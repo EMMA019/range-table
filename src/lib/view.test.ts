@@ -25,6 +25,13 @@ function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow
       brokeHigh: false,
       gapWarning: false,
     },
+    pe: {
+      trailingEps: null,
+      forwardEps: null,
+      trailingPe: null,
+      forwardPe: null,
+      recovering: false,
+    },
     error: null,
     errorDetail: null,
     ...partial,
@@ -90,6 +97,38 @@ describe("applyView", () => {
       applyView(rows, { ...filters, earnings: true }).map((item) => item.ticker),
       ["EARN"],
     );
+  });
+
+  it("sorts by trailing P/E and leaves missing ratios last", () => {
+    const pe = (
+      trailingPe: number | null,
+      forwardPe: number | null,
+    ): TickerRow["pe"] => ({
+      trailingEps: trailingPe,
+      forwardEps: forwardPe,
+      trailingPe,
+      forwardPe,
+      recovering: false,
+    });
+    const ordered = applyView(
+      [
+        row({ ticker: "HIGH", pe: pe(40, 30) }),
+        row({ ticker: "LOW", pe: pe(10, 8) }),
+        row({ ticker: "MISS", pe: pe(null, 4) }),
+        row({ ticker: "RED", pe: pe(null, 12) }),
+      ],
+      { ...filters, sort: "trailPeAsc" },
+    ).map((item) => item.ticker);
+    assert.deepEqual(ordered, ["LOW", "HIGH", "MISS", "RED"]);
+
+    const forward = applyView(
+      [
+        row({ ticker: "HIGH", pe: pe(10, 30) }),
+        row({ ticker: "LOW", pe: pe(40, 8) }),
+      ],
+      { ...filters, sort: "fwdPeAsc" },
+    ).map((item) => item.ticker);
+    assert.deepEqual(forward, ["LOW", "HIGH"]);
   });
 
   it("inserts zone dividers in box order", () => {

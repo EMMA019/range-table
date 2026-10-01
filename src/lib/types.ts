@@ -54,6 +54,19 @@ export type EarningsView = {
   warn: boolean;
 };
 
+export type EpsSnapshot = {
+  trailingEps: number | null;
+  forwardEps: number | null;
+};
+
+export type PeView = {
+  trailingEps: number | null;
+  forwardEps: number | null;
+  trailingPe: number | null;
+  forwardPe: number | null;
+  recovering: boolean;
+};
+
 export type TickerRow = {
   ticker: string;
   sectorId: string;
@@ -64,6 +77,7 @@ export type TickerRow = {
   watchOnly: boolean;
   earnings: EarningsView | null;
   quote: Quote | null;
+  pe: PeView;
   error: string | null;
   errorDetail: string | null;
 };

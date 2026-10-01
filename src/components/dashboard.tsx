@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CHIPS, SORT_OPTIONS, type ChipKey, type SortId } from "@/lib/copy";
+import { formatPe } from "@/lib/pe";
 import {
   earningsBadge,
   formatAge,
@@ -466,6 +467,7 @@ function TickerCard({
     row.watchOnly ? "監視のみ" : null,
     quote?.gapWarning ? "価格が飛んでいる" : null,
     row.tags.includes("高ボラ") ? "高ボラ" : null,
+    row.pe.recovering ? "利益回復中" : null,
   ].filter((badge): badge is string => Boolean(badge));
 
   return (
@@ -496,7 +498,7 @@ function TickerCard({
                   key={badge}
                   className={cn(
                     "rounded-full px-2 py-0.5 text-[10px]",
-                    badge === "監視のみ" || badge === "高ボラ"
+                    badge === "監視のみ" || badge === "高ボラ" || badge === "利益回復中"
                       ? "bg-chip text-muted"
                       : "bg-rust-soft text-rust",
                   )}
@@ -549,6 +551,17 @@ function TickerCard({
           {row.errorDetail && row.errorDetail !== row.error ? `（${row.errorDetail}）` : ""}
         </p>
       )}
+      <p className="mt-2 text-[11px] leading-snug text-muted">
+        実績PER{" "}
+        <b className="font-mono font-medium text-ink tabular-nums">
+          {formatPe(quote?.close, row.pe.trailingEps)}
+        </b>
+        {" / "}
+        予想PER{" "}
+        <b className="font-mono font-medium text-ink tabular-nums">
+          {formatPe(quote?.close, row.pe.forwardEps)}
+        </b>
+      </p>
     </button>
   );
 }

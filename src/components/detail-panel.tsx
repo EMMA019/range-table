@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { BASIS } from "@/lib/copy";
+import { formatPe, PE_SOURCE_NOTE } from "@/lib/pe";
 import {
   earningsBadge,
   formatAtr,
@@ -46,6 +47,7 @@ export function DetailPanel({
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
               <h2 className="font-mono text-3xl tracking-wide">{row.ticker}</h2>
               {row.watchOnly && <Pill>監視のみ</Pill>}
+              {row.pe.recovering && <Pill>利益回復中</Pill>}
               {row.tags.map((tag) => (
                 <Pill key={tag}>{tag}</Pill>
               ))}
@@ -116,11 +118,36 @@ export function DetailPanel({
                   直近20本のあいだに、終値が前日終値から35%以上動いた日がある。分割やスピンオフの直後は箱をそのまま信じない。
                 </p>
               )}
+              <PeBlock row={row} />
               <ChartBlock ticker={row.ticker} />
             </>
           )}
+          {!row.quote && <PeBlock row={row} />}
         </article>
       )}
+    </div>
+  );
+}
+
+function PeBlock({ row }: { row: TickerRow }) {
+  return (
+    <div className="mt-4">
+      <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
+        <Stat
+          label="実績PER"
+          value={formatPe(row.quote?.close, row.pe.trailingEps)}
+          basis={BASIS.trailingPe}
+        />
+        <Stat
+          label="予想PER"
+          value={formatPe(row.quote?.close, row.pe.forwardEps)}
+          basis={BASIS.forwardPe}
+        />
+      </div>
+      {row.pe.recovering && (
+        <p className="mt-2 text-xs leading-relaxed text-muted">{BASIS.recovering}</p>
+      )}
+      <p className="mt-2 text-[11px] leading-relaxed text-muted">{PE_SOURCE_NOTE}</p>
     </div>
   );
 }

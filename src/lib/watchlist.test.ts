@@ -7,11 +7,12 @@ describe("watchlist", () => {
   const tickers = list.groups.flatMap((group) => group.tickers);
 
   it("loads the grouped list without duplicate tickers", () => {
-    assert.equal(tickers.length, 87);
-    assert.equal(new Set(tickers.map((item) => item.ticker)).size, 87);
+    assert.equal(tickers.length, 109);
+    assert.equal(new Set(tickers.map((item) => item.ticker)).size, 109);
+    assert.equal(list.groups[0]?.id, "ibkr");
     assert.deepEqual(
       list.groups.map((group) => group.tickers.length),
-      [21, 10, 10, 8, 11, 9, 10, 8],
+      [22, 21, 10, 10, 8, 11, 9, 10, 8],
     );
   });
 

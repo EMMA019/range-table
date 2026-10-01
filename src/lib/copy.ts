@@ -2,6 +2,7 @@ import {
   BOX_BOTTOM_MAX,
   BOX_TOP_MIN,
   EARNINGS_WARN_DAYS,
+  PE_RECOVERY_MULTIPLE,
 } from "./constants";
 
 export const BASIS = {
@@ -15,6 +16,9 @@ export const BASIS = {
   breakout: "終値が、当日を含まない直前20本の高値より上。箱が一段上に移った印",
   earnings: `米国東部の今日を含めず、翌営業日から決算日までのNYSE営業日。${EARNINGS_WARN_DAYS}営業日以内で印`,
   priorHigh: "当日を含まない直前20本の高値の最大",
+  trailingPe: "直近の確定終値 ÷ 過去12か月のEPS。EPSがマイナスなら赤字",
+  forwardPe: "直近の確定終値 ÷ アナリスト予想EPS。予想EPSがマイナスなら赤字",
+  recovering: `実績PERが予想PERの${PE_RECOVERY_MULTIPLE}倍以上。過去12か月の利益が薄く、予想利益の方が大きい`,
 } as const;
 
 export const SORT_OPTIONS = [
@@ -22,6 +26,8 @@ export const SORT_OPTIONS = [
   { id: "boxDesc", label: "箱の天井から" },
   { id: "devAsc", label: "20日線の下から" },
   { id: "earnAsc", label: "決算が近い順" },
+  { id: "trailPeAsc", label: "実績PERの低い順" },
+  { id: "fwdPeAsc", label: "予想PERの低い順" },
 ] as const;
 
 export type SortId = (typeof SORT_OPTIONS)[number]["id"];

@@ -10,6 +10,9 @@ const ITEMS = [
   ["ATR(14)", BASIS.atr],
   ["上抜け", BASIS.breakout],
   ["決算までの営業日", BASIS.earnings],
+  ["実績PER", BASIS.trailingPe],
+  ["予想PER", BASIS.forwardPe],
+  ["利益回復中", BASIS.recovering],
 ] as const;
 
 export function Glossary({ className = "" }: { className?: string }) {

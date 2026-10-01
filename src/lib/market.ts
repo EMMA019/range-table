@@ -1,13 +1,16 @@
 import fs from "fs";
 import path from "path";
 import { todayEt } from "./calendar";
-import { BENCHMARKS, CACHE_TTL_MS, FETCH_CONCURRENCY } from "./constants";
+import { BENCHMARKS, CACHE_TTL_MS, EPS_CACHE_TTL_MS, FETCH_CONCURRENCY } from "./constants";
+import { fetchEpsMap } from "./eps";
+import { peView } from "./pe";
 import { chartPoints, computeQuote } from "./compute";
 import { classifyEarnings } from "./earnings";
 import { formatJst, friendlyFetchError } from "./format";
 import type {
   Bar,
   ChartPayload,
+  EpsSnapshot,
   IndexRow,
   MarketPayload,
   Quote,
@@ -30,9 +33,19 @@ type CacheBody = {
 };
 
 const CACHE_PATH = path.join(process.cwd(), "data", ".cache", "market.json");
+const EPS_CACHE_PATH = path.join(process.cwd(), "data", ".cache", "eps.json");
 
 let memory: CacheBody | null = null;
 let inflight: Promise<CacheBody> | null = null;
+
+type EpsCacheBody = {
+  v: 1;
+  fetchedAt: number;
+  quotes: Record<string, EpsSnapshot>;
+};
+
+let epsMemory: EpsCacheBody | null = null;
+let epsInflight: Promise<Record<string, EpsSnapshot>> | null = null;
 
 const SOURCE = "Yahoo Finance の日足をサーバで計算（分割がある場合は分割調整、配当は未調整）";
 
@@ -42,8 +55,9 @@ export function warmMarket(): Promise<void> {
 
 export async function getMarketPayload(): Promise<MarketPayload> {
   const list = loadWatchlist();
-  const cache = await ensureSeries(list);
-  return buildPayload(cache, list);
+  const symbols = list.groups.flatMap((group) => group.tickers.map((ticker) => ticker.ticker));
+  const [cache, eps] = await Promise.all([ensureSeries(list), loadEps(symbols)]);
+  return buildPayload(cache, list, eps);
 }
 
 export async function getChart(ticker: string): Promise<ChartPayload | { error: string }> {
@@ -137,7 +151,54 @@ async function fetchOne(symbol: string): Promise<{ symbol: string; entry: Series
   }
 }
 
-function buildPayload(cache: CacheBody, list: Watchlist): MarketPayload {
+async function loadEps(symbols: string[]): Promise<Record<string, EpsSnapshot>> {
+  if (epsInflight) return epsInflight;
+  epsInflight = ensureEps(symbols)
+    .catch((error) => {
+      console.error("[range] eps", error);
+      return epsMemory?.quotes ?? readEps()?.quotes ?? {};
+    })
+    .finally(() => {
+      epsInflight = null;
+    });
+  return epsInflight;
+}
+
+async function ensureEps(symbols: string[]): Promise<Record<string, EpsSnapshot>> {
+  const cache = epsMemory ?? readEps();
+  const age = cache ? Date.now() - cache.fetchedAt : Number.POSITIVE_INFINITY;
+  const fresh = Boolean(cache) && age < EPS_CACHE_TTL_MS;
+  const missing = fresh ? symbols.filter((symbol) => !cache?.quotes[symbol]) : symbols;
+  if (cache && fresh && missing.length === 0) {
+    epsMemory = cache;
+    return cache.quotes;
+  }
+
+  const fetched = await fetchEpsMap(missing);
+  if (Object.keys(fetched).length === 0 && missing.length > 0) {
+    return cache?.quotes ?? {};
+  }
+
+  const quotes = { ...(cache?.quotes ?? {}), ...fetched };
+  const next: EpsCacheBody = {
+    v: 1,
+    fetchedAt: fresh && cache ? cache.fetchedAt : Date.now(),
+    quotes,
+  };
+  epsMemory = next;
+  try {
+    writeJson(EPS_CACHE_PATH, next);
+  } catch (error) {
+    console.error("[range] eps cache write failed", error);
+  }
+  return quotes;
+}
+
+function buildPayload(
+  cache: CacheBody,
+  list: Watchlist,
+  eps: Record<string, EpsSnapshot>,
+): MarketPayload {
   const today = todayEt();
   const rows: TickerRow[] = [];
   for (const group of list.groups) {
@@ -154,6 +215,7 @@ function buildPayload(cache: CacheBody, list: Watchlist): MarketPayload {
         watchOnly: ticker.watchOnly,
         earnings: classifyEarnings(today, ticker.earnings),
         quote: built.quote,
+        pe: peView(built.quote?.close, eps[ticker.ticker] ?? null),
         error: built.error,
         errorDetail: built.errorDetail,
       });
@@ -230,10 +292,39 @@ function readDisk(): CacheBody | null {
 }
 
 function writeDisk(body: CacheBody) {
-  fs.mkdirSync(path.dirname(CACHE_PATH), { recursive: true });
-  const tmp = `${CACHE_PATH}.tmp`;
+  writeJson(CACHE_PATH, body);
+}
+
+function writeJson(file: string, body: unknown) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const tmp = `${file}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify(body));
-  fs.renameSync(tmp, CACHE_PATH);
+  fs.renameSync(tmp, file);
+}
+
+function readEps(): EpsCacheBody | null {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(EPS_CACHE_PATH, "utf8")) as EpsCacheBody;
+    if (parsed?.v !== 1 || typeof parsed.fetchedAt !== "number" || !parsed.quotes) return null;
+    const quotes: Record<string, EpsSnapshot> = {};
+    for (const [symbol, value] of Object.entries(parsed.quotes)) {
+      if (!isEpsSnapshot(value)) continue;
+      quotes[symbol] = value;
+    }
+    return { v: 1, fetchedAt: parsed.fetchedAt, quotes };
+  } catch {
+    return null;
+  }
+}
+
+function isEpsSnapshot(value: unknown): value is EpsSnapshot {
+  if (!value || typeof value !== "object") return false;
+  const snapshot = value as Record<string, unknown>;
+  return nullableNumber(snapshot.trailingEps) && nullableNumber(snapshot.forwardEps);
+}
+
+function nullableNumber(value: unknown): boolean {
+  return value === null || (typeof value === "number" && Number.isFinite(value));
 }
 
 async function mapPool<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {

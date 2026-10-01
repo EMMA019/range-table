@@ -46,10 +46,23 @@ function earnRank(row: TickerRow): number {
   return 9_000;
 }
 
+function peRank(pe: number | null): number {
+  if (pe == null || !Number.isFinite(pe) || !(pe > 0)) return Number.POSITIVE_INFINITY;
+  return pe;
+}
+
 function compareRows(a: TickerRow, b: TickerRow, sort: SortId): number {
   if (sort === "earnAsc") {
     const d = earnRank(a) - earnRank(b);
     if (d !== 0) return d;
+    return a.ticker.localeCompare(b.ticker);
+  }
+
+  if (sort === "trailPeAsc" || sort === "fwdPeAsc") {
+    const key = sort === "trailPeAsc" ? "trailingPe" : "forwardPe";
+    const av = peRank(a.pe[key]);
+    const bv = peRank(b.pe[key]);
+    if (av !== bv) return av < bv ? -1 : 1;
     return a.ticker.localeCompare(b.ticker);
   }
 
