@@ -24,6 +24,7 @@ function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow
       atr14: 1,
       brokeHigh: false,
       gapWarning: false,
+      maSlopePct: null,
     },
     pe: {
       trailingEps: null,
@@ -45,6 +46,7 @@ const filters = {
   bottom: false,
   top: false,
   breakout: false,
+  continued: false,
   earnings: false,
   hideWatch: false,
   sort: "boxAsc" as const,
@@ -133,6 +135,30 @@ describe("applyView", () => {
       { ...filters, sort: "fwdPeAsc" },
     ).map((item) => item.ticker);
     assert.deepEqual(forward, ["LOW", "HIGH"]);
+  });
+
+  it("filters a breakout that is still at the top of the box", () => {
+    const topBreak = row({
+      ticker: "TOP",
+      quote: { ...row({ ticker: "TOP" }).quote!, boxPct: 88, brokeHigh: true, maSlopePct: 2.4 },
+    });
+    const topOnly = row({
+      ticker: "CEIL",
+      quote: { ...row({ ticker: "CEIL" }).quote!, boxPct: 84, brokeHigh: false, maSlopePct: -1.2 },
+    });
+    const midBreak = row({
+      ticker: "MID",
+      quote: { ...row({ ticker: "MID" }).quote!, boxPct: 40, brokeHigh: true, maSlopePct: 0.2 },
+    });
+    const names = [topBreak, topOnly, midBreak];
+    assert.deepEqual(
+      applyView(names, { ...filters, continued: true }).map((item) => item.ticker),
+      ["TOP"],
+    );
+    assert.deepEqual(
+      applyView(names, { ...filters, sort: "slopeDesc" }).map((item) => item.ticker),
+      ["TOP", "MID", "CEIL"],
+    );
   });
 
   it("inserts zone dividers in box order", () => {

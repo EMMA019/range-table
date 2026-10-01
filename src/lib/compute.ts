@@ -3,6 +3,7 @@ import {
   BOX_WINDOW,
   CHART_SESSIONS,
   GAP_THRESHOLD,
+  MA_SLOPE_LOOKBACK,
 } from "./constants";
 import type { Bar, ChartBar, Quote } from "./types";
 
@@ -87,8 +88,23 @@ export function computeQuote(bars: Bar[]): QuoteResult {
       atr14: round4(atr),
       brokeHigh: last.c > priorHigh20,
       gapWarning: hasLargeGap(bars),
+      maSlopePct: maSlopePct(bars),
     },
   };
+}
+
+/** (SMA today / SMA 5 trading days ago − 1) in percent. Needs 25 completed closes. */
+export function maSlopePct(bars: Bar[]): number | null {
+  if (bars.length < BOX_WINDOW + MA_SLOPE_LOOKBACK) return null;
+  const sma = (end: number) => {
+    let sum = 0;
+    for (let i = end - BOX_WINDOW; i < end; i++) sum += bars[i].c;
+    return sum / BOX_WINDOW;
+  };
+  const today = sma(bars.length);
+  const prior = sma(bars.length - MA_SLOPE_LOOKBACK);
+  if (!(prior > 0) || !Number.isFinite(today)) return null;
+  return round4((today / prior - 1) * 100);
 }
 
 export function chartPoints(bars: Bar[], sessions = CHART_SESSIONS): ChartBar[] {

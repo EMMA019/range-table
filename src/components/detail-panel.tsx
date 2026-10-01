@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { BASIS } from "@/lib/copy";
+import { BASIS, TOP_BREAKOUT_NOTE } from "@/lib/copy";
 import { formatPe, PE_SOURCE_NOTE } from "@/lib/pe";
 import {
   earningsBadge,
@@ -10,11 +10,13 @@ import {
   formatDev,
   formatEarnings,
   formatPx,
+  formatSlope,
   shortDate,
+  slopeLabel,
 } from "@/lib/format";
 import type { ChartPayload, TickerRow } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { zoneOf } from "@/lib/view";
+import { atTop, continuedBreakout, zoneOf } from "@/lib/view";
 import { BoxBar } from "./box-bar";
 import { PriceChart } from "./price-chart";
 import { Button } from "./ui/button";
@@ -48,6 +50,8 @@ export function DetailPanel({
               <h2 className="font-mono text-3xl tracking-wide">{row.ticker}</h2>
               {row.watchOnly && <Pill>監視のみ</Pill>}
               {row.pe.recovering && <Pill>利益回復中</Pill>}
+              {row.quote && continuedBreakout(row.quote) && <Pill tone="rust">上抜け継続？（売り急ぎ注意）</Pill>}
+              {row.quote && atTop(row.quote) && !row.quote.brokeHigh && <Pill>箱の天井付近</Pill>}
               {row.tags.map((tag) => (
                 <Pill key={tag}>{tag}</Pill>
               ))}
@@ -92,6 +96,24 @@ export function DetailPanel({
                   basis={BASIS.dev}
                   tone={row.quote.devPct < 0 ? "rust" : row.quote.devPct > 0 ? "sage" : undefined}
                 />
+                <Stat
+                  label="20日線の傾き"
+                  value={
+                    row.quote.maSlopePct == null
+                      ? "—"
+                      : `${formatSlope(row.quote.maSlopePct)}（${slopeLabel(row.quote.maSlopePct)}）`
+                  }
+                  basis={BASIS.slope}
+                  tone={
+                    row.quote.maSlopePct == null
+                      ? undefined
+                      : slopeLabel(row.quote.maSlopePct) === "下向き"
+                        ? "rust"
+                        : slopeLabel(row.quote.maSlopePct) === "上向き"
+                          ? "sage"
+                          : undefined
+                  }
+                />
                 <Stat label="20日安値" value={formatPx(row.quote.low20)} basis={BASIS.low20} />
                 <Stat label="20日高値" value={formatPx(row.quote.high20)} basis={BASIS.high20} />
                 <Stat label="箱の位置" value={formatBox(row.quote.boxPct)} basis={BASIS.box} tone={zoneTone(row.quote.boxPct)} />
@@ -113,6 +135,9 @@ export function DetailPanel({
                   tone={row.earnings?.warn ? "rust" : undefined}
                 />
               </div>
+              {row.quote && atTop(row.quote) && (
+                <p className="mt-3 text-xs leading-relaxed text-muted">{TOP_BREAKOUT_NOTE}</p>
+              )}
               {row.quote.gapWarning && (
                 <p className="mt-3 text-xs leading-relaxed text-rust">
                   直近20本のあいだに、終値が前日終値から35%以上動いた日がある。分割やスピンオフの直後は箱をそのまま信じない。

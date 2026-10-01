@@ -3,6 +3,7 @@ import { BASIS } from "@/lib/copy";
 const ITEMS = [
   ["終値", BASIS.close],
   ["20日線", BASIS.ma20],
+  ["20日線の傾き", BASIS.slope],
   ["乖離", BASIS.dev],
   ["20日安値", BASIS.low20],
   ["20日高値", BASIS.high20],

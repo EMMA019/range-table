@@ -1,3 +1,4 @@
+import { MA_SLOPE_FLAT_PCT } from "./constants";
 import type { EarningsView } from "./types";
 
 const px = new Intl.NumberFormat("en-US", {
@@ -29,6 +30,26 @@ export function boxShown(pct: number): number {
 
 export function formatBox(pct: number): string {
   return `${boxShown(pct).toFixed(1)}%`;
+}
+
+export function slopeShown(pct: number): number {
+  return Math.round(pct * 10) / 10;
+}
+
+export function formatSlope(pct: number): string {
+  const shown = slopeShown(pct);
+  if (shown === 0) return "0.0%";
+  const sign = shown > 0 ? "+" : "−";
+  return `${sign}${Math.abs(shown).toFixed(1)}%`;
+}
+
+export type SlopeLabel = "横ばい" | "上向き" | "下向き";
+
+export function slopeLabel(pct: number): SlopeLabel {
+  const shown = slopeShown(pct);
+  if (shown >= MA_SLOPE_FLAT_PCT) return "上向き";
+  if (shown <= -MA_SLOPE_FLAT_PCT) return "下向き";
+  return "横ばい";
 }
 
 export function formatAtr(n: number): string {

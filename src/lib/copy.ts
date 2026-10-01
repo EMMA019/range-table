@@ -2,6 +2,8 @@ import {
   BOX_BOTTOM_MAX,
   BOX_TOP_MIN,
   EARNINGS_WARN_DAYS,
+  MA_SLOPE_FLAT_PCT,
+  MA_SLOPE_LOOKBACK,
   PE_RECOVERY_MULTIPLE,
 } from "./constants";
 
@@ -19,7 +21,11 @@ export const BASIS = {
   trailingPe: "直近の確定終値 ÷ 過去12か月のEPS。EPSがマイナスなら赤字",
   forwardPe: "直近の確定終値 ÷ アナリスト予想EPS。予想EPSがマイナスなら赤字",
   recovering: `実績PERが予想PERの${PE_RECOVERY_MULTIPLE}倍以上。過去12か月の利益が薄く、予想利益の方が大きい`,
+  slope: `Yahoo Finance の確定終値で作った20日単純移動平均。今日の値 ÷ ${MA_SLOPE_LOOKBACK}営業日前の値 − 1。±${MA_SLOPE_FLAT_PCT}%未満は横ばい`,
 } as const;
+
+export const TOP_BREAKOUT_NOTE =
+  "上抜け=終値が当日を除く直前20本の高値超え。天井と決めつけて売る前に確認する目安。買いサインではありません。";
 
 export const SORT_OPTIONS = [
   { id: "boxAsc", label: "箱の底から" },
@@ -28,6 +34,7 @@ export const SORT_OPTIONS = [
   { id: "earnAsc", label: "決算が近い順" },
   { id: "trailPeAsc", label: "実績PERの低い順" },
   { id: "fwdPeAsc", label: "予想PERの低い順" },
+  { id: "slopeDesc", label: "20日線の上向きから" },
 ] as const;
 
 export type SortId = (typeof SORT_OPTIONS)[number]["id"];
@@ -36,6 +43,7 @@ export const CHIPS = [
   { key: "bottom", label: `箱の底 ≤${BOX_BOTTOM_MAX}%` },
   { key: "top", label: `箱の天井 ≥${BOX_TOP_MIN}%` },
   { key: "breakout", label: "20日高値を上抜け" },
+  { key: "continued", label: "上抜け継続" },
   { key: "earnings", label: `決算 ≤${EARNINGS_WARN_DAYS}営業日` },
   { key: "hideWatch", label: "監視のみを隠す" },
 ] as const;

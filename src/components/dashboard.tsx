@@ -11,10 +11,11 @@ import {
   formatAtr,
   formatPx,
   shortDate,
+  slopeLabel,
 } from "@/lib/format";
 import type { MarketPayload, TickerRow } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { applyView, sectorsOf, withDividers, zoneOf, type ViewFilters } from "@/lib/view";
+import { applyView, atTop, continuedBreakout, sectorsOf, withDividers, zoneOf, type ViewFilters } from "@/lib/view";
 import { BoxBar } from "./box-bar";
 import { DetailPanel } from "./detail-panel";
 import { Glossary } from "./glossary";
@@ -27,6 +28,7 @@ const CHIP_PARAM: Record<ChipKey, string> = {
   bottom: "bottom",
   top: "top",
   breakout: "breakout",
+  continued: "cont",
   earnings: "earn",
   hideWatch: "hideWatch",
 };
@@ -92,6 +94,7 @@ export function Dashboard() {
       bottom: sp.get("bottom") === "1",
       top: sp.get("top") === "1",
       breakout: sp.get("breakout") === "1",
+      continued: sp.get("cont") === "1",
       earnings: sp.get("earn") === "1",
       hideWatch: sp.get("hideWatch") === "1",
       sort: SORTS.has(sort ?? "") ? (sort as SortId) : "boxAsc",
@@ -155,6 +158,7 @@ export function Dashboard() {
     filters.bottom ||
     filters.top ||
     filters.breakout ||
+    filters.continued ||
     filters.earnings ||
     filters.hideWatch ||
     query.trim().length > 0;
@@ -172,6 +176,7 @@ export function Dashboard() {
         bottom: null,
         top: null,
         breakout: null,
+        cont: null,
         earn: null,
         hideWatch: null,
         sort: null,
@@ -468,6 +473,8 @@ function TickerCard({
     quote?.gapWarning ? "価格が飛んでいる" : null,
     row.tags.includes("高ボラ") ? "高ボラ" : null,
     row.pe.recovering ? "利益回復中" : null,
+    quote && continuedBreakout(quote) ? "上抜け継続？（売り急ぎ注意）" : null,
+    quote && atTop(quote) && !quote.brokeHigh ? "箱の天井付近" : null,
   ].filter((badge): badge is string => Boolean(badge));
 
   return (
@@ -498,7 +505,7 @@ function TickerCard({
                   key={badge}
                   className={cn(
                     "rounded-full px-2 py-0.5 text-[10px]",
-                    badge === "監視のみ" || badge === "高ボラ" || badge === "利益回復中"
+                    badge === "監視のみ" || badge === "高ボラ" || badge === "利益回復中" || badge === "箱の天井付近"
                       ? "bg-chip text-muted"
                       : "bg-rust-soft text-rust",
                   )}
@@ -533,6 +540,20 @@ function TickerCard({
               >
                 {formatDev(quote.devPct)}
               </b>
+              {quote.maSlopePct != null && (
+                <>
+                  {" "}
+                  <b
+                    className={cn(
+                      "font-medium",
+                      slopeLabel(quote.maSlopePct) === "下向き" && "text-rust",
+                      slopeLabel(quote.maSlopePct) === "上向き" && "text-sage",
+                    )}
+                  >
+                    {slopeLabel(quote.maSlopePct)}
+                  </b>
+                </>
+              )}
             </span>
             <span>
               ATR(14) <b className="font-mono font-medium text-ink tabular-nums">{formatAtr(quote.atr14)}</b>

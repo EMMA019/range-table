@@ -13,6 +13,10 @@ export const EPS_FAIL_TTL_MS = 10 * 60 * 1000;
 export const PE_RECOVERY_MULTIPLE = 2;
 
 export const BOX_WINDOW = 20;
+/** Trading days between the current 20-day average and the earlier one. */
+export const MA_SLOPE_LOOKBACK = 5;
+/** Absolute slope under this percent is labeled flat. */
+export const MA_SLOPE_FLAT_PCT = 1;
 export const ATR_WINDOW = 14;
 export const CHART_SESSIONS = 66;
 

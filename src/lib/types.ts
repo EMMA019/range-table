@@ -44,6 +44,8 @@ export type Quote = {
   atr14: number;
   brokeHigh: boolean;
   gapWarning: boolean;
+  /** Percent change of the 20-day average versus 5 trading days earlier. Null until 25 closes exist. */
+  maSlopePct: number | null;
 };
 
 export type EarningsView = {

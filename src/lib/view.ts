@@ -1,18 +1,27 @@
 import { BOX_BOTTOM_MAX, BOX_TOP_MIN } from "./constants";
 import type { SortId } from "./copy";
 import { boxShown } from "./format";
-import type { TickerRow } from "./types";
+import type { Quote, TickerRow } from "./types";
 
 export type ViewFilters = {
   sector: string;
   bottom: boolean;
   top: boolean;
   breakout: boolean;
+  continued: boolean;
   earnings: boolean;
   hideWatch: boolean;
   sort: SortId;
   q: string;
 };
+
+export function atTop(quote: Quote): boolean {
+  return boxShown(quote.boxPct) >= BOX_TOP_MIN;
+}
+
+export function continuedBreakout(quote: Quote): boolean {
+  return atTop(quote) && quote.brokeHigh;
+}
 
 export function applyView(rows: TickerRow[], filters: ViewFilters): TickerRow[] {
   const query = filters.q.trim().toLowerCase();
@@ -26,6 +35,7 @@ export function applyView(rows: TickerRow[], filters: ViewFilters): TickerRow[] 
       if (!row.quote || boxShown(row.quote.boxPct) < BOX_TOP_MIN) return false;
     }
     if (filters.breakout && !row.quote?.brokeHigh) return false;
+    if (filters.continued && !(row.quote && continuedBreakout(row.quote))) return false;
     if (filters.earnings && !row.earnings?.warn) return false;
     if (query) {
       const hay = `${row.ticker} ${row.description} ${row.notes} ${row.sector} ${row.tags.join(" ")}`.toLowerCase();
@@ -55,6 +65,16 @@ function compareRows(a: TickerRow, b: TickerRow, sort: SortId): number {
   if (sort === "earnAsc") {
     const d = earnRank(a) - earnRank(b);
     if (d !== 0) return d;
+    return a.ticker.localeCompare(b.ticker);
+  }
+
+  if (sort === "slopeDesc") {
+    const av = a.quote?.maSlopePct;
+    const bv = b.quote?.maSlopePct;
+    if (av == null && bv == null) return a.ticker.localeCompare(b.ticker);
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (av !== bv) return av > bv ? -1 : 1;
     return a.ticker.localeCompare(b.ticker);
   }
 

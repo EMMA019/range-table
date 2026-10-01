@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { atr14, computeQuote } from "./compute";
+import { atr14, computeQuote, maSlopePct } from "./compute";
+import { slopeLabel } from "./format";
 import type { Bar } from "./types";
 
 function bar(date: string, o: number, h: number, l: number, c: number): Bar {
@@ -60,5 +61,21 @@ describe("computeQuote", () => {
     }
     const atr = atr14(bars);
     assert.equal(atr, 2);
+  });
+
+  it("measures the 20-day average against five trading days earlier", () => {
+    const bars = flat(25, 100);
+    for (let i = 5; i < bars.length; i++) bars[i].c = 110;
+    const slope = maSlopePct(bars);
+    assert.ok(slope != null && Math.abs(slope - (110 / 107.5 - 1) * 100) < 0.001);
+    assert.equal(slopeLabel(slope ?? 0), "上向き");
+    assert.equal(maSlopePct(flat(24, 100)), null);
+    assert.equal(slopeLabel(0.4), "横ばい");
+    assert.equal(slopeLabel(1), "上向き");
+    assert.equal(slopeLabel(-1), "下向き");
+    const quote = computeQuote(bars);
+    assert.equal(quote.ok, true);
+    if (!quote.ok) return;
+    assert.equal(quote.quote.maSlopePct, slope);
   });
 });
