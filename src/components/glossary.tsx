@@ -14,6 +14,7 @@ const ITEMS = [
   ["実績PER", BASIS.trailingPe],
   ["予想PER", BASIS.forwardPe],
   ["利益回復中", BASIS.recovering],
+  ["出来高", BASIS.volume],
 ] as const;
 
 export function Glossary({ className = "" }: { className?: string }) {

@@ -52,6 +52,37 @@ export function slopeLabel(pct: number): SlopeLabel {
   return "横ばい";
 }
 
+/** One decimal, so 1.76 displays as 1.8倍. */
+export function formatVolumeRatio(ratio: number): string {
+  return `${(Math.round(ratio * 10) / 10).toFixed(1)}倍`;
+}
+
+/** Two decimals for the detail view. */
+export function formatVolumeRatioExact(ratio: number): string {
+  return `${(Math.round(ratio * 100) / 100).toFixed(2)}倍`;
+}
+
+/** 12345678 → 12.3M. Shares, not yen. */
+export function formatCompactShares(n: number): string {
+  if (!Number.isFinite(n)) return "—";
+  const abs = Math.abs(n);
+  const scaled =
+    abs >= 1_000_000_000 ? n / 1_000_000_000 : abs >= 1_000_000 ? n / 1_000_000 : abs >= 1_000 ? n / 1_000 : n;
+  const suffix = abs >= 1_000_000_000 ? "B" : abs >= 1_000_000 ? "M" : abs >= 1_000 ? "K" : "";
+  if (!suffix) return Math.round(n).toLocaleString("en-US");
+  return `${(Math.round(scaled * 10) / 10).toFixed(1)}${suffix}`;
+}
+
+export function formatShares(n: number): string {
+  if (!Number.isFinite(n)) return "—";
+  return Math.round(n).toLocaleString("en-US");
+}
+
+export function formatDollarVolume(n: number): string {
+  if (!Number.isFinite(n)) return "—";
+  return `$${Math.round(n).toLocaleString("en-US")}`;
+}
+
 export function formatAtr(n: number): string {
   if (!Number.isFinite(n)) return "—";
   return n.toFixed(2);

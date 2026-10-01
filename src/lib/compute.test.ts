@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { atr14, computeQuote, maSlopePct } from "./compute";
-import { slopeLabel } from "./format";
+import { atr14, computeQuote, maSlopePct, volumeStats } from "./compute";
+import { formatCompactShares, formatVolumeRatio, slopeLabel } from "./format";
 import type { Bar } from "./types";
 
-function bar(date: string, o: number, h: number, l: number, c: number): Bar {
-  return { date, o, h, l, c };
+function bar(date: string, o: number, h: number, l: number, c: number, v = 1_000_000): Bar {
+  return { date, o, h, l, c, v };
 }
 
 function flat(n: number, price = 10): Bar[] {
@@ -77,5 +77,28 @@ describe("computeQuote", () => {
     assert.equal(quote.ok, true);
     if (!quote.ok) return;
     assert.equal(quote.quote.maSlopePct, slope);
+  });
+
+  it("compares the latest volume with the prior 20 sessions", () => {
+    const bars = flat(21, 10);
+    for (const item of bars) item.v = 100;
+    bars[20].v = 180;
+    const stats = volumeStats(bars);
+    assert.equal(stats.volume, 180);
+    assert.equal(stats.avgVolume20, 100);
+    assert.equal(stats.volumeRatio, 1.8);
+    assert.equal(stats.avgDollarVolume20, 1000);
+    const quote = computeQuote(bars);
+    assert.equal(quote.ok, true);
+    if (!quote.ok) return;
+    assert.equal(quote.quote.volumeRatio, 1.8);
+
+    for (const item of bars) item.v = 0;
+    bars[20].v = 50;
+    assert.equal(volumeStats(bars).volumeRatio, null);
+    assert.equal(volumeStats(bars).avgVolume20, 0);
+    assert.equal(formatVolumeRatio(1.76), "1.8倍");
+    assert.equal(formatCompactShares(12_300_000), "12.3M");
+    assert.equal(formatVolumeRatio(0.69), "0.7倍");
   });
 });

@@ -33,7 +33,7 @@ type SeriesEntry = {
 };
 
 type CacheBody = {
-  v: 2;
+  v: 3;
   fetchedAt: number;
   series: Record<string, SeriesEntry>;
 };
@@ -136,7 +136,7 @@ async function refresh(list: Watchlist): Promise<CacheBody> {
   for (const item of fetched) series[item.symbol] = item.entry;
 
   const next: CacheBody = {
-    v: 2,
+    v: 3,
     fetchedAt: cache && fresh ? cache.fetchedAt : Date.now(),
     series,
   };
@@ -355,7 +355,7 @@ function modeDate(indices: IndexRow[], rows: TickerRow[]): string | null {
 function readDisk(): CacheBody | null {
   try {
     const parsed = JSON.parse(fs.readFileSync(CACHE_PATH, "utf8")) as CacheBody;
-    if (parsed?.v !== 2 || typeof parsed.fetchedAt !== "number" || !parsed.series) return null;
+    if (parsed?.v !== 3 || typeof parsed.fetchedAt !== "number" || !parsed.series) return null;
     return parsed;
   } catch {
     return null;

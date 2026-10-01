@@ -27,6 +27,7 @@ type YahooResult = {
       high?: Array<number | null>;
       low?: Array<number | null>;
       close?: Array<number | null>;
+      volume?: Array<number | null>;
     }>;
   };
   events?: { splits?: Record<string, YahooSplit> };
@@ -91,6 +92,7 @@ export function applySplits(
       h: bar.h * factor,
       l: bar.l * factor,
       c: bar.c * factor,
+      v: bar.v / factor,
     };
   });
 }
@@ -133,20 +135,23 @@ export function parseChart(result: YahooResult, nowSec = Date.now() / 1000): Par
     const h = quote.high?.[i];
     const l = quote.low?.[i];
     const c = quote.close?.[i];
+    const v = quote.volume?.[i];
     if (
       o == null ||
       h == null ||
       l == null ||
       c == null ||
+      v == null ||
       !Number.isFinite(o) ||
       !Number.isFinite(h) ||
       !Number.isFinite(l) ||
-      !Number.isFinite(c)
+      !Number.isFinite(c) ||
+      !Number.isFinite(v)
     ) {
       continue;
     }
     const t = timestamps[i];
-    raw.push({ t, date: sessionDate(t), o, h, l, c });
+    raw.push({ t, date: sessionDate(t), o, h, l, c, v });
   }
 
   raw.sort((a, b) => a.t - b.t);
@@ -163,6 +168,7 @@ export function parseChart(result: YahooResult, nowSec = Date.now() / 1000): Par
       h: round4(bar.h),
       l: round4(bar.l),
       c: round4(bar.c),
+      v: Math.round(bar.v),
     });
   }
 

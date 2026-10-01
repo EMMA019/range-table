@@ -38,6 +38,13 @@ export const BOX_BOTTOM_MAX = 20;
 /** Box position at or over this percent is "near the top". */
 export const BOX_TOP_MIN = 80;
 
+/** Latest volume under this multiple of the prior 20-day average is thin. */
+export const VOLUME_THIN_RATIO = 0.7;
+/** Latest volume at or over this multiple of the prior 20-day average is a surge. */
+export const VOLUME_SURGE_RATIO = 1.5;
+/** A breakout below this multiple of the prior 20-day average lacks volume confirmation. */
+export const VOLUME_CONFIRM_RATIO = 1;
+
 export const EARNINGS_WARN_DAYS = 5;
 
 /** A one-day close move at least this large flags a possible split or spinoff. */

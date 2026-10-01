@@ -9,13 +9,15 @@ import {
   formatAge,
   formatDev,
   formatAtr,
+  formatCompactShares,
   formatPx,
+  formatVolumeRatio,
   shortDate,
   slopeLabel,
 } from "@/lib/format";
 import type { MarketPayload, TickerRow } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { applyView, atTop, continuedBreakout, sectorsOf, withDividers, zoneOf, type ViewFilters } from "@/lib/view";
+import { applyView, atTop, continuedBreakout, continuedBreakoutText, sectorsOf, volumeSurge, volumeThin, withDividers, zoneOf, type ViewFilters } from "@/lib/view";
 import { BoxBar } from "./box-bar";
 import { DetailPanel } from "./detail-panel";
 import { Glossary } from "./glossary";
@@ -29,6 +31,7 @@ const CHIP_PARAM: Record<ChipKey, string> = {
   top: "top",
   breakout: "breakout",
   continued: "cont",
+  surge: "surge",
   earnings: "earn",
   hideWatch: "hideWatch",
 };
@@ -95,6 +98,7 @@ export function Dashboard() {
       top: sp.get("top") === "1",
       breakout: sp.get("breakout") === "1",
       continued: sp.get("cont") === "1",
+      surge: sp.get("surge") === "1",
       earnings: sp.get("earn") === "1",
       hideWatch: sp.get("hideWatch") === "1",
       sort: SORTS.has(sort ?? "") ? (sort as SortId) : "boxAsc",
@@ -159,6 +163,7 @@ export function Dashboard() {
     filters.top ||
     filters.breakout ||
     filters.continued ||
+    filters.surge ||
     filters.earnings ||
     filters.hideWatch ||
     query.trim().length > 0;
@@ -177,6 +182,7 @@ export function Dashboard() {
         top: null,
         breakout: null,
         cont: null,
+        surge: null,
         earn: null,
         hideWatch: null,
         sort: null,
@@ -473,8 +479,10 @@ function TickerCard({
     quote?.gapWarning ? "価格が飛んでいる" : null,
     row.tags.includes("高ボラ") ? "高ボラ" : null,
     row.pe.recovering ? "利益回復中" : null,
-    quote && continuedBreakout(quote) ? "上抜け継続？（売り急ぎ注意）" : null,
+    quote && continuedBreakout(quote) ? continuedBreakoutText(quote) : null,
     quote && atTop(quote) && !quote.brokeHigh ? "箱の天井付近" : null,
+    quote && volumeThin(quote) ? "薄商い" : null,
+    quote && volumeSurge(quote) ? "出来高急増" : null,
   ].filter((badge): badge is string => Boolean(badge));
 
   return (
@@ -505,7 +513,11 @@ function TickerCard({
                   key={badge}
                   className={cn(
                     "rounded-full px-2 py-0.5 text-[10px]",
-                    badge === "監視のみ" || badge === "高ボラ" || badge === "利益回復中" || badge === "箱の天井付近"
+                    badge === "監視のみ" ||
+                    badge === "高ボラ" ||
+                    badge === "利益回復中" ||
+                    badge === "箱の天井付近" ||
+                    badge === "薄商い"
                       ? "bg-chip text-muted"
                       : "bg-rust-soft text-rust",
                   )}
@@ -583,6 +595,18 @@ function TickerCard({
           {formatPe(quote?.close, row.pe.forwardEps)}
         </b>
         {row.pe.error && <span className="text-rust"> · {row.pe.error}</span>}
+        {quote && (
+          <>
+            {" · "}
+            出来高{" "}
+            <b className="font-mono font-medium text-ink tabular-nums">
+              {quote.volumeRatio == null ? "—" : formatVolumeRatio(quote.volumeRatio)}
+            </b>{" "}
+            <b className="font-mono font-medium text-ink tabular-nums">
+              {quote.volume == null ? "—" : formatCompactShares(quote.volume)}
+            </b>
+          </>
+        )}
       </p>
     </button>
   );

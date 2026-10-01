@@ -30,6 +30,8 @@ export type Bar = {
   h: number;
   l: number;
   c: number;
+  /** Share volume. Split-adjusted the same way as price when a raw split is applied. */
+  v: number;
 };
 
 export type Quote = {
@@ -46,6 +48,14 @@ export type Quote = {
   gapWarning: boolean;
   /** Percent change of the 20-day average versus 5 trading days earlier. Null until 25 closes exist. */
   maSlopePct: number | null;
+  /** Latest completed bar's share volume. Null when that bar has no volume. */
+  volume: number | null;
+  /** Average share volume of the 20 completed bars before the latest one. */
+  avgVolume20: number | null;
+  /** Latest volume ÷ prior 20-day average. Null when the average is not positive. */
+  volumeRatio: number | null;
+  /** Average of close × volume over those same prior 20 bars. */
+  avgDollarVolume20: number | null;
 };
 
 export type EarningsView = {

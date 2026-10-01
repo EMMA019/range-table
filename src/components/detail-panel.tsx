@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { BASIS, TOP_BREAKOUT_NOTE } from "@/lib/copy";
+import { BASIS, TOP_BREAKOUT_NOTE, VOLUME_NOTE } from "@/lib/copy";
 import { formatPe, PE_SOURCE_NOTE } from "@/lib/pe";
 import {
   earningsBadge,
@@ -9,14 +9,17 @@ import {
   formatBox,
   formatDev,
   formatEarnings,
+  formatDollarVolume,
   formatPx,
+  formatShares,
   formatSlope,
+  formatVolumeRatioExact,
   shortDate,
   slopeLabel,
 } from "@/lib/format";
 import type { ChartPayload, TickerRow } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { atTop, continuedBreakout, zoneOf } from "@/lib/view";
+import { atTop, continuedBreakout, continuedBreakoutText, volumeSurge, volumeThin, zoneOf } from "@/lib/view";
 import { BoxBar } from "./box-bar";
 import { PriceChart } from "./price-chart";
 import { Button } from "./ui/button";
@@ -50,8 +53,10 @@ export function DetailPanel({
               <h2 className="font-mono text-3xl tracking-wide">{row.ticker}</h2>
               {row.watchOnly && <Pill>監視のみ</Pill>}
               {row.pe.recovering && <Pill>利益回復中</Pill>}
-              {row.quote && continuedBreakout(row.quote) && <Pill tone="rust">上抜け継続？（売り急ぎ注意）</Pill>}
+              {row.quote && continuedBreakout(row.quote) && <Pill tone="rust">{continuedBreakoutText(row.quote)}</Pill>}
               {row.quote && atTop(row.quote) && !row.quote.brokeHigh && <Pill>箱の天井付近</Pill>}
+              {row.quote && volumeThin(row.quote) && <Pill>薄商い</Pill>}
+              {row.quote && volumeSurge(row.quote) && <Pill tone="rust">出来高急増</Pill>}
               {row.tags.map((tag) => (
                 <Pill key={tag}>{tag}</Pill>
               ))}
@@ -138,6 +143,7 @@ export function DetailPanel({
               {row.quote && atTop(row.quote) && (
                 <p className="mt-3 text-xs leading-relaxed text-muted">{TOP_BREAKOUT_NOTE}</p>
               )}
+              <VolumeBlock quote={row.quote} />
               {row.quote.gapWarning && (
                 <p className="mt-3 text-xs leading-relaxed text-rust">
                   直近20本のあいだに、終値が前日終値から35%以上動いた日がある。分割やスピンオフの直後は箱をそのまま信じない。
@@ -150,6 +156,37 @@ export function DetailPanel({
           {!row.quote && <PeBlock row={row} />}
         </article>
       )}
+    </div>
+  );
+}
+
+function VolumeBlock({ quote }: { quote: TickerRow["quote"] }) {
+  if (!quote) return null;
+  return (
+    <div className="mt-4">
+      <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
+        <Stat
+          label="出来高"
+          value={quote.volume == null ? "—" : formatShares(quote.volume)}
+          basis="直近の確定日足の出来高"
+        />
+        <Stat
+          label="出来高倍率"
+          value={quote.volumeRatio == null ? "—" : formatVolumeRatioExact(quote.volumeRatio)}
+          basis={
+            quote.avgVolume20 == null
+              ? "直前20日の平均出来高がない"
+              : `直前20日平均 ${formatShares(quote.avgVolume20)}`
+          }
+          tone={volumeSurge(quote) ? "rust" : undefined}
+        />
+        <Stat
+          label="20日平均売買代金"
+          value={quote.avgDollarVolume20 == null ? "—" : formatDollarVolume(quote.avgDollarVolume20)}
+          basis="直前20日の、終値×出来高の平均"
+        />
+      </div>
+      <p className="mt-2 text-[11px] leading-relaxed text-muted">{VOLUME_NOTE}</p>
     </div>
   );
 }

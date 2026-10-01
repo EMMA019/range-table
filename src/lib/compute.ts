@@ -89,7 +89,32 @@ export function computeQuote(bars: Bar[]): QuoteResult {
       brokeHigh: last.c > priorHigh20,
       gapWarning: hasLargeGap(bars),
       maSlopePct: maSlopePct(bars),
+      ...volumeStats(bars),
     },
+  };
+}
+
+/** Latest volume against the prior 20 completed bars, which are excluded from the average. */
+export function volumeStats(bars: Bar[]): {
+  volume: number | null;
+  avgVolume20: number | null;
+  volumeRatio: number | null;
+  avgDollarVolume20: number | null;
+} {
+  const empty = { volume: null, avgVolume20: null, volumeRatio: null, avgDollarVolume20: null };
+  if (bars.length < BOX_WINDOW + 1) return empty;
+  const last = bars[bars.length - 1];
+  const prior = bars.slice(-(BOX_WINDOW + 1), -1);
+  if (!Number.isFinite(last.v) || prior.some((bar) => !Number.isFinite(bar.v) || !Number.isFinite(bar.c))) {
+    return empty;
+  }
+  const avgVolume20 = prior.reduce((sum, bar) => sum + bar.v, 0) / BOX_WINDOW;
+  const avgDollarVolume20 = prior.reduce((sum, bar) => sum + bar.c * bar.v, 0) / BOX_WINDOW;
+  return {
+    volume: Math.round(last.v),
+    avgVolume20: round4(avgVolume20),
+    volumeRatio: avgVolume20 > 0 ? round4(last.v / avgVolume20) : null,
+    avgDollarVolume20: round4(avgDollarVolume20),
   };
 }
 

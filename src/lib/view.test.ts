@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { TickerRow } from "./types";
-import { applyView, withDividers } from "./view";
+import { applyView, continuedBreakoutText, volumeSurge, volumeThin, withDividers } from "./view";
 
 function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow {
   return {
@@ -25,6 +25,10 @@ function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow
       brokeHigh: false,
       gapWarning: false,
       maSlopePct: null,
+      volume: 1_000_000,
+      avgVolume20: 1_000_000,
+      volumeRatio: 1,
+      avgDollarVolume20: 10_000_000,
     },
     pe: {
       trailingEps: null,
@@ -47,6 +51,7 @@ const filters = {
   top: false,
   breakout: false,
   continued: false,
+  surge: false,
   earnings: false,
   hideWatch: false,
   sort: "boxAsc" as const,
@@ -158,6 +163,34 @@ describe("applyView", () => {
     assert.deepEqual(
       applyView(names, { ...filters, sort: "slopeDesc" }).map((item) => item.ticker),
       ["TOP", "MID", "CEIL"],
+    );
+  });
+
+  it("sorts and filters by volume ratio", () => {
+    const quoteOf = (ticker: string, volumeRatio: number | null) =>
+      row({
+        ticker,
+        quote: { ...row({ ticker }).quote!, volumeRatio },
+      });
+    const names = [quoteOf("QUIET", 0.5), quoteOf("HOT", 1.8), quoteOf("FLAT", 1), quoteOf("NONE", null)];
+    assert.equal(volumeThin(names[0].quote!), true);
+    assert.equal(volumeThin(quoteOf("EDGE", 0.69).quote!), false);
+    assert.equal(volumeSurge(names[1].quote!), true);
+    assert.equal(volumeSurge(quoteOf("EDGE2", 1.46).quote!), true);
+    assert.equal(volumeSurge(names[2].quote!), false);
+    assert.equal(continuedBreakoutText(names[0].quote!), "上抜け継続？（売り急ぎ注意）（出来高伴わず）");
+    names[0].quote!.brokeHigh = false;
+    assert.equal(
+      continuedBreakoutText({ ...names[1].quote!, brokeHigh: true, boxPct: 90, volumeRatio: 1.8 }),
+      "上抜け継続？（売り急ぎ注意）",
+    );
+    assert.deepEqual(
+      applyView(names, { ...filters, surge: true }).map((item) => item.ticker),
+      ["HOT"],
+    );
+    assert.deepEqual(
+      applyView(names, { ...filters, sort: "volDesc" }).map((item) => item.ticker),
+      ["HOT", "FLAT", "QUIET", "NONE"],
     );
   });
 

@@ -1,4 +1,4 @@
-import { BOX_BOTTOM_MAX, BOX_TOP_MIN } from "./constants";
+import { BOX_BOTTOM_MAX, BOX_TOP_MIN, VOLUME_CONFIRM_RATIO, VOLUME_SURGE_RATIO, VOLUME_THIN_RATIO } from "./constants";
 import type { SortId } from "./copy";
 import { boxShown } from "./format";
 import type { Quote, TickerRow } from "./types";
@@ -9,6 +9,7 @@ export type ViewFilters = {
   top: boolean;
   breakout: boolean;
   continued: boolean;
+  surge: boolean;
   earnings: boolean;
   hideWatch: boolean;
   sort: SortId;
@@ -21,6 +22,28 @@ export function atTop(quote: Quote): boolean {
 
 export function continuedBreakout(quote: Quote): boolean {
   return atTop(quote) && quote.brokeHigh;
+}
+
+/** Same one-decimal rounding as the row, so a badge matches the 倍 it sits next to. */
+function volumeRatioShown(ratio: number): number {
+  return Math.round(ratio * 10) / 10;
+}
+
+export function volumeThin(quote: Quote): boolean {
+  return quote.volumeRatio != null && volumeRatioShown(quote.volumeRatio) < VOLUME_THIN_RATIO;
+}
+
+export function volumeSurge(quote: Quote): boolean {
+  return quote.volumeRatio != null && volumeRatioShown(quote.volumeRatio) >= VOLUME_SURGE_RATIO;
+}
+
+const CONTINUED_LABEL = "上抜け継続？（売り急ぎ注意）";
+
+export function continuedBreakoutText(quote: Quote): string {
+  if (quote.volumeRatio != null && volumeRatioShown(quote.volumeRatio) < VOLUME_CONFIRM_RATIO) {
+    return `${CONTINUED_LABEL}（出来高伴わず）`;
+  }
+  return CONTINUED_LABEL;
 }
 
 export function applyView(rows: TickerRow[], filters: ViewFilters): TickerRow[] {
@@ -36,6 +59,7 @@ export function applyView(rows: TickerRow[], filters: ViewFilters): TickerRow[] 
     }
     if (filters.breakout && !row.quote?.brokeHigh) return false;
     if (filters.continued && !(row.quote && continuedBreakout(row.quote))) return false;
+    if (filters.surge && !(row.quote && volumeSurge(row.quote))) return false;
     if (filters.earnings && !row.earnings?.warn) return false;
     if (query) {
       const hay = `${row.ticker} ${row.description} ${row.notes} ${row.sector} ${row.tags.join(" ")}`.toLowerCase();
@@ -65,6 +89,16 @@ function compareRows(a: TickerRow, b: TickerRow, sort: SortId): number {
   if (sort === "earnAsc") {
     const d = earnRank(a) - earnRank(b);
     if (d !== 0) return d;
+    return a.ticker.localeCompare(b.ticker);
+  }
+
+  if (sort === "volDesc") {
+    const av = a.quote?.volumeRatio;
+    const bv = b.quote?.volumeRatio;
+    if (av == null && bv == null) return a.ticker.localeCompare(b.ticker);
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (av !== bv) return av > bv ? -1 : 1;
     return a.ticker.localeCompare(b.ticker);
   }
 
