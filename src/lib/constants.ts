@@ -16,7 +16,7 @@ export const EPS_TIMEOUT_TTL_MS = 60 * 1000;
 export const EPS_RATE_LIMIT_TTL_MS = 3 * 60 * 1000;
 
 /** Background EPS warm-up. Small batches keep a single /api/market call from waiting on Yahoo. */
-export const EPS_WARM_CONCURRENCY = 3;
+export const EPS_WARM_CONCURRENCY = 2;
 export const EPS_WARM_BATCH = 6;
 export const EPS_WARM_PAUSE_MS = 700;
 export const EPS_WARM_GAP_MS = 350;
@@ -50,4 +50,5 @@ export const EARNINGS_WARN_DAYS = 5;
 /** A one-day close move at least this large flags a possible split or spinoff. */
 export const GAP_THRESHOLD = 0.35;
 
-export const FETCH_CONCURRENCY = 6;
+/** Parallel Yahoo chart reads. Kept small so a cold start does not spike the 512MB instance. */
+export const FETCH_CONCURRENCY = 5;

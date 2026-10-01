@@ -1,4 +1,5 @@
 import { sessionDate } from "./calendar";
+import { CHART_SESSIONS } from "./constants";
 import type { Bar } from "./types";
 
 const HOSTS = [
@@ -174,18 +175,21 @@ export function parseChart(result: YahooResult, nowSec = Date.now() / 1000): Par
 
   const bars = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
   if (bars.length === 0) throw new Error("確定日足が0本");
-  return { bars, droppedPartial: dropped };
+  const kept = bars.length > CHART_SESSIONS ? bars.slice(-CHART_SESSIONS) : bars;
+  return { bars: kept, droppedPartial: dropped };
 }
 
 async function fetchHost(host: string, symbol: string): Promise<YahooResult> {
-  const url = `${host}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=6mo&events=split&includePrePost=false`;
+  const url = `${host}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=3mo&events=split&includePrePost=false`;
   const res = await fetch(url, {
     headers: { "User-Agent": UA, Accept: "application/json" },
     signal: AbortSignal.timeout(15000),
     cache: "no-store",
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const json = (await res.json()) as {
+  const text = await res.text();
+  if (text.length > 256_000) throw new Error("日足が大きすぎる");
+  const json = JSON.parse(text) as {
     chart?: { result?: Array<YahooResult | null>; error?: { description?: string; code?: string } };
   };
   if (json.chart?.error) {

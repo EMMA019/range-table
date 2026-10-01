@@ -87,4 +87,30 @@ describe("yahoo adjustments", () => {
     assert.equal(parsed.bars[24].v, 1024);
     assert.equal(parsed.droppedPartial, false);
   });
+
+  it("keeps only the sessions the chart and the 20-day stats need", () => {
+    const day = 86_400;
+    const start = 1_790_000_000;
+    const timestamp: number[] = [];
+    const open: number[] = [];
+    const high: number[] = [];
+    const low: number[] = [];
+    const close: number[] = [];
+    const volume: number[] = [];
+    for (let i = 0; i < 80; i++) {
+      timestamp.push(start + i * day);
+      open.push(10);
+      high.push(12);
+      low.push(9);
+      close.push(i);
+      volume.push(100);
+    }
+    const parsed = parseChart(
+      { timestamp, indicators: { quote: [{ open, high, low, close, volume }] }, meta: {} },
+      start + 120 * day,
+    );
+    assert.equal(parsed.bars.length, 66);
+    assert.equal(parsed.bars[0].c, 14);
+    assert.equal(parsed.bars[65].c, 79);
+  });
 });

@@ -4,6 +4,7 @@ import { todayEt } from "./calendar";
 import {
   BENCHMARKS,
   CACHE_TTL_MS,
+  CHART_SESSIONS,
   EPS_WARM_BATCH,
   EPS_WARM_PAUSE_MS,
   FETCH_CONCURRENCY,
@@ -69,9 +70,10 @@ export function startEpsWarm(): void {
 export async function getMarketPayload(): Promise<MarketPayload> {
   const list = loadWatchlist();
   const symbols = list.groups.flatMap((group) => group.tickers.map((ticker) => ticker.ticker));
-  kickEpsWarm(symbols);
   const cache = await ensureSeries(list);
-  return buildPayload(cache, list, readCachedEps());
+  const payload = memoPayload(cache, list);
+  kickEpsWarm(symbols);
+  return payload;
 }
 
 export async function getChart(ticker: string): Promise<ChartPayload | { error: string }> {
@@ -165,6 +167,38 @@ async function fetchOne(symbol: string): Promise<{ symbol: string; entry: Series
   }
 }
 
+async function waitForPrices(): Promise<void> {
+  while (inflight) {
+    try {
+      await inflight;
+    } catch {
+      return;
+    }
+  }
+}
+
+let payloadMemo: { key: string; payload: MarketPayload } | null = null;
+
+function memoPayload(cache: CacheBody, list: Watchlist): MarketPayload {
+  const key = `${cache.fetchedAt}:${epsStamp()}`;
+  if (payloadMemo?.key === key) return payloadMemo.payload;
+  const payload = buildPayload(cache, list, readCachedEps());
+  payloadMemo = { key, payload };
+  return payload;
+}
+
+function epsStamp(): string {
+  const quotes = (epsMemory ?? readEps())?.quotes;
+  if (!quotes) return "0";
+  let count = 0;
+  let latest = 0;
+  for (const entry of Object.values(quotes)) {
+    count += 1;
+    if (entry.fetchedAt > latest) latest = entry.fetchedAt;
+  }
+  return `${count}:${latest}`;
+}
+
 function kickEpsWarm(symbols: string[]): void {
   if (epsWarming) return;
   epsWarming = true;
@@ -176,6 +210,7 @@ function kickEpsWarm(symbols: string[]): void {
 }
 
 async function warmEps(symbols: string[]): Promise<void> {
+  await waitForPrices();
   const unique = [...new Set(symbols.map((symbol) => symbol.toUpperCase()))];
   let extraPasses = 0;
   for (;;) {
@@ -193,6 +228,7 @@ async function warmEps(symbols: string[]): Promise<void> {
       await sleep(wait + 100);
       continue;
     }
+    await waitForPrices();
     const pending = unique.filter((symbol) => !epsIsFresh(quotes[symbol], now)).length;
     console.log(`[range] eps warm batch=${batch.join(",")} pending=${pending}`);
     let fetched: Record<string, EpsSnapshot> = {};
@@ -356,6 +392,11 @@ function readDisk(): CacheBody | null {
   try {
     const parsed = JSON.parse(fs.readFileSync(CACHE_PATH, "utf8")) as CacheBody;
     if (parsed?.v !== 3 || typeof parsed.fetchedAt !== "number" || !parsed.series) return null;
+    for (const entry of Object.values(parsed.series)) {
+      if (entry?.bars && entry.bars.length > CHART_SESSIONS) {
+        entry.bars = entry.bars.slice(-CHART_SESSIONS);
+      }
+    }
     return parsed;
   } catch {
     return null;

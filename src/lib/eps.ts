@@ -16,6 +16,9 @@ const SESSION_FAIL_MS = 10 * 60 * 1000;
 const SESSION_TIMEOUT_MS = 8_000;
 const SUMMARY_TIMEOUT_MS = 8_000;
 
+const TRAILING_EPS = Buffer.from("trailingEps");
+const FORWARD_EPS = Buffer.from("forwardEps");
+
 const agent = new https.Agent({
   keepAlive: true,
   maxSockets: EPS_WARM_CONCURRENCY + 1,
@@ -135,7 +138,12 @@ async function openSession(signal: AbortSignal): Promise<Session> {
   const jar = new Map<string, string>();
   for (const url of COOKIE_URLS) {
     try {
-      const res = await request(url, { headers: { Accept: "text/html,application/json,*/*" }, signal, redirect: "manual" });
+      const res = await request(url, {
+        headers: { Accept: "text/html,application/json,*/*" },
+        signal,
+        redirect: "manual",
+        discardBody: true,
+      });
       absorbCookies(jar, res.setCookie);
       console.log(`[range] eps cookie ${hostOf(url)} HTTP ${res.status} names=${cookieNames(jar)}`);
       const location = res.location;
@@ -146,6 +154,7 @@ async function openSession(signal: AbortSignal): Promise<Session> {
             headers: { Accept: "*/*", Cookie: cookieHeader(jar) },
             signal,
             redirect: "manual",
+            discardBody: true,
           });
           absorbCookies(jar, followed.setCookie);
           console.log(`[range] eps cookie ${next.host} HTTP ${followed.status} names=${cookieNames(jar)}`);
@@ -332,6 +341,7 @@ async function request(
     signal: AbortSignal;
     redirect?: "manual" | "follow";
     until?: (text: string) => boolean;
+    discardBody?: boolean;
     hops?: number;
   },
 ): Promise<HttpResult> {
@@ -353,6 +363,11 @@ async function request(
         const status = res.statusCode ?? 0;
         const location = typeof res.headers.location === "string" ? res.headers.location : null;
         const setCookie = Array.isArray(res.headers["set-cookie"]) ? res.headers["set-cookie"] : [];
+        if (init.discardBody) {
+          res.resume();
+          resolve({ status, ok: status >= 200 && status < 300, body: "", location, setCookie });
+          return;
+        }
         if (init.redirect !== "manual" && location && status >= 300 && status < 400 && hops < 4) {
           res.resume();
           const next = new URL(location, url).toString();
@@ -361,8 +376,11 @@ async function request(
         }
         const chunks: Buffer[] = [];
         let received = 0;
-        let lastScan = 0;
+        let carry = Buffer.alloc(0);
+        let trail = false;
+        let fwd = false;
         let settled = false;
+        const cap = init.until ? 900_000 : 256_000;
         const finish = () => {
           if (settled) return;
           settled = true;
@@ -378,12 +396,18 @@ async function request(
           if (settled) return;
           chunks.push(chunk);
           received += chunk.length;
-          const capped = received > 1_400_000;
-          const ready = Boolean(init.until) && received >= 80_000 && received - lastScan >= 80_000;
-          if (!ready && !capped) return;
-          lastScan = received;
-          const text = Buffer.concat(chunks).toString("utf8");
-          if (capped || (init.until && init.until(text))) {
+          if (!init.until) {
+            if (received > cap) {
+              res.destroy();
+              finish();
+            }
+            return;
+          }
+          const window = carry.length > 0 ? Buffer.concat([carry, chunk]) : chunk;
+          if (!trail && window.includes(TRAILING_EPS)) trail = true;
+          if (!fwd && window.includes(FORWARD_EPS)) fwd = true;
+          carry = Buffer.from(chunk.subarray(Math.max(0, chunk.length - 16)));
+          if ((trail && fwd) || received > cap) {
             res.destroy();
             finish();
           }
