@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { EPS_FAIL_TTL_MS } from "./constants";
-import { computePe, epsIsFresh, formatPe, hasEpsValue, isRecovering, parseQuotePage, parseQuoteSummary, parseV7Quotes, peView } from "./pe";
+import { EPS_FAIL_TTL_MS, EPS_RATE_LIMIT_TTL_MS, EPS_TIMEOUT_TTL_MS } from "./constants";
+import { computePe, epsIsFresh, epsTtlMs, formatPe, hasEpsValue, isRecovering, parseQuotePage, parseQuoteSummary, parseV7Quotes, peView, pickEpsBatch } from "./pe";
 
 const aapl = {
   quoteSummary: {
@@ -93,6 +93,7 @@ describe("P/E from price and cached EPS", () => {
     assert.equal(loss.recovering, false);
     assert.equal(formatPe(120.21, loss.trailingEps), "赤字");
     assert.equal(peView(null, null).recovering, false);
+    assert.equal(peView(null, null).error, "EPSを取得中");
   });
 
   it("reads v7 quote EPS and keeps a failed read retryable", () => {
@@ -117,6 +118,34 @@ describe("P/E from price and cached EPS", () => {
     assert.equal(epsIsFresh(filled, now), true);
     assert.equal(epsIsFresh({ ...filled, fetchedAt: now - 25 * 60 * 60 * 1000 }, now), false);
     assert.equal(EPS_FAIL_TTL_MS, 10 * 60 * 1000);
+    assert.equal(EPS_TIMEOUT_TTL_MS, 60 * 1000);
+    assert.equal(EPS_RATE_LIMIT_TTL_MS, 3 * 60 * 1000);
+
+    const recentTimeout = { trailingEps: null, forwardEps: null, fetchedAt: now - 30_000, error: "timeout" };
+    const oldTimeout = { trailingEps: null, forwardEps: null, fetchedAt: now - 90_000, error: "timeout" };
+    const recentLimit = { trailingEps: null, forwardEps: null, fetchedAt: now - 60_000, error: "quote page HTTP 429" };
+    assert.equal(epsTtlMs(recentTimeout), EPS_TIMEOUT_TTL_MS);
+    assert.equal(epsIsFresh(recentTimeout, now), true);
+    assert.equal(epsIsFresh(oldTimeout, now), false);
+    assert.equal(epsIsFresh(recentLimit, now), true);
+    assert.equal(epsIsFresh({ ...recentLimit, fetchedAt: now - 4 * 60 * 1000 }, now), false);
+
+    const quotes = {
+      FRESH: { trailingEps: 1, forwardEps: 2, fetchedAt: now - 1000, error: null },
+      FAIL: { trailingEps: null, forwardEps: null, fetchedAt: now - 5 * 60 * 1000, error: "HTTP 401" },
+      TOUT: recentTimeout,
+      OLDTO: oldTimeout,
+      OLDFAIL: { trailingEps: null, forwardEps: null, fetchedAt: now - 11 * 60 * 1000, error: "EPSが空" },
+    };
+    assert.deepEqual(pickEpsBatch(["FRESH", "FAIL", "TOUT", "NEW", "OLDTO", "OLDFAIL"], quotes, now, 10), [
+      "NEW",
+      "OLDFAIL",
+      "OLDTO",
+    ]);
+    assert.deepEqual(pickEpsBatch(["FRESH", "FAIL", "TOUT", "NEW", "OLDTO", "OLDFAIL"], quotes, now, 2), [
+      "NEW",
+      "OLDFAIL",
+    ]);
 
     const failed = peView(241.31, { trailingEps: null, forwardEps: null, error: "quoteSummary HTTP 401 Invalid Crumb" });
     assert.equal(failed.trailingPe, null);

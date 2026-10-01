@@ -1,9 +1,15 @@
 import fs from "fs";
 import path from "path";
 import { todayEt } from "./calendar";
-import { BENCHMARKS, CACHE_TTL_MS, FETCH_CONCURRENCY } from "./constants";
-import { fetchEpsMap } from "./eps";
-import { epsIsFresh, peView } from "./pe";
+import {
+  BENCHMARKS,
+  CACHE_TTL_MS,
+  EPS_WARM_BATCH,
+  EPS_WARM_PAUSE_MS,
+  FETCH_CONCURRENCY,
+} from "./constants";
+import { fetchEpsBatch } from "./eps";
+import { epsIsFresh, epsTtlMs, hasEpsValue, peView, pickEpsBatch } from "./pe";
 import { chartPoints, computeQuote } from "./compute";
 import { classifyEarnings } from "./earnings";
 import { formatJst, friendlyFetchError } from "./format";
@@ -46,7 +52,7 @@ type EpsCacheBody = {
 };
 
 let epsMemory: EpsCacheBody | null = null;
-let epsInflight: Promise<Record<string, EpsSnapshot>> | null = null;
+let epsWarming = false;
 
 const SOURCE = "Yahoo Finance の日足をサーバで計算（分割がある場合は分割調整、配当は未調整）";
 
@@ -54,11 +60,18 @@ export function warmMarket(): Promise<void> {
   return ensureSeries(loadWatchlist()).then(() => undefined);
 }
 
+/** Starts the EPS queue without waiting for it. Safe to call on every request and at process boot. */
+export function startEpsWarm(): void {
+  const symbols = loadWatchlist().groups.flatMap((group) => group.tickers.map((ticker) => ticker.ticker));
+  kickEpsWarm(symbols);
+}
+
 export async function getMarketPayload(): Promise<MarketPayload> {
   const list = loadWatchlist();
   const symbols = list.groups.flatMap((group) => group.tickers.map((ticker) => ticker.ticker));
-  const [cache, eps] = await Promise.all([ensureSeries(list), loadEps(symbols)]);
-  return buildPayload(cache, list, eps);
+  kickEpsWarm(symbols);
+  const cache = await ensureSeries(list);
+  return buildPayload(cache, list, readCachedEps());
 }
 
 export async function getChart(ticker: string): Promise<ChartPayload | { error: string }> {
@@ -152,41 +165,92 @@ async function fetchOne(symbol: string): Promise<{ symbol: string; entry: Series
   }
 }
 
-async function loadEps(symbols: string[]): Promise<Record<string, EpsSnapshot>> {
-  if (epsInflight) return epsInflight;
-  epsInflight = ensureEps(symbols)
-    .catch((error) => {
-      console.error("[range] eps", error);
-      return epsMemory?.quotes ?? readEps()?.quotes ?? {};
-    })
+function kickEpsWarm(symbols: string[]): void {
+  if (epsWarming) return;
+  epsWarming = true;
+  void warmEps(symbols)
+    .catch((error) => console.error("[range] eps warm", error))
     .finally(() => {
-      epsInflight = null;
+      epsWarming = false;
     });
-  return epsInflight;
 }
 
-async function ensureEps(symbols: string[]): Promise<Record<string, EpsSnapshot>> {
-  const now = Date.now();
-  const cache = epsMemory ?? readEps();
-  const quotes: Record<string, StoredEps> = { ...(cache?.quotes ?? {}) };
-  const missing = symbols.filter((symbol) => !epsIsFresh(quotes[symbol], now));
-  if (missing.length === 0 && cache) {
-    epsMemory = cache;
-    return projectEps(quotes);
+async function warmEps(symbols: string[]): Promise<void> {
+  const unique = [...new Set(symbols.map((symbol) => symbol.toUpperCase()))];
+  let extraPasses = 0;
+  for (;;) {
+    const now = Date.now();
+    const cache = epsMemory ?? readEps();
+    const quotes: Record<string, StoredEps> = { ...(cache?.quotes ?? {}) };
+    const batch = pickEpsBatch(unique, quotes, now, EPS_WARM_BATCH);
+    if (batch.length === 0) {
+      const ok = unique.filter((symbol) => quotes[symbol] && hasEpsValue(quotes[symbol])).length;
+      console.log(`[range] eps warm caught up ok=${ok} total=${unique.length}`);
+      if (extraPasses >= 2) return;
+      const wait = msUntilEpsRetry(unique, quotes, now);
+      if (wait == null || wait > 90_000) return;
+      extraPasses += 1;
+      await sleep(wait + 100);
+      continue;
+    }
+    const pending = unique.filter((symbol) => !epsIsFresh(quotes[symbol], now)).length;
+    console.log(`[range] eps warm batch=${batch.join(",")} pending=${pending}`);
+    let fetched: Record<string, EpsSnapshot> = {};
+    try {
+      fetched = await fetchEpsBatch(batch, (symbol, snap) => {
+        rememberEps(quotes, symbol, snap);
+      });
+    } catch (error) {
+      console.error("[range] eps batch", error);
+    }
+    let limited = 0;
+    for (const symbol of batch) {
+      const snap = fetched[symbol] ?? quotes[symbol] ?? { trailingEps: null, forwardEps: null, error: "timeout" };
+      if (!fetched[symbol]) rememberEps(quotes, symbol, { trailingEps: null, forwardEps: null, error: "timeout" });
+      if (/429/.test(snap.error ?? "")) limited += 1;
+    }
+    const ok = unique.filter((symbol) => quotes[symbol] && hasEpsValue(quotes[symbol])).length;
+    console.log(`[range] eps warm saved ok=${ok} total=${unique.length}`);
+    if (limited >= Math.ceil(batch.length / 2)) {
+      console.error(`[range] eps warm backing off 429s=${limited}`);
+      await sleep(30_000);
+    } else {
+      await sleep(EPS_WARM_PAUSE_MS);
+    }
   }
+}
 
-  const fetched = await fetchEpsMap(missing);
-  for (const [symbol, snap] of Object.entries(fetched)) {
-    quotes[symbol] = { ...snap, fetchedAt: now };
-  }
-  const next: EpsCacheBody = { v: 2, quotes };
-  epsMemory = next;
+function rememberEps(quotes: Record<string, StoredEps>, symbol: string, snap: EpsSnapshot) {
+  quotes[symbol] = { ...snap, fetchedAt: Date.now() };
+  epsMemory = { v: 2, quotes };
   try {
-    writeJson(EPS_CACHE_PATH, next);
+    writeJson(EPS_CACHE_PATH, epsMemory);
   } catch (error) {
     console.error("[range] eps cache write failed", error);
   }
-  return projectEps(quotes);
+}
+
+function msUntilEpsRetry(symbols: string[], quotes: Record<string, StoredEps>, now: number): number | null {
+  let wait: number | null = null;
+  for (const symbol of symbols) {
+    const entry = quotes[symbol];
+    if (!entry || hasEpsValue(entry)) continue;
+    if (!epsIsFresh(entry, now)) return 0;
+    const remain = entry.fetchedAt + epsTtlMs(entry) - now;
+    if (wait == null || remain < wait) wait = remain;
+  }
+  return wait;
+}
+
+function readCachedEps(): Record<string, EpsSnapshot> {
+  const cache = epsMemory ?? readEps();
+  if (!cache) return {};
+  epsMemory = cache;
+  return projectEps(cache.quotes);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function projectEps(quotes: Record<string, StoredEps>): Record<string, EpsSnapshot> {

@@ -1,4 +1,10 @@
-import { EPS_CACHE_TTL_MS, EPS_FAIL_TTL_MS, PE_RECOVERY_MULTIPLE } from "./constants";
+import {
+  EPS_CACHE_TTL_MS,
+  EPS_FAIL_TTL_MS,
+  EPS_RATE_LIMIT_TTL_MS,
+  EPS_TIMEOUT_TTL_MS,
+  PE_RECOVERY_MULTIPLE,
+} from "./constants";
 import type { EpsSnapshot, PeView } from "./types";
 
 export const PE_SOURCE_NOTE = `出典: Yahoo Finance（実績=過去12か月EPS、予想=アナリスト予想EPS）。実績PERが予想PERの${PE_RECOVERY_MULTIPLE}倍以上のとき「利益回復中」。`;
@@ -68,14 +74,46 @@ export function hasEpsValue(eps: { trailingEps: number | null; forwardEps: numbe
   return eps.trailingEps != null || eps.forwardEps != null;
 }
 
+type CachedEps = {
+  trailingEps: number | null;
+  forwardEps: number | null;
+  fetchedAt: number;
+  error?: string | null;
+};
+
+/** How long this read may be reused. Successes last a day. Timeouts and rate limits are shorter than other failures. */
+export function epsTtlMs(entry: {
+  trailingEps: number | null;
+  forwardEps: number | null;
+  error?: string | null;
+}): number {
+  if (hasEpsValue(entry)) return EPS_CACHE_TTL_MS;
+  const error = entry.error ?? "";
+  if (/timeout|aborted|AbortError/i.test(error)) return EPS_TIMEOUT_TTL_MS;
+  if (/429/.test(error)) return EPS_RATE_LIMIT_TTL_MS;
+  return EPS_FAIL_TTL_MS;
+}
+
 /** Successful EPS stays for a day. Empty or failed reads expire after about 10 minutes. */
-export function epsIsFresh(
-  entry: { trailingEps: number | null; forwardEps: number | null; fetchedAt: number } | undefined,
-  now: number,
-): boolean {
+export function epsIsFresh(entry: CachedEps | undefined, now: number): boolean {
   if (!entry || !Number.isFinite(entry.fetchedAt)) return false;
-  const ttl = hasEpsValue(entry) ? EPS_CACHE_TTL_MS : EPS_FAIL_TTL_MS;
-  return now - entry.fetchedAt < ttl;
+  return now - entry.fetchedAt < epsTtlMs(entry);
+}
+
+/**
+ * Symbols that still need an EPS read, oldest attempt first.
+ * Names that have never been fetched sort ahead of recent timeouts, so one slow batch cannot starve the list.
+ */
+export function pickEpsBatch(
+  symbols: string[],
+  quotes: Record<string, CachedEps>,
+  now: number,
+  limit: number,
+): string[] {
+  return symbols
+    .filter((symbol) => !epsIsFresh(quotes[symbol], now))
+    .sort((a, b) => (quotes[a]?.fetchedAt ?? 0) - (quotes[b]?.fetchedAt ?? 0))
+    .slice(0, Math.max(0, limit));
 }
 
 export function friendlyEpsError(detail: string | null): string {
@@ -84,6 +122,7 @@ export function friendlyEpsError(detail: string | null): string {
   if (/HTTP 401|HTTP 403|crumb|cookie/i.test(detail)) return "データ元がEPSを返さなかった";
   if (/HTTP 404/.test(detail)) return "ティッカーが見つからない";
   if (/timeout|aborted|AbortError/i.test(detail)) return "EPSの取得がタイムアウトした";
+  if (/まだない/.test(detail)) return "EPSを取得中";
   if (/空/.test(detail)) return "EPSが空だった";
   return "EPSを取得できなかった";
 }

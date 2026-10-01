@@ -9,6 +9,19 @@ export const EPS_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 /** Failed or empty EPS reads are not kept for a day. Retry after this. */
 export const EPS_FAIL_TTL_MS = 10 * 60 * 1000;
 
+/** A timed-out read is retried quickly so the rest of the list is not stuck behind it. */
+export const EPS_TIMEOUT_TTL_MS = 60 * 1000;
+
+/** Yahoo rate limits are retried sooner than a hard failure, and slower than a timeout. */
+export const EPS_RATE_LIMIT_TTL_MS = 3 * 60 * 1000;
+
+/** Background EPS warm-up. Small batches keep a single /api/market call from waiting on Yahoo. */
+export const EPS_WARM_CONCURRENCY = 3;
+export const EPS_WARM_BATCH = 6;
+export const EPS_WARM_PAUSE_MS = 700;
+export const EPS_WARM_GAP_MS = 350;
+export const EPS_REQUEST_TIMEOUT_MS = 22_000;
+
 /** Trailing P/E at least this many times forward P/E is flagged as recovering earnings. */
 export const PE_RECOVERY_MULTIPLE = 2;
 

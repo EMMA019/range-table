@@ -1,5 +1,5 @@
 import https from "node:https";
-import { FETCH_CONCURRENCY } from "./constants";
+import { EPS_REQUEST_TIMEOUT_MS, EPS_WARM_CONCURRENCY, EPS_WARM_GAP_MS } from "./constants";
 import { hasEpsValue, parseQuotePage, parseQuoteSummary, parseV7Quotes } from "./pe";
 import type { EpsSnapshot } from "./types";
 
@@ -10,86 +10,125 @@ const PROBE_ORDER = ["NVDA", "MSFT", "AVGO", "VRT", "AAPL"];
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 
-const EPS_BUDGET_MS = 45_000;
 const V7_BATCH = 40;
+const SESSION_OK_MS = 30 * 60 * 1000;
+const SESSION_FAIL_MS = 10 * 60 * 1000;
+const SESSION_TIMEOUT_MS = 8_000;
+const SUMMARY_TIMEOUT_MS = 8_000;
+
+const agent = new https.Agent({
+  keepAlive: true,
+  maxSockets: EPS_WARM_CONCURRENCY + 1,
+  maxFreeSockets: 2,
+});
 
 type Session = { cookie: string; crumb: string };
 
 const NO_EPS: EpsSnapshot = { trailingEps: null, forwardEps: null, error: "EPSが空" };
 
+let sessionMemo: { session: Session | null; until: number } | null = null;
+
 /**
- * Trailing and forward EPS. quoteSummary is tried first. If that route is
- * blocked (401/403/429) or returns no numbers, the v7 quote endpoint is used.
- * Failures are returned with an error string so callers can retry soon instead
- * of caching an empty result for a day. A hung Yahoo call cannot hold the page
- * longer than the budget.
+ * Trailing and forward EPS for one polite batch.
+ * quoteSummary is tried when a crumb is available. If that route is blocked,
+ * each symbol falls back to the v7 quote and then the public quote page.
+ * Only symbols this call actually finished are returned. A per-request timeout
+ * replaces the old shared budget so one slow page cannot fail the rest of the list.
  */
-export async function fetchEpsMap(symbols: string[]): Promise<Record<string, EpsSnapshot>> {
+export async function fetchEpsBatch(
+  symbols: string[],
+  onItem?: (symbol: string, snap: EpsSnapshot) => void,
+): Promise<Record<string, EpsSnapshot>> {
   const unique = [...new Set(symbols.map((symbol) => symbol.toUpperCase()))];
   const out: Record<string, EpsSnapshot> = {};
   if (unique.length === 0) return out;
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), EPS_BUDGET_MS);
-  try {
-    let session: Session | null = null;
-    try {
-      session = await openSession(controller.signal);
-    } catch (error) {
-      console.error("[range] eps session failed", errText(error));
-    }
+  const note = (symbol: string, snap: EpsSnapshot) => {
+    out[symbol] = snap;
+    onItem?.(symbol, snap);
+  };
 
+  const session = await loadSession();
+  let summaryOpen = Boolean(session);
+  if (session) {
     const probe = PROBE_ORDER.find((symbol) => unique.includes(symbol)) ?? unique[0];
-    if (!session) {
-      // Crumb was blocked (often HTTP 429 from a datacenter). The quote page still embeds EPS.
-    } else {
-    const probeResult = await fetchSummary(session, probe, controller.signal);
-    const summaryBlocked = probeResult.blocked;
-    if (!summaryBlocked && probeResult.snap && hasEpsValue(probeResult.snap)) {
-      await mapPool(unique, FETCH_CONCURRENCY, async (symbol) => {
-        if (controller.signal.aborted) return;
-        const result = await fetchSummary(session, symbol, controller.signal);
-        if (result.snap && hasEpsValue(result.snap)) out[symbol] = { ...result.snap, error: null };
-        else if (result.error) out[symbol] = { ...NO_EPS, error: result.error };
-      });
-    } else if (probeResult.error) {
-      for (const symbol of unique) out[symbol] = { ...NO_EPS, error: probeResult.error };
-    }
-
-    const missing = unique.filter((symbol) => !out[symbol] || !hasEpsValue(out[symbol]));
-    if (missing.length > 0 && !controller.signal.aborted) {
-      console.log(`[range] eps v7 fallback symbols=${missing.length} summaryBlocked=${summaryBlocked}`);
-      const batched = await fetchV7(session, missing, controller.signal);
-      for (const symbol of missing) {
-        const snap = batched.quotes.get(symbol);
-        if (snap && hasEpsValue(snap)) out[symbol] = { ...snap, error: null };
-        else out[symbol] = { ...NO_EPS, error: snap?.error || batched.error || out[symbol]?.error || "EPSが空" };
-      }
-    }
-    }
-
-    const stillMissing = unique.filter((symbol) => !out[symbol] || !hasEpsValue(out[symbol]));
-    if (stillMissing.length > 0 && !controller.signal.aborted) {
-      console.log(`[range] eps quote-page fallback symbols=${stillMissing.length}`);
-      await mapPool(stillMissing, FETCH_CONCURRENCY, async (symbol) => {
-        if (controller.signal.aborted) return;
-        const page = await fetchQuotePage(symbol, controller.signal);
-        if (page.snap && hasEpsValue(page.snap)) out[symbol] = { ...page.snap, error: null };
-        else out[symbol] = { ...NO_EPS, error: page.error || out[symbol]?.error || "EPSが空" };
+    const probeResult = await withTimeout(SUMMARY_TIMEOUT_MS, (signal) => fetchSummary(session, probe, signal));
+    if (probeResult.blocked) {
+      console.error(`[range] eps quoteSummary blocked ${probeResult.error}`);
+      dropSession();
+      summaryOpen = false;
+    } else if (probeResult.snap && hasEpsValue(probeResult.snap)) {
+      note(probe, { ...probeResult.snap, error: null });
+      const rest = unique.filter((symbol) => symbol !== probe);
+      await mapPool(rest, EPS_WARM_CONCURRENCY, async (symbol) => {
+        if (!summaryOpen) return;
+        const result = await withTimeout(SUMMARY_TIMEOUT_MS, (signal) => fetchSummary(session, symbol, signal));
+        if (result.blocked) {
+          console.error(`[range] eps ${symbol} quoteSummary blocked ${result.error}`);
+          dropSession();
+          summaryOpen = false;
+          return;
+        }
+        if (result.snap && hasEpsValue(result.snap)) note(symbol, { ...result.snap, error: null });
+        else if (result.error) note(symbol, { ...NO_EPS, error: result.error });
+        await sleep(EPS_WARM_GAP_MS);
       });
     }
-
-    for (const symbol of unique) {
-      if (!out[symbol]) {
-        out[symbol] = { ...NO_EPS, error: controller.signal.aborted ? "timeout" : "EPSが空" };
-      }
-    }
-    const ok = unique.filter((symbol) => hasEpsValue(out[symbol])).length;
-    console.log(`[range] eps ready ok=${ok} fail=${unique.length - ok}`);
-    return out;
-  } finally {
-    clearTimeout(timer);
   }
+
+  const afterSummary = unique.filter((symbol) => !out[symbol] || !hasEpsValue(out[symbol]));
+  const liveSession = sessionMemo?.session;
+  if (liveSession && afterSummary.length > 0 && summaryOpen) {
+    console.log(`[range] eps v7 fallback symbols=${afterSummary.length}`);
+    const batched = await withTimeout(SUMMARY_TIMEOUT_MS * 2, (signal) => fetchV7(liveSession, afterSummary, signal));
+    for (const symbol of afterSummary) {
+      const snap = batched.quotes.get(symbol);
+      if (snap && hasEpsValue(snap)) note(symbol, { ...snap, error: null });
+      else if (snap?.error && !/429|401|403/.test(snap.error)) note(symbol, { ...NO_EPS, error: snap.error });
+    }
+    if (batched.error && /429|401|403/.test(batched.error)) {
+      console.error(`[range] eps v7 blocked ${batched.error}`);
+      dropSession();
+    }
+  }
+
+  const stillMissing = unique.filter((symbol) => {
+    const snap = out[symbol];
+    if (!snap) return true;
+    if (hasEpsValue(snap)) return false;
+    return !/EPSが空/.test(snap.error ?? "");
+  });
+  if (stillMissing.length > 0) {
+    console.log(`[range] eps quote-page fallback symbols=${stillMissing.length}`);
+    await mapPool(stillMissing, EPS_WARM_CONCURRENCY, async (symbol) => {
+      const page = await withTimeout(EPS_REQUEST_TIMEOUT_MS, (signal) => fetchQuotePage(symbol, signal));
+      if (page.snap && hasEpsValue(page.snap)) note(symbol, { ...page.snap, error: null });
+      else note(symbol, { ...NO_EPS, error: page.error || out[symbol]?.error || "EPSが空" });
+      await sleep(EPS_WARM_GAP_MS);
+    });
+  }
+
+  const ok = unique.filter((symbol) => out[symbol] && hasEpsValue(out[symbol])).length;
+  console.log(`[range] eps batch done ok=${ok} fail=${unique.filter((symbol) => out[symbol]).length - ok} unfinished=${unique.length - Object.keys(out).length}`);
+  return out;
+}
+
+async function loadSession(): Promise<Session | null> {
+  const now = Date.now();
+  if (sessionMemo && now < sessionMemo.until) return sessionMemo.session;
+  try {
+    const session = await withTimeout(SESSION_TIMEOUT_MS, (signal) => openSession(signal));
+    sessionMemo = { session, until: Date.now() + SESSION_OK_MS };
+    return session;
+  } catch (error) {
+    console.error("[range] eps session failed", errText(error));
+    sessionMemo = { session: null, until: Date.now() + SESSION_FAIL_MS };
+    return null;
+  }
+}
+
+function dropSession() {
+  sessionMemo = { session: null, until: Date.now() + SESSION_FAIL_MS };
 }
 
 async function openSession(signal: AbortSignal): Promise<Session> {
@@ -123,18 +162,10 @@ async function openSession(signal: AbortSignal): Promise<Session> {
   let lastError = "crumbを取得できなかった";
   for (const host of HOSTS) {
     try {
-      let res = await request(`${host}/v1/test/getcrumb`, {
+      const res = await request(`${host}/v1/test/getcrumb`, {
         headers: { Accept: "text/plain", Cookie: cookie },
         signal,
       });
-      for (let attempt = 0; res.status === 429 && attempt < 2; attempt++) {
-        console.error(`[range] eps getcrumb HTTP 429 host=${hostOf(host)} retry=${attempt + 1}`);
-        await delay(800 * (attempt + 1), signal);
-        res = await request(`${host}/v1/test/getcrumb`, {
-          headers: { Accept: "text/plain", Cookie: cookie },
-          signal,
-        });
-      }
       const body = res.body.trim();
       if (!res.ok || !body || body.startsWith("<") || body.startsWith("{") || body.length > 64) {
         lastError = `getcrumb HTTP ${res.status} ${clip(body)}`;
@@ -315,7 +346,8 @@ async function request(
         method: "GET",
         headers: { "User-Agent": UA, ...init.headers },
         maxHeaderSize: 256 * 1024,
-        timeout: 15_000,
+        timeout: EPS_REQUEST_TIMEOUT_MS,
+        agent,
       },
       (res) => {
         const status = res.statusCode ?? 0;
@@ -329,6 +361,7 @@ async function request(
         }
         const chunks: Buffer[] = [];
         let received = 0;
+        let lastScan = 0;
         let settled = false;
         const finish = () => {
           if (settled) return;
@@ -345,9 +378,12 @@ async function request(
           if (settled) return;
           chunks.push(chunk);
           received += chunk.length;
-          if (received < 700_000 && received <= 1_400_000) return;
+          const capped = received > 1_400_000;
+          const ready = Boolean(init.until) && received >= 80_000 && received - lastScan >= 80_000;
+          if (!ready && !capped) return;
+          lastScan = received;
           const text = Buffer.concat(chunks).toString("utf8");
-          if ((init.until && init.until(text)) || received > 1_400_000) {
+          if (capped || (init.until && init.until(text))) {
             res.destroy();
             finish();
           }
@@ -368,14 +404,14 @@ async function request(
   });
 }
 
-function delay(ms: number, signal: AbortSignal): Promise<void> {
-  return new Promise((resolve) => {
-    const timer = setTimeout(resolve, ms);
-    signal.addEventListener("abort", () => {
-      clearTimeout(timer);
-      resolve();
-    }, { once: true });
-  });
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function withTimeout<T>(ms: number, fn: (signal: AbortSignal) => Promise<T>): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  return fn(controller.signal).finally(() => clearTimeout(timer));
 }
 
 function absorbCookies(jar: Map<string, string>, parts: string[]) {
