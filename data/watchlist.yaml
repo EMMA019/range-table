@@ -10,6 +10,63 @@
 # earnings.status  confirmed（確）または estimated（推定）
 
 groups:
+  - id: ibkr
+    name: IBKRウォッチリスト（元の22銘柄）
+    tickers:
+      - ticker: AVGO
+        description: AI向けカスタムチップ・ネットワーク半導体
+        notes: 保有
+      - ticker: VRT
+        description: データセンター向け電源・冷却設備
+        notes: 保有
+      - ticker: ON
+        description: 車載・産業向けパワー半導体（SiC）
+        notes: 保有
+      - ticker: ONDS
+        description: ドローン・産業向け無線通信（小型・高ボラ）
+        notes: 保有
+        tags: [高ボラ]
+      - ticker: SPCX
+        description: SpaceX。ロケット打ち上げ・衛星通信（Starlink）
+      - ticker: COHR
+        description: 光トランシーバー・レーザー部品
+      - ticker: MRVL
+        description: データセンター向けカスタムチップ・光通信DSP
+      - ticker: GOOGL
+        description: 検索・クラウド。自社AIチップ（TPU）
+      - ticker: WDC
+        description: HDD大手。データ増加の恩恵
+        watchOnly: true
+      - ticker: PLTR
+        description: データ分析・AIソフトウェア
+      - ticker: MSFT
+        description: クラウド（Azure）・AI設備投資の大手
+        watchOnly: true
+      - ticker: AMZN
+        description: クラウド（AWS）・EC。AI設備投資の大手
+      - ticker: ORCL
+        description: クラウドインフラ・データベース。AI向けデータセンター
+      - ticker: GLW
+        description: 光ファイバー・特殊ガラス
+      - ticker: INTC
+        description: CPU・受託製造（ファウンドリ）
+      - ticker: LRCX
+        description: エッチング・成膜装置。メモリ投資の恩恵
+      - ticker: SMCI
+        description: AIサーバーの組み立て・液冷
+        tags: [高ボラ]
+      - ticker: AMD
+        description: CPU・AI向けGPU
+        watchOnly: true
+      - ticker: QCOM
+        description: スマホ向けSoC・通信チップ。PC・車載へ拡大
+      - ticker: AKAM
+        description: CDN・セキュリティ・エッジクラウド
+      - ticker: CIEN
+        description: 光伝送装置。データセンター間接続
+      - ticker: ARM
+        description: CPU設計IP。スマホ・データセンター向け
+
   - id: semi
     name: 半導体
     tickers:
