@@ -561,6 +561,7 @@ function TickerCard({
         <b className="font-mono font-medium text-ink tabular-nums">
           {formatPe(quote?.close, row.pe.forwardEps)}
         </b>
+        {row.pe.error && <span className="text-rust"> · {row.pe.error}</span>}
       </p>
     </button>
   );

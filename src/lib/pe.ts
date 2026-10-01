@@ -1,4 +1,4 @@
-import { PE_RECOVERY_MULTIPLE } from "./constants";
+import { EPS_CACHE_TTL_MS, EPS_FAIL_TTL_MS, PE_RECOVERY_MULTIPLE } from "./constants";
 import type { EpsSnapshot, PeView } from "./types";
 
 export const PE_SOURCE_NOTE = `出典: Yahoo Finance（実績=過去12か月EPS、予想=アナリスト予想EPS）。実績PERが予想PERの${PE_RECOVERY_MULTIPLE}倍以上のとき「利益回復中」。`;
@@ -16,7 +16,53 @@ export function parseQuoteSummary(json: unknown): EpsSnapshot | null {
   return {
     trailingEps: firstEps(stats, financial, "trailingEps"),
     forwardEps: firstEps(stats, financial, "forwardEps"),
+    error: null,
   };
+}
+
+/** v7 /finance/quote fields. Numbers are plain, not `{raw}` objects. */
+export function parseV7Quotes(json: unknown): Array<{ ticker: string } & EpsSnapshot> {
+  if (!json || typeof json !== "object" || !("quoteResponse" in json)) return [];
+  const response = json.quoteResponse;
+  if (!response || typeof response !== "object" || !("result" in response)) return [];
+  if (!Array.isArray(response.result)) return [];
+  const out: Array<{ ticker: string } & EpsSnapshot> = [];
+  for (const item of response.result) {
+    if (!item || typeof item !== "object" || !("symbol" in item)) continue;
+    const symbol = item.symbol;
+    if (typeof symbol !== "string" || !symbol) continue;
+    out.push({
+      ticker: symbol.toUpperCase(),
+      trailingEps: plainNumber("epsTrailingTwelveMonths" in item ? item.epsTrailingTwelveMonths : null),
+      forwardEps: plainNumber("epsForward" in item ? item.epsForward : null),
+      error: null,
+    });
+  }
+  return out;
+}
+
+export function hasEpsValue(eps: { trailingEps: number | null; forwardEps: number | null }): boolean {
+  return eps.trailingEps != null || eps.forwardEps != null;
+}
+
+/** Successful EPS stays for a day. Empty or failed reads expire after about 10 minutes. */
+export function epsIsFresh(
+  entry: { trailingEps: number | null; forwardEps: number | null; fetchedAt: number } | undefined,
+  now: number,
+): boolean {
+  if (!entry || !Number.isFinite(entry.fetchedAt)) return false;
+  const ttl = hasEpsValue(entry) ? EPS_CACHE_TTL_MS : EPS_FAIL_TTL_MS;
+  return now - entry.fetchedAt < ttl;
+}
+
+export function friendlyEpsError(detail: string | null): string {
+  if (!detail) return "EPSを取得できなかった";
+  if (/HTTP 429/.test(detail)) return "データ元が混んでいる";
+  if (/HTTP 401|HTTP 403|crumb|cookie/i.test(detail)) return "データ元がEPSを返さなかった";
+  if (/HTTP 404/.test(detail)) return "ティッカーが見つからない";
+  if (/timeout|aborted|AbortError/i.test(detail)) return "EPSの取得がタイムアウトした";
+  if (/空/.test(detail)) return "EPSが空だった";
+  return "EPSを取得できなかった";
 }
 
 export function computePe(price: number | null | undefined, eps: number | null): number | null {
@@ -31,12 +77,15 @@ export function peView(price: number | null | undefined, eps: EpsSnapshot | null
   const forwardEps = eps?.forwardEps ?? null;
   const trailingPe = computePe(price, trailingEps);
   const forwardPe = computePe(price, forwardEps);
+  const gotEps = eps != null && hasEpsValue(eps);
   return {
     trailingEps,
     forwardEps,
     trailingPe,
     forwardPe,
     recovering: isRecovering(trailingPe, forwardPe),
+    error: gotEps ? null : friendlyEpsError(eps?.error ?? (eps ? "EPSが空" : "EPSがまだない")),
+    errorDetail: gotEps ? null : (eps?.error ?? null),
   };
 }
 
@@ -67,6 +116,11 @@ function firstEps(
 function moduleEps(mod: unknown, key: "trailingEps" | "forwardEps"): number | null {
   if (!mod || typeof mod !== "object" || !(key in mod)) return null;
   return rawNumber((mod as Record<string, unknown>)[key]);
+}
+
+function plainNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  return null;
 }
 
 function rawNumber(value: unknown): number | null {

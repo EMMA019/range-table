@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { computePe, formatPe, isRecovering, parseQuoteSummary, peView } from "./pe";
+import { EPS_FAIL_TTL_MS } from "./constants";
+import { computePe, epsIsFresh, formatPe, hasEpsValue, isRecovering, parseQuoteSummary, parseV7Quotes, peView } from "./pe";
 
 const aapl = {
   quoteSummary: {
@@ -26,6 +27,7 @@ describe("parseQuoteSummary", () => {
     assert.deepEqual(parseQuoteSummary(aapl), {
       trailingEps: 8.83,
       forwardEps: 9.58285,
+      error: null,
     });
   });
 
@@ -41,7 +43,7 @@ describe("parseQuoteSummary", () => {
           ],
         },
       }),
-      { trailingEps: 1.5, forwardEps: 2 },
+      { trailingEps: 1.5, forwardEps: 2, error: null },
     );
   });
 
@@ -49,6 +51,7 @@ describe("parseQuoteSummary", () => {
     assert.deepEqual(parseQuoteSummary({ quoteSummary: { result: [{}] } }), {
       trailingEps: null,
       forwardEps: null,
+      error: null,
     });
   });
 
@@ -90,5 +93,37 @@ describe("P/E from price and cached EPS", () => {
     assert.equal(loss.recovering, false);
     assert.equal(formatPe(120.21, loss.trailingEps), "赤字");
     assert.equal(peView(null, null).recovering, false);
+  });
+
+  it("reads v7 quote EPS and keeps a failed read retryable", () => {
+    const parsed = parseV7Quotes({
+      quoteResponse: {
+        result: [
+          { symbol: "vrt", epsTrailingTwelveMonths: 4.43, epsForward: 9.12236 },
+          { symbol: "ONDS", epsTrailingTwelveMonths: -0.03, epsForward: -0.02 },
+          { symbol: "NONE", epsTrailingTwelveMonths: null, epsForward: null },
+        ],
+        error: null,
+      },
+    });
+    assert.equal(parsed[0]?.ticker, "VRT");
+    assert.equal(parsed[0]?.trailingEps, 4.43);
+    assert.equal(hasEpsValue(parsed[2]), false);
+
+    const now = 1_700_000_000_000;
+    const empty = { trailingEps: null, forwardEps: null, fetchedAt: now - 11 * 60 * 1000 };
+    const filled = { trailingEps: 4.43, forwardEps: 9.12, fetchedAt: now - 11 * 60 * 1000 };
+    assert.equal(epsIsFresh(empty, now), false);
+    assert.equal(epsIsFresh(filled, now), true);
+    assert.equal(epsIsFresh({ ...filled, fetchedAt: now - 25 * 60 * 60 * 1000 }, now), false);
+    assert.equal(EPS_FAIL_TTL_MS, 10 * 60 * 1000);
+
+    const failed = peView(241.31, { trailingEps: null, forwardEps: null, error: "quoteSummary HTTP 401 Invalid Crumb" });
+    assert.equal(failed.trailingPe, null);
+    assert.equal(failed.error, "データ元がEPSを返さなかった");
+    assert.match(failed.errorDetail ?? "", /HTTP 401/);
+    const ok = peView(241.31, { trailingEps: 4.43, forwardEps: 9.12236, error: null });
+    assert.equal(ok.error, null);
+    assert.equal(ok.trailingPe, 241.31 / 4.43);
   });
 });

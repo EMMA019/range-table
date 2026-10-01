@@ -31,6 +31,8 @@ function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow
       trailingPe: null,
       forwardPe: null,
       recovering: false,
+      error: null,
+      errorDetail: null,
     },
     error: null,
     errorDetail: null,
@@ -109,6 +111,8 @@ describe("applyView", () => {
       trailingPe,
       forwardPe,
       recovering: false,
+      error: null,
+      errorDetail: null,
     });
     const ordered = applyView(
       [

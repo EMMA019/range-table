@@ -3,8 +3,11 @@ export const BENCHMARKS = ["SPY", "QQQ", "SOXX"] as const;
 
 export const CACHE_TTL_MS = 15 * 60 * 1000;
 
-/** Trailing and forward EPS change slowly, so they are cached much longer than prices. */
+/** Trailing and forward EPS change slowly, so a successful read is cached much longer than prices. */
 export const EPS_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+/** Failed or empty EPS reads are not kept for a day. Retry after this. */
+export const EPS_FAIL_TTL_MS = 10 * 60 * 1000;
 
 /** Trailing P/E at least this many times forward P/E is flagged as recovering earnings. */
 export const PE_RECOVERY_MULTIPLE = 2;

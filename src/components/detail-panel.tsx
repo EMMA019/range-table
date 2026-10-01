@@ -148,6 +148,12 @@ function PeBlock({ row }: { row: TickerRow }) {
         <p className="mt-2 text-xs leading-relaxed text-muted">{BASIS.recovering}</p>
       )}
       <p className="mt-2 text-[11px] leading-relaxed text-muted">{PE_SOURCE_NOTE}</p>
+      {row.pe.error && (
+        <p className="mt-1 text-[11px] leading-relaxed text-rust">
+          {row.pe.error}
+          {row.pe.errorDetail && row.pe.errorDetail !== row.pe.error ? `（${row.pe.errorDetail}）` : ""}
+        </p>
+      )}
     </div>
   );
 }

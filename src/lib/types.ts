@@ -57,6 +57,8 @@ export type EarningsView = {
 export type EpsSnapshot = {
   trailingEps: number | null;
   forwardEps: number | null;
+  /** Upstream status or reason. Null when at least one EPS value was returned. */
+  error: string | null;
 };
 
 export type PeView = {
@@ -65,6 +67,8 @@ export type PeView = {
   trailingPe: number | null;
   forwardPe: number | null;
   recovering: boolean;
+  error: string | null;
+  errorDetail: string | null;
 };
 
 export type TickerRow = {

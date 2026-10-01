@@ -1,9 +1,9 @@
 import fs from "fs";
 import path from "path";
 import { todayEt } from "./calendar";
-import { BENCHMARKS, CACHE_TTL_MS, EPS_CACHE_TTL_MS, FETCH_CONCURRENCY } from "./constants";
+import { BENCHMARKS, CACHE_TTL_MS, FETCH_CONCURRENCY } from "./constants";
 import { fetchEpsMap } from "./eps";
-import { peView } from "./pe";
+import { epsIsFresh, peView } from "./pe";
 import { chartPoints, computeQuote } from "./compute";
 import { classifyEarnings } from "./earnings";
 import { formatJst, friendlyFetchError } from "./format";
@@ -38,10 +38,11 @@ const EPS_CACHE_PATH = path.join(process.cwd(), "data", ".cache", "eps.json");
 let memory: CacheBody | null = null;
 let inflight: Promise<CacheBody> | null = null;
 
+type StoredEps = EpsSnapshot & { fetchedAt: number };
+
 type EpsCacheBody = {
-  v: 1;
-  fetchedAt: number;
-  quotes: Record<string, EpsSnapshot>;
+  v: 2;
+  quotes: Record<string, StoredEps>;
 };
 
 let epsMemory: EpsCacheBody | null = null;
@@ -165,33 +166,39 @@ async function loadEps(symbols: string[]): Promise<Record<string, EpsSnapshot>> 
 }
 
 async function ensureEps(symbols: string[]): Promise<Record<string, EpsSnapshot>> {
+  const now = Date.now();
   const cache = epsMemory ?? readEps();
-  const age = cache ? Date.now() - cache.fetchedAt : Number.POSITIVE_INFINITY;
-  const fresh = Boolean(cache) && age < EPS_CACHE_TTL_MS;
-  const missing = fresh ? symbols.filter((symbol) => !cache?.quotes[symbol]) : symbols;
-  if (cache && fresh && missing.length === 0) {
+  const quotes: Record<string, StoredEps> = { ...(cache?.quotes ?? {}) };
+  const missing = symbols.filter((symbol) => !epsIsFresh(quotes[symbol], now));
+  if (missing.length === 0 && cache) {
     epsMemory = cache;
-    return cache.quotes;
+    return projectEps(quotes);
   }
 
   const fetched = await fetchEpsMap(missing);
-  if (Object.keys(fetched).length === 0 && missing.length > 0) {
-    return cache?.quotes ?? {};
+  for (const [symbol, snap] of Object.entries(fetched)) {
+    quotes[symbol] = { ...snap, fetchedAt: now };
   }
-
-  const quotes = { ...(cache?.quotes ?? {}), ...fetched };
-  const next: EpsCacheBody = {
-    v: 1,
-    fetchedAt: fresh && cache ? cache.fetchedAt : Date.now(),
-    quotes,
-  };
+  const next: EpsCacheBody = { v: 2, quotes };
   epsMemory = next;
   try {
     writeJson(EPS_CACHE_PATH, next);
   } catch (error) {
     console.error("[range] eps cache write failed", error);
   }
-  return quotes;
+  return projectEps(quotes);
+}
+
+function projectEps(quotes: Record<string, StoredEps>): Record<string, EpsSnapshot> {
+  const out: Record<string, EpsSnapshot> = {};
+  for (const [symbol, entry] of Object.entries(quotes)) {
+    out[symbol] = {
+      trailingEps: entry.trailingEps,
+      forwardEps: entry.forwardEps,
+      error: entry.error,
+    };
+  }
+  return out;
 }
 
 function buildPayload(
@@ -305,22 +312,27 @@ function writeJson(file: string, body: unknown) {
 function readEps(): EpsCacheBody | null {
   try {
     const parsed = JSON.parse(fs.readFileSync(EPS_CACHE_PATH, "utf8")) as EpsCacheBody;
-    if (parsed?.v !== 1 || typeof parsed.fetchedAt !== "number" || !parsed.quotes) return null;
-    const quotes: Record<string, EpsSnapshot> = {};
+    if (parsed?.v !== 2 || !parsed.quotes) return null;
+    const quotes: Record<string, StoredEps> = {};
     for (const [symbol, value] of Object.entries(parsed.quotes)) {
-      if (!isEpsSnapshot(value)) continue;
+      if (!isStoredEps(value)) continue;
       quotes[symbol] = value;
     }
-    return { v: 1, fetchedAt: parsed.fetchedAt, quotes };
+    return { v: 2, quotes };
   } catch {
     return null;
   }
 }
 
-function isEpsSnapshot(value: unknown): value is EpsSnapshot {
+function isStoredEps(value: unknown): value is StoredEps {
   if (!value || typeof value !== "object") return false;
   const snapshot = value as Record<string, unknown>;
-  return nullableNumber(snapshot.trailingEps) && nullableNumber(snapshot.forwardEps);
+  return (
+    nullableNumber(snapshot.trailingEps) &&
+    nullableNumber(snapshot.forwardEps) &&
+    (snapshot.error === null || typeof snapshot.error === "string") &&
+    typeof snapshot.fetchedAt === "number"
+  );
 }
 
 function nullableNumber(value: unknown): boolean {
