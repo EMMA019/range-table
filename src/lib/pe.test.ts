@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { EPS_FAIL_TTL_MS } from "./constants";
-import { computePe, epsIsFresh, formatPe, hasEpsValue, isRecovering, parseQuoteSummary, parseV7Quotes, peView } from "./pe";
+import { computePe, epsIsFresh, formatPe, hasEpsValue, isRecovering, parseQuotePage, parseQuoteSummary, parseV7Quotes, peView } from "./pe";
 
 const aapl = {
   quoteSummary: {
@@ -125,5 +125,13 @@ describe("P/E from price and cached EPS", () => {
     const ok = peView(241.31, { trailingEps: 4.43, forwardEps: 9.12236, error: null });
     assert.equal(ok.error, null);
     assert.equal(ok.trailingPe, 241.31 / 4.43);
+  });
+
+  it("reads EPS embedded in a Yahoo quote page", () => {
+    const escaped = String.raw`trailingEps\":{\"raw\":4.43,\"fmt\":\"4.43\"},\"forwardEps\":{\"raw\":9.12,\"fmt\":\"9.12\"}`;
+    assert.deepEqual(parseQuotePage(escaped), { trailingEps: 4.43, forwardEps: 9.12, error: null });
+    const plain = `"trailingEps":{"raw":-2.16,"fmt":"-2.16"},"forwardEps":{"raw":2.06,"fmt":"2.06"}`;
+    assert.deepEqual(parseQuotePage(plain), { trailingEps: -2.16, forwardEps: 2.06, error: null });
+    assert.equal(parseQuotePage("<html>consent</html>"), null);
   });
 });

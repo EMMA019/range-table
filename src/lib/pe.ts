@@ -20,6 +20,29 @@ export function parseQuoteSummary(json: unknown): EpsSnapshot | null {
   };
 }
 
+/** EPS embedded in the finance.yahoo.com quote page, escaped or plain JSON. */
+export function parseQuotePage(html: string): EpsSnapshot | null {
+  if (!html) return null;
+  const trailingEps = readEmbeddedRaw(html, "trailingEps");
+  const forwardEps = readEmbeddedRaw(html, "forwardEps");
+  if (trailingEps == null && forwardEps == null) return null;
+  return { trailingEps, forwardEps, error: null };
+}
+
+function readEmbeddedRaw(html: string, key: string): number | null {
+  const patterns = [
+    new RegExp(key + String.raw`\\":\{\\"raw\\":(-?\d+(?:\.\d+)?)`),
+    new RegExp(`"${key}"\\s*:\\s*\\{\\s*"raw"\\s*:\\s*(-?\\d+(?:\\.\\d+)?)`),
+  ];
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (!match) continue;
+    const value = Number(match[1]);
+    if (Number.isFinite(value)) return value;
+  }
+  return null;
+}
+
 /** v7 /finance/quote fields. Numbers are plain, not `{raw}` objects. */
 export function parseV7Quotes(json: unknown): Array<{ ticker: string } & EpsSnapshot> {
   if (!json || typeof json !== "object" || !("quoteResponse" in json)) return [];
