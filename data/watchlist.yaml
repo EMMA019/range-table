@@ -1,0 +1,454 @@
+# ウォッチリスト。ティッカーの追加・削除はこのファイルを手で編集する。
+# 価格は書かない。画面の数字は日足から計算する。
+#
+# ticker       必須。米国ティッカー
+# description  必須。一行の説明
+# notes        任意。連動メモやイベント
+# tags         任意。高ボラ / 増資枠 / 合併 / 売出予定 / 事業分離 など
+# watchOnly    true で「監視のみ」（目安は1株が約$450超）
+# earnings.date    YYYY-MM-DD。季節が変わったら手で更新する
+# earnings.status  confirmed（確）または estimated（推定）
+
+groups:
+  - id: semi
+    name: 半導体
+    tickers:
+      - ticker: NVDA
+        description: AI向けGPUの本命。AI設備投資の中心
+        notes: 連動中/MU低
+      - ticker: TSM
+        description: AI半導体の受託製造をほぼ独占
+        notes: 連動高/MU高
+        watchOnly: true
+        earnings:
+          date: 2026-10-15
+          status: confirmed
+      - ticker: MU
+        description: HBM（AI向けメモリ）。9/30決算で半導体全体を動かす
+        notes: 連動中/MU高
+        watchOnly: true
+        earnings:
+          date: 2026-09-30
+          status: confirmed
+      - ticker: AMKR
+        description: 後工程（パッケージ）受託。先端パッケージ拡大
+        notes: 連動中/MU高
+        earnings:
+          date: 2026-10-26
+          status: estimated
+      - ticker: ASX
+        description: 後工程受託の最大手（ADR）
+        notes: 連動高/MU高
+        earnings:
+          date: 2026-10-29
+          status: estimated
+      - ticker: GFS
+        description: 受託製造。米国内生産・シリコンフォトニクス
+        notes: 連動高/MU高 / 政府保有株の売出し予定
+        tags: [売出予定]
+      - ticker: TXN
+        description: アナログ最大手。産業・電源の回復待ち
+        notes: 連動高/MU中
+        earnings:
+          date: 2026-10-20
+          status: estimated
+      - ticker: ADI
+        description: アナログ・電源。データセンター電源にも
+        notes: 連動高/MU中
+      - ticker: NXPI
+        description: 車載・産業。ONと同じ回復テーマ
+        notes: 連動高/MU中
+        earnings:
+          date: 2026-10-27
+          status: confirmed
+      - ticker: MCHP
+        description: マイコン・アナログ。在庫調整明けの戻り
+        notes: 連動高/MU中
+      - ticker: STM
+        description: 車載・パワー半導体（ADR）。ONの同業
+        notes: 連動高/MU中
+        earnings:
+          date: 2026-10-29
+          status: confirmed
+      - ticker: MPWR
+        description: AIサーバー向け電源IC
+        notes: 連動高/MU中
+        watchOnly: true
+        earnings:
+          date: 2026-10-29
+          status: estimated
+      - ticker: RMBS
+        description: メモリインターフェースIP・チップ。DDR5/HBM
+        notes: 連動高/MU高
+        earnings:
+          date: 2026-10-26
+          status: estimated
+      - ticker: SITM
+        description: MEMSタイミング。AIデータセンター向け伸長
+        notes: 連動中/MU中
+        watchOnly: true
+      - ticker: MTSI
+        description: 光通信・高速アナログ部品
+        notes: 連動中/MU高
+      - ticker: SWKS
+        description: RF半導体。スマホ回復と統合の話題
+        notes: 連動低/MU低 / QRVOと合併手続き中
+        tags: [合併]
+        earnings:
+          date: 2026-10-27
+          status: estimated
+      - ticker: QRVO
+        description: RF半導体。SWKSとの統合で監視
+        notes: 連動低/MU低 / SWKSと合併手続き中
+        tags: [合併]
+        earnings:
+          date: 2026-10-27
+          status: estimated
+      - ticker: LSCC
+        description: 低消費電力FPGA。サーバー管理用途
+        notes: 連動高/MU高
+      - ticker: POWI
+        description: パワー半導体（GaN）。800V DC電源
+        notes: 連動高/MU中
+      - ticker: NVTS
+        description: GaN・SiC電源。NVIDIAの800V電源構想で材料が出やすい
+        notes: 連動高/MU高
+      - ticker: SNDK
+        description: NANDフラッシュ。AI向けSSD需要
+        notes: 連動中/MU高
+        watchOnly: true
+
+  - id: equipment
+    name: 半導体装置・材料
+    tickers:
+      - ticker: ASML
+        description: 最先端の露光装置を独占
+        notes: 連動中/MU高
+        watchOnly: true
+        earnings:
+          date: 2026-10-14
+          status: confirmed
+      - ticker: AMAT
+        description: 前工程装置の最大手。先端ロジック・HBM投資の恩恵
+        notes: 連動中/MU高
+        watchOnly: true
+      - ticker: KLAC
+        description: 検査・計測装置の首位。先端プロセスほど需要増
+        notes: 連動高/MU高
+        earnings:
+          date: 2026-10-28
+          status: estimated
+      - ticker: TER
+        description: AI半導体・HBMの検査装置
+        notes: 連動中/MU高
+        earnings:
+          date: 2026-10-27
+          status: estimated
+      - ticker: ONTO
+        description: 先端パッケージの検査・計測
+        notes: 連動高/MU高
+      - ticker: CAMT
+        description: HBM・先端パッケージの検査装置
+        notes: 連動高/MU高
+      - ticker: NVMI
+        description: 計測装置。先端ノードとパッケージ向け
+        notes: 連動高/MU高
+      - ticker: FORM
+        description: プローブカード。HBM・先端品のテスト
+        notes: 連動中/MU高
+        earnings:
+          date: 2026-10-28
+          status: estimated
+      - ticker: ENTG
+        description: 先端プロセス向けの材料・フィルター
+        notes: 連動高/MU高
+        earnings:
+          date: 2026-10-29
+          status: estimated
+      - ticker: AEHR
+        description: SiC・AI半導体のバーンイン試験装置（小型・高ボラ）
+        notes: 連動中/MU中
+        tags: [高ボラ]
+        earnings:
+          date: 2026-10-05
+          status: estimated
+
+  - id: network
+    name: ネットワーク・光通信
+    tickers:
+      - ticker: ANET
+        description: AIデータセンター向けスイッチ
+        notes: 連動高/MU中
+      - ticker: CRDO
+        description: AI向け高速接続（AEC・DSP）
+        notes: 連動中/MU中
+      - ticker: ALAB
+        description: AIサーバー内の接続チップ
+        notes: 連動中/MU高
+      - ticker: LITE
+        description: 光トランシーバー・レーザー。AI向け光の中心
+        notes: 連動中/MU高
+        watchOnly: true
+      - ticker: AAOI
+        description: 光トランシーバー（小型・高ボラ）
+        notes: 連動高/MU高 / 増資枠あり
+        tags: [高ボラ, 増資枠]
+      - ticker: FN
+        description: 光部品の受託製造。NVIDIA向け
+        notes: 連動中/MU中
+      - ticker: CSCO
+        description: ネットワーク最大手。AIインフラ受注
+        notes: 連動低/MU低
+      - ticker: NOK
+        description: Infinera買収で光伝送（ADR）
+        notes: 連動中/MU高
+        earnings:
+          date: 2026-10-22
+          status: confirmed
+      - ticker: VIAV
+        description: 光通信の測定器・光学部品
+        notes: 連動高/MU高
+        earnings:
+          date: 2026-10-28
+          status: estimated
+      - ticker: POET
+        description: 光インターポーザー（小型・高ボラ）
+        notes: 連動中/MU高
+        tags: [高ボラ]
+
+  - id: server
+    name: サーバー・ストレージ・部品
+    tickers:
+      - ticker: CLS
+        description: AIサーバー・スイッチの受託製造
+        notes: 連動中/MU中
+        earnings:
+          date: 2026-10-27
+          status: confirmed
+      - ticker: JBL
+        description: 受託製造。AIデータセンター部門が伸長
+        notes: 連動高/MU高
+        earnings:
+          date: 2026-09-30
+          status: confirmed
+      - ticker: APH
+        description: コネクター・ケーブル。AIラック内の接続
+        notes: 連動中/MU中
+        earnings:
+          date: 2026-10-28
+          status: confirmed
+      - ticker: TEL
+        description: コネクター大手。データセンター向け
+        notes: 連動低/MU低
+        earnings:
+          date: 2026-10-28
+          status: estimated
+      - ticker: DELL
+        description: AIサーバーの大手
+        notes: 連動中/MU中
+        watchOnly: true
+      - ticker: HPE
+        description: AIサーバーとネットワーク（Juniper）
+        notes: 連動中/MU中
+      - ticker: STX
+        description: HDD。データ増加でWDCと並ぶ
+        notes: 連動中/MU高
+        watchOnly: true
+        earnings:
+          date: 2026-10-27
+          status: estimated
+      - ticker: NTAP
+        description: 企業向けストレージ
+        notes: 連動低/MU低
+
+  - id: cloud
+    name: AIクラウド・データセンター
+    tickers:
+      - ticker: META
+        description: AI設備投資の最大級の買い手
+        notes: 連動低/MU低
+        watchOnly: true
+        earnings:
+          date: 2026-10-28
+          status: estimated
+      - ticker: CRWV
+        description: GPUクラウド（CoreWeave）。AI需要の先行指標
+        notes: 連動中/MU中 / 増資枠あり
+        tags: [増資枠]
+      - ticker: NBIS
+        description: GPUクラウド（Nebius）
+        notes: 連動中/MU高
+      - ticker: IREN
+        description: マイニング設備をAIクラウドへ転換
+        notes: 連動中/MU高
+      - ticker: CIFR
+        description: マイニング設備をAIデータセンターに転用
+        notes: 連動中/MU中
+        tags: [高ボラ]
+      - ticker: WULF
+        description: マイニングからAIホスティングへ
+        notes: 連動高/MU中
+        tags: [高ボラ]
+      - ticker: HUT
+        description: マイニングからAIデータセンターへ
+        notes: 連動中/MU中
+        tags: [高ボラ]
+      - ticker: APLD
+        description: AI向けデータセンター開発
+        notes: 連動中/MU高
+        earnings:
+          date: 2026-10-08
+          status: estimated
+      - ticker: CORZ
+        description: CoreWeave向けデータセンター
+        notes: 連動中/MU中
+        earnings:
+          date: 2026-10-23
+          status: estimated
+      - ticker: EQIX
+        description: データセンターREIT最大手
+        notes: 連動低/MU低
+        watchOnly: true
+        earnings:
+          date: 2026-10-28
+          status: estimated
+      - ticker: DLR
+        description: データセンターREIT。ハイパースケーラー向け
+        notes: 連動低/MU低 / 株の売出し予定
+        tags: [売出予定]
+        earnings:
+          date: 2026-10-22
+          status: estimated
+
+  - id: power
+    name: 電力設備・冷却
+    tickers:
+      - ticker: ETN
+        description: データセンター向け電源機器
+        notes: 連動高/MU中
+      - ticker: GEV
+        description: ガスタービン・送電。電力需要増の本命
+        notes: 連動中/MU中
+        watchOnly: true
+        earnings:
+          date: 2026-10-28
+          status: confirmed
+      - ticker: PWR
+        description: 送電・データセンターの電気工事
+        notes: 連動中/MU高
+        watchOnly: true
+        earnings:
+          date: 2026-10-29
+          status: estimated
+      - ticker: EME
+        description: データセンターの電気・機械工事
+        notes: 連動中/MU高
+        watchOnly: true
+        earnings:
+          date: 2026-10-29
+          status: estimated
+      - ticker: MOD
+        description: データセンター向け冷却
+        notes: 連動高/MU高 / 10/1に事業分離、直後は数字がずれる
+        tags: [事業分離]
+        earnings:
+          date: 2026-10-27
+          status: estimated
+      - ticker: NVT
+        description: 電気接続・液冷ラック
+        notes: 連動高/MU中
+        earnings:
+          date: 2026-10-30
+          status: estimated
+      - ticker: HUBB
+        description: 送配電機器
+        notes: 連動中/MU低
+        watchOnly: true
+        earnings:
+          date: 2026-10-27
+          status: estimated
+      - ticker: POWL
+        description: 配電盤。データセンター・電力向け
+        notes: 連動中/MU高
+      - ticker: TT
+        description: 空調・データセンター冷却
+        notes: 連動高/MU低
+        watchOnly: true
+        earnings:
+          date: 2026-10-29
+          status: estimated
+
+  - id: generation
+    name: 発電・原子力
+    tickers:
+      - ticker: BE
+        description: 燃料電池の自家発電。データセンター向け受注
+        notes: 連動中/MU高
+        earnings:
+          date: 2026-10-27
+          status: estimated
+      - ticker: FLNC
+        description: 蓄電システム
+        notes: 連動中/MU中
+        tags: [高ボラ]
+      - ticker: CEG
+        description: 原子力発電。ハイパースケーラーと電力契約
+        notes: 連動低/MU低
+      - ticker: VST
+        description: 発電大手。データセンター向け電力
+        notes: 連動中/MU低
+      - ticker: TLN
+        description: 原子力・ガス発電。AWSと契約
+        notes: 連動中/MU中
+      - ticker: NRG
+        description: 発電・小売。データセンター需要
+        notes: 連動低/MU低
+      - ticker: OKLO
+        description: 小型炉。材料で大きく動く（高ボラ）
+        notes: 連動低/MU中 / 増資枠あり
+        tags: [高ボラ, 増資枠]
+      - ticker: SMR
+        description: 小型モジュール炉（高ボラ）
+        notes: 連動低/MU中
+        tags: [高ボラ]
+      - ticker: CCJ
+        description: ウラン大手。原子力拡大の本命
+        notes: 連動低/MU中
+        earnings:
+          date: 2026-10-30
+          status: estimated
+      - ticker: LEU
+        description: 濃縮ウラン（HALEU）
+        notes: 連動中/MU中
+
+  - id: space
+    name: 宇宙
+    tickers:
+      - ticker: RKLB
+        description: 小型ロケット・衛星部品
+        notes: 連動中/MU中
+      - ticker: ASTS
+        description: 衛星から直接スマホ通信
+        notes: 連動中/MU中
+      - ticker: LUNR
+        description: 月着陸・宇宙インフラ
+        notes: 連動低/MU中
+      - ticker: PL
+        description: 地球観測衛星データ
+        notes: 連動低/MU中
+      - ticker: RDW
+        description: 宇宙機の部品・構造
+        notes: 連動中/MU中
+      - ticker: IRDM
+        description: 衛星通信
+        notes: 連動中/MU高 / RKLBと合併手続き中で連動しやすい
+        tags: [合併]
+        earnings:
+          date: 2026-10-22
+          status: estimated
+      - ticker: VSAT
+        description: 衛星通信
+        notes: 連動低/MU低
+      - ticker: FLY
+        description: ロケット（Firefly）
+        notes: 連動低/MU中
