@@ -30,6 +30,12 @@ export const VOLUME_NOTE = BASIS.volume;
 export const TOP_BREAKOUT_NOTE =
   "上抜け=終値が当日を除く直前20本の高値超え。天井と決めつけて売る前に確認する目安。買いサインではありません。";
 
+export const TEAM_PICKS_EMPTY = "チームの推奨は朝に更新されます";
+export const PICK_ENTRY_BADGE = "エントリー圏";
+export const PICK_WATCH_BADGE = "監視のみ";
+export const PICK_EARNINGS_BADGE = "決算5営業日以内";
+export const PICK_DISTANCE_NOTE = "距離=(終値 − ライン) ÷ ライン";
+
 export const SORT_OPTIONS = [
   { id: "boxAsc", label: "箱の底から" },
   { id: "boxDesc", label: "箱の天井から" },

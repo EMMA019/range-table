@@ -21,6 +21,8 @@ import { applyView, atTop, continuedBreakout, continuedBreakoutText, sectorsOf, 
 import { BoxBar } from "./box-bar";
 import { DetailPanel } from "./detail-panel";
 import { Glossary } from "./glossary";
+import { SiteNav } from "./site-nav";
+import { ThemeToggle } from "./theme-toggle";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 
@@ -46,7 +48,6 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [now, setNow] = useState(() => Date.now());
-  const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
   const openedHere = useRef(false);
 
   const load = useCallback(async (silent = false) => {
@@ -83,12 +84,6 @@ export function Dashboard() {
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [data, load]);
-
-  useEffect(() => {
-    const stored = document.documentElement.dataset.theme;
-    if (stored === "light" || stored === "dark") setTheme(stored);
-    else setTheme(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  }, []);
 
   const filters = useMemo<ViewFilters>(() => {
     const sort = sp.get("sort");
@@ -191,13 +186,6 @@ export function Dashboard() {
     );
   }
 
-  function toggleTheme() {
-    const next = theme === "dark" ? "light" : "dark";
-    document.documentElement.dataset.theme = next;
-    localStorage.setItem("range-theme", next);
-    setTheme(next);
-  }
-
   const sortLabel = SORT_OPTIONS.find((option) => option.id === filters.sort)?.label ?? "箱の底から";
 
   return (
@@ -213,9 +201,7 @@ export function Dashboard() {
                 {data ? ` · ${formatAge(data.fetchedAt, now)}` : ""}
               </p>
             </div>
-            <Button type="button" variant="ghost" size="sm" onClick={toggleTheme} aria-label="配色を切り替える">
-              {theme === "dark" ? "ライト" : "ダーク"}
-            </Button>
+            <ThemeToggle />
             <Button
               type="button"
               variant="outline"
@@ -226,6 +212,7 @@ export function Dashboard() {
               {refreshing ? "取得中" : "更新"}
             </Button>
           </div>
+          <SiteNav current="/" />
           <div className="flex flex-wrap gap-2 pb-3">
             {CHIPS.map((chip) => {
               const on = filters[chip.key];
@@ -408,7 +395,10 @@ export function DashboardFallback() {
   return (
     <div className="mx-auto min-h-dvh w-full max-w-lg px-4 pt-6">
       <h1 className="text-lg font-semibold">レンジ表</h1>
-      <p className="mt-2 text-sm text-muted">日足を集めています。</p>
+      <div className="mt-3">
+        <SiteNav current="/" />
+      </div>
+      <p className="text-sm text-muted">日足を集めています。</p>
       <div className="mt-4 space-y-2">
         {Array.from({ length: 5 }, (_, i) => (
           <div key={i} className="h-28 animate-pulse rounded-2xl bg-elev motion-reduce:animate-none" />

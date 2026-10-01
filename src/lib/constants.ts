@@ -47,6 +47,9 @@ export const VOLUME_CONFIRM_RATIO = 1;
 
 export const EARNINGS_WARN_DAYS = 5;
 
+/** A team pick priced above this is marked 監視のみ even when its status is 候補. */
+export const PICK_WATCH_PRICE = 450;
+
 /** A one-day close move at least this large flags a possible split or spinoff. */
 export const GAP_THRESHOLD = 0.35;
 

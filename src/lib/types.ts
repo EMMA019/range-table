@@ -117,6 +117,64 @@ export type MarketPayload = {
   failCount: number;
 };
 
+export type PickStatus = "候補" | "監視のみ";
+
+export type TeamPick = {
+  ticker: string;
+  name: string;
+  genre: string;
+  thesisFacts: string;
+  thesisHypothesis: string;
+  entryLine: number;
+  entryBasis: string;
+  reviewLine: number;
+  reviewBasis: string;
+  earningsDate: string | null;
+  status: PickStatus;
+  recommendedBy: string;
+  asOf: string;
+};
+
+/** The quote fields a team-pick card needs. The rest of the daily series stays in the shared cache. */
+export type PickQuote = {
+  close: number;
+  closeDate: string;
+  boxPct: number;
+  low20: number;
+  high20: number;
+  volumeRatio: number | null;
+};
+
+export type PickCard = {
+  ticker: string;
+  name: string;
+  genre: string;
+  thesisFacts: string;
+  thesisHypothesis: string;
+  entryLine: number;
+  entryBasis: string;
+  reviewLine: number;
+  reviewBasis: string;
+  earningsDate: string | null;
+  earningsWarn: boolean;
+  status: PickStatus;
+  recommendedBy: string;
+  asOf: string;
+  quote: PickQuote | null;
+  error: string | null;
+  entryDistancePct: number | null;
+  reviewDistancePct: number | null;
+  entryZone: boolean;
+  watchOnly: boolean;
+};
+
+export type PicksPayload = {
+  fetchedAt: number;
+  fetchedAtJst: string;
+  empty: boolean;
+  picks: PickCard[];
+};
+
 export type ChartBar = {
   date: string;
   open: number;

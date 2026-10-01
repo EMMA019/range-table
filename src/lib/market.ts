@@ -14,12 +14,15 @@ import { epsIsFresh, epsTtlMs, hasEpsValue, peView, pickEpsBatch } from "./pe";
 import { chartPoints, computeQuote } from "./compute";
 import { classifyEarnings } from "./earnings";
 import { formatJst, friendlyFetchError } from "./format";
+import { buildPickCard, loadTeamPicks } from "./picks";
 import type {
   Bar,
   ChartPayload,
   EpsSnapshot,
   IndexRow,
   MarketPayload,
+  PickQuote,
+  PicksPayload,
   Quote,
   TickerRow,
   Watchlist,
@@ -76,6 +79,35 @@ export async function getMarketPayload(): Promise<MarketPayload> {
   return payload;
 }
 
+/** Team picks reuse the price cache. Tickers already on the watchlist are not fetched again. */
+export async function getPicksPayload(): Promise<PicksPayload> {
+  const picks = loadTeamPicks();
+  if (picks.length === 0) {
+    const now = Date.now();
+    return {
+      fetchedAt: now,
+      fetchedAtJst: formatJst(new Date(now)),
+      empty: true,
+      picks: [],
+    };
+  }
+  const list = loadWatchlist();
+  const cache = await ensureSeries(
+    list,
+    picks.map((pick) => pick.ticker),
+  );
+  const today = todayEt();
+  return {
+    fetchedAt: cache.fetchedAt,
+    fetchedAtJst: formatJst(new Date(cache.fetchedAt)),
+    empty: false,
+    picks: picks.map((pick) => {
+      const built = quoteFromEntry(cache.series[pick.ticker]);
+      return buildPickCard(pick, toPickQuote(built.quote), built.error, today);
+    }),
+  };
+}
+
 export async function getChart(ticker: string): Promise<ChartPayload | { error: string }> {
   const symbol = ticker.toUpperCase();
   const list = loadWatchlist();
@@ -107,16 +139,46 @@ function symbolsFor(list: Watchlist): string[] {
   return [...set];
 }
 
-async function ensureSeries(list: Watchlist): Promise<CacheBody> {
-  if (inflight) return inflight;
-  inflight = refresh(list).finally(() => {
-    inflight = null;
+async function ensureSeries(list: Watchlist, extra: string[] = []): Promise<CacheBody> {
+  const symbols = withExtra(symbolsFor(list), extra);
+  for (;;) {
+    const pending = inflight;
+    if (!pending) break;
+    try {
+      await pending;
+    } catch {
+      break;
+    }
+  }
+  if (inflight) return ensureSeries(list, extra);
+
+  const cache = memory ?? readDisk();
+  const age = cache ? Date.now() - cache.fetchedAt : Number.POSITIVE_INFINITY;
+  const fresh = Boolean(cache) && age < CACHE_TTL_MS;
+  const missing = fresh ? symbols.filter((symbol) => !cache?.series[symbol]) : symbols;
+  if (cache && fresh && missing.length === 0) {
+    memory = cache;
+    return cache;
+  }
+
+  const run = refresh(symbols).finally(() => {
+    if (inflight === run) inflight = null;
   });
-  return inflight;
+  inflight = run;
+  return run;
 }
 
-async function refresh(list: Watchlist): Promise<CacheBody> {
-  const symbols = symbolsFor(list);
+function withExtra(symbols: string[], extra: string[]): string[] {
+  if (extra.length === 0) return symbols;
+  const set = new Set(symbols);
+  for (const symbol of extra) {
+    const upper = symbol.trim().toUpperCase();
+    if (upper) set.add(upper);
+  }
+  return [...set];
+}
+
+async function refresh(symbols: string[]): Promise<CacheBody> {
   const cache = memory ?? readDisk();
   const age = cache ? Date.now() - cache.fetchedAt : Number.POSITIVE_INFINITY;
   const fresh = Boolean(cache) && age < CACHE_TTL_MS;
@@ -350,6 +412,18 @@ function buildPayload(
     rows,
     okCount: rows.length - failCount,
     failCount,
+  };
+}
+
+function toPickQuote(quote: Quote | null): PickQuote | null {
+  if (!quote) return null;
+  return {
+    close: quote.close,
+    closeDate: quote.closeDate,
+    boxPct: quote.boxPct,
+    low20: quote.low20,
+    high20: quote.high20,
+    volumeRatio: quote.volumeRatio,
   };
 }
 
