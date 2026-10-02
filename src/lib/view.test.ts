@@ -41,6 +41,9 @@ function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow
     },
     error: null,
     errorDetail: null,
+    sectorLabel: null,
+    corrBasket: null,
+    corrSoxx: null,
     ...partial,
   };
 }
@@ -53,6 +56,7 @@ const filters = {
   continued: false,
   surge: false,
   earnings: false,
+  lowCorr: false,
   hideWatch: false,
   sort: "boxAsc" as const,
   q: "",
@@ -191,6 +195,25 @@ describe("applyView", () => {
     assert.deepEqual(
       applyView(names, { ...filters, sort: "volDesc" }).map((item) => item.ticker),
       ["HOT", "FLAT", "QUIET", "NONE"],
+    );
+  });
+
+  it("filters a low basket correlation and the jab group", () => {
+    const names = [
+      row({ ticker: "LOW", corrBasket: 0.3, corrSoxx: 0.9 }),
+      row({ ticker: "EDGE", corrBasket: 0.304, corrSoxx: 0.1 }),
+      row({ ticker: "HIGH", corrBasket: 0.305, corrSoxx: 0.2 }),
+      row({ ticker: "NEG", corrBasket: -0.2, corrSoxx: 0.4 }),
+      row({ ticker: "NONE", corrBasket: null, corrSoxx: null }),
+      row({ ticker: "JAB", sectorId: "jab_sp500", sector: "安定ジャブ（S&P500）", sectorLabel: "金融", corrBasket: 0.8 }),
+    ];
+    assert.deepEqual(
+      applyView(names, { ...filters, lowCorr: true }).map((item) => item.ticker),
+      ["EDGE", "LOW", "NEG"],
+    );
+    assert.deepEqual(
+      applyView(names, { ...filters, sector: "jab_sp500" }).map((item) => item.ticker),
+      ["JAB"],
     );
   });
 

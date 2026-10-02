@@ -1,4 +1,4 @@
-import { BOX_BOTTOM_MAX, BOX_TOP_MIN, VOLUME_CONFIRM_RATIO, VOLUME_SURGE_RATIO, VOLUME_THIN_RATIO } from "./constants";
+import { BOX_BOTTOM_MAX, BOX_TOP_MIN, CORR_LOW_MAX, VOLUME_CONFIRM_RATIO, VOLUME_SURGE_RATIO, VOLUME_THIN_RATIO } from "./constants";
 import type { SortId } from "./copy";
 import { boxShown } from "./format";
 import type { Quote, TickerRow } from "./types";
@@ -11,6 +11,7 @@ export type ViewFilters = {
   continued: boolean;
   surge: boolean;
   earnings: boolean;
+  lowCorr: boolean;
   hideWatch: boolean;
   sort: SortId;
   q: string;
@@ -37,6 +38,12 @@ export function volumeSurge(quote: Quote): boolean {
   return quote.volumeRatio != null && volumeRatioShown(quote.volumeRatio) >= VOLUME_SURGE_RATIO;
 }
 
+/** Two-decimal basket correlation at or under 0.3, including negatives. Missing correlation stays out. */
+export function lowBasketCorr(row: TickerRow): boolean {
+  if (row.corrBasket == null || !Number.isFinite(row.corrBasket)) return false;
+  return Math.round(row.corrBasket * 100) / 100 <= CORR_LOW_MAX;
+}
+
 const CONTINUED_LABEL = "上抜け継続？（売り急ぎ注意）";
 
 export function continuedBreakoutText(quote: Quote): string {
@@ -61,8 +68,9 @@ export function applyView(rows: TickerRow[], filters: ViewFilters): TickerRow[] 
     if (filters.continued && !(row.quote && continuedBreakout(row.quote))) return false;
     if (filters.surge && !(row.quote && volumeSurge(row.quote))) return false;
     if (filters.earnings && !row.earnings?.warn) return false;
+    if (filters.lowCorr && !lowBasketCorr(row)) return false;
     if (query) {
-      const hay = `${row.ticker} ${row.description} ${row.notes} ${row.sector} ${row.tags.join(" ")}`.toLowerCase();
+      const hay = `${row.ticker} ${row.description} ${row.notes} ${row.sector} ${row.sectorLabel ?? ""} ${row.tags.join(" ")}`.toLowerCase();
       if (!hay.includes(query)) return false;
     }
     return true;

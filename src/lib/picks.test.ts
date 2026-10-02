@@ -42,8 +42,11 @@ function card(overrides: Record<string, unknown> = {}, close: number | null = 10
 }
 
 describe("team picks", () => {
-  it("seeds an empty list", () => {
-    assert.deepEqual(loadTeamPicks(), []);
+  it("loads the committed picks", () => {
+    assert.deepEqual(
+      loadTeamPicks().map((pick) => pick.ticker),
+      ["AMZN", "AKAM", "HPE", "CEG", "GOOGL", "DLR", "JBL", "COHR"],
+    );
     assert.deepEqual(parseTeamPicks([]), []);
     assert.equal(TEAM_PICKS_EMPTY, "チームの推奨は朝に更新されます");
     assert.equal(PICK_ENTRY_BADGE, "エントリー圏");

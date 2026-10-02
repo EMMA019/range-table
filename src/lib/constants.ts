@@ -55,3 +55,9 @@ export const GAP_THRESHOLD = 0.35;
 
 /** Parallel Yahoo chart reads. Kept small so a cold start does not spike the 512MB instance. */
 export const FETCH_CONCURRENCY = 5;
+
+/** Daily-return window for the holdings basket and the benchmark. */
+export const CORR_WINDOW = 60;
+
+/** Basket correlation at or under this, on the two-decimal figure, is the low-correlation chip. */
+export const CORR_LOW_MAX = 0.3;

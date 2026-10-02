@@ -10,7 +10,7 @@ import type {
 
 const TICKER_RE = /^[A-Z][A-Z0-9.]{0,9}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const ID_RE = /^[a-z0-9-]+$/;
+const ID_RE = /^[a-z0-9_-]+$/;
 const STATUSES = new Set<EarningsStatus>(["confirmed", "estimated"]);
 
 export function watchlistPath(): string {
@@ -65,6 +65,7 @@ export function validateWatchlist(doc: unknown): Watchlist {
       const watchOnly = boolField(raw, "watchOnly");
       const tags = tagsField(raw, ticker, errors);
       const earnings = earningsField(raw, ticker, errors);
+      const sectorLabel = stringField(raw, "sector");
 
       tickers.push({
         ticker,
@@ -73,6 +74,7 @@ export function validateWatchlist(doc: unknown): Watchlist {
         tags,
         watchOnly,
         earnings,
+        sectorLabel,
       });
     });
 

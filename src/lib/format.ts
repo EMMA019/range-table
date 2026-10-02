@@ -83,6 +83,22 @@ export function formatDollarVolume(n: number): string {
   return `$${Math.round(n).toLocaleString("en-US")}`;
 }
 
+/** Two decimals, matching the card. Negative uses the same minus as the other percents. */
+export function formatCorr(n: number | null): string {
+  if (n == null || !Number.isFinite(n)) return "—";
+  const shown = Math.round(n * 100) / 100;
+  const sign = shown < 0 ? "−" : "";
+  return `${sign}${Math.abs(shown).toFixed(2)}`;
+}
+
+/** Four decimals for the detail view. */
+export function formatCorrExact(n: number | null): string {
+  if (n == null || !Number.isFinite(n)) return "—";
+  const shown = Math.round(n * 10000) / 10000;
+  const sign = shown < 0 ? "−" : "";
+  return `${sign}${Math.abs(shown).toFixed(4)}`;
+}
+
 export function formatAtr(n: number): string {
   if (!Number.isFinite(n)) return "—";
   return n.toFixed(2);

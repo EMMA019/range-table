@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { BASIS, TOP_BREAKOUT_NOTE, VOLUME_NOTE } from "@/lib/copy";
+import { BASIS, CORR_NOTE, TOP_BREAKOUT_NOTE, VOLUME_NOTE } from "@/lib/copy";
 import { formatPe, PE_SOURCE_NOTE } from "@/lib/pe";
 import {
   earningsBadge,
   formatAtr,
   formatBox,
+  formatCorrExact,
   formatDev,
   formatEarnings,
   formatDollarVolume,
@@ -39,7 +40,12 @@ export function DetailPanel({
         <Button type="button" variant="outline" onClick={onClose}>
           一覧
         </Button>
-        {row && <span className="truncate text-sm text-muted">{row.sector}</span>}
+        {row && (
+          <span className="truncate text-sm text-muted">
+            {row.sector}
+            {row.sectorLabel ? ` · ${row.sectorLabel}` : ""}
+          </span>
+        )}
       </div>
 
       {!row ? (
@@ -144,6 +150,7 @@ export function DetailPanel({
                 <p className="mt-3 text-xs leading-relaxed text-muted">{TOP_BREAKOUT_NOTE}</p>
               )}
               <VolumeBlock quote={row.quote} />
+              <CorrBlock row={row} />
               {row.quote.gapWarning && (
                 <p className="mt-3 text-xs leading-relaxed text-rust">
                   直近20本のあいだに、終値が前日終値から35%以上動いた日がある。分割やスピンオフの直後は箱をそのまま信じない。
@@ -153,7 +160,12 @@ export function DetailPanel({
               <ChartBlock ticker={row.ticker} />
             </>
           )}
-          {!row.quote && <PeBlock row={row} />}
+          {!row.quote && (
+            <>
+              <CorrBlock row={row} />
+              <PeBlock row={row} />
+            </>
+          )}
         </article>
       )}
     </div>
@@ -187,6 +199,17 @@ function VolumeBlock({ quote }: { quote: TickerRow["quote"] }) {
         />
       </div>
       <p className="mt-2 text-[11px] leading-relaxed text-muted">{VOLUME_NOTE}</p>
+    </div>
+  );
+}
+
+function CorrBlock({ row }: { row: TickerRow }) {
+  return (
+    <div className="mt-4">
+      <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
+        <Stat label="保有との相関" value={formatCorrExact(row.corrBasket)} basis={CORR_NOTE} />
+        <Stat label="SOXXとの相関" value={formatCorrExact(row.corrSoxx)} basis="同じ60営業日の日次リターンとSOXXの相関" />
+      </div>
     </div>
   );
 }

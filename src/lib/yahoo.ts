@@ -1,5 +1,6 @@
+import https from "node:https";
 import { sessionDate } from "./calendar";
-import { CHART_SESSIONS } from "./constants";
+import { CHART_SESSIONS, FETCH_CONCURRENCY } from "./constants";
 import type { Bar } from "./types";
 
 const HOSTS = [
@@ -9,6 +10,12 @@ const HOSTS = [
 
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+
+const chartAgent = new https.Agent({
+  keepAlive: true,
+  maxSockets: FETCH_CONCURRENCY,
+  maxFreeSockets: 1,
+});
 
 type YahooSplit = {
   date?: number;
@@ -179,25 +186,71 @@ export function parseChart(result: YahooResult, nowSec = Date.now() / 1000): Par
   return { bars: kept, droppedPartial: dropped };
 }
 
-async function fetchHost(host: string, symbol: string): Promise<YahooResult> {
-  const url = `${host}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=3mo&events=split&includePrePost=false`;
-  const res = await fetch(url, {
-    headers: { "User-Agent": UA, Accept: "application/json" },
-    signal: AbortSignal.timeout(15000),
-    cache: "no-store",
+function fetchHost(host: string, symbol: string): Promise<YahooResult> {
+  // 6mo covers the 60-return window. parseChart keeps only the last CHART_SESSIONS bars.
+  const path = `/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=6mo&events=split&includePrePost=false`;
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      {
+        hostname: new URL(host).hostname,
+        path,
+        method: "GET",
+        headers: { "User-Agent": UA, Accept: "application/json" },
+        agent: chartAgent,
+        timeout: 15_000,
+      },
+      (res) => {
+        const status = res.statusCode ?? 0;
+        const chunks: Buffer[] = [];
+        let received = 0;
+        let settled = false;
+        const fail = (error: Error) => {
+          if (settled) return;
+          settled = true;
+          res.destroy();
+          reject(error);
+        };
+        res.on("data", (chunk: Buffer) => {
+          if (settled) return;
+          received += chunk.length;
+          if (received > 256_000) {
+            fail(new Error("日足が大きすぎる"));
+            return;
+          }
+          chunks.push(chunk);
+        });
+        res.on("end", () => {
+          if (settled) return;
+          settled = true;
+          if (status < 200 || status >= 300) {
+            reject(new Error(`HTTP ${status}`));
+            return;
+          }
+          try {
+            const json = JSON.parse(Buffer.concat(chunks).toString("utf8")) as {
+              chart?: { result?: Array<YahooResult | null>; error?: { description?: string; code?: string } };
+            };
+            if (json.chart?.error) {
+              reject(new Error(json.chart.error.description || json.chart.error.code || "日足がない"));
+              return;
+            }
+            const result = json.chart?.result?.[0];
+            if (!result) {
+              reject(new Error("日足が空"));
+              return;
+            }
+            resolve(result);
+          } catch (error) {
+            reject(error instanceof Error ? error : new Error("日足を読めなかった"));
+          }
+        });
+        res.on("error", (error) => fail(error));
+      },
+    );
+    req.on("timeout", () => req.destroy(new Error("timeout")));
+    req.on("error", reject);
+    req.end();
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const text = await res.text();
-  if (text.length > 256_000) throw new Error("日足が大きすぎる");
-  const json = JSON.parse(text) as {
-    chart?: { result?: Array<YahooResult | null>; error?: { description?: string; code?: string } };
-  };
-  if (json.chart?.error) {
-    throw new Error(json.chart.error.description || json.chart.error.code || "日足がない");
-  }
-  const result = json.chart?.result?.[0];
-  if (!result) throw new Error("日足が空");
-  return result;
 }
 
 export async function fetchDailyBars(symbol: string): Promise<ParsedSeries> {

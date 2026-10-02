@@ -1,6 +1,7 @@
 import {
   BOX_BOTTOM_MAX,
   BOX_TOP_MIN,
+  CORR_LOW_MAX,
   EARNINGS_WARN_DAYS,
   MA_SLOPE_FLAT_PCT,
   MA_SLOPE_LOOKBACK,
@@ -23,7 +24,10 @@ export const BASIS = {
   recovering: `実績PERが予想PERの${PE_RECOVERY_MULTIPLE}倍以上。過去12か月の利益が薄く、予想利益の方が大きい`,
   slope: `Yahoo Finance の確定終値で作った20日単純移動平均。今日の値 ÷ ${MA_SLOPE_LOOKBACK}営業日前の値 − 1。±${MA_SLOPE_FLAT_PCT}%未満は横ばい`,
   volume: "出来高=Yahoo日足。倍率=直近日の出来高÷直前20日平均。薄商い<0.7倍、急増≧1.5倍。売買代金=終値×出来高の20日平均。",
+  corr: "60営業日の日次リターン相関。保有バスケット=data/corr_basket.json の株数×最新終値で加重。",
 } as const;
+
+export const CORR_NOTE = BASIS.corr;
 
 export const VOLUME_NOTE = BASIS.volume;
 
@@ -56,6 +60,7 @@ export const CHIPS = [
   { key: "continued", label: "上抜け継続" },
   { key: "surge", label: "出来高急増" },
   { key: "earnings", label: `決算 ≤${EARNINGS_WARN_DAYS}営業日` },
+  { key: "lowCorr", label: `低相関 ≤${CORR_LOW_MAX}` },
   { key: "hideWatch", label: "監視のみを隠す" },
 ] as const;
 

@@ -36,13 +36,16 @@ const NYSE_HOLIDAYS = new Set<string>([
   "2028-12-25",
 ]);
 
+/** Shared formatter. Creating one per bar retains native memory across a full refresh. */
+const etDate = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "America/New_York",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
 export function todayEt(now = new Date()): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/New_York",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(now);
+  return etDate.format(now);
 }
 
 export function addDays(iso: string, days: number): string {
@@ -79,10 +82,5 @@ export function tradingDaysUntil(today: string, earningsDate: string): number {
 }
 
 export function sessionDate(unixSec: number): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/New_York",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date(unixSec * 1000));
+  return etDate.format(new Date(unixSec * 1000));
 }

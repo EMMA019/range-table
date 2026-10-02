@@ -12,6 +12,8 @@ export type WatchTicker = {
   tags: string[];
   watchOnly: boolean;
   earnings: EarningsInput | null;
+  /** Japanese sector label from the jab list. Null on the original groups. */
+  sectorLabel: string | null;
 };
 
 export type WatchGroup = {
@@ -92,6 +94,12 @@ export type TickerRow = {
   tags: string[];
   watchOnly: boolean;
   earnings: EarningsView | null;
+  /** Japanese sector label. Null unless the watchlist row set `sector`. */
+  sectorLabel: string | null;
+  /** 60-day daily-return correlation versus the holdings basket. Null when the window is short. */
+  corrBasket: number | null;
+  /** 60-day daily-return correlation versus the basket file's benchmark (SOXX). */
+  corrSoxx: number | null;
   quote: Quote | null;
   pe: PeView;
   error: string | null;

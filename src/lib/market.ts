@@ -11,6 +11,7 @@ import {
 } from "./constants";
 import { fetchEpsBatch } from "./eps";
 import { epsIsFresh, epsTtlMs, hasEpsValue, peView, pickEpsBatch } from "./pe";
+import { buildCorrelations, loadCorrBasket, type CorrPair } from "./corr";
 import { chartPoints, computeQuote } from "./compute";
 import { classifyEarnings } from "./earnings";
 import { formatJst, friendlyFetchError } from "./format";
@@ -242,11 +243,19 @@ async function waitForPrices(): Promise<void> {
 let payloadMemo: { key: string; payload: MarketPayload } | null = null;
 
 function memoPayload(cache: CacheBody, list: Watchlist): MarketPayload {
-  const key = `${cache.fetchedAt}:${epsStamp()}`;
+  const key = `${cache.fetchedAt}:${epsStamp()}:${basketStamp()}`;
   if (payloadMemo?.key === key) return payloadMemo.payload;
   const payload = buildPayload(cache, list, readCachedEps());
   payloadMemo = { key, payload };
   return payload;
+}
+
+function basketStamp(): string {
+  try {
+    return String(fs.statSync(path.join(process.cwd(), "data", "corr_basket.json")).mtimeMs);
+  } catch {
+    return "0";
+  }
 }
 
 function epsStamp(): string {
@@ -369,20 +378,25 @@ function buildPayload(
   eps: Record<string, EpsSnapshot>,
 ): MarketPayload {
   const today = todayEt();
+  const corr = correlationsOf(cache);
   const rows: TickerRow[] = [];
   for (const group of list.groups) {
     for (const ticker of group.tickers) {
       const entry = cache.series[ticker.ticker];
       const built = quoteFromEntry(entry);
+      const pair = corr.get(ticker.ticker);
       rows.push({
         ticker: ticker.ticker,
         sectorId: group.id,
         sector: group.name,
+        sectorLabel: ticker.sectorLabel,
         description: ticker.description,
         notes: ticker.notes,
         tags: ticker.tags,
         watchOnly: ticker.watchOnly,
         earnings: classifyEarnings(today, ticker.earnings),
+        corrBasket: pair?.basket ?? null,
+        corrSoxx: pair?.soxx ?? null,
         quote: built.quote,
         pe: peView(built.quote?.close, eps[ticker.ticker] ?? null),
         error: built.error,
@@ -425,6 +439,22 @@ function toPickQuote(quote: Quote | null): PickQuote | null {
     high20: quote.high20,
     volumeRatio: quote.volumeRatio,
   };
+}
+
+function correlationsOf(cache: CacheBody): Map<string, CorrPair> {
+  const basket = loadCorrBasket();
+  if (!basket) return new Map();
+  const closes: Record<string, Array<{ date: string; c: number }>> = {};
+  for (const [symbol, entry] of Object.entries(cache.series)) {
+    if (!entry.bars?.length) continue;
+    closes[symbol] = entry.bars.map((bar) => ({ date: bar.date, c: bar.c }));
+  }
+  try {
+    return buildCorrelations(closes, basket);
+  } catch (error) {
+    console.error("[range] corr", error);
+    return new Map();
+  }
 }
 
 function quoteFromEntry(entry: SeriesEntry | undefined): {

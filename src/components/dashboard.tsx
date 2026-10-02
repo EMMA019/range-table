@@ -10,6 +10,7 @@ import {
   formatDev,
   formatAtr,
   formatCompactShares,
+  formatCorr,
   formatPx,
   formatVolumeRatio,
   shortDate,
@@ -35,6 +36,7 @@ const CHIP_PARAM: Record<ChipKey, string> = {
   continued: "cont",
   surge: "surge",
   earnings: "earn",
+  lowCorr: "lowcorr",
   hideWatch: "hideWatch",
 };
 
@@ -95,6 +97,7 @@ export function Dashboard() {
       continued: sp.get("cont") === "1",
       surge: sp.get("surge") === "1",
       earnings: sp.get("earn") === "1",
+      lowCorr: sp.get("lowcorr") === "1",
       hideWatch: sp.get("hideWatch") === "1",
       sort: SORTS.has(sort ?? "") ? (sort as SortId) : "boxAsc",
       q: query,
@@ -160,6 +163,7 @@ export function Dashboard() {
     filters.continued ||
     filters.surge ||
     filters.earnings ||
+    filters.lowCorr ||
     filters.hideWatch ||
     query.trim().length > 0;
 
@@ -179,6 +183,7 @@ export function Dashboard() {
         cont: null,
         surge: null,
         earn: null,
+        lowcorr: null,
         hideWatch: null,
         sort: null,
       },
@@ -494,7 +499,10 @@ function TickerCard({
         <div className="min-w-0">
           <div className="flex flex-wrap items-baseline gap-x-2">
             <span className="font-mono text-base font-medium tracking-wide">{row.ticker}</span>
-            <span className="text-[11px] text-muted">{row.sector}</span>
+            <span className="text-[11px] text-muted">
+              {row.sector}
+              {row.sectorLabel ? ` · ${row.sectorLabel}` : ""}
+            </span>
           </div>
           {badges.length > 0 && (
             <div className="mt-1 flex flex-wrap gap-1">
@@ -597,6 +605,12 @@ function TickerCard({
             </b>
           </>
         )}
+      </p>
+      <p className="mt-1 text-[11px] text-muted">
+        相関 保有
+        <b className="font-mono font-medium text-ink tabular-nums">{formatCorr(row.corrBasket)}</b>
+        {" / SOXX"}
+        <b className="font-mono font-medium text-ink tabular-nums">{formatCorr(row.corrSoxx)}</b>
       </p>
     </button>
   );
