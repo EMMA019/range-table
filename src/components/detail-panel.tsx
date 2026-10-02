@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { pastResult } from "@/lib/backtest-view";
 import { BASIS, CORR_NOTE, TOP_BREAKOUT_NOTE, VOLUME_NOTE } from "@/lib/copy";
 import { formatPe, PE_SOURCE_NOTE } from "@/lib/pe";
 import {
@@ -11,6 +12,7 @@ import {
   formatDev,
   formatEarnings,
   formatDollarVolume,
+  formatPnl,
   formatPx,
   formatShares,
   guideLineText,
@@ -165,6 +167,7 @@ export function DetailPanel({
                   }
                   tone={row.earnings?.warn ? "rust" : undefined}
                 />
+                <PastStat ticker={row.ticker} />
               </div>
               {row.quote && atTop(row.quote) && (
                 <p className="mt-3 text-xs leading-relaxed text-muted">{TOP_BREAKOUT_NOTE}</p>
@@ -189,6 +192,21 @@ export function DetailPanel({
         </article>
       )}
     </div>
+  );
+}
+
+function PastStat({ ticker }: { ticker: string }) {
+  const past = pastResult(ticker);
+  return (
+    <Stat
+      label="この形の過去2年"
+      value={
+        past && past.n > 0
+          ? `${past.n}回 · 勝率${Math.round((past.winRate ?? 0) * 100)}% · ${formatPnl(past.expectancyUsd ?? 0)}`
+          : "—"
+      }
+      basis="反発して15%ライン以上で翌日始値買い、+1ATRで利確、20日安値割れで損切り。1回あたり手数料込み（過去検証タブ）"
+    />
   );
 }
 

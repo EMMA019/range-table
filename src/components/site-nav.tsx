@@ -6,6 +6,7 @@ const TABS = [
   { href: "/picks", label: "チーム注目" },
   { href: "/alerts", label: "アラート" },
   { href: "/log", label: "取引ログ" },
+  { href: "/backtest", label: "過去検証" },
 ] as const;
 
 export type NavPath = (typeof TABS)[number]["href"];
