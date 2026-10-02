@@ -8,7 +8,8 @@
     "start": "node --max-old-space-size=384 node_modules/next/dist/bin/next start -H 0.0.0.0 -p ${PORT:-43123}",
     "lint": "eslint",
     "test": "tsx --test src/lib/*.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "backtest": "tsx scripts/backtest.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.3.3",

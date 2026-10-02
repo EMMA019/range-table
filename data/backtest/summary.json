@@ -1,0 +1,1579 @@
+{
+ "v": 1,
+ "generatedAt": "2026-10-02T22:58:28.453Z",
+ "period": {
+  "from": "2024-10-03",
+  "to": "2026-10-02",
+  "sessions": 501
+ },
+ "universe": {
+  "tickers": 186,
+  "withData": 186,
+  "missing": []
+ },
+ "rules": {
+  "signal": "反発1日以上（安値後の陽線続き）かつ終値が15%ライン以上。in_ok は25%ライン以下も条件",
+  "entry": "シグナル翌日の始値で買う",
+  "target": "買値 + シグナル日のATR14。始値が上なら始値、高値が届けば利確値で約定",
+  "stop": "終値がシグナル日の20日安値を下回った日の終値",
+  "timeout": "20営業日で終値決済",
+  "sizing": "ceil($10 ÷ ATR14) 株（表の$10株数と同じ）",
+  "fees": "往復 $0.70"
+ },
+ "byAtrThreshold": [
+  {
+   "minAtrPct": null,
+   "rebound15": {
+    "n": 3160,
+    "winRate": 0.6665,
+    "avgHoldSessions": 4.4,
+    "expectancyUsd": 0.58,
+    "expectancyAtr": 0.097,
+    "profitFactor": 1.07,
+    "totalUsd": 1824.34,
+    "maxConsecLosses": 54,
+    "targets": 2094,
+    "stops": 962,
+    "timeouts": 104
+   },
+   "in_ok": {
+    "n": 1203,
+    "winRate": 0.5919,
+    "avgHoldSessions": 3.6,
+    "expectancyUsd": 0.33,
+    "expectancyAtr": 0.049,
+    "profitFactor": 1.04,
+    "totalUsd": 400.39,
+    "maxConsecLosses": 22,
+    "targets": 710,
+    "stops": 484,
+    "timeouts": 9
+   }
+  },
+  {
+   "minAtrPct": 2,
+   "rebound15": {
+    "n": 2844,
+    "winRate": 0.6667,
+    "avgHoldSessions": 4.5,
+    "expectancyUsd": 0.68,
+    "expectancyAtr": 0.103,
+    "profitFactor": 1.08,
+    "totalUsd": 1931.08,
+    "maxConsecLosses": 54,
+    "targets": 1885,
+    "stops": 858,
+    "timeouts": 101
+   },
+   "in_ok": {
+    "n": 1094,
+    "winRate": 0.5914,
+    "avgHoldSessions": 3.6,
+    "expectancyUsd": 0.43,
+    "expectancyAtr": 0.055,
+    "profitFactor": 1.06,
+    "totalUsd": 471.4,
+    "maxConsecLosses": 22,
+    "targets": 645,
+    "stops": 440,
+    "timeouts": 9
+   }
+  },
+  {
+   "minAtrPct": 3,
+   "rebound15": {
+    "n": 1909,
+    "winRate": 0.6731,
+    "avgHoldSessions": 4.8,
+    "expectancyUsd": 1.35,
+    "expectancyAtr": 0.148,
+    "profitFactor": 1.15,
+    "totalUsd": 2581.02,
+    "maxConsecLosses": 43,
+    "targets": 1277,
+    "stops": 548,
+    "timeouts": 84
+   },
+   "in_ok": {
+    "n": 761,
+    "winRate": 0.6018,
+    "avgHoldSessions": 3.9,
+    "expectancyUsd": 1.17,
+    "expectancyAtr": 0.106,
+    "profitFactor": 1.16,
+    "totalUsd": 892.69,
+    "maxConsecLosses": 24,
+    "targets": 456,
+    "stops": 296,
+    "timeouts": 9
+   }
+  },
+  {
+   "minAtrPct": 4,
+   "rebound15": {
+    "n": 1248,
+    "winRate": 0.6803,
+    "avgHoldSessions": 4.9,
+    "expectancyUsd": 1.83,
+    "expectancyAtr": 0.179,
+    "profitFactor": 1.2,
+    "totalUsd": 2280.51,
+    "maxConsecLosses": 44,
+    "targets": 843,
+    "stops": 351,
+    "timeouts": 54
+   },
+   "in_ok": {
+    "n": 509,
+    "winRate": 0.6012,
+    "avgHoldSessions": 4,
+    "expectancyUsd": 1.6,
+    "expectancyAtr": 0.105,
+    "profitFactor": 1.21,
+    "totalUsd": 815.62,
+    "maxConsecLosses": 40,
+    "targets": 305,
+    "stops": 196,
+    "timeouts": 8
+   }
+  }
+ ],
+ "byAtrBand": [
+  {
+   "band": "<2%",
+   "n": 316,
+   "winRate": 0.6646,
+   "avgHoldSessions": 3.6,
+   "expectancyUsd": -0.34,
+   "expectancyAtr": 0.039,
+   "profitFactor": 0.96,
+   "totalUsd": -106.74,
+   "maxConsecLosses": 10,
+   "targets": 209,
+   "stops": 104,
+   "timeouts": 3
+  },
+  {
+   "band": "2-3%",
+   "n": 935,
+   "winRate": 0.6535,
+   "avgHoldSessions": 4,
+   "expectancyUsd": -0.7,
+   "expectancyAtr": 0.012,
+   "profitFactor": 0.92,
+   "totalUsd": -649.93,
+   "maxConsecLosses": 13,
+   "targets": 608,
+   "stops": 310,
+   "timeouts": 17
+  },
+  {
+   "band": "3-4%",
+   "n": 661,
+   "winRate": 0.6596,
+   "avgHoldSessions": 4.7,
+   "expectancyUsd": 0.45,
+   "expectancyAtr": 0.088,
+   "profitFactor": 1.05,
+   "totalUsd": 300.5,
+   "maxConsecLosses": 16,
+   "targets": 434,
+   "stops": 197,
+   "timeouts": 30
+  },
+  {
+   "band": "4-6%",
+   "n": 611,
+   "winRate": 0.7103,
+   "avgHoldSessions": 4.9,
+   "expectancyUsd": 2.69,
+   "expectancyAtr": 0.231,
+   "profitFactor": 1.32,
+   "totalUsd": 1643.84,
+   "maxConsecLosses": 24,
+   "targets": 432,
+   "stops": 155,
+   "timeouts": 24
+  },
+  {
+   "band": "≥6%",
+   "n": 637,
+   "winRate": 0.6515,
+   "avgHoldSessions": 4.9,
+   "expectancyUsd": 1,
+   "expectancyAtr": 0.13,
+   "profitFactor": 1.1,
+   "totalUsd": 636.68,
+   "maxConsecLosses": 34,
+   "targets": 411,
+   "stops": 196,
+   "timeouts": 30
+  }
+ ],
+ "variants": {
+  "main": {
+   "n": 3160,
+   "winRate": 0.6665,
+   "avgHoldSessions": 4.4,
+   "expectancyUsd": 0.58,
+   "expectancyAtr": 0.097,
+   "profitFactor": 1.07,
+   "totalUsd": 1824.34,
+   "maxConsecLosses": 54,
+   "targets": 2094,
+   "stops": 962,
+   "timeouts": 104
+  },
+  "in_ok": {
+   "n": 1203,
+   "winRate": 0.5919,
+   "avgHoldSessions": 3.6,
+   "expectancyUsd": 0.33,
+   "expectancyAtr": 0.049,
+   "profitFactor": 1.04,
+   "totalUsd": 400.39,
+   "maxConsecLosses": 22,
+   "targets": 710,
+   "stops": 484,
+   "timeouts": 9
+  },
+  "signal_close_entry": {
+   "n": 3203,
+   "winRate": 0.6778,
+   "avgHoldSessions": 5.1,
+   "expectancyUsd": 0.8,
+   "expectancyAtr": 0.106,
+   "profitFactor": 1.09,
+   "totalUsd": 2548.95,
+   "maxConsecLosses": 69,
+   "targets": 2162,
+   "stops": 946,
+   "timeouts": 95
+  },
+  "next_open_stop": {
+   "n": 3157,
+   "winRate": 0.668,
+   "avgHoldSessions": 4.7,
+   "expectancyUsd": 0.45,
+   "expectancyAtr": 0.088,
+   "profitFactor": 1.05,
+   "totalUsd": 1424.14,
+   "maxConsecLosses": 66,
+   "targets": 2093,
+   "stops": 960,
+   "timeouts": 104
+  }
+ },
+ "byTicker": [
+  {
+   "ticker": "AAOI",
+   "n": 11,
+   "winRate": 0.6364,
+   "expectancyUsd": -0.89,
+   "totalUsd": -9.75
+  },
+  {
+   "ticker": "AAPL",
+   "n": 10,
+   "winRate": 0.6,
+   "expectancyUsd": -0.21,
+   "totalUsd": -2.11
+  },
+  {
+   "ticker": "ABNB",
+   "n": 18,
+   "winRate": 0.5,
+   "expectancyUsd": -5.11,
+   "totalUsd": -92.05
+  },
+  {
+   "ticker": "ADI",
+   "n": 27,
+   "winRate": 0.6296,
+   "expectancyUsd": 0.25,
+   "totalUsd": 6.74
+  },
+  {
+   "ticker": "ADM",
+   "n": 21,
+   "winRate": 0.7619,
+   "expectancyUsd": 1.82,
+   "totalUsd": 38.15
+  },
+  {
+   "ticker": "ADSK",
+   "n": 25,
+   "winRate": 0.56,
+   "expectancyUsd": -5.67,
+   "totalUsd": -141.74
+  },
+  {
+   "ticker": "AEHR",
+   "n": 22,
+   "winRate": 0.7273,
+   "expectancyUsd": 4.03,
+   "totalUsd": 88.72
+  },
+  {
+   "ticker": "AKAM",
+   "n": 17,
+   "winRate": 0.7059,
+   "expectancyUsd": -2.22,
+   "totalUsd": -37.75
+  },
+  {
+   "ticker": "ALAB",
+   "n": 20,
+   "winRate": 0.65,
+   "expectancyUsd": 1.45,
+   "totalUsd": 28.95
+  },
+  {
+   "ticker": "AMD",
+   "n": 16,
+   "winRate": 0.5625,
+   "expectancyUsd": -1.18,
+   "totalUsd": -18.9
+  },
+  {
+   "ticker": "AMGN",
+   "n": 18,
+   "winRate": 0.7222,
+   "expectancyUsd": 3.85,
+   "totalUsd": 69.27
+  },
+  {
+   "ticker": "AMKR",
+   "n": 14,
+   "winRate": 0.5,
+   "expectancyUsd": -6.37,
+   "totalUsd": -89.21
+  },
+  {
+   "ticker": "AMT",
+   "n": 28,
+   "winRate": 0.6429,
+   "expectancyUsd": 0.42,
+   "totalUsd": 11.72
+  },
+  {
+   "ticker": "AMZN",
+   "n": 21,
+   "winRate": 0.5238,
+   "expectancyUsd": -5.84,
+   "totalUsd": -122.54
+  },
+  {
+   "ticker": "ANET",
+   "n": 20,
+   "winRate": 0.8,
+   "expectancyUsd": 7.67,
+   "totalUsd": 153.48
+  },
+  {
+   "ticker": "APD",
+   "n": 15,
+   "winRate": 0.6,
+   "expectancyUsd": -3.72,
+   "totalUsd": -55.82
+  },
+  {
+   "ticker": "APH",
+   "n": 15,
+   "winRate": 0.7333,
+   "expectancyUsd": 4.94,
+   "totalUsd": 74.1
+  },
+  {
+   "ticker": "APLD",
+   "n": 24,
+   "winRate": 0.6667,
+   "expectancyUsd": 0.74,
+   "totalUsd": 17.68
+  },
+  {
+   "ticker": "ARM",
+   "n": 17,
+   "winRate": 0.7059,
+   "expectancyUsd": 2.86,
+   "totalUsd": 48.59
+  },
+  {
+   "ticker": "ASML",
+   "n": 14,
+   "winRate": 0.7143,
+   "expectancyUsd": -0.31,
+   "totalUsd": -4.38
+  },
+  {
+   "ticker": "ASTS",
+   "n": 20,
+   "winRate": 0.75,
+   "expectancyUsd": 0.54,
+   "totalUsd": 10.9
+  },
+  {
+   "ticker": "ASX",
+   "n": 9,
+   "winRate": 0.7778,
+   "expectancyUsd": 3.26,
+   "totalUsd": 29.36
+  },
+  {
+   "ticker": "AVGO",
+   "n": 16,
+   "winRate": 0.625,
+   "expectancyUsd": -1.53,
+   "totalUsd": -24.51
+  },
+  {
+   "ticker": "BA",
+   "n": 22,
+   "winRate": 0.5909,
+   "expectancyUsd": -5.26,
+   "totalUsd": -115.79
+  },
+  {
+   "ticker": "BAC",
+   "n": 12,
+   "winRate": 0.8333,
+   "expectancyUsd": 5.32,
+   "totalUsd": 63.85
+  },
+  {
+   "ticker": "BE",
+   "n": 12,
+   "winRate": 0.6667,
+   "expectancyUsd": -5.73,
+   "totalUsd": -68.72
+  },
+  {
+   "ticker": "BKNG",
+   "n": 23,
+   "winRate": 0.5652,
+   "expectancyUsd": -2.85,
+   "totalUsd": -65.63
+  },
+  {
+   "ticker": "BSX",
+   "n": 18,
+   "winRate": 0.6667,
+   "expectancyUsd": -0.46,
+   "totalUsd": -8.24
+  },
+  {
+   "ticker": "C",
+   "n": 11,
+   "winRate": 0.7273,
+   "expectancyUsd": 1.52,
+   "totalUsd": 16.71
+  },
+  {
+   "ticker": "CAMT",
+   "n": 18,
+   "winRate": 0.6667,
+   "expectancyUsd": 3.94,
+   "totalUsd": 70.94
+  },
+  {
+   "ticker": "CCJ",
+   "n": 14,
+   "winRate": 0.5714,
+   "expectancyUsd": -5.33,
+   "totalUsd": -74.59
+  },
+  {
+   "ticker": "CDNS",
+   "n": 15,
+   "winRate": 0.8,
+   "expectancyUsd": 1.54,
+   "totalUsd": 23.1
+  },
+  {
+   "ticker": "CEG",
+   "n": 16,
+   "winRate": 0.75,
+   "expectancyUsd": 3.74,
+   "totalUsd": 59.85
+  },
+  {
+   "ticker": "CHTR",
+   "n": 26,
+   "winRate": 0.6154,
+   "expectancyUsd": 1.83,
+   "totalUsd": 47.59
+  },
+  {
+   "ticker": "CI",
+   "n": 25,
+   "winRate": 0.64,
+   "expectancyUsd": -2.88,
+   "totalUsd": -72.12
+  },
+  {
+   "ticker": "CIEN",
+   "n": 20,
+   "winRate": 0.75,
+   "expectancyUsd": 4.16,
+   "totalUsd": 83.23
+  },
+  {
+   "ticker": "CIFR",
+   "n": 14,
+   "winRate": 0.5,
+   "expectancyUsd": -5.54,
+   "totalUsd": -77.61
+  },
+  {
+   "ticker": "CLS",
+   "n": 12,
+   "winRate": 0.6667,
+   "expectancyUsd": 5.79,
+   "totalUsd": 69.54
+  },
+  {
+   "ticker": "CMG",
+   "n": 20,
+   "winRate": 0.75,
+   "expectancyUsd": 3.54,
+   "totalUsd": 70.76
+  },
+  {
+   "ticker": "COF",
+   "n": 17,
+   "winRate": 0.4706,
+   "expectancyUsd": -10.3,
+   "totalUsd": -175.02
+  },
+  {
+   "ticker": "COHR",
+   "n": 12,
+   "winRate": 0.8333,
+   "expectancyUsd": 10.24,
+   "totalUsd": 122.83
+  },
+  {
+   "ticker": "COP",
+   "n": 8,
+   "winRate": 0.5,
+   "expectancyUsd": -3.56,
+   "totalUsd": -28.51
+  },
+  {
+   "ticker": "CORZ",
+   "n": 18,
+   "winRate": 0.6667,
+   "expectancyUsd": -2.62,
+   "totalUsd": -47.25
+  },
+  {
+   "ticker": "CPRT",
+   "n": 26,
+   "winRate": 0.6538,
+   "expectancyUsd": -0.43,
+   "totalUsd": -11.09
+  },
+  {
+   "ticker": "CRDO",
+   "n": 20,
+   "winRate": 0.8,
+   "expectancyUsd": 6.01,
+   "totalUsd": 120.11
+  },
+  {
+   "ticker": "CRWV",
+   "n": 13,
+   "winRate": 0.8462,
+   "expectancyUsd": 5.21,
+   "totalUsd": 67.76
+  },
+  {
+   "ticker": "CSCO",
+   "n": 13,
+   "winRate": 0.6923,
+   "expectancyUsd": 2.03,
+   "totalUsd": 26.38
+  },
+  {
+   "ticker": "CVX",
+   "n": 13,
+   "winRate": 0.6923,
+   "expectancyUsd": 4.48,
+   "totalUsd": 58.18
+  },
+  {
+   "ticker": "DAL",
+   "n": 19,
+   "winRate": 0.5789,
+   "expectancyUsd": -0.52,
+   "totalUsd": -9.92
+  },
+  {
+   "ticker": "DELL",
+   "n": 9,
+   "winRate": 0.7778,
+   "expectancyUsd": 9.01,
+   "totalUsd": 81.1
+  },
+  {
+   "ticker": "DGX",
+   "n": 16,
+   "winRate": 0.6875,
+   "expectancyUsd": 2.54,
+   "totalUsd": 40.61
+  },
+  {
+   "ticker": "DHR",
+   "n": 25,
+   "winRate": 0.68,
+   "expectancyUsd": 1,
+   "totalUsd": 25.01
+  },
+  {
+   "ticker": "DIS",
+   "n": 21,
+   "winRate": 0.5714,
+   "expectancyUsd": -3.66,
+   "totalUsd": -76.96
+  },
+  {
+   "ticker": "DRI",
+   "n": 23,
+   "winRate": 0.5652,
+   "expectancyUsd": -3.74,
+   "totalUsd": -86.13
+  },
+  {
+   "ticker": "DVN",
+   "n": 18,
+   "winRate": 0.6111,
+   "expectancyUsd": -0.76,
+   "totalUsd": -13.68
+  },
+  {
+   "ticker": "EIX",
+   "n": 15,
+   "winRate": 0.7333,
+   "expectancyUsd": 3.33,
+   "totalUsd": 50.02
+  },
+  {
+   "ticker": "EME",
+   "n": 11,
+   "winRate": 0.5455,
+   "expectancyUsd": -12.07,
+   "totalUsd": -132.81
+  },
+  {
+   "ticker": "ENTG",
+   "n": 15,
+   "winRate": 0.8,
+   "expectancyUsd": 6.49,
+   "totalUsd": 97.42
+  },
+  {
+   "ticker": "EOG",
+   "n": 17,
+   "winRate": 0.8235,
+   "expectancyUsd": 6.73,
+   "totalUsd": 114.4
+  },
+  {
+   "ticker": "EQIX",
+   "n": 17,
+   "winRate": 0.7647,
+   "expectancyUsd": 8.24,
+   "totalUsd": 140.1
+  },
+  {
+   "ticker": "ETN",
+   "n": 15,
+   "winRate": 0.6667,
+   "expectancyUsd": -0.1,
+   "totalUsd": -1.51
+  },
+  {
+   "ticker": "ETR",
+   "n": 20,
+   "winRate": 0.65,
+   "expectancyUsd": 1.24,
+   "totalUsd": 24.78
+  },
+  {
+   "ticker": "EW",
+   "n": 10,
+   "winRate": 0.9,
+   "expectancyUsd": 6.61,
+   "totalUsd": 66.1
+  },
+  {
+   "ticker": "F",
+   "n": 15,
+   "winRate": 0.9333,
+   "expectancyUsd": 7.73,
+   "totalUsd": 115.95
+  },
+  {
+   "ticker": "FANG",
+   "n": 24,
+   "winRate": 0.8333,
+   "expectancyUsd": 6.99,
+   "totalUsd": 167.65
+  },
+  {
+   "ticker": "FCX",
+   "n": 10,
+   "winRate": 0.7,
+   "expectancyUsd": 2.57,
+   "totalUsd": 25.74
+  },
+  {
+   "ticker": "FERG",
+   "n": 18,
+   "winRate": 0.6667,
+   "expectancyUsd": 1.4,
+   "totalUsd": 25.12
+  },
+  {
+   "ticker": "FLNC",
+   "n": 17,
+   "winRate": 0.4706,
+   "expectancyUsd": -4.4,
+   "totalUsd": -74.86
+  },
+  {
+   "ticker": "FLY",
+   "n": 8,
+   "winRate": 0.5,
+   "expectancyUsd": -2.83,
+   "totalUsd": -22.63
+  },
+  {
+   "ticker": "FN",
+   "n": 23,
+   "winRate": 0.7391,
+   "expectancyUsd": 1.36,
+   "totalUsd": 31.32
+  },
+  {
+   "ticker": "FORM",
+   "n": 13,
+   "winRate": 0.6923,
+   "expectancyUsd": 0.67,
+   "totalUsd": 8.72
+  },
+  {
+   "ticker": "FTNT",
+   "n": 13,
+   "winRate": 0.7692,
+   "expectancyUsd": 5.05,
+   "totalUsd": 65.69
+  },
+  {
+   "ticker": "GE",
+   "n": 17,
+   "winRate": 0.6471,
+   "expectancyUsd": 1.03,
+   "totalUsd": 17.5
+  },
+  {
+   "ticker": "GEHC",
+   "n": 20,
+   "winRate": 0.8,
+   "expectancyUsd": 4.17,
+   "totalUsd": 83.46
+  },
+  {
+   "ticker": "GEV",
+   "n": 15,
+   "winRate": 0.7333,
+   "expectancyUsd": 5.97,
+   "totalUsd": 89.55
+  },
+  {
+   "ticker": "GFS",
+   "n": 14,
+   "winRate": 0.7143,
+   "expectancyUsd": 2.4,
+   "totalUsd": 33.67
+  },
+  {
+   "ticker": "GLW",
+   "n": 11,
+   "winRate": 0.8182,
+   "expectancyUsd": 6.16,
+   "totalUsd": 67.81
+  },
+  {
+   "ticker": "GOOGL",
+   "n": 20,
+   "winRate": 0.5,
+   "expectancyUsd": -4.02,
+   "totalUsd": -80.38
+  },
+  {
+   "ticker": "HON",
+   "n": 13,
+   "winRate": 0.6923,
+   "expectancyUsd": 3.34,
+   "totalUsd": 43.41
+  },
+  {
+   "ticker": "HPE",
+   "n": 10,
+   "winRate": 0.9,
+   "expectancyUsd": 7.05,
+   "totalUsd": 70.5
+  },
+  {
+   "ticker": "HUBB",
+   "n": 14,
+   "winRate": 0.6429,
+   "expectancyUsd": 3.41,
+   "totalUsd": 47.79
+  },
+  {
+   "ticker": "IBKR",
+   "n": 18,
+   "winRate": 0.6667,
+   "expectancyUsd": -1.62,
+   "totalUsd": -29.15
+  },
+  {
+   "ticker": "IFF",
+   "n": 18,
+   "winRate": 0.5556,
+   "expectancyUsd": -1.15,
+   "totalUsd": -20.66
+  },
+  {
+   "ticker": "INTC",
+   "n": 14,
+   "winRate": 0.7857,
+   "expectancyUsd": 4.19,
+   "totalUsd": 58.61
+  },
+  {
+   "ticker": "IRDM",
+   "n": 8,
+   "winRate": 0.625,
+   "expectancyUsd": -1.94,
+   "totalUsd": -15.48
+  },
+  {
+   "ticker": "IREN",
+   "n": 14,
+   "winRate": 0.5714,
+   "expectancyUsd": -1.98,
+   "totalUsd": -27.76
+  },
+  {
+   "ticker": "ISRG",
+   "n": 20,
+   "winRate": 0.65,
+   "expectancyUsd": -4.72,
+   "totalUsd": -94.39
+  },
+  {
+   "ticker": "JBL",
+   "n": 17,
+   "winRate": 0.8235,
+   "expectancyUsd": 6.37,
+   "totalUsd": 108.23
+  },
+  {
+   "ticker": "KHC",
+   "n": 30,
+   "winRate": 0.6,
+   "expectancyUsd": -1.98,
+   "totalUsd": -59.39
+  },
+  {
+   "ticker": "KLAC",
+   "n": 19,
+   "winRate": 0.7895,
+   "expectancyUsd": 5.05,
+   "totalUsd": 96.01
+  },
+  {
+   "ticker": "LEU",
+   "n": 18,
+   "winRate": 0.6667,
+   "expectancyUsd": -4.42,
+   "totalUsd": -79.53
+  },
+  {
+   "ticker": "LITE",
+   "n": 10,
+   "winRate": 0.7,
+   "expectancyUsd": 3.22,
+   "totalUsd": 32.21
+  },
+  {
+   "ticker": "LRCX",
+   "n": 16,
+   "winRate": 0.8125,
+   "expectancyUsd": 4.97,
+   "totalUsd": 79.57
+  },
+  {
+   "ticker": "LSCC",
+   "n": 14,
+   "winRate": 0.7143,
+   "expectancyUsd": 0.84,
+   "totalUsd": 11.82
+  },
+  {
+   "ticker": "LUNR",
+   "n": 15,
+   "winRate": 0.5333,
+   "expectancyUsd": -1.29,
+   "totalUsd": -19.33
+  },
+  {
+   "ticker": "LYV",
+   "n": 21,
+   "winRate": 0.619,
+   "expectancyUsd": 0.49,
+   "totalUsd": 10.25
+  },
+  {
+   "ticker": "MCHP",
+   "n": 25,
+   "winRate": 0.56,
+   "expectancyUsd": -2.11,
+   "totalUsd": -52.77
+  },
+  {
+   "ticker": "MCO",
+   "n": 15,
+   "winRate": 0.8667,
+   "expectancyUsd": 9.01,
+   "totalUsd": 135.09
+  },
+  {
+   "ticker": "MDT",
+   "n": 16,
+   "winRate": 0.5625,
+   "expectancyUsd": -1.83,
+   "totalUsd": -29.22
+  },
+  {
+   "ticker": "META",
+   "n": 19,
+   "winRate": 0.5789,
+   "expectancyUsd": -0.8,
+   "totalUsd": -15.28
+  },
+  {
+   "ticker": "MMM",
+   "n": 25,
+   "winRate": 0.8,
+   "expectancyUsd": 4.62,
+   "totalUsd": 115.51
+  },
+  {
+   "ticker": "MO",
+   "n": 22,
+   "winRate": 0.6818,
+   "expectancyUsd": 0.6,
+   "totalUsd": 13.25
+  },
+  {
+   "ticker": "MOD",
+   "n": 14,
+   "winRate": 0.5714,
+   "expectancyUsd": -2.38,
+   "totalUsd": -33.27
+  },
+  {
+   "ticker": "MOS",
+   "n": 25,
+   "winRate": 0.64,
+   "expectancyUsd": -0.12,
+   "totalUsd": -3.06
+  },
+  {
+   "ticker": "MPC",
+   "n": 20,
+   "winRate": 0.85,
+   "expectancyUsd": 8,
+   "totalUsd": 159.96
+  },
+  {
+   "ticker": "MPWR",
+   "n": 18,
+   "winRate": 0.7222,
+   "expectancyUsd": 11.59,
+   "totalUsd": 208.6
+  },
+  {
+   "ticker": "MRK",
+   "n": 21,
+   "winRate": 0.8571,
+   "expectancyUsd": 6.78,
+   "totalUsd": 142.34
+  },
+  {
+   "ticker": "MRVL",
+   "n": 20,
+   "winRate": 0.75,
+   "expectancyUsd": 5.07,
+   "totalUsd": 101.4
+  },
+  {
+   "ticker": "MS",
+   "n": 9,
+   "winRate": 0.4444,
+   "expectancyUsd": -7.2,
+   "totalUsd": -64.77
+  },
+  {
+   "ticker": "MSCI",
+   "n": 18,
+   "winRate": 0.6667,
+   "expectancyUsd": 3.6,
+   "totalUsd": 64.89
+  },
+  {
+   "ticker": "MSFT",
+   "n": 19,
+   "winRate": 0.4737,
+   "expectancyUsd": -9.38,
+   "totalUsd": -178.19
+  },
+  {
+   "ticker": "MTSI",
+   "n": 21,
+   "winRate": 0.6667,
+   "expectancyUsd": -0.4,
+   "totalUsd": -8.38
+  },
+  {
+   "ticker": "MU",
+   "n": 15,
+   "winRate": 0.7333,
+   "expectancyUsd": 9.43,
+   "totalUsd": 141.45
+  },
+  {
+   "ticker": "NBIS",
+   "n": 11,
+   "winRate": 0.5455,
+   "expectancyUsd": -0.38,
+   "totalUsd": -4.14
+  },
+  {
+   "ticker": "NEM",
+   "n": 16,
+   "winRate": 0.75,
+   "expectancyUsd": 3.92,
+   "totalUsd": 62.72
+  },
+  {
+   "ticker": "NFLX",
+   "n": 19,
+   "winRate": 0.5263,
+   "expectancyUsd": -5.49,
+   "totalUsd": -104.24
+  },
+  {
+   "ticker": "NKE",
+   "n": 21,
+   "winRate": 0.4762,
+   "expectancyUsd": -1.74,
+   "totalUsd": -36.47
+  },
+  {
+   "ticker": "NOK",
+   "n": 7,
+   "winRate": 0.1429,
+   "expectancyUsd": -8.12,
+   "totalUsd": -56.83
+  },
+  {
+   "ticker": "NOW",
+   "n": 21,
+   "winRate": 0.5714,
+   "expectancyUsd": -4.19,
+   "totalUsd": -87.91
+  },
+  {
+   "ticker": "NRG",
+   "n": 22,
+   "winRate": 0.7273,
+   "expectancyUsd": -0.99,
+   "totalUsd": -21.77
+  },
+  {
+   "ticker": "NTAP",
+   "n": 14,
+   "winRate": 0.7143,
+   "expectancyUsd": 2.18,
+   "totalUsd": 30.52
+  },
+  {
+   "ticker": "NVDA",
+   "n": 18,
+   "winRate": 0.7778,
+   "expectancyUsd": 1.9,
+   "totalUsd": 34.14
+  },
+  {
+   "ticker": "NVMI",
+   "n": 24,
+   "winRate": 0.5833,
+   "expectancyUsd": -3.41,
+   "totalUsd": -81.94
+  },
+  {
+   "ticker": "NVTS",
+   "n": 14,
+   "winRate": 0.6429,
+   "expectancyUsd": 2.47,
+   "totalUsd": 34.61
+  },
+  {
+   "ticker": "NXPI",
+   "n": 21,
+   "winRate": 0.5238,
+   "expectancyUsd": -6.23,
+   "totalUsd": -130.8
+  },
+  {
+   "ticker": "OKLO",
+   "n": 14,
+   "winRate": 0.5,
+   "expectancyUsd": -0.94,
+   "totalUsd": -13.2
+  },
+  {
+   "ticker": "ON",
+   "n": 26,
+   "winRate": 0.7308,
+   "expectancyUsd": 2.38,
+   "totalUsd": 61.78
+  },
+  {
+   "ticker": "ONTO",
+   "n": 13,
+   "winRate": 0.6154,
+   "expectancyUsd": -2.71,
+   "totalUsd": -35.27
+  },
+  {
+   "ticker": "ORCL",
+   "n": 12,
+   "winRate": 0.4167,
+   "expectancyUsd": -6.5,
+   "totalUsd": -77.99
+  },
+  {
+   "ticker": "OXY",
+   "n": 14,
+   "winRate": 0.7857,
+   "expectancyUsd": 4.61,
+   "totalUsd": 64.6
+  },
+  {
+   "ticker": "PGR",
+   "n": 20,
+   "winRate": 0.7,
+   "expectancyUsd": 0.92,
+   "totalUsd": 18.4
+  },
+  {
+   "ticker": "PL",
+   "n": 13,
+   "winRate": 0.5385,
+   "expectancyUsd": -3.83,
+   "totalUsd": -49.77
+  },
+  {
+   "ticker": "PLTR",
+   "n": 13,
+   "winRate": 0.7692,
+   "expectancyUsd": 5.98,
+   "totalUsd": 77.8
+  },
+  {
+   "ticker": "PM",
+   "n": 23,
+   "winRate": 0.6087,
+   "expectancyUsd": -1.62,
+   "totalUsd": -37.23
+  },
+  {
+   "ticker": "POET",
+   "n": 20,
+   "winRate": 0.8,
+   "expectancyUsd": 4.03,
+   "totalUsd": 80.62
+  },
+  {
+   "ticker": "POWI",
+   "n": 25,
+   "winRate": 0.48,
+   "expectancyUsd": -7.6,
+   "totalUsd": -190
+  },
+  {
+   "ticker": "POWL",
+   "n": 13,
+   "winRate": 0.7692,
+   "expectancyUsd": 5.78,
+   "totalUsd": 75.15
+  },
+  {
+   "ticker": "PWR",
+   "n": 19,
+   "winRate": 0.6842,
+   "expectancyUsd": -1.24,
+   "totalUsd": -23.54
+  },
+  {
+   "ticker": "PYPL",
+   "n": 22,
+   "winRate": 0.7727,
+   "expectancyUsd": 5.22,
+   "totalUsd": 114.85
+  },
+  {
+   "ticker": "QCOM",
+   "n": 15,
+   "winRate": 0.6,
+   "expectancyUsd": -2.39,
+   "totalUsd": -35.89
+  },
+  {
+   "ticker": "RCL",
+   "n": 16,
+   "winRate": 0.4375,
+   "expectancyUsd": -9.13,
+   "totalUsd": -146.13
+  },
+  {
+   "ticker": "RDW",
+   "n": 15,
+   "winRate": 0.6,
+   "expectancyUsd": -2.49,
+   "totalUsd": -37.41
+  },
+  {
+   "ticker": "RKLB",
+   "n": 10,
+   "winRate": 0.7,
+   "expectancyUsd": 4.96,
+   "totalUsd": 49.62
+  },
+  {
+   "ticker": "RMBS",
+   "n": 19,
+   "winRate": 0.8421,
+   "expectancyUsd": 6.53,
+   "totalUsd": 124.01
+  },
+  {
+   "ticker": "RTX",
+   "n": 16,
+   "winRate": 0.5,
+   "expectancyUsd": -7.04,
+   "totalUsd": -112.66
+  },
+  {
+   "ticker": "SBUX",
+   "n": 15,
+   "winRate": 0.9333,
+   "expectancyUsd": 7.58,
+   "totalUsd": 113.76
+  },
+  {
+   "ticker": "SCHW",
+   "n": 21,
+   "winRate": 0.5714,
+   "expectancyUsd": -4,
+   "totalUsd": -83.92
+  },
+  {
+   "ticker": "SHW",
+   "n": 17,
+   "winRate": 0.7647,
+   "expectancyUsd": 6.9,
+   "totalUsd": 117.29
+  },
+  {
+   "ticker": "SITM",
+   "n": 17,
+   "winRate": 0.7647,
+   "expectancyUsd": 13.98,
+   "totalUsd": 237.65
+  },
+  {
+   "ticker": "SMCI",
+   "n": 16,
+   "winRate": 0.625,
+   "expectancyUsd": -1.46,
+   "totalUsd": -23.34
+  },
+  {
+   "ticker": "SMR",
+   "n": 23,
+   "winRate": 0.6522,
+   "expectancyUsd": -0.89,
+   "totalUsd": -20.36
+  },
+  {
+   "ticker": "SNDK",
+   "n": 5,
+   "winRate": 0.8,
+   "expectancyUsd": -30.27,
+   "totalUsd": -151.33
+  },
+  {
+   "ticker": "SPCX",
+   "n": 1,
+   "winRate": 1,
+   "expectancyUsd": 16,
+   "totalUsd": 16
+  },
+  {
+   "ticker": "SPGI",
+   "n": 10,
+   "winRate": 0.8,
+   "expectancyUsd": 7.64,
+   "totalUsd": 76.45
+  },
+  {
+   "ticker": "STLD",
+   "n": 16,
+   "winRate": 0.625,
+   "expectancyUsd": 0.39,
+   "totalUsd": 6.24
+  },
+  {
+   "ticker": "STM",
+   "n": 18,
+   "winRate": 0.7222,
+   "expectancyUsd": -2.62,
+   "totalUsd": -47.08
+  },
+  {
+   "ticker": "STX",
+   "n": 13,
+   "winRate": 0.8462,
+   "expectancyUsd": 20.94,
+   "totalUsd": 272.17
+  },
+  {
+   "ticker": "SWKS",
+   "n": 18,
+   "winRate": 0.6667,
+   "expectancyUsd": -2.93,
+   "totalUsd": -52.69
+  },
+  {
+   "ticker": "T",
+   "n": 20,
+   "winRate": 0.5,
+   "expectancyUsd": -4.84,
+   "totalUsd": -96.78
+  },
+  {
+   "ticker": "TEL",
+   "n": 18,
+   "winRate": 0.6111,
+   "expectancyUsd": -1.86,
+   "totalUsd": -33.44
+  },
+  {
+   "ticker": "TER",
+   "n": 14,
+   "winRate": 0.8571,
+   "expectancyUsd": 8.74,
+   "totalUsd": 122.3
+  },
+  {
+   "ticker": "TJX",
+   "n": 16,
+   "winRate": 0.75,
+   "expectancyUsd": 2.84,
+   "totalUsd": 45.38
+  },
+  {
+   "ticker": "TLN",
+   "n": 21,
+   "winRate": 0.7143,
+   "expectancyUsd": 4.38,
+   "totalUsd": 92.04
+  },
+  {
+   "ticker": "TMUS",
+   "n": 25,
+   "winRate": 0.48,
+   "expectancyUsd": -4.2,
+   "totalUsd": -105.12
+  },
+  {
+   "ticker": "TSLA",
+   "n": 18,
+   "winRate": 0.4444,
+   "expectancyUsd": -12.81,
+   "totalUsd": -230.53
+  },
+  {
+   "ticker": "TSM",
+   "n": 16,
+   "winRate": 0.625,
+   "expectancyUsd": 0.83,
+   "totalUsd": 13.2
+  },
+  {
+   "ticker": "TT",
+   "n": 22,
+   "winRate": 0.6818,
+   "expectancyUsd": 2.37,
+   "totalUsd": 52.17
+  },
+  {
+   "ticker": "TTWO",
+   "n": 23,
+   "winRate": 0.7391,
+   "expectancyUsd": -1.19,
+   "totalUsd": -27.47
+  },
+  {
+   "ticker": "TXN",
+   "n": 24,
+   "winRate": 0.5417,
+   "expectancyUsd": -4.42,
+   "totalUsd": -105.98
+  },
+  {
+   "ticker": "TYL",
+   "n": 25,
+   "winRate": 0.44,
+   "expectancyUsd": -9.56,
+   "totalUsd": -239.03
+  },
+  {
+   "ticker": "UBER",
+   "n": 9,
+   "winRate": 0.7778,
+   "expectancyUsd": 5.45,
+   "totalUsd": 49.08
+  },
+  {
+   "ticker": "UNH",
+   "n": 16,
+   "winRate": 0.5,
+   "expectancyUsd": -6.07,
+   "totalUsd": -97.11
+  },
+  {
+   "ticker": "VIAV",
+   "n": 9,
+   "winRate": 0.7778,
+   "expectancyUsd": 8.52,
+   "totalUsd": 76.7
+  },
+  {
+   "ticker": "VLO",
+   "n": 18,
+   "winRate": 0.8333,
+   "expectancyUsd": 7.94,
+   "totalUsd": 142.95
+  },
+  {
+   "ticker": "VMRK",
+   "n": 22,
+   "winRate": 0.5909,
+   "expectancyUsd": -2.81,
+   "totalUsd": -61.92
+  },
+  {
+   "ticker": "VRSK",
+   "n": 21,
+   "winRate": 0.5238,
+   "expectancyUsd": -4.16,
+   "totalUsd": -87.41
+  },
+  {
+   "ticker": "VRT",
+   "n": 13,
+   "winRate": 0.6923,
+   "expectancyUsd": 1.72,
+   "totalUsd": 22.41
+  },
+  {
+   "ticker": "VSAT",
+   "n": 18,
+   "winRate": 0.8889,
+   "expectancyUsd": 6.72,
+   "totalUsd": 120.96
+  },
+  {
+   "ticker": "VST",
+   "n": 18,
+   "winRate": 0.6667,
+   "expectancyUsd": -0.7,
+   "totalUsd": -12.63
+  },
+  {
+   "ticker": "VZ",
+   "n": 18,
+   "winRate": 0.6667,
+   "expectancyUsd": 0.61,
+   "totalUsd": 10.91
+  },
+  {
+   "ticker": "WDC",
+   "n": 8,
+   "winRate": 0.875,
+   "expectancyUsd": 7.79,
+   "totalUsd": 62.34
+  },
+  {
+   "ticker": "WELL",
+   "n": 13,
+   "winRate": 0.7692,
+   "expectancyUsd": 4.6,
+   "totalUsd": 59.81
+  },
+  {
+   "ticker": "WFC",
+   "n": 17,
+   "winRate": 0.5294,
+   "expectancyUsd": -2.76,
+   "totalUsd": -46.87
+  },
+  {
+   "ticker": "WMT",
+   "n": 18,
+   "winRate": 0.8889,
+   "expectancyUsd": 5.82,
+   "totalUsd": 104.72
+  },
+  {
+   "ticker": "WULF",
+   "n": 17,
+   "winRate": 0.6471,
+   "expectancyUsd": 0.51,
+   "totalUsd": 8.61
+  },
+  {
+   "ticker": "XOM",
+   "n": 11,
+   "winRate": 0.8182,
+   "expectancyUsd": 5.49,
+   "totalUsd": 60.36
+  }
+ ],
+ "openAtEnd": 35,
+ "biases": [
+  "生存・選択バイアス: 今のウォッチリストで過去を測っている",
+  "配当は未調整（分割は調整済み）",
+  "同じ日に利確値と損切りの両方に届いた日は、場中に指値が先に約定したとみなす",
+  "過去の決算日が無いので、決算をまたぐトレードを除けていない",
+  "スリッページは見ていない。手数料は往復$0.70"
+ ]
+}
