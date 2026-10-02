@@ -62,6 +62,9 @@ export const VOLUME_CONFIRM_RATIO = 1;
 
 export const EARNINGS_WARN_DAYS = 5;
 
+/** Entry alerts need ATR(14) at least this percent of the close. */
+export const ALERT_MIN_ATR_PCT = 3;
+
 /** A team pick priced above this is marked 監視のみ even when its status is 候補. */
 export const PICK_WATCH_PRICE = 450;
 
