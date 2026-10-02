@@ -17,3 +17,9 @@ services:
       # "range-table <contact email>". SEC rejects requests without a contact email.
       - key: SEC_USER_AGENT
         sync: false
+      # Opens the read-only holdings tab (8+ characters). Without it the tab stays closed.
+      - key: HOLDINGS_PASSCODE
+        sync: false
+      # Bearer token (16+ characters) for review-line alerts in /api/alerts and for /api/precheck.
+      - key: ALERTS_TOKEN
+        sync: false

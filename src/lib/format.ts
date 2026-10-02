@@ -143,6 +143,13 @@ export function formatDollar(n: number): string {
   return frac === "00" ? `$${grouped}` : `$${grouped}.${frac}`;
 }
 
+/** ¥1,234,567, rounded to the yen. */
+export function formatYen(n: number): string {
+  if (!Number.isFinite(n)) return "—";
+  const body = Math.round(Math.abs(n)).toLocaleString("en-US");
+  return n < 0 ? `−¥${body}` : `¥${body}`;
+}
+
 /** +$53.60 / −$8 / $0 for realized P&L. */
 export function formatPnl(n: number): string {
   if (!Number.isFinite(n)) return "—";

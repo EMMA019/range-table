@@ -3,6 +3,7 @@ import { AlertCards } from "@/components/alert-cards";
 import { SiteNav } from "@/components/site-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { getAlertsPayload } from "@/lib/alerts-feed";
+import { hasHoldingsSession } from "@/lib/private-session";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ export default async function AlertsPage() {
   let error: string | null = null;
   let payload: Awaited<ReturnType<typeof getAlertsPayload>> | null = null;
   try {
-    payload = await getAlertsPayload({ since: null, edgarWaitMs: 4_000 });
+    payload = await getAlertsPayload({ since: null, edgarWaitMs: 4_000, authorized: await hasHoldingsSession() });
   } catch (err) {
     error = err instanceof Error ? err.message : "アラートを作れなかった";
   }

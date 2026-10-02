@@ -55,6 +55,8 @@ export type AlertsPayload = {
   sources: {
     prices: AlertSourceStatus & { provisional: boolean; failCount: number; staleCount: number };
     edgar: AlertSourceStatus;
+    /** Review-line alerts: only for a caller with ALERTS_TOKEN or the holdings session. */
+    holdings: AlertSourceStatus;
   };
   counts: { total: number } & Partial<Record<AlertKind, number>>;
   items: AlertItem[];

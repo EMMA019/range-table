@@ -86,6 +86,9 @@ export const CORR_WINDOW = 60;
 /** Basket correlation at or under this, on the two-decimal figure, is the low-correlation chip. */
 export const CORR_LOW_MAX = 0.3;
 
+/** The pre-buy check flags a holding whose 60-day correlation with the candidate is above this. */
+export const CORR_HIGH = 0.6;
+
 /** A Form 4 open-market sale (code S) below this total is not an alert. */
 export const FORM4_MIN_SELL_USD = 250_000;
 

@@ -5,6 +5,7 @@ const TABS = [
   { href: "/", label: "レンジ表" },
   { href: "/picks", label: "チーム注目" },
   { href: "/alerts", label: "アラート" },
+  { href: "/holdings", label: "保有" },
   { href: "/log", label: "取引ログ" },
   { href: "/backtest", label: "過去検証" },
 ] as const;

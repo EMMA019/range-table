@@ -13,12 +13,16 @@ import {
   type AlertsPayload,
 } from "./alerts";
 import { entryAlerts, finalBars, type EntryCandidate } from "./alerts-entry";
+import { reviewAlerts } from "./alerts-review";
+import { holdingsSource } from "./holdings";
 import { edgarItems, edgarStatus, refreshEdgar } from "./edgar-feed";
 
 export type AlertsQuery = {
   since: string | null;
   /** Override for how long to wait on a running EDGAR sweep. */
   edgarWaitMs?: number;
+  /** The caller proved access to the private holdings (bearer token or passcode session). */
+  authorized?: boolean;
 };
 
 /** How long one poll waits for a running EDGAR sweep before answering with what is done. */
@@ -43,6 +47,19 @@ export async function getAlertsPayload(query: AlertsQuery, now = new Date()): Pr
   });
 
   const items: AlertItem[] = [...entryAlerts(candidates, today, now), ...edgarItems()];
+  const config = holdingsSource().load();
+  const withLine = config.holdings.filter((holding) => holding.reviewLine != null);
+  if (query.authorized) {
+    const series = Object.fromEntries(withLine.map((holding) => [holding.ticker, cache.series[holding.ticker]?.bars]));
+    items.push(...reviewAlerts(withLine, series, now));
+  }
+  const holdings = {
+    ok: !query.authorized || withLine.every((holding) => cache.series[holding.ticker]?.bars),
+    enabled: Boolean(query.authorized) && withLine.length > 0,
+    checkedAtJst: query.authorized ? formatJst(now) : null,
+    error: query.authorized && withLine.length === 0 ? "HOLDINGS_JSON に reviewLine のある保有がない" : null,
+    complete: true,
+  };
 
   const spy = cache.series.SPY?.bars;
   const spyFinal = spy ? finalBars(spy, now) : [];
@@ -74,7 +91,7 @@ export async function getAlertsPayload(query: AlertsQuery, now = new Date()): Pr
     slot: alertSlot(now),
     barDate,
     complete: prices.complete && edgar.complete,
-    sources: { prices, edgar },
+    sources: { prices, edgar, holdings },
     counts: countAlerts(finalItems),
     items: finalItems,
   };
