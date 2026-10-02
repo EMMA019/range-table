@@ -7,15 +7,18 @@ describe("watchlist", () => {
   const tickers = list.groups.flatMap((group) => group.tickers);
 
   it("loads the grouped list without duplicate tickers", () => {
-    assert.equal(tickers.length, 162);
-    assert.equal(new Set(tickers.map((item) => item.ticker)).size, 162);
+    assert.equal(tickers.length, 188);
+    assert.equal(new Set(tickers.map((item) => item.ticker)).size, 188);
     assert.equal(list.groups[0]?.id, "ibkr");
     assert.equal(list.groups.at(-1)?.id, "jab_sp500");
     assert.equal(list.groups.at(-1)?.name, "安定ジャブ（S&P500）");
     assert.deepEqual(
       list.groups.map((group) => group.tickers.length),
-      [22, 21, 10, 10, 8, 11, 9, 10, 8, 53],
+      [22, 20, 9, 10, 8, 10, 8, 10, 8, 83],
     );
+    for (const removed of ["QRVO", "HUT", "AMAT", "NVT"]) {
+      assert.equal(tickers.some((item) => item.ticker === removed), false);
+    }
   });
 
   it("keeps earnings status and the watch-only flag", () => {
@@ -43,6 +46,12 @@ describe("watchlist", () => {
     assert.deepEqual(dal?.earnings, { date: "2026-10-09", status: "estimated" });
     assert.equal(vmrk?.sectorLabel, "不動産");
     assert.equal(vmrk?.description, "賃貸住宅REIT");
-    assert.equal(tickers.filter((item) => item.sectorLabel).length, 53);
+    const now = tickers.find((item) => item.ticker === "NOW");
+    const ferg = tickers.find((item) => item.ticker === "FERG");
+    assert.equal(now?.sectorLabel, "IT・ソフト");
+    assert.deepEqual(now?.earnings, { date: "2026-11-04", status: "estimated" });
+    assert.equal(ferg?.sectorLabel, "資本財");
+    assert.equal(ferg?.earnings, null);
+    assert.equal(tickers.filter((item) => item.sectorLabel).length, 83);
   });
 });
