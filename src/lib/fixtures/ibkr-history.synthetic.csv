@@ -1,0 +1,11 @@
+Statement,Header,Field Name,Field Value
+Statement,Data,Title,Transaction History
+Summary,Header,Field Name,Field Value
+Summary,Data,Account,U0000000
+Transaction History,Header,Date,Account,Description,Transaction Type,Symbol,Quantity,価格,Price Currency,Gross Amount ,Commission,Net Amount
+Transaction History,Data,2026-09-10,U0000000,Forex conversion,Forex Trade Component,USD.JPY,500,147.1,JPY,-73550,-2,-73552
+Transaction History,Data,2026-09-09,U0000000,Deposit,Deposit,,,,,1000,,1000
+Transaction History,Data,2026-09-09,U0000000,Example Co cash dividend,Dividend,GGG,,,,1.00,,1.00
+Transaction History,Data,2026-09-08,U0000000,Example Co,Sell,GGG,-10,21.50,USD,215.00,-1.00,214.00
+Transaction History,Data,2026-09-08,U0000000,Example Co,Buy,GGG,10,20.00,USD,-200.00,-1.00,-201.00
+Transaction History,Data,2026-09-07,U0000000,Example Co,Buy,HHH,"1,200",2.50,USD,"-3,000.00",-2.00,"-3,002.00"

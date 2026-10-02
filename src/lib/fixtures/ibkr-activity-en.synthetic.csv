@@ -1,0 +1,11 @@
+Statement,Header,Field Name,Field Value
+Statement,Data,BrokerName,Example Broker (synthetic)
+Account Information,Header,Field Name,Field Value
+Account Information,Data,Account,U0000000
+Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,MTM P/L,Code
+Trades,Data,Order,Stocks,USD,FFF,"2026-09-08, 23:10:00",4,25,25,-100,-0.35,100.35,0,0,O
+Trades,Data,Order,Stocks,USD,FFF,"2026-09-10, 04:50:00",-4,27,27,108,-0.35,-100.35,7.3,0,C
+Trades,Data,Order,Stocks,USD,BRK B,"2026-09-11, 00:05:00",1,480,480,-480,-1,481,0,0,O
+Trades,Data,Order,Equity and Index Options,USD,FFF 261016C00030000,"2026-09-11, 01:00:00",1,1.2,1.2,-120,-0.65,120.65,0,0,O
+Trades,Data,Order,Forex,JPY,USD.JPY,"2026-09-07, 22:00:00",500,147.1,,-73550,-2,,,0,
+Trades,SubTotal,,Stocks,USD,FFF,,0,,,8,-0.7,,7.3,0,
