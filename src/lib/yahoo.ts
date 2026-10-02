@@ -1,6 +1,7 @@
 import https from "node:https";
 import { sessionDate } from "./calendar";
 import { CHART_SESSIONS, FETCH_CONCURRENCY } from "./constants";
+import { yahooGate } from "./rate-gate";
 import type { Bar } from "./types";
 
 const HOSTS = [
@@ -130,7 +131,7 @@ export function dropPartialBar(
   return { bars, dropped: false };
 }
 
-export function parseChart(result: YahooResult, nowSec = Date.now() / 1000): ParsedSeries {
+export function parseChart(result: YahooResult, nowSec = Date.now() / 1000, keep = CHART_SESSIONS): ParsedSeries {
   const timestamps = result.timestamp;
   const quote = result.indicators?.quote?.[0];
   if (!timestamps || !quote) {
@@ -182,13 +183,12 @@ export function parseChart(result: YahooResult, nowSec = Date.now() / 1000): Par
 
   const bars = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
   if (bars.length === 0) throw new Error("確定日足が0本");
-  const kept = bars.length > CHART_SESSIONS ? bars.slice(-CHART_SESSIONS) : bars;
+  const kept = bars.length > keep ? bars.slice(-keep) : bars;
   return { bars: kept, droppedPartial: dropped };
 }
 
-function fetchHost(host: string, symbol: string): Promise<YahooResult> {
-  // 6mo covers the 60-return window. parseChart keeps only the last CHART_SESSIONS bars.
-  const path = `/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=6mo&events=split&includePrePost=false`;
+function fetchHost(host: string, symbol: string, range: string, maxBytes: number): Promise<YahooResult> {
+  const path = `/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${encodeURIComponent(range)}&events=split&includePrePost=false`;
   return new Promise((resolve, reject) => {
     const req = https.request(
       {
@@ -213,7 +213,7 @@ function fetchHost(host: string, symbol: string): Promise<YahooResult> {
         res.on("data", (chunk: Buffer) => {
           if (settled) return;
           received += chunk.length;
-          if (received > 256_000) {
+          if (received > maxBytes) {
             fail(new Error("日足が大きすぎる"));
             return;
           }
@@ -253,24 +253,40 @@ function fetchHost(host: string, symbol: string): Promise<YahooResult> {
   });
 }
 
-export async function fetchDailyBars(symbol: string): Promise<ParsedSeries> {
+const NOT_FOUND_RE = /HTTP 404|not found|No data/i;
+const ATTEMPTS = [HOSTS[0], HOSTS[1], HOSTS[0]];
+
+export type FetchBarsOptions = {
+  /** Yahoo range. 6mo covers the 60-return correlation window. */
+  range?: string;
+  /** Completed sessions to keep from the end. */
+  keep?: number;
+};
+
+/**
+ * Every attempt waits on the shared Yahoo cooldown. A 429 extends that cooldown for all
+ * callers instead of hammering the other host right away.
+ */
+export async function fetchDailyBars(symbol: string, options: FetchBarsOptions = {}): Promise<ParsedSeries> {
+  const range = options.range ?? "6mo";
+  const keep = options.keep ?? CHART_SESSIONS;
+  const maxBytes = range === "6mo" ? 256_000 : 2_000_000;
   let lastError: Error | null = null;
-  for (const host of HOSTS) {
+  for (let i = 0; i < ATTEMPTS.length; i++) {
+    await yahooGate.wait();
     try {
-      const result = await fetchHost(host, symbol);
-      return parseChart(result);
+      const result = await fetchHost(ATTEMPTS[i], symbol, range, maxBytes);
+      yahooGate.ok();
+      return parseChart(result, Date.now() / 1000, keep);
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      if (/HTTP 404|not found|No data/i.test(lastError.message)) break;
-    }
-  }
-  if (lastError && !/HTTP 404|not found|No data/i.test(lastError.message)) {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    try {
-      const result = await fetchHost(HOSTS[0], symbol);
-      return parseChart(result);
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
+      if (NOT_FOUND_RE.test(lastError.message)) break;
+      if (/HTTP 429/.test(lastError.message)) {
+        const pause = yahooGate.penalize();
+        console.error(`[range] yahoo 429 ${symbol} cooldown=${pause}ms`);
+      } else if (i === 1) {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+      }
     }
   }
   throw lastError ?? new Error("日足を取得できなかった");

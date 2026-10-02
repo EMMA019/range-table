@@ -123,6 +123,8 @@ export type TickerRow = {
   pe: PeView;
   error: string | null;
   errorDetail: string | null;
+  /** The quote comes from an earlier fetch because the latest one failed. */
+  stale: boolean;
 };
 
 export type IndexRow = {
@@ -136,12 +138,18 @@ export type MarketPayload = {
   fetchedAtJst: string;
   ttlMs: number;
   barDate: string | null;
+  /** The latest bar is today's and the close may still be revised (before 16:20 ET). */
+  provisional: boolean;
   excludedPartial: boolean;
   source: string;
   indices: IndexRow[];
   rows: TickerRow[];
   okCount: number;
   failCount: number;
+  /** Rows showing bars from an earlier fetch. */
+  staleCount: number;
+  /** Latest USD/JPY daily close (Yahoo JPY=X). */
+  usdJpy: { rate: number; date: string } | null;
 };
 
 export type PickStatus = "候補" | "監視のみ";

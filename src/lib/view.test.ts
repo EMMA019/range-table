@@ -50,6 +50,7 @@ function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow
     sectorLabel: null,
     corrBasket: null,
     corrSoxx: null,
+    stale: false,
     ...partial,
   };
 }

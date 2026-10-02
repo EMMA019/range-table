@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { todayEt } from "./calendar";
+import { closeIsProvisional, todayEt } from "./calendar";
 import {
   BENCHMARKS,
   CACHE_TTL_MS,
@@ -8,6 +8,7 @@ import {
   EPS_WARM_BATCH,
   EPS_WARM_PAUSE_MS,
   FETCH_CONCURRENCY,
+  FX_USDJPY,
 } from "./constants";
 import { fetchEpsBatch } from "./eps";
 import { epsIsFresh, epsTtlMs, hasEpsValue, peView, pickEpsBatch } from "./pe";
@@ -18,7 +19,6 @@ import { holdingsSource } from "./holdings";
 import { formatJst, friendlyFetchError } from "./format";
 import { buildPickCard, loadTeamPicks } from "./picks";
 import type {
-  Bar,
   ChartPayload,
   EpsSnapshot,
   IndexRow,
@@ -31,18 +31,17 @@ import type {
 } from "./types";
 import { loadWatchlist } from "./watchlist";
 import { fetchDailyBars } from "./yahoo";
-
-type SeriesEntry = {
-  bars?: Bar[];
-  error?: string;
-  droppedPartial?: boolean;
-};
-
-type CacheBody = {
-  v: 3;
-  fetchedAt: number;
-  series: Record<string, SeriesEntry>;
-};
+import {
+  dueSymbols,
+  emptyCache,
+  isStale,
+  mergeOutcome,
+  missingSymbols,
+  oldestOkAt,
+  type CacheBody,
+  type FetchOutcome,
+  type SeriesEntry,
+} from "./price-cache";
 
 const CACHE_PATH = path.join(process.cwd(), "data", ".cache", "market.json");
 const EPS_CACHE_PATH = path.join(process.cwd(), "data", ".cache", "eps.json");
@@ -99,9 +98,10 @@ export async function getPicksPayload(): Promise<PicksPayload> {
     picks.map((pick) => pick.ticker),
   );
   const today = todayEt();
+  const fetchedAt = oldestOkAt(cache, picks.map((pick) => pick.ticker), Date.now());
   return {
-    fetchedAt: cache.fetchedAt,
-    fetchedAtJst: formatJst(new Date(cache.fetchedAt)),
+    fetchedAt,
+    fetchedAtJst: formatJst(new Date(fetchedAt)),
     empty: false,
     picks: picks.map((pick) => {
       const built = quoteFromEntry(cache.series[pick.ticker]);
@@ -119,7 +119,7 @@ export async function getChart(ticker: string): Promise<ChartPayload | { error: 
   const cache = await ensureSeries(list);
   const entry = cache.series[symbol];
   if (!entry) return { error: "日足がまだない" };
-  if (entry.error || !entry.bars) return { error: friendlyFetchError(entry.error || "日足がない") };
+  if (!entry.bars) return { error: friendlyFetchError(entry.error || "日足がない") };
 
   const computed = computeQuote(entry.bars);
   if (!computed.ok) return { error: computed.error };
@@ -134,7 +134,7 @@ export async function getChart(ticker: string): Promise<ChartPayload | { error: 
 }
 
 function symbolsFor(list: Watchlist): string[] {
-  const set = new Set<string>(BENCHMARKS);
+  const set = new Set<string>([...BENCHMARKS, FX_USDJPY]);
   for (const group of list.groups) {
     for (const ticker of group.tickers) set.add(ticker.ticker);
   }
@@ -142,28 +142,38 @@ function symbolsFor(list: Watchlist): string[] {
   return [...set];
 }
 
-async function ensureSeries(list: Watchlist, extra: string[] = []): Promise<CacheBody> {
+export type EnsureOptions = {
+  /** Wait for due symbols to be refetched instead of answering from the older cache. */
+  fresh?: boolean;
+};
+
+/**
+ * Answers from the cache when every symbol has an entry and refreshes due symbols in the
+ * background (stale-while-revalidate). Waits only on a cold cache, new symbols, or `fresh`.
+ */
+export async function ensureSeries(list: Watchlist, extra: string[] = [], options: EnsureOptions = {}): Promise<CacheBody> {
   const symbols = withExtra(symbolsFor(list), extra);
-  for (;;) {
-    const pending = inflight;
-    if (!pending) break;
-    try {
-      await pending;
-    } catch {
-      break;
-    }
-  }
-  if (inflight) return ensureSeries(list, extra);
+  if (!memory) memory = readDisk();
+  const cache = memory;
+  const due = dueSymbols(cache, symbols, Date.now());
+  if (cache && due.length === 0) return cache;
+  const run = startRefresh(due);
+  if (!cache || options.fresh || missingSymbols(cache, symbols).length > 0) return run;
+  void run.catch((error) => console.error("[range] background refresh", error));
+  return cache;
+}
 
-  const cache = memory ?? readDisk();
-  const age = cache ? Date.now() - cache.fetchedAt : Number.POSITIVE_INFINITY;
-  const fresh = Boolean(cache) && age < CACHE_TTL_MS;
-  const missing = fresh ? symbols.filter((symbol) => !cache?.series[symbol]) : symbols;
-  if (cache && fresh && missing.length === 0) {
-    memory = cache;
-    return cache;
+function startRefresh(symbols: string[]): Promise<CacheBody> {
+  const pending = inflight;
+  if (pending) {
+    return pending.then(
+      () => {
+        const again = dueSymbols(memory, symbols, Date.now());
+        return again.length > 0 ? startRefresh(again) : (memory ?? emptyCache());
+      },
+      () => startRefresh(symbols),
+    );
   }
-
   const run = refresh(symbols).finally(() => {
     if (inflight === run) inflight = null;
   });
@@ -182,53 +192,40 @@ function withExtra(symbols: string[], extra: string[]): string[] {
 }
 
 async function refresh(symbols: string[]): Promise<CacheBody> {
-  const cache = memory ?? readDisk();
-  const age = cache ? Date.now() - cache.fetchedAt : Number.POSITIVE_INFINITY;
-  const fresh = Boolean(cache) && age < CACHE_TTL_MS;
-  const missing = fresh
-    ? symbols.filter((symbol) => !cache?.series[symbol])
-    : symbols;
-
-  if (cache && fresh && missing.length === 0) {
-    memory = cache;
-    return cache;
-  }
-
-  const toFetch = missing;
   const started = Date.now();
-  console.log(`[range] fetching ${toFetch.length} symbols`);
-  const fetched = await mapPool(toFetch, FETCH_CONCURRENCY, fetchOne);
-  const series: Record<string, SeriesEntry> =
-    cache && fresh ? { ...cache.series } : {};
-  for (const item of fetched) series[item.symbol] = item.entry;
-
-  const next: CacheBody = {
-    v: 3,
-    fetchedAt: cache && fresh ? cache.fetchedAt : Date.now(),
-    series,
-  };
+  console.log(`[range] fetching ${symbols.length} symbols`);
+  const fetched = await mapPool(symbols, FETCH_CONCURRENCY, fetchOne);
+  const base = memory ?? emptyCache();
+  const series: Record<string, SeriesEntry> = { ...base.series };
+  const now = Date.now();
+  let ok = 0;
+  let kept = 0;
+  for (const item of fetched) {
+    const merged = mergeOutcome(series[item.symbol], item.outcome, now);
+    series[item.symbol] = merged;
+    if (!merged.error) ok += 1;
+    else if (merged.bars) kept += 1;
+  }
+  const next: CacheBody = { v: 4, version: base.version + 1, series };
   memory = next;
   try {
     writeDisk(next);
   } catch (error) {
     console.error("[range] cache write failed", error);
   }
-  const ok = toFetch.filter((symbol) => series[symbol]?.bars).length;
-  const fail = toFetch.length - ok;
-  console.log(`[range] ready in ${Date.now() - started}ms ok=${ok} fail=${fail}`);
+  console.log(
+    `[range] ready in ${Date.now() - started}ms ok=${ok} keptOld=${kept} fail=${symbols.length - ok - kept}`,
+  );
   return next;
 }
 
-async function fetchOne(symbol: string): Promise<{ symbol: string; entry: SeriesEntry }> {
+async function fetchOne(symbol: string): Promise<{ symbol: string; outcome: FetchOutcome }> {
   try {
     const parsed = await fetchDailyBars(symbol);
-    return {
-      symbol,
-      entry: { bars: parsed.bars, droppedPartial: parsed.droppedPartial },
-    };
+    return { symbol, outcome: { bars: parsed.bars, droppedPartial: parsed.droppedPartial } };
   } catch (error) {
     const message = error instanceof Error ? error.message : "取得失敗";
-    return { symbol, entry: { error: message.slice(0, 180) } };
+    return { symbol, outcome: { error: message.slice(0, 180) } };
   }
 }
 
@@ -245,7 +242,7 @@ async function waitForPrices(): Promise<void> {
 let payloadMemo: { key: string; payload: MarketPayload } | null = null;
 
 function memoPayload(cache: CacheBody, list: Watchlist): MarketPayload {
-  const key = `${cache.fetchedAt}:${epsStamp()}:${basketStamp()}`;
+  const key = `${cache.version}:${epsStamp()}:${basketStamp()}`;
   if (payloadMemo?.key === key) return payloadMemo.payload;
   const payload = buildPayload(cache, list, readCachedEps());
   payloadMemo = { key, payload };
@@ -405,6 +402,7 @@ function buildPayload(
         pe: peView(built.quote?.close, eps[ticker.ticker] ?? null),
         error: built.error,
         errorDetail: built.errorDetail,
+        stale: built.stale,
       });
     }
   }
@@ -415,21 +413,27 @@ function buildPayload(
   });
 
   const failCount = rows.filter((row) => !row.quote).length;
+  const staleCount = rows.filter((row) => row.stale).length;
+  const fetchedAt = oldestOkAt(cache, rows.map((row) => row.ticker), Date.now());
+  const barDate = modeDate(indices, rows);
   const excludedPartial = BENCHMARKS.some(
     (ticker) => cache.series[ticker]?.droppedPartial,
   );
 
   return {
-    fetchedAt: cache.fetchedAt,
-    fetchedAtJst: formatJst(new Date(cache.fetchedAt)),
+    fetchedAt,
+    fetchedAtJst: formatJst(new Date(fetchedAt)),
     ttlMs: CACHE_TTL_MS,
-    barDate: modeDate(indices, rows),
+    barDate,
+    provisional: closeIsProvisional(barDate),
     excludedPartial,
     source: SOURCE,
     indices,
     rows,
     okCount: rows.length - failCount,
     failCount,
+    staleCount,
+    usdJpy: usdJpyOf(cache),
   };
 }
 
@@ -468,19 +472,28 @@ function correlationsOf(cache: CacheBody): Map<string, CorrPair> {
   }
 }
 
-function quoteFromEntry(entry: SeriesEntry | undefined): {
+/** Latest USD/JPY daily close. Null until Yahoo returns it. */
+export function usdJpyOf(cache: CacheBody): { rate: number; date: string } | null {
+  const last = cache.series[FX_USDJPY]?.bars?.at(-1);
+  if (!last || !(last.c > 0)) return null;
+  return { rate: last.c, date: last.date };
+}
+
+/** Bars kept from an earlier fetch still produce a quote; `stale` tells the UI they are old. */
+export function quoteFromEntry(entry: SeriesEntry | undefined): {
   quote: Quote | null;
   error: string | null;
   errorDetail: string | null;
+  stale: boolean;
 } {
-  if (!entry) return { quote: null, error: "日足がまだない", errorDetail: null };
-  if (entry.error || !entry.bars) {
+  if (!entry) return { quote: null, error: "日足がまだない", errorDetail: null, stale: false };
+  if (!entry.bars) {
     const detail = entry.error || "日足がない";
-    return { quote: null, error: friendlyFetchError(detail), errorDetail: detail };
+    return { quote: null, error: friendlyFetchError(detail), errorDetail: detail, stale: false };
   }
   const computed = computeQuote(entry.bars);
-  if (!computed.ok) return { quote: null, error: computed.error, errorDetail: null };
-  return { quote: computed.quote, error: null, errorDetail: null };
+  if (!computed.ok) return { quote: null, error: computed.error, errorDetail: null, stale: false };
+  return { quote: computed.quote, error: null, errorDetail: entry.error ?? null, stale: isStale(entry) };
 }
 
 function modeDate(indices: IndexRow[], rows: TickerRow[]): string | null {
@@ -506,7 +519,7 @@ function modeDate(indices: IndexRow[], rows: TickerRow[]): string | null {
 function readDisk(): CacheBody | null {
   try {
     const parsed = JSON.parse(fs.readFileSync(CACHE_PATH, "utf8")) as CacheBody;
-    if (parsed?.v !== 3 || typeof parsed.fetchedAt !== "number" || !parsed.series) return null;
+    if (parsed?.v !== 4 || typeof parsed.version !== "number" || !parsed.series) return null;
     for (const entry of Object.values(parsed.series)) {
       if (entry?.bars && entry.bars.length > CHART_SESSIONS) {
         entry.bars = entry.bars.slice(-CHART_SESSIONS);

@@ -84,3 +84,49 @@ export function tradingDaysUntil(today: string, earningsDate: string): number {
 export function sessionDate(unixSec: number): string {
   return etDate.format(new Date(unixSec * 1000));
 }
+
+const etOffset = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/New_York",
+  timeZoneName: "shortOffset",
+});
+
+const etClock = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/New_York",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
+/** Minutes since midnight on the US Eastern wall clock. */
+export function minutesEt(now = new Date()): number {
+  const parts = etClock.formatToParts(now);
+  const hour = Number(parts.find((part) => part.type === "hour")?.value ?? 0);
+  const minute = Number(parts.find((part) => part.type === "minute")?.value ?? 0);
+  return (hour % 24) * 60 + minute;
+}
+
+/** Eastern offset from UTC in minutes at that instant: −240 in summer, −300 in winter. */
+export function etOffsetMinutes(at: Date): number {
+  const name = etOffset.formatToParts(at).find((part) => part.type === "timeZoneName")?.value ?? "GMT-5";
+  const match = /GMT([+-])(\d{1,2})(?::(\d{2}))?/.exec(name);
+  if (!match) return -300;
+  const sign = match[1] === "-" ? -1 : 1;
+  return sign * (Number(match[2]) * 60 + Number(match[3] ?? 0));
+}
+
+/** UTC epoch ms for an Eastern wall-clock time on an ET date. */
+export function etWallTimeMs(date: string, minutes: number): number {
+  const [y, m, d] = date.split("-").map(Number);
+  const wall = Date.UTC(y, m - 1, d, 0, minutes);
+  const offset = etOffsetMinutes(new Date(wall + 5 * 3_600_000));
+  return wall - offset * 60_000;
+}
+
+/** Yahoo's daily close settles a few minutes after the bell. Bars before this are provisional. */
+export const CLOSE_FINAL_MINUTES = 16 * 60 + 20;
+
+/** True while the latest bar is today's and the closing print may still be revised. */
+export function closeIsProvisional(barDate: string | null, now = new Date()): boolean {
+  if (!barDate) return false;
+  return barDate === todayEt(now) && minutesEt(now) < CLOSE_FINAL_MINUTES;
+}

@@ -216,6 +216,7 @@ export function Dashboard() {
               <p className="mt-1 truncate text-[11px] text-muted">
                 {data?.barDate ? `終値日 ${data.barDate}` : "終値日 —"}
                 {data ? ` · ${formatAge(data.fetchedAt, now)}` : ""}
+                {data?.usdJpy ? ` · ドル円 ${data.usdJpy.rate.toFixed(2)}` : ""}
               </p>
             </div>
             <ThemeToggle />
@@ -262,6 +263,11 @@ export function Dashboard() {
           {data?.excludedPartial && (
             <p className="text-xs leading-relaxed text-muted">
               米国市場の場中なので、未確定の当日足は除き、直前の確定日足で計算している。
+            </p>
+          )}
+          {data?.provisional && (
+            <p className="text-xs leading-relaxed text-muted">
+              引け直後なので、今日の終値は暫定。米国東部16:20以降に取り直す。
             </p>
           )}
           <Input
@@ -336,6 +342,11 @@ export function Dashboard() {
         {data && data.failCount > 0 && (
           <p className="mx-4 mb-3 rounded-xl bg-rust-soft px-3 py-2 text-xs leading-relaxed text-rust">
             {data.failCount}銘柄は日足を取れなかった。一覧の下に理由がある。
+          </p>
+        )}
+        {data && data.staleCount > 0 && (
+          <p className="mx-4 mb-3 rounded-xl bg-elev px-3 py-2 text-xs leading-relaxed text-muted">
+            {data.staleCount}銘柄は最新の取得に失敗したため、前回の日足で表示している。2分後に取り直す。
           </p>
         )}
 

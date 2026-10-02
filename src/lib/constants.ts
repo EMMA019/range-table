@@ -6,6 +6,12 @@ export const IGNORED_TICKERS = ["ONDS"] as const;
 
 export const CACHE_TTL_MS = 15 * 60 * 1000;
 
+/** A failed price fetch is retried after this instead of waiting out the full TTL. */
+export const ERROR_RETRY_MS = 2 * 60 * 1000;
+
+/** USD/JPY daily bars. Fetched with prices, not shown as a row. */
+export const FX_USDJPY = "JPY=X";
+
 /** Trailing and forward EPS change slowly, so a successful read is cached much longer than prices. */
 export const EPS_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 

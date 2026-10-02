@@ -1,6 +1,7 @@
 import https from "node:https";
 import { EPS_REQUEST_TIMEOUT_MS, EPS_WARM_CONCURRENCY, EPS_WARM_GAP_MS } from "./constants";
 import { hasEpsValue, parseQuotePage, parseQuoteSummary, parseV7Quotes } from "./pe";
+import { yahooGate } from "./rate-gate";
 import type { EpsSnapshot } from "./types";
 
 const HOSTS = ["https://query1.finance.yahoo.com", "https://query2.finance.yahoo.com"];
@@ -346,6 +347,7 @@ async function request(
   },
 ): Promise<HttpResult> {
   const hops = init.hops ?? 0;
+  await yahooGate.wait();
   return await new Promise((resolve, reject) => {
     const target = new URL(url);
     const req = https.request(
@@ -361,6 +363,7 @@ async function request(
       },
       (res) => {
         const status = res.statusCode ?? 0;
+        if (status === 429) yahooGate.penalize();
         const location = typeof res.headers.location === "string" ? res.headers.location : null;
         const setCookie = Array.isArray(res.headers["set-cookie"]) ? res.headers["set-cookie"] : [];
         if (init.discardBody) {
