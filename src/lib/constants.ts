@@ -54,6 +54,12 @@ export const EARNINGS_WARN_DAYS = 5;
 /** A team pick priced above this is marked 監視のみ even when its status is 候補. */
 export const PICK_WATCH_PRICE = 450;
 
+/** Share count is sized so one average daily range is worth this many dollars. */
+export const ATR_TARGET_DOLLARS = 10;
+
+/** Cost of that share count above this is tinted. Usual max position is $300–450. */
+export const ATR_COST_WARN = 450;
+
 /** A one-day close move at least this large flags a possible split or spinoff. */
 export const GAP_THRESHOLD = 0.35;
 

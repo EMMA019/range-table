@@ -10,6 +10,7 @@ const ITEMS = [
   ["箱の位置", BASIS.box],
   ["15%・25%ラインと反発", BASIS.guide],
   ["ATR(14)", BASIS.atr],
+  ["$10株数", BASIS.shares10],
   ["上抜け", BASIS.breakout],
   ["決算までの営業日", BASIS.earnings],
   ["実績PER", BASIS.trailingPe],

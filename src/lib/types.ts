@@ -46,6 +46,10 @@ export type Quote = {
   priorHigh20: number;
   boxPct: number;
   atr14: number;
+  /** Shares so one ATR(14) move is about $10. Null when ATR is missing. */
+  shares10: number | null;
+  /** shares10 × close. Null when ATR is missing. */
+  cost10: number | null;
   brokeHigh: boolean;
   gapWarning: boolean;
   /** Percent change of the 20-day average versus 5 trading days earlier. Null until 25 closes exist. */
@@ -161,6 +165,9 @@ export type PickQuote = {
   low20: number;
   high20: number;
   volumeRatio: number | null;
+  atr14: number;
+  shares10: number | null;
+  cost10: number | null;
   line15: number;
   line25: number;
   reboundDays: number | null;

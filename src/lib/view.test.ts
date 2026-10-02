@@ -22,6 +22,8 @@ function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow
       priorHigh20: 12,
       boxPct: 50,
       atr14: 1,
+      shares10: 10,
+      cost10: 100,
       brokeHigh: false,
       gapWarning: false,
       maSlopePct: null,

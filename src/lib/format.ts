@@ -1,4 +1,4 @@
-import { MA_SLOPE_FLAT_PCT } from "./constants";
+import { ATR_COST_WARN, MA_SLOPE_FLAT_PCT } from "./constants";
 import type { EarningsView } from "./types";
 
 const px = new Intl.NumberFormat("en-US", {
@@ -113,6 +113,24 @@ export function formatCorrExact(n: number | null): string {
 export function formatAtr(n: number): string {
   if (!Number.isFinite(n)) return "—";
   return n.toFixed(2);
+}
+
+/** $423, or $423.50 when there are cents. */
+export function formatDollar(n: number): string {
+  if (!Number.isFinite(n)) return "—";
+  const cents = Math.round(n * 100) / 100;
+  const [whole, frac] = cents.toFixed(2).split(".");
+  const grouped = Number(whole).toLocaleString("en-US");
+  return frac === "00" ? `$${grouped}` : `$${grouped}.${frac}`;
+}
+
+export function formatShares10(shares: number | null, cost: number | null): string {
+  if (shares == null || cost == null || !Number.isFinite(shares) || !Number.isFinite(cost)) return "—";
+  return `${shares}株 / ${formatDollar(cost)}`;
+}
+
+export function sharesCostWarn(cost: number | null): boolean {
+  return cost != null && Number.isFinite(cost) && cost > ATR_COST_WARN;
 }
 
 export function shortDate(iso: string): string {

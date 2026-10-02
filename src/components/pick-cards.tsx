@@ -1,11 +1,12 @@
 import { BoxBar } from "@/components/box-bar";
+import { Shares10 } from "@/components/shares10";
 import {
   PICK_DISTANCE_NOTE,
   PICK_EARNINGS_BADGE,
   PICK_ENTRY_BADGE,
   PICK_WATCH_BADGE,
 } from "@/lib/copy";
-import { formatDev, formatPx, formatVolumeRatio, guideLineText, reboundText, shortDate } from "@/lib/format";
+import { formatAtr, formatDev, formatPx, formatVolumeRatio, guideLineText, reboundText, shortDate } from "@/lib/format";
 import type { PickCard } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -64,6 +65,13 @@ function PickCardView({ pick }: { pick: PickCard }) {
           <BoxBar pct={quote.boxPct} />
           <p className="text-[11px] leading-relaxed text-muted">{guideLineText(quote.line15, quote.line25)}</p>
           <p className="text-[11px] text-ink">{reboundText(quote.reboundDays)}</p>
+          <p className="text-[11px] text-muted">
+            ATR(14) <b className="font-mono font-medium text-ink tabular-nums">{formatAtr(quote.atr14)}</b>
+            {" · "}
+            <b className="font-mono font-medium text-ink tabular-nums">
+              <Shares10 shares={quote.shares10} cost={quote.cost10} />
+            </b>
+          </p>
           <p className="text-[11px] text-muted">
             20日安値 {formatPx(quote.low20)} · 高値 {formatPx(quote.high20)}
             {quote.volumeRatio != null ? ` · 出来高 ${formatVolumeRatio(quote.volumeRatio)}` : ""}

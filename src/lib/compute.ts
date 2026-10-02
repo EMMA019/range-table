@@ -1,4 +1,5 @@
 import {
+  ATR_TARGET_DOLLARS,
   ATR_WINDOW,
   BOX_WINDOW,
   CHART_SESSIONS,
@@ -76,10 +77,13 @@ export function computeQuote(bars: Bar[]): QuoteResult {
   }
 
   const guides = entryGuides(low20, high20);
+  const close = round4(last.c);
+  const atrRounded = round4(atr);
+  const ten = sharesForMove(atrRounded, close);
   return {
     ok: true,
     quote: {
-      close: round4(last.c),
+      close,
       closeDate: last.date,
       ma20: round4(ma20),
       devPct: round4(devPct),
@@ -87,7 +91,9 @@ export function computeQuote(bars: Bar[]): QuoteResult {
       high20: round4(high20),
       priorHigh20: round4(priorHigh20),
       boxPct: round4(boxPct),
-      atr14: round4(atr),
+      atr14: atrRounded,
+      shares10: ten.shares10,
+      cost10: ten.cost10,
       brokeHigh: last.c > priorHigh20,
       gapWarning: hasLargeGap(bars),
       maSlopePct: maSlopePct(bars),
@@ -97,6 +103,28 @@ export function computeQuote(bars: Bar[]): QuoteResult {
       reboundDays: reboundDays(bars),
     },
   };
+}
+
+/** Shares so one ATR move is worth about $10, and what those shares cost at the close. */
+export function sharesForMove(
+  atr: number | null | undefined,
+  close: number | null | undefined,
+  dollars = ATR_TARGET_DOLLARS,
+): { shares10: number | null; cost10: number | null } {
+  if (
+    atr == null ||
+    close == null ||
+    !Number.isFinite(atr) ||
+    !Number.isFinite(close) ||
+    !(atr > 0) ||
+    !(close > 0) ||
+    !(dollars > 0)
+  ) {
+    return { shares10: null, cost10: null };
+  }
+  const shares10 = Math.ceil(Number((dollars / atr).toFixed(8)));
+  const cost10 = Math.round(shares10 * close * 100) / 100;
+  return { shares10, cost10 };
 }
 
 /** 15% and 25% of the same 20-day high-low box used for box position. */

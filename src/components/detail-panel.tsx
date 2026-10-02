@@ -24,6 +24,7 @@ import type { ChartPayload, TickerRow } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { atTop, continuedBreakout, continuedBreakoutText, volumeSurge, volumeThin, zoneOf } from "@/lib/view";
 import { BoxBar } from "./box-bar";
+import { Shares10 } from "./shares10";
 import { PriceChart } from "./price-chart";
 import { Button } from "./ui/button";
 
@@ -133,7 +134,17 @@ export function DetailPanel({
                 <Stat label="20日安値" value={formatPx(row.quote.low20)} basis={BASIS.low20} />
                 <Stat label="20日高値" value={formatPx(row.quote.high20)} basis={BASIS.high20} />
                 <Stat label="箱の位置" value={formatBox(row.quote.boxPct)} basis={BASIS.box} tone={zoneTone(row.quote.boxPct)} />
-                <Stat label="ATR(14)" value={formatAtr(row.quote.atr14)} basis={BASIS.atr} />
+                <Stat
+                  label="ATR(14)"
+                  value={
+                    <>
+                      {formatAtr(row.quote.atr14)}
+                      {" · "}
+                      <Shares10 shares={row.quote.shares10} cost={row.quote.cost10} />
+                    </>
+                  }
+                  basis={`${BASIS.atr}。${BASIS.shares10}`}
+                />
                 <Stat
                   label="上抜け"
                   value={row.quote.brokeHigh ? "はい" : "いいえ"}
@@ -262,7 +273,7 @@ function Stat({
   tone,
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
   basis: string;
   tone?: "sage" | "rust" | "copper";
 }) {

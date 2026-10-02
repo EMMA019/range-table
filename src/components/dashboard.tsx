@@ -22,6 +22,7 @@ import type { MarketPayload, TickerRow } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { applyView, atTop, continuedBreakout, continuedBreakoutText, sectorsOf, volumeSurge, volumeThin, withDividers, zoneOf, type ViewFilters } from "@/lib/view";
 import { BoxBar } from "./box-bar";
+import { Shares10 } from "./shares10";
 import { DetailPanel } from "./detail-panel";
 import { Glossary } from "./glossary";
 import { SiteNav } from "./site-nav";
@@ -575,6 +576,10 @@ function TickerCard({
             </span>
             <span>
               ATR(14) <b className="font-mono font-medium text-ink tabular-nums">{formatAtr(quote.atr14)}</b>
+              {" · "}
+              <b className="font-mono font-medium text-ink tabular-nums">
+                <Shares10 shares={quote.shares10} cost={quote.cost10} />
+              </b>
             </span>
             <span>
               20日安値 <b className="font-mono font-medium text-ink tabular-nums">{formatPx(quote.low20)}</b>

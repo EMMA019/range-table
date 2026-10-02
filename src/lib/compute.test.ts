@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { atr14, computeQuote, entryGuides, maSlopePct, reboundDays, volumeStats } from "./compute";
-import { guideLineText, reboundText, formatCompactShares, formatVolumeRatio, slopeLabel } from "./format";
+import { atr14, computeQuote, entryGuides, maSlopePct, reboundDays, sharesForMove, volumeStats } from "./compute";
+import { formatShares10, guideLineText, reboundText, formatCompactShares, formatVolumeRatio, sharesCostWarn, slopeLabel } from "./format";
 import type { Bar } from "./types";
 
 function bar(date: string, o: number, h: number, l: number, c: number, v = 1_000_000): Bar {
@@ -37,10 +37,28 @@ describe("computeQuote", () => {
     assert.equal(result.quote.line15, 18.25);
     assert.equal(result.quote.line25, 19.75);
     assert.equal(result.quote.reboundDays, 0);
+    const ten = sharesForMove(result.quote.atr14, result.quote.close);
+    assert.equal(result.quote.shares10, ten.shares10);
+    assert.equal(result.quote.cost10, ten.cost10);
     assert.equal(guideLineText(18.25, 19.75), "15%ライン $18.25 / 25%ライン $19.75");
     assert.equal(reboundText(0), "安値更新中");
     assert.equal(reboundText(null), "—");
     assert.equal(reboundText(2), "反発確認2日目");
+  });
+
+  it("sizes shares so one ATR is about ten dollars", () => {
+    assert.deepEqual(sharesForMove(4, 141), { shares10: 3, cost10: 423 });
+    assert.equal(formatShares10(3, 423), "3株 / $423");
+    assert.equal(sharesCostWarn(423), false);
+    assert.equal(sharesCostWarn(450), false);
+    assert.equal(sharesCostWarn(450.01), true);
+    assert.deepEqual(sharesForMove(0, 100), { shares10: null, cost10: null });
+    assert.deepEqual(sharesForMove(null, 100), { shares10: null, cost10: null });
+    assert.equal(formatShares10(null, null), "—");
+    const exact = sharesForMove(5, 141.31);
+    assert.equal(exact.shares10, 2);
+    assert.equal(exact.cost10, 282.62);
+    assert.equal(formatShares10(2, 282.62), "2株 / $282.62");
   });
 
   it("counts bullish candles after a 20-day low inside the last 10 sessions", () => {
