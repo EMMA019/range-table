@@ -32,6 +32,17 @@ export function formatBox(pct: number): string {
   return `${boxShown(pct).toFixed(1)}%`;
 }
 
+export function guideLineText(line15: number, line25: number): string {
+  return `15%ライン $${formatPx(line15)} / 25%ライン $${formatPx(line25)}`;
+}
+
+/** 0 is 安値更新中. Null is the em dash. A positive count is 反発確認N日目. */
+export function reboundText(days: number | null): string {
+  if (days == null) return "—";
+  if (days <= 0) return "安値更新中";
+  return `反発確認${days}日目`;
+}
+
 export function slopeShown(pct: number): number {
   return Math.round(pct * 10) / 10;
 }

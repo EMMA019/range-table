@@ -33,6 +33,9 @@ function quote(close: number): PickQuote {
     low20: 90,
     high20: 140,
     volumeRatio: 1.2,
+    line15: 97.5,
+    line25: 102.5,
+    reboundDays: null,
   };
 }
 

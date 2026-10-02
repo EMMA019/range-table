@@ -58,6 +58,16 @@ export type Quote = {
   volumeRatio: number | null;
   /** Average of close × volume over those same prior 20 bars. */
   avgDollarVolume20: number | null;
+  /** 20-day low plus 15% of the 20-day range. Same box as boxPct. */
+  line15: number;
+  /** 20-day low plus 25% of the 20-day range. */
+  line25: number;
+  /**
+   * Consecutive bullish candles after the latest 20-day low.
+   * 0 when that low is the latest bar (安値更新中).
+   * Null when the low is older than 10 sessions or the run stops before the latest bar.
+   */
+  reboundDays: number | null;
 };
 
 export type EarningsView = {
@@ -151,6 +161,9 @@ export type PickQuote = {
   low20: number;
   high20: number;
   volumeRatio: number | null;
+  line15: number;
+  line25: number;
+  reboundDays: number | null;
 };
 
 export type PickCard = {

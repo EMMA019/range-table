@@ -35,6 +35,10 @@ export const CHART_SESSIONS = 66;
 
 /** Box position at or under this percent is "near the bottom". */
 export const BOX_BOTTOM_MAX = 20;
+/** Box position at or under this percent can be the rebound-waiting chip. */
+export const BOX_REBOUND_MAX = 25;
+/** The 20-day low must fall inside this many latest sessions to count a rebound. */
+export const REBOUND_SESSIONS = 10;
 /** Box position at or over this percent is "near the top". */
 export const BOX_TOP_MIN = 80;
 

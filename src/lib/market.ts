@@ -438,6 +438,9 @@ function toPickQuote(quote: Quote | null): PickQuote | null {
     low20: quote.low20,
     high20: quote.high20,
     volumeRatio: quote.volumeRatio,
+    line15: quote.line15,
+    line25: quote.line25,
+    reboundDays: quote.reboundDays,
   };
 }
 

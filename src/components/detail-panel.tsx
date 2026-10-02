@@ -13,6 +13,8 @@ import {
   formatDollarVolume,
   formatPx,
   formatShares,
+  guideLineText,
+  reboundText,
   formatSlope,
   formatVolumeRatioExact,
   shortDate,
@@ -93,6 +95,9 @@ export function DetailPanel({
                 <p className="mb-1 text-xs text-muted">箱の位置</p>
                 <BoxBar pct={row.quote.boxPct} />
                 <p className="mt-1 text-[11px] text-muted">{BASIS.box}</p>
+                <p className="mt-3 text-sm leading-relaxed">{guideLineText(row.quote.line15, row.quote.line25)}</p>
+                <p className="mt-1 text-sm">{reboundText(row.quote.reboundDays)}</p>
+                <p className="mt-1 text-[11px] leading-relaxed text-muted">{BASIS.guide}</p>
               </div>
               <div className="mt-4 flex flex-wrap gap-1">
                 {row.quote.brokeHigh && <Pill tone="rust">上抜け</Pill>}

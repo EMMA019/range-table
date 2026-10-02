@@ -5,7 +5,7 @@ import {
   PICK_ENTRY_BADGE,
   PICK_WATCH_BADGE,
 } from "@/lib/copy";
-import { formatDev, formatPx, formatVolumeRatio, shortDate } from "@/lib/format";
+import { formatDev, formatPx, formatVolumeRatio, guideLineText, reboundText, shortDate } from "@/lib/format";
 import type { PickCard } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -62,6 +62,8 @@ function PickCardView({ pick }: { pick: PickCard }) {
       {quote ? (
         <div className="mt-3 space-y-2">
           <BoxBar pct={quote.boxPct} />
+          <p className="text-[11px] leading-relaxed text-muted">{guideLineText(quote.line15, quote.line25)}</p>
+          <p className="text-[11px] text-ink">{reboundText(quote.reboundDays)}</p>
           <p className="text-[11px] text-muted">
             20日安値 {formatPx(quote.low20)} · 高値 {formatPx(quote.high20)}
             {quote.volumeRatio != null ? ` · 出来高 ${formatVolumeRatio(quote.volumeRatio)}` : ""}

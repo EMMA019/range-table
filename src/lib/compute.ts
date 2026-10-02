@@ -4,6 +4,7 @@ import {
   CHART_SESSIONS,
   GAP_THRESHOLD,
   MA_SLOPE_LOOKBACK,
+  REBOUND_SESSIONS,
 } from "./constants";
 import type { Bar, ChartBar, Quote } from "./types";
 
@@ -74,6 +75,7 @@ export function computeQuote(bars: Bar[]): QuoteResult {
     return { ok: false, error: "ATRを計算できない" };
   }
 
+  const guides = entryGuides(low20, high20);
   return {
     ok: true,
     quote: {
@@ -90,8 +92,47 @@ export function computeQuote(bars: Bar[]): QuoteResult {
       gapWarning: hasLargeGap(bars),
       maSlopePct: maSlopePct(bars),
       ...volumeStats(bars),
+      line15: guides.line15,
+      line25: guides.line25,
+      reboundDays: reboundDays(bars),
     },
   };
+}
+
+/** 15% and 25% of the same 20-day high-low box used for box position. */
+export function entryGuides(low20: number, high20: number): { line15: number; line25: number } {
+  const range = high20 - low20;
+  return {
+    line15: round4(low20 + 0.15 * range),
+    line25: round4(low20 + 0.25 * range),
+  };
+}
+
+/**
+ * Consecutive bullish candles (close above open) after the most recent 20-day low.
+ * Returns 0 when that low is the latest bar, and null when the low is outside the
+ * last 10 sessions or a later candle is not bullish.
+ */
+export function reboundDays(bars: Bar[]): number | null {
+  const window = bars.slice(-BOX_WINDOW);
+  if (window.length < BOX_WINDOW) return null;
+  let low = window[0].l;
+  for (const bar of window) {
+    if (bar.l < low) low = bar.l;
+  }
+  let lowIndex = 0;
+  for (let i = 0; i < window.length; i++) {
+    if (window[i].l === low) lowIndex = i;
+  }
+  const last = window[window.length - 1];
+  if (lowIndex === window.length - 1 || last.c === low) return 0;
+  if (lowIndex < window.length - REBOUND_SESSIONS) return null;
+  let days = 0;
+  for (let i = lowIndex + 1; i < window.length; i++) {
+    if (!(window[i].c > window[i].o)) return null;
+    days += 1;
+  }
+  return days > 0 ? days : null;
 }
 
 /** Latest volume against the prior 20 completed bars, which are excluded from the average. */

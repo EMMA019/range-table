@@ -8,6 +8,7 @@ const ITEMS = [
   ["20日安値", BASIS.low20],
   ["20日高値", BASIS.high20],
   ["箱の位置", BASIS.box],
+  ["15%・25%ラインと反発", BASIS.guide],
   ["ATR(14)", BASIS.atr],
   ["上抜け", BASIS.breakout],
   ["決算までの営業日", BASIS.earnings],

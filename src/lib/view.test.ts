@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { TickerRow } from "./types";
-import { applyView, continuedBreakoutText, volumeSurge, volumeThin, withDividers } from "./view";
+import { applyView, continuedBreakoutText, volumeSurge, volumeThin, waitingRebound, withDividers } from "./view";
 
 function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow {
   return {
@@ -29,6 +29,9 @@ function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow
       avgVolume20: 1_000_000,
       volumeRatio: 1,
       avgDollarVolume20: 10_000_000,
+      line15: 8.6,
+      line25: 9,
+      reboundDays: null,
     },
     pe: {
       trailingEps: null,
@@ -57,6 +60,7 @@ const filters = {
   surge: false,
   earnings: false,
   lowCorr: false,
+  rebound: false,
   hideWatch: false,
   sort: "boxAsc" as const,
   q: "",
@@ -214,6 +218,22 @@ describe("applyView", () => {
     assert.deepEqual(
       applyView(names, { ...filters, sector: "jab_sp500" }).map((item) => item.ticker),
       ["JAB"],
+    );
+  });
+
+  it("keeps names in the rebound-waiting zone", () => {
+    const names = [
+      row({ ticker: "IN", quote: { ...row({ ticker: "IN" }).quote!, boxPct: 25, reboundDays: 1 } }),
+      row({ ticker: "ROUND", quote: { ...row({ ticker: "ROUND" }).quote!, boxPct: 25.04, reboundDays: 2 } }),
+      row({ ticker: "HIGH", quote: { ...row({ ticker: "HIGH" }).quote!, boxPct: 25.06, reboundDays: 3 } }),
+      row({ ticker: "FRESH", quote: { ...row({ ticker: "FRESH" }).quote!, boxPct: 12, reboundDays: 0 } }),
+      row({ ticker: "NONE", quote: { ...row({ ticker: "NONE" }).quote!, boxPct: 10, reboundDays: null } }),
+    ];
+    assert.equal(waitingRebound(names[0].quote!), true);
+    assert.equal(waitingRebound(names[2].quote!), false);
+    assert.deepEqual(
+      applyView(names, { ...filters, rebound: true }).map((item) => item.ticker),
+      ["IN", "ROUND"],
     );
   });
 

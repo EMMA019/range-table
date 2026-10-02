@@ -13,6 +13,8 @@ import {
   formatCorr,
   formatPx,
   formatVolumeRatio,
+  guideLineText,
+  reboundText,
   shortDate,
   slopeLabel,
 } from "@/lib/format";
@@ -37,6 +39,7 @@ const CHIP_PARAM: Record<ChipKey, string> = {
   surge: "surge",
   earnings: "earn",
   lowCorr: "lowcorr",
+  rebound: "rebound",
   hideWatch: "hideWatch",
 };
 
@@ -98,6 +101,7 @@ export function Dashboard() {
       surge: sp.get("surge") === "1",
       earnings: sp.get("earn") === "1",
       lowCorr: sp.get("lowcorr") === "1",
+      rebound: sp.get("rebound") === "1",
       hideWatch: sp.get("hideWatch") === "1",
       sort: SORTS.has(sort ?? "") ? (sort as SortId) : "boxAsc",
       q: query,
@@ -164,6 +168,7 @@ export function Dashboard() {
     filters.surge ||
     filters.earnings ||
     filters.lowCorr ||
+    filters.rebound ||
     filters.hideWatch ||
     query.trim().length > 0;
 
@@ -184,6 +189,7 @@ export function Dashboard() {
         surge: null,
         earn: null,
         lowcorr: null,
+        rebound: null,
         hideWatch: null,
         sort: null,
       },
@@ -537,6 +543,8 @@ function TickerCard({
             <div className="mb-1 text-[11px] text-muted">箱の位置</div>
             <BoxBar pct={quote.boxPct} />
           </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-muted">{guideLineText(quote.line15, quote.line25)}</p>
+          <p className="text-[11px] text-ink">{reboundText(quote.reboundDays)}</p>
           <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-muted">
             <span>
               20日線{" "}

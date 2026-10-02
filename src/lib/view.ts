@@ -1,4 +1,4 @@
-import { BOX_BOTTOM_MAX, BOX_TOP_MIN, CORR_LOW_MAX, VOLUME_CONFIRM_RATIO, VOLUME_SURGE_RATIO, VOLUME_THIN_RATIO } from "./constants";
+import { BOX_BOTTOM_MAX, BOX_REBOUND_MAX, BOX_TOP_MIN, CORR_LOW_MAX, VOLUME_CONFIRM_RATIO, VOLUME_SURGE_RATIO, VOLUME_THIN_RATIO } from "./constants";
 import type { SortId } from "./copy";
 import { boxShown } from "./format";
 import type { Quote, TickerRow } from "./types";
@@ -12,6 +12,7 @@ export type ViewFilters = {
   surge: boolean;
   earnings: boolean;
   lowCorr: boolean;
+  rebound: boolean;
   hideWatch: boolean;
   sort: SortId;
   q: string;
@@ -36,6 +37,11 @@ export function volumeThin(quote: Quote): boolean {
 
 export function volumeSurge(quote: Quote): boolean {
   return quote.volumeRatio != null && volumeRatioShown(quote.volumeRatio) >= VOLUME_SURGE_RATIO;
+}
+
+/** Box at or under 25% and at least one confirmed rebound day. */
+export function waitingRebound(quote: Quote): boolean {
+  return boxShown(quote.boxPct) <= BOX_REBOUND_MAX && quote.reboundDays != null && quote.reboundDays >= 1;
 }
 
 /** Two-decimal basket correlation at or under 0.3, including negatives. Missing correlation stays out. */
@@ -69,6 +75,7 @@ export function applyView(rows: TickerRow[], filters: ViewFilters): TickerRow[] 
     if (filters.surge && !(row.quote && volumeSurge(row.quote))) return false;
     if (filters.earnings && !row.earnings?.warn) return false;
     if (filters.lowCorr && !lowBasketCorr(row)) return false;
+    if (filters.rebound && !(row.quote && waitingRebound(row.quote))) return false;
     if (query) {
       const hay = `${row.ticker} ${row.description} ${row.notes} ${row.sector} ${row.sectorLabel ?? ""} ${row.tags.join(" ")}`.toLowerCase();
       if (!hay.includes(query)) return false;
