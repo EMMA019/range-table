@@ -61,7 +61,12 @@ APIキーは不要。価格はサーバが [Yahoo Finance の日足チャート]
 | kind | 条件 |
 |---|---|
 | `entry_in_ok` | IN OK・ATR14が終値の3%以上・決算5営業日以内なし。監視のみと ONDS は除く。決算日未登録は `low` と `no_earnings_date`。id は `entry:{T}:{IN OKが続いている初日}` |
+| `sec_8k` | 8-K / 8-K/A。Item 1.01・1.02・1.03・1.05・2.01・3.01・4.02・5.01 は `high`、それ以外は `normal`。2.02（決算）・7.01・9.01・5.07 だけの提出は出さない |
+| `sec_form4_sell` | Form 4 の市場売却（コード S）が合計 $250K 以上で、10b5-1 計画のチェックも脚注も無いもの。$5M 以上は `high` |
+| `sec_offering` | 424B1/B3/B4/B5/B7。424B2（仕組債）と金融グループは出さない。株か社債かはリンク先で確認 |
 | `anthropic_s1` | 提出者名が Anthropic 本体と完全一致する S-1/S-1/A/F-1/424B4。`critical`。直近30日 |
+
+SEC の3種は watchlist の銘柄（ONDS を除く）の受付から4日以内。id は `sec:{提出番号}`。CIK は `data/sec_cik.json`（公開情報）で、ウォッチリストを変えたら `SEC_USER_AGENT=... npx tsx scripts/build-sec-cik.ts` で作り直す。1社ずつ順に読み、各社30分キャッシュ。起動直後の1巡は約80秒かかり、その間は `complete: false`。
 
 EDGAR は Render の環境変数 `SEC_USER_AGENT`（例 `range-table you@example.com`）が無いと止まる。SEC は連絡先メールの無い User-Agent に 403 を返すため。メールはリポジトリに書かない。
 

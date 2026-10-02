@@ -19,6 +19,7 @@ const FLAG_LABEL: Record<string, string> = {
   no_earnings_date: "決算日未登録",
   price_over_450: "1株$450超",
   stale_data: "前回の日足",
+  amended: "訂正",
 };
 
 export function AlertCards({ items }: { items: AlertItem[] }) {

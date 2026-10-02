@@ -85,3 +85,9 @@ export const CORR_WINDOW = 60;
 
 /** Basket correlation at or under this, on the two-decimal figure, is the low-correlation chip. */
 export const CORR_LOW_MAX = 0.3;
+
+/** A Form 4 open-market sale (code S) below this total is not an alert. */
+export const FORM4_MIN_SELL_USD = 250_000;
+
+/** A Form 4 sale at or above this total is high priority. */
+export const FORM4_HIGH_SELL_USD = 5_000_000;
