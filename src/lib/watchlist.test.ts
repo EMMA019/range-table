@@ -9,13 +9,14 @@ describe("watchlist", () => {
   it("loads the grouped list without duplicate tickers", () => {
     assert.equal(tickers.length, 187);
     assert.equal(new Set(tickers.map((item) => item.ticker)).size, 187);
-    assert.equal(list.groups[0]?.id, "ibkr");
+    assert.equal(list.groups[0]?.id, "semi");
+    assert.equal(list.groups[0]?.name, "半導体");
     assert.equal(list.groups.at(-1)?.id, "realestate");
     assert.equal(list.groups.at(-1)?.name, "不動産");
-    assert.equal(list.groups.some((group) => group.id === "jab_sp500"), false);
+    assert.equal(list.groups.some((group) => group.id === "jab_sp500" || group.id === "ibkr"), false);
     assert.deepEqual(
       list.groups.map((group) => group.tickers.length),
-      [22, 20, 9, 10, 8, 9, 8, 10, 8, 12, 11, 10, 10, 5, 9, 8, 6, 7, 2, 3],
+      [27, 10, 14, 10, 13, 9, 10, 9, 12, 11, 11, 10, 5, 9, 8, 7, 7, 2, 3],
     );
     for (const removed of ["QRVO", "HUT", "AMAT", "NVT", "DLR"]) {
       assert.equal(tickers.some((item) => item.ticker === removed), false);
@@ -70,5 +71,38 @@ describe("watchlist", () => {
     assert.equal(groupOf("FERG")?.name, "資本財・工業");
     assert.equal(groupOf("FERG")?.tickers.find((item) => item.ticker === "FERG")?.earnings, null);
     assert.equal(tickers.find((item) => item.ticker === "NVDA")?.tags.includes("安定ジャブ"), false);
+  });
+
+  it("distributes the original IBKR names and keeps the holding notes", () => {
+    const groupOf = (ticker: string) => list.groups.find((group) => group.tickers.some((item) => item.ticker === ticker));
+    const original = tickers.filter((item) => item.tags.includes("IBKR元リスト"));
+    assert.equal(original.length, 22);
+    assert.deepEqual(
+      original.map((item) => item.ticker).sort(),
+      [
+        "AKAM", "AMD", "AMZN", "ARM", "AVGO", "CIEN", "COHR", "GLW", "GOOGL", "INTC", "LRCX", "MRVL", "MSFT", "ON",
+        "ONDS", "ORCL", "PLTR", "QCOM", "SMCI", "SPCX", "VRT", "WDC",
+      ],
+    );
+    assert.equal(groupOf("AVGO")?.name, "半導体");
+    assert.equal(groupOf("AVGO")?.tickers.find((item) => item.ticker === "AVGO")?.notes, "保有");
+    assert.equal(groupOf("ON")?.name, "半導体");
+    assert.equal(groupOf("ON")?.tickers.find((item) => item.ticker === "ON")?.notes, "保有");
+    assert.equal(groupOf("VRT")?.name, "電力設備・冷却");
+    assert.equal(groupOf("VRT")?.tickers.find((item) => item.ticker === "VRT")?.notes, "保有");
+    assert.equal(groupOf("ONDS")?.name, "資本財・工業");
+    assert.equal(groupOf("ONDS")?.tickers.find((item) => item.ticker === "ONDS")?.notes, "保有");
+    assert.deepEqual(groupOf("ONDS")?.tickers.find((item) => item.ticker === "ONDS")?.tags, ["高ボラ", "IBKR元リスト"]);
+    assert.equal(groupOf("LRCX")?.name, "半導体装置・材料");
+    assert.equal(groupOf("COHR")?.name, "ネットワーク・光通信");
+    assert.equal(groupOf("WDC")?.name, "サーバー・ストレージ・部品");
+    assert.equal(groupOf("WDC")?.tickers.find((item) => item.ticker === "WDC")?.watchOnly, true);
+    assert.equal(groupOf("SMCI")?.tickers.find((item) => item.ticker === "SMCI")?.tags.includes("高ボラ"), true);
+    assert.equal(groupOf("GOOGL")?.name, "AIクラウド・データセンター");
+    assert.equal(groupOf("MSFT")?.tickers.find((item) => item.ticker === "MSFT")?.watchOnly, true);
+    assert.equal(groupOf("PLTR")?.name, "IT・ソフト");
+    assert.equal(groupOf("AMD")?.tickers.find((item) => item.ticker === "AMD")?.watchOnly, true);
+    assert.equal(groupOf("SPCX")?.name, "宇宙");
+    assert.equal(tickers.find((item) => item.ticker === "NVDA")?.tags.includes("IBKR元リスト"), false);
   });
 });

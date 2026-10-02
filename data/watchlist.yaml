@@ -4,69 +4,12 @@
 # ticker       必須。米国ティッカー
 # description  必須。一行の説明
 # notes        任意。連動メモやイベント
-# tags         任意。高ボラ / 増資枠 / 合併 / 売出予定 / 事業分離 など
+# tags         任意。高ボラ / 増資枠 / 合併 / 売出予定 / 事業分離 / 安定ジャブ / IBKR元リスト など
 # watchOnly    true で「監視のみ」（目安は1株が約$450超）
 # earnings.date    YYYY-MM-DD。季節が変わったら手で更新する
 # earnings.status  confirmed（確）または estimated（推定）
 
 groups:
-  - id: ibkr
-    name: IBKRウォッチリスト（元の22銘柄）
-    tickers:
-      - ticker: AVGO
-        description: AI向けカスタムチップ・ネットワーク半導体
-        notes: 保有
-      - ticker: VRT
-        description: データセンター向け電源・冷却設備
-        notes: 保有
-      - ticker: ON
-        description: 車載・産業向けパワー半導体（SiC）
-        notes: 保有
-      - ticker: ONDS
-        description: ドローン・産業向け無線通信（小型・高ボラ）
-        notes: 保有
-        tags: [高ボラ]
-      - ticker: SPCX
-        description: SpaceX。ロケット打ち上げ・衛星通信（Starlink）
-      - ticker: COHR
-        description: 光トランシーバー・レーザー部品
-      - ticker: MRVL
-        description: データセンター向けカスタムチップ・光通信DSP
-      - ticker: GOOGL
-        description: 検索・クラウド。自社AIチップ（TPU）
-      - ticker: WDC
-        description: HDD大手。データ増加の恩恵
-        watchOnly: true
-      - ticker: PLTR
-        description: データ分析・AIソフトウェア
-      - ticker: MSFT
-        description: クラウド（Azure）・AI設備投資の大手
-        watchOnly: true
-      - ticker: AMZN
-        description: クラウド（AWS）・EC。AI設備投資の大手
-      - ticker: ORCL
-        description: クラウドインフラ・データベース。AI向けデータセンター
-      - ticker: GLW
-        description: 光ファイバー・特殊ガラス
-      - ticker: INTC
-        description: CPU・受託製造（ファウンドリ）
-      - ticker: LRCX
-        description: エッチング・成膜装置。メモリ投資の恩恵
-      - ticker: SMCI
-        description: AIサーバーの組み立て・液冷
-        tags: [高ボラ]
-      - ticker: AMD
-        description: CPU・AI向けGPU
-        watchOnly: true
-      - ticker: QCOM
-        description: スマホ向けSoC・通信チップ。PC・車載へ拡大
-      - ticker: AKAM
-        description: CDN・セキュリティ・エッジクラウド
-      - ticker: CIEN
-        description: 光伝送装置。データセンター間接続
-      - ticker: ARM
-        description: CPU設計IP。スマホ・データセンター向け
-
   - id: semi
     name: 半導体
     tickers:
@@ -167,6 +110,30 @@ groups:
         description: NANDフラッシュ。AI向けSSD需要
         notes: 連動中/MU高
         watchOnly: true
+      - ticker: AVGO
+        description: AI向けカスタムチップ・ネットワーク半導体
+        notes: 保有
+        tags: [IBKR元リスト]
+      - ticker: ON
+        description: 車載・産業向けパワー半導体（SiC）
+        notes: 保有
+        tags: [IBKR元リスト]
+      - ticker: MRVL
+        description: データセンター向けカスタムチップ・光通信DSP
+        tags: [IBKR元リスト]
+      - ticker: INTC
+        description: CPU・受託製造（ファウンドリ）
+        tags: [IBKR元リスト]
+      - ticker: AMD
+        description: CPU・AI向けGPU
+        tags: [IBKR元リスト]
+        watchOnly: true
+      - ticker: QCOM
+        description: スマホ向けSoC・通信チップ。PC・車載へ拡大
+        tags: [IBKR元リスト]
+      - ticker: ARM
+        description: CPU設計IP。スマホ・データセンター向け
+        tags: [IBKR元リスト]
 
   - id: equipment
     name: 半導体装置・材料
@@ -218,6 +185,9 @@ groups:
         earnings:
           date: 2026-10-05
           status: estimated
+      - ticker: LRCX
+        description: エッチング・成膜装置。メモリ投資の恩恵
+        tags: [IBKR元リスト]
 
   - id: network
     name: ネットワーク・光通信
@@ -261,6 +231,18 @@ groups:
         description: 光インターポーザー（小型・高ボラ）
         notes: 連動中/MU高
         tags: [高ボラ]
+      - ticker: COHR
+        description: 光トランシーバー・レーザー部品
+        tags: [IBKR元リスト]
+      - ticker: GLW
+        description: 光ファイバー・特殊ガラス
+        tags: [IBKR元リスト]
+      - ticker: AKAM
+        description: CDN・セキュリティ・エッジクラウド
+        tags: [IBKR元リスト]
+      - ticker: CIEN
+        description: 光伝送装置。データセンター間接続
+        tags: [IBKR元リスト]
 
   - id: server
     name: サーバー・ストレージ・部品
@@ -306,6 +288,13 @@ groups:
       - ticker: NTAP
         description: 企業向けストレージ
         notes: 連動低/MU低
+      - ticker: WDC
+        description: HDD大手。データ増加の恩恵
+        tags: [IBKR元リスト]
+        watchOnly: true
+      - ticker: SMCI
+        description: AIサーバーの組み立て・液冷
+        tags: [高ボラ, IBKR元リスト]
 
   - id: cloud
     name: AIクラウド・データセンター
@@ -354,6 +343,19 @@ groups:
         earnings:
           date: 2026-10-28
           status: estimated
+      - ticker: GOOGL
+        description: 検索・クラウド。自社AIチップ（TPU）
+        tags: [IBKR元リスト]
+      - ticker: MSFT
+        description: クラウド（Azure）・AI設備投資の大手
+        tags: [IBKR元リスト]
+        watchOnly: true
+      - ticker: AMZN
+        description: クラウド（AWS）・EC。AI設備投資の大手
+        tags: [IBKR元リスト]
+      - ticker: ORCL
+        description: クラウドインフラ・データベース。AI向けデータセンター
+        tags: [IBKR元リスト]
 
   - id: power
     name: 電力設備・冷却
@@ -406,6 +408,10 @@ groups:
         earnings:
           date: 2026-10-29
           status: estimated
+      - ticker: VRT
+        description: データセンター向け電源・冷却設備
+        notes: 保有
+        tags: [IBKR元リスト]
 
   - id: generation
     name: 発電・原子力
@@ -483,6 +489,10 @@ groups:
         notes: 連動低/MU中
 
   # 旧「安定ジャブ（S&P500）」。まとめて見るときはタグ「安定ジャブ」。
+      - ticker: SPCX
+        description: SpaceX。ロケット打ち上げ・衛星通信（Starlink）
+        tags: [IBKR元リスト]
+
   - id: financials
     name: 金融
     tickers:
@@ -689,6 +699,10 @@ groups:
         earnings:
           date: 2026-11-19
           status: estimated
+      - ticker: ONDS
+        description: ドローン・産業向け無線通信（小型・高ボラ）
+        notes: 保有
+        tags: [高ボラ, IBKR元リスト]
 
   - id: discretionary
     name: 一般消費財
@@ -934,6 +948,9 @@ groups:
         earnings:
           date: 2026-11-04
           status: estimated
+      - ticker: PLTR
+        description: データ分析・AIソフトウェア
+        tags: [IBKR元リスト]
 
   - id: materials
     name: 素材

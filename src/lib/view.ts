@@ -1,5 +1,5 @@
 import { BOX_BOTTOM_MAX, BOX_REBOUND_MAX, BOX_TOP_MIN, CORR_LOW_MAX, VOLUME_CONFIRM_RATIO, VOLUME_SURGE_RATIO, VOLUME_THIN_RATIO } from "./constants";
-import { JAB_SECTOR_ID, JAB_TAG, type SortId } from "./copy";
+import { TAG_SECTORS, type SortId } from "./copy";
 import { boxShown } from "./format";
 import type { Quote, TickerRow } from "./types";
 
@@ -63,8 +63,11 @@ export function continuedBreakoutText(quote: Quote): string {
 export function applyView(rows: TickerRow[], filters: ViewFilters): TickerRow[] {
   const query = filters.q.trim().toLowerCase();
   const filtered = rows.filter((row) => {
-    if (filters.sector === JAB_SECTOR_ID || filters.sector === "jab_sp500") {
-      if (!row.tags.includes(JAB_TAG)) return false;
+    const tagged = TAG_SECTORS.find(
+      (item) => item.id === filters.sector || item.legacy.some((legacy) => legacy === filters.sector),
+    );
+    if (tagged) {
+      if (!row.tags.includes(tagged.tag)) return false;
     } else if (filters.sector !== "all" && row.sectorId !== filters.sector) return false;
     if (filters.hideWatch && row.watchOnly) return false;
     if (filters.bottom) {
@@ -207,14 +210,15 @@ export function sectorsOf(rows: TickerRow[]): { id: string; name: string; count:
     if (found) found.count += 1;
     else out.push({ id: row.sectorId, name: row.sector, count: 1 });
   }
-  const jabCount = rows.filter((row) => row.tags.includes(JAB_TAG)).length;
-  if (jabCount > 0) {
-    const firstJab = out.findIndex((sector) =>
-      rows.some((row) => row.sectorId === sector.id && row.tags.includes(JAB_TAG)),
+  for (const item of TAG_SECTORS) {
+    const count = rows.filter((row) => row.tags.includes(item.tag)).length;
+    if (count === 0) continue;
+    const first = out.findIndex((sector) =>
+      rows.some((row) => row.sectorId === sector.id && row.tags.includes(item.tag)),
     );
-    const jab = { id: JAB_SECTOR_ID, name: JAB_TAG, count: jabCount };
-    if (firstJab === -1) out.push(jab);
-    else out.splice(firstJab, 0, jab);
+    const entry = { id: item.id, name: item.tag, count };
+    if (first === -1) out.push(entry);
+    else out.splice(first, 0, entry);
   }
   return out;
 }

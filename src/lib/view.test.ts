@@ -232,6 +232,17 @@ describe("applyView", () => {
       applyView(names, { ...filters, sector: "jab_sp500" }).map((item) => item.ticker),
       ["JAB", "SOFT"],
     );
+    const withIbkr = [
+      ...names,
+      row({ ticker: "HELD", sectorId: "semi", sector: "半導体", tags: ["IBKR元リスト"], corrBasket: 0.9 }),
+    ];
+    assert.deepEqual(
+      applyView(withIbkr, { ...filters, sector: "ibkr" }).map((item) => item.ticker),
+      ["HELD"],
+    );
+    assert.equal(sectorsOf(withIbkr)[0]?.id, "ibkr");
+    assert.equal(sectorsOf(withIbkr)[0]?.name, "IBKR元リスト");
+    assert.equal(sectorsOf(withIbkr)[0]?.count, 1);
     assert.deepEqual(
       sectorsOf(names).filter((sector) => sector.id === "jab" || sector.id === "financials" || sector.id === "software").map((sector) => [sector.id, sector.name, sector.count]),
       [

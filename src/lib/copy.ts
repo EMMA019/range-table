@@ -45,6 +45,17 @@ export const JAB_TAG = "安定ジャブ";
 /** Sector-dropdown id for that tag. `jab_sp500` is the previous group id. */
 export const JAB_SECTOR_ID = "jab";
 
+/** Tag shared by the original 22-name IBKR list. */
+export const IBKR_TAG = "IBKR元リスト";
+/** Sector-dropdown id for that tag. Same id the old group used. */
+export const IBKR_SECTOR_ID = "ibkr";
+
+/** Virtual sector menu entries. `legacy` ids keep older links working. */
+export const TAG_SECTORS = [
+  { id: IBKR_SECTOR_ID, tag: IBKR_TAG, legacy: [] as string[] },
+  { id: JAB_SECTOR_ID, tag: JAB_TAG, legacy: ["jab_sp500"] },
+] as const;
+
 export const TEAM_PICKS_EMPTY = "チームの推奨は朝に更新されます";
 export const PICK_ENTRY_BADGE = "エントリー圏";
 export const PICK_WATCH_BADGE = "監視のみ";
