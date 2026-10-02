@@ -7,16 +7,16 @@ describe("watchlist", () => {
   const tickers = list.groups.flatMap((group) => group.tickers);
 
   it("loads the grouped list without duplicate tickers", () => {
-    assert.equal(tickers.length, 188);
-    assert.equal(new Set(tickers.map((item) => item.ticker)).size, 188);
+    assert.equal(tickers.length, 187);
+    assert.equal(new Set(tickers.map((item) => item.ticker)).size, 187);
     assert.equal(list.groups[0]?.id, "ibkr");
     assert.equal(list.groups.at(-1)?.id, "jab_sp500");
     assert.equal(list.groups.at(-1)?.name, "安定ジャブ（S&P500）");
     assert.deepEqual(
       list.groups.map((group) => group.tickers.length),
-      [22, 20, 9, 10, 8, 10, 8, 10, 8, 83],
+      [22, 20, 9, 10, 8, 9, 8, 10, 8, 83],
     );
-    for (const removed of ["QRVO", "HUT", "AMAT", "NVT"]) {
+    for (const removed of ["QRVO", "HUT", "AMAT", "NVT", "DLR"]) {
       assert.equal(tickers.some((item) => item.ticker === removed), false);
     }
   });
@@ -26,13 +26,11 @@ describe("watchlist", () => {
     const nvda = tickers.find((item) => item.ticker === "NVDA");
     const mu = tickers.find((item) => item.ticker === "MU");
     const mod = tickers.find((item) => item.ticker === "MOD");
-    const dlr = tickers.find((item) => item.ticker === "DLR");
     assert.equal(tsm?.watchOnly, true);
     assert.deepEqual(tsm?.earnings, { date: "2026-10-15", status: "confirmed" });
     assert.equal(nvda?.watchOnly, false);
     assert.equal(nvda?.earnings, null);
     assert.deepEqual(mu?.earnings, { date: "2026-09-30", status: "confirmed" });
-    assert.deepEqual(dlr?.earnings, { date: "2026-10-29", status: "confirmed" });
     assert.equal(mod?.tags.includes("事業分離"), true);
     assert.match(mod?.notes ?? "", /事業分離/);
     assert.equal(nvda?.sectorLabel, null);

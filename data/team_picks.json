@@ -60,21 +60,6 @@
     "as_of": "2026-10-02"
   },
   {
-    "ticker": "DLR",
-    "name": "Digital Realty Trust",
-    "genre": "AIクラウド・データセンター",
-    "thesis_facts": "残す（期限つき）。決算は10/29引け後で確定（会社発表）。新規は10/21ごろまで。",
-    "thesis_hypothesis": "",
-    "entry_line": 172.83,
-    "entry_basis": "直近安値 $172.83（直近10営業日の最安値・2026-10-01、Yahoo日足、2026-10-01）",
-    "review_line": 168.32,
-    "review_basis": "20日安値$172.83−ATR14 $4.51 ＝ $168.32（入りとの差が1%以内のため。20日安値は2026-10-01、ATR14は基準日2026-10-01までの14営業日の真の値幅の単純平均、Yahoo日足、2026-10-01）",
-    "earnings_date": "2026-10-29",
-    "status": "候補",
-    "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-02"
-  },
-  {
     "ticker": "VRSK",
     "name": "Verisk Analytics",
     "genre": "保険データ分析",
