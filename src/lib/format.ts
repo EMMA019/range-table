@@ -1,5 +1,5 @@
 import { ATR_COST_WARN, MA_SLOPE_FLAT_PCT } from "./constants";
-import type { EarningsView } from "./types";
+import type { EarningsView, EntrySignal } from "./types";
 
 const px = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 2,
@@ -34,6 +34,25 @@ export function formatBox(pct: number): string {
 
 export function guideLineText(line15: number, line25: number): string {
   return `15%ライン $${formatPx(line15)} / 25%ライン $${formatPx(line25)}`;
+}
+
+export const ENTRY_SIGNAL_LABEL: Record<EntrySignal, string> = {
+  in_ok: "IN OK!",
+  early: "まだ早いよ！",
+  chase: "追いかけ注意",
+  late: "新規は遅いよ",
+};
+
+export function entrySignalLabel(signal: EntrySignal): string {
+  return ENTRY_SIGNAL_LABEL[signal];
+}
+
+/** Green, gray, amber, and rust for the four entry badges. */
+export function entrySignalClass(signal: EntrySignal): string {
+  if (signal === "in_ok") return "bg-sage-soft text-sage";
+  if (signal === "chase") return "bg-copper-soft text-copper";
+  if (signal === "late") return "bg-rust-soft text-rust";
+  return "bg-chip text-muted";
 }
 
 /** 0 is 安値更新中. Null is the em dash. A positive count is 反発確認N日目. */

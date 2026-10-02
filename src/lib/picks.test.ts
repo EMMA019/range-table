@@ -39,6 +39,7 @@ function quote(close: number): PickQuote {
     line15: 97.5,
     line25: 102.5,
     reboundDays: null,
+    entrySignal: "early",
   };
 }
 

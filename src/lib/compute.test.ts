@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { atr14, computeQuote, entryGuides, maSlopePct, reboundDays, sharesForMove, volumeStats } from "./compute";
-import { formatShares10, guideLineText, reboundText, formatCompactShares, formatVolumeRatio, sharesCostWarn, slopeLabel } from "./format";
+import { atr14, classifyEntrySignal, computeQuote, entryGuides, maSlopePct, reboundDays, sharesForMove, volumeStats } from "./compute";
+import { BASIS } from "./copy";
+import { ENTRY_SIGNAL_LABEL, entrySignalLabel, formatShares10, guideLineText, reboundText, formatCompactShares, formatVolumeRatio, sharesCostWarn, slopeLabel } from "./format";
 import type { Bar } from "./types";
 
 function bar(date: string, o: number, h: number, l: number, c: number, v = 1_000_000): Bar {
@@ -37,6 +38,7 @@ describe("computeQuote", () => {
     assert.equal(result.quote.line15, 18.25);
     assert.equal(result.quote.line25, 19.75);
     assert.equal(result.quote.reboundDays, 0);
+    assert.equal(result.quote.entrySignal, "early");
     const ten = sharesForMove(result.quote.atr14, result.quote.close);
     assert.equal(result.quote.shares10, ten.shares10);
     assert.equal(result.quote.cost10, ten.cost10);
@@ -112,8 +114,60 @@ describe("computeQuote", () => {
     if (!result.ok) return;
     assert.equal(result.quote.priorHigh20, 12);
     assert.equal(result.quote.brokeHigh, true);
+    assert.equal(result.quote.entrySignal, "late");
     assert.equal(result.quote.high20, 16);
     assert.equal(result.quote.low20, 8);
+  });
+
+  it("labels the close against the 15% and 25% lines", () => {
+    const band = { line15: 11.5, line25: 12.5 };
+    assert.equal(
+      classifyEntrySignal({ close: 12, boxPct: 20, reboundDays: 1, ...band }),
+      "in_ok",
+    );
+    assert.equal(
+      classifyEntrySignal({ close: 11.5, boxPct: 15, reboundDays: 2, ...band }),
+      "in_ok",
+    );
+    assert.equal(
+      classifyEntrySignal({ close: 12.5, boxPct: 25, reboundDays: 1, ...band }),
+      "in_ok",
+    );
+    assert.equal(
+      classifyEntrySignal({ close: 11, boxPct: 10, reboundDays: 3, ...band }),
+      "early",
+    );
+    assert.equal(
+      classifyEntrySignal({ close: 12, boxPct: 20, reboundDays: 0, ...band }),
+      "early",
+    );
+    assert.equal(
+      classifyEntrySignal({ close: 12, boxPct: 20, reboundDays: null, ...band }),
+      "early",
+    );
+    assert.equal(
+      classifyEntrySignal({ close: 13, boxPct: 50, reboundDays: 2, ...band }),
+      "chase",
+    );
+    assert.equal(
+      classifyEntrySignal({ close: 18, boxPct: 50.01, reboundDays: 2, ...band }),
+      "late",
+    );
+    assert.equal(
+      classifyEntrySignal({ close: 12, boxPct: 80, reboundDays: 1, ...band }),
+      "late",
+    );
+    assert.deepEqual(ENTRY_SIGNAL_LABEL, {
+      in_ok: "IN OK!",
+      early: "まだ早いよ！",
+      chase: "追いかけ注意",
+      late: "新規は遅いよ",
+    });
+    assert.equal(entrySignalLabel("early"), "まだ早いよ！");
+    assert.equal(BASIS.entryInOk.includes("15%"), true);
+    assert.equal(BASIS.entryEarly.includes("15%"), true);
+    assert.equal(BASIS.entryChase.includes("25%"), true);
+    assert.equal(BASIS.entryLate.includes("50%"), true);
   });
 
   it("averages the last 14 true ranges", () => {

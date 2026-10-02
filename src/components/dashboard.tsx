@@ -22,6 +22,7 @@ import type { MarketPayload, TickerRow } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { applyView, atTop, continuedBreakout, continuedBreakoutText, sectorsOf, volumeSurge, volumeThin, withDividers, zoneOf, type ViewFilters } from "@/lib/view";
 import { BoxBar } from "./box-bar";
+import { EntryBadge } from "./entry-badge";
 import { Shares10 } from "./shares10";
 import { DetailPanel } from "./detail-panel";
 import { Glossary } from "./glossary";
@@ -41,6 +42,7 @@ const CHIP_PARAM: Record<ChipKey, string> = {
   earnings: "earn",
   lowCorr: "lowcorr",
   rebound: "rebound",
+  inOk: "inok",
   hideWatch: "hideWatch",
 };
 
@@ -103,6 +105,7 @@ export function Dashboard() {
       earnings: sp.get("earn") === "1",
       lowCorr: sp.get("lowcorr") === "1",
       rebound: sp.get("rebound") === "1",
+      inOk: sp.get("inok") === "1",
       hideWatch: sp.get("hideWatch") === "1",
       sort: SORTS.has(sort ?? "") ? (sort as SortId) : "boxAsc",
       q: query,
@@ -170,6 +173,7 @@ export function Dashboard() {
     filters.earnings ||
     filters.lowCorr ||
     filters.rebound ||
+    filters.inOk ||
     filters.hideWatch ||
     query.trim().length > 0;
 
@@ -191,6 +195,7 @@ export function Dashboard() {
         earn: null,
         lowcorr: null,
         rebound: null,
+        inok: null,
         hideWatch: null,
         sort: null,
       },
@@ -511,8 +516,9 @@ function TickerCard({
               {row.sectorLabel ? ` · ${row.sectorLabel}` : ""}
             </span>
           </div>
-          {badges.length > 0 && (
+          {(quote || badges.length > 0) && (
             <div className="mt-1 flex flex-wrap gap-1">
+              {quote && <EntryBadge signal={quote.entrySignal} />}
               {badges.map((badge) => (
                 <span
                   key={badge}

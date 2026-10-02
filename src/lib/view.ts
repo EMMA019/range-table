@@ -13,6 +13,7 @@ export type ViewFilters = {
   earnings: boolean;
   lowCorr: boolean;
   rebound: boolean;
+  inOk: boolean;
   hideWatch: boolean;
   sort: SortId;
   q: string;
@@ -76,6 +77,7 @@ export function applyView(rows: TickerRow[], filters: ViewFilters): TickerRow[] 
     if (filters.earnings && !row.earnings?.warn) return false;
     if (filters.lowCorr && !lowBasketCorr(row)) return false;
     if (filters.rebound && !(row.quote && waitingRebound(row.quote))) return false;
+    if (filters.inOk && row.quote?.entrySignal !== "in_ok") return false;
     if (query) {
       const hay = `${row.ticker} ${row.description} ${row.notes} ${row.sector} ${row.sectorLabel ?? ""} ${row.tags.join(" ")}`.toLowerCase();
       if (!hay.includes(query)) return false;

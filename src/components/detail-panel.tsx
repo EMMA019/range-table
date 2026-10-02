@@ -24,6 +24,7 @@ import type { ChartPayload, TickerRow } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { atTop, continuedBreakout, continuedBreakoutText, volumeSurge, volumeThin, zoneOf } from "@/lib/view";
 import { BoxBar } from "./box-bar";
+import { EntryBadge } from "./entry-badge";
 import { Shares10 } from "./shares10";
 import { PriceChart } from "./price-chart";
 import { Button } from "./ui/button";
@@ -97,7 +98,10 @@ export function DetailPanel({
                 <BoxBar pct={row.quote.boxPct} />
                 <p className="mt-1 text-[11px] text-muted">{BASIS.box}</p>
                 <p className="mt-3 text-sm leading-relaxed">{guideLineText(row.quote.line15, row.quote.line25)}</p>
-                <p className="mt-1 text-sm">{reboundText(row.quote.reboundDays)}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <EntryBadge signal={row.quote.entrySignal} className="text-[11px]" />
+                  <p className="text-sm">{reboundText(row.quote.reboundDays)}</p>
+                </div>
                 <p className="mt-1 text-[11px] leading-relaxed text-muted">{BASIS.guide}</p>
               </div>
               <div className="mt-4 flex flex-wrap gap-1">

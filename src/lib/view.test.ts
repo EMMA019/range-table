@@ -34,6 +34,7 @@ function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow
       line15: 8.6,
       line25: 9,
       reboundDays: null,
+      entrySignal: "chase",
     },
     pe: {
       trailingEps: null,
@@ -63,6 +64,7 @@ const filters = {
   earnings: false,
   lowCorr: false,
   rebound: false,
+  inOk: false,
   hideWatch: false,
   sort: "boxAsc" as const,
   q: "",
@@ -236,6 +238,20 @@ describe("applyView", () => {
     assert.deepEqual(
       applyView(names, { ...filters, rebound: true }).map((item) => item.ticker),
       ["IN", "ROUND"],
+    );
+  });
+
+  it("keeps only IN OK names", () => {
+    const names = [
+      row({ ticker: "OK", quote: { ...row({ ticker: "OK" }).quote!, entrySignal: "in_ok" } }),
+      row({ ticker: "EARLY", quote: { ...row({ ticker: "EARLY" }).quote!, entrySignal: "early" } }),
+      row({ ticker: "CHASE", quote: { ...row({ ticker: "CHASE" }).quote!, entrySignal: "chase" } }),
+      row({ ticker: "LATE", quote: { ...row({ ticker: "LATE" }).quote!, entrySignal: "late" } }),
+      row({ ticker: "NONE", quote: null }),
+    ];
+    assert.deepEqual(
+      applyView(names, { ...filters, inOk: true }).map((item) => item.ticker),
+      ["OK"],
     );
   });
 

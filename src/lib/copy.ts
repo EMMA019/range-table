@@ -27,6 +27,10 @@ export const BASIS = {
   volume: "出来高=Yahoo日足。倍率=直近日の出来高÷直前20日平均。薄商い<0.7倍、急増≧1.5倍。売買代金=終値×出来高の20日平均。",
   corr: "60営業日の日次リターン相関。保有バスケット=data/corr_basket.json の株数×最新終値で加重。",
   guide: "20日箱(直近20営業日の高値・安値)から計算。反発=20日安値後の連続陽線数",
+  entryInOk: "反発が1日以上続き、終値が20日箱の15%〜25%にある。",
+  entryEarly: "終値が15%ラインより下、または箱の底付近で反発がまだ確認できない。",
+  entryChase: "終値が25%ラインを超え、箱の位置は50%以下。",
+  entryLate: "箱の位置が50%を超えており、新規は遅い。",
 } as const;
 
 export const CORR_NOTE = BASIS.corr;
@@ -64,6 +68,7 @@ export const CHIPS = [
   { key: "earnings", label: `決算 ≤${EARNINGS_WARN_DAYS}営業日` },
   { key: "lowCorr", label: `低相関 ≤${CORR_LOW_MAX}` },
   { key: "rebound", label: "反発待ち圏" },
+  { key: "inOk", label: "IN OK!" },
   { key: "hideWatch", label: "監視のみを隠す" },
 ] as const;
 

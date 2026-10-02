@@ -36,6 +36,9 @@ export type Bar = {
   v: number;
 };
 
+/** Where the latest close sits against the 15% and 25% lines of the 20-day box. */
+export type EntrySignal = "in_ok" | "early" | "chase" | "late";
+
 export type Quote = {
   close: number;
   closeDate: string;
@@ -72,6 +75,8 @@ export type Quote = {
    * Null when the low is older than 10 sessions or the run stops before the latest bar.
    */
   reboundDays: number | null;
+  /** in_ok inside 15–25% after a rebound, early below that, chase above 25% through 50%, late above 50%. */
+  entrySignal: EntrySignal;
 };
 
 export type EarningsView = {
@@ -171,6 +176,7 @@ export type PickQuote = {
   line15: number;
   line25: number;
   reboundDays: number | null;
+  entrySignal: EntrySignal;
 };
 
 export type PickCard = {

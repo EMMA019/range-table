@@ -1,4 +1,5 @@
 import { BoxBar } from "@/components/box-bar";
+import { EntryBadge } from "@/components/entry-badge";
 import { Shares10 } from "@/components/shares10";
 import {
   PICK_DISTANCE_NOTE,
@@ -38,8 +39,9 @@ function PickCardView({ pick }: { pick: PickCard }) {
             <span className="truncate text-sm text-muted">{pick.name}</span>
           </div>
           {pick.genre && <p className="mt-0.5 text-[11px] text-muted">{pick.genre}</p>}
-          {badges.length > 0 && (
+          {(quote || badges.length > 0) && (
             <div className="mt-1 flex flex-wrap gap-1">
+              {quote && <EntryBadge signal={quote.entrySignal} />}
               {badges.map((badge) => (
                 <span
                   key={badge}

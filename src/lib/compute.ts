@@ -1,13 +1,14 @@
 import {
   ATR_TARGET_DOLLARS,
   ATR_WINDOW,
+  BOX_LATE_MIN,
   BOX_WINDOW,
   CHART_SESSIONS,
   GAP_THRESHOLD,
   MA_SLOPE_LOOKBACK,
   REBOUND_SESSIONS,
 } from "./constants";
-import type { Bar, ChartBar, Quote } from "./types";
+import type { Bar, ChartBar, EntrySignal, Quote } from "./types";
 
 export type QuoteResult =
   | { ok: true; quote: Quote }
@@ -78,8 +79,10 @@ export function computeQuote(bars: Bar[]): QuoteResult {
 
   const guides = entryGuides(low20, high20);
   const close = round4(last.c);
+  const box = round4(boxPct);
   const atrRounded = round4(atr);
   const ten = sharesForMove(atrRounded, close);
+  const days = reboundDays(bars);
   return {
     ok: true,
     quote: {
@@ -90,7 +93,7 @@ export function computeQuote(bars: Bar[]): QuoteResult {
       low20: round4(low20),
       high20: round4(high20),
       priorHigh20: round4(priorHigh20),
-      boxPct: round4(boxPct),
+      boxPct: box,
       atr14: atrRounded,
       shares10: ten.shares10,
       cost10: ten.cost10,
@@ -100,9 +103,42 @@ export function computeQuote(bars: Bar[]): QuoteResult {
       ...volumeStats(bars),
       line15: guides.line15,
       line25: guides.line25,
-      reboundDays: reboundDays(bars),
+      reboundDays: days,
+      entrySignal: classifyEntrySignal({
+        close,
+        boxPct: box,
+        line15: guides.line15,
+        line25: guides.line25,
+        reboundDays: days,
+      }),
     },
   };
+}
+
+/**
+ * Late when the close is past halfway up the box.
+ * Chase when it has cleared the 25% line and is still at or under halfway.
+ * IN OK when a rebound is underway and the close sits on the 15–25% band.
+ * Early covers a close under the 15% line, and a close in that band before the rebound confirms.
+ */
+export function classifyEntrySignal(quote: {
+  close: number;
+  boxPct: number;
+  line15: number;
+  line25: number;
+  reboundDays: number | null;
+}): EntrySignal {
+  if (quote.boxPct > BOX_LATE_MIN) return "late";
+  if (quote.close > quote.line25) return "chase";
+  if (
+    quote.reboundDays != null &&
+    quote.reboundDays >= 1 &&
+    quote.close >= quote.line15 &&
+    quote.close <= quote.line25
+  ) {
+    return "in_ok";
+  }
+  return "early";
 }
 
 /** Shares so one ATR move is worth about $10, and what those shares cost at the close. */

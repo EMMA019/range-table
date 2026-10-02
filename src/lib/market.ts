@@ -444,6 +444,7 @@ function toPickQuote(quote: Quote | null): PickQuote | null {
     line15: quote.line15,
     line25: quote.line25,
     reboundDays: quote.reboundDays,
+    entrySignal: quote.entrySignal,
   };
 }
 
