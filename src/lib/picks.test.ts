@@ -43,10 +43,15 @@ function card(overrides: Record<string, unknown> = {}, close: number | null = 10
 
 describe("team picks", () => {
   it("loads the committed picks", () => {
+    const picks = loadTeamPicks();
     assert.deepEqual(
-      loadTeamPicks().map((pick) => pick.ticker),
-      ["AMZN", "AKAM", "HPE", "CEG", "GOOGL", "DLR", "JBL", "COHR"],
+      picks.map((pick) => pick.ticker),
+      ["GOOGL", "AMZN", "CEG", "AKAM", "DLR", "VRSK", "EOG", "MO", "GEHC", "MDT"],
     );
+    assert.equal(picks.every((pick) => pick.asOf === "2026-10-02"), true);
+    assert.equal(picks.every((pick) => pick.recommendedBy === "Alex/Sarah/Nova/Colin"), true);
+    assert.equal(picks.find((pick) => pick.ticker === "DLR")?.earningsDate, "2026-10-29");
+    assert.equal(picks.find((pick) => pick.ticker === "VRSK")?.thesisFacts.includes("箱16.5%"), true);
     assert.deepEqual(parseTeamPicks([]), []);
     assert.equal(TEAM_PICKS_EMPTY, "チームの推奨は朝に更新されます");
     assert.equal(PICK_ENTRY_BADGE, "エントリー圏");

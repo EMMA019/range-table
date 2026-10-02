@@ -359,8 +359,8 @@ groups:
         notes: 連動低/MU低 / 株の売出し予定
         tags: [売出予定]
         earnings:
-          date: 2026-10-22
-          status: estimated
+          date: 2026-10-29
+          status: confirmed
 
   - id: power
     name: 電力設備・冷却

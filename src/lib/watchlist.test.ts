@@ -26,11 +26,13 @@ describe("watchlist", () => {
     const nvda = tickers.find((item) => item.ticker === "NVDA");
     const mu = tickers.find((item) => item.ticker === "MU");
     const mod = tickers.find((item) => item.ticker === "MOD");
+    const dlr = tickers.find((item) => item.ticker === "DLR");
     assert.equal(tsm?.watchOnly, true);
     assert.deepEqual(tsm?.earnings, { date: "2026-10-15", status: "confirmed" });
     assert.equal(nvda?.watchOnly, false);
     assert.equal(nvda?.earnings, null);
     assert.deepEqual(mu?.earnings, { date: "2026-09-30", status: "confirmed" });
+    assert.deepEqual(dlr?.earnings, { date: "2026-10-29", status: "confirmed" });
     assert.equal(mod?.tags.includes("事業分離"), true);
     assert.match(mod?.notes ?? "", /事業分離/);
     assert.equal(nvda?.sectorLabel, null);
