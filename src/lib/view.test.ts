@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { TickerRow } from "./types";
-import { applyView, continuedBreakoutText, volumeSurge, volumeThin, waitingRebound, withDividers } from "./view";
+import { applyView, continuedBreakoutText, sectorsOf, volumeSurge, volumeThin, waitingRebound, withDividers } from "./view";
 
 function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow {
   return {
@@ -213,15 +213,32 @@ describe("applyView", () => {
       row({ ticker: "HIGH", corrBasket: 0.305, corrSoxx: 0.2 }),
       row({ ticker: "NEG", corrBasket: -0.2, corrSoxx: 0.4 }),
       row({ ticker: "NONE", corrBasket: null, corrSoxx: null }),
-      row({ ticker: "JAB", sectorId: "jab_sp500", sector: "安定ジャブ（S&P500）", sectorLabel: "金融", corrBasket: 0.8 }),
+      row({ ticker: "JAB", sectorId: "financials", sector: "金融", tags: ["安定ジャブ"], corrBasket: 0.8 }),
+      row({ ticker: "SOFT", sectorId: "software", sector: "IT・ソフト", tags: ["安定ジャブ"], corrBasket: 0.8 }),
     ];
     assert.deepEqual(
       applyView(names, { ...filters, lowCorr: true }).map((item) => item.ticker),
       ["EDGE", "LOW", "NEG"],
     );
     assert.deepEqual(
-      applyView(names, { ...filters, sector: "jab_sp500" }).map((item) => item.ticker),
+      applyView(names, { ...filters, sector: "financials" }).map((item) => item.ticker),
       ["JAB"],
+    );
+    assert.deepEqual(
+      applyView(names, { ...filters, sector: "jab" }).map((item) => item.ticker),
+      ["JAB", "SOFT"],
+    );
+    assert.deepEqual(
+      applyView(names, { ...filters, sector: "jab_sp500" }).map((item) => item.ticker),
+      ["JAB", "SOFT"],
+    );
+    assert.deepEqual(
+      sectorsOf(names).filter((sector) => sector.id === "jab" || sector.id === "financials" || sector.id === "software").map((sector) => [sector.id, sector.name, sector.count]),
+      [
+        ["jab", "安定ジャブ", 2],
+        ["financials", "金融", 1],
+        ["software", "IT・ソフト", 1],
+      ],
     );
   });
 

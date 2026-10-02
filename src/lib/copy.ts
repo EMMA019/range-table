@@ -40,6 +40,11 @@ export const VOLUME_NOTE = BASIS.volume;
 export const TOP_BREAKOUT_NOTE =
   "上抜け=終値が当日を除く直前20本の高値超え。天井と決めつけて売る前に確認する目安。買いサインではありません。";
 
+/** Tag shared by the old S&P jab list, so those names still filter as one group. */
+export const JAB_TAG = "安定ジャブ";
+/** Sector-dropdown id for that tag. `jab_sp500` is the previous group id. */
+export const JAB_SECTOR_ID = "jab";
+
 export const TEAM_PICKS_EMPTY = "チームの推奨は朝に更新されます";
 export const PICK_ENTRY_BADGE = "エントリー圏";
 export const PICK_WATCH_BADGE = "監視のみ";

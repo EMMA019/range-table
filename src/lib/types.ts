@@ -12,7 +12,7 @@ export type WatchTicker = {
   tags: string[];
   watchOnly: boolean;
   earnings: EarningsInput | null;
-  /** Japanese sector label from the jab list. Null on the original groups. */
+  /** Optional extra sector label. Null when the group name is the label shown on the card. */
   sectorLabel: string | null;
 };
 

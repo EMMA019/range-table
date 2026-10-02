@@ -482,498 +482,539 @@ groups:
         description: ロケット（Firefly）
         notes: 連動低/MU中
 
-  - id: jab_sp500
-    name: 安定ジャブ（S&P500）
+  # 旧「安定ジャブ（S&P500）」。まとめて見るときはタグ「安定ジャブ」。
+  - id: financials
+    name: 金融
     tickers:
-      - ticker: NFLX
-        description: 動画配信の最大手
-        sector: 通信
-        earnings:
-          date: 2026-10-20
-          status: estimated
-      - ticker: VZ
-        description: 米通信大手（携帯・固定）。高配当
-        sector: 通信
-        earnings:
-          date: 2026-10-26
-          status: estimated
-      - ticker: T
-        description: 米通信大手（携帯・光回線）
-        sector: 通信
-        earnings:
-          date: 2026-10-21
-          status: estimated
-      - ticker: TMUS
-        description: 米携帯キャリア（5G）
-        sector: 通信
-        earnings:
-          date: 2026-10-28
-          status: estimated
-      - ticker: TSLA
-        description: EV・蓄電池。値動き大きめ
-        sector: 一般消費財
-        earnings:
-          date: 2026-10-28
-          status: estimated
-      - ticker: BKNG
-        description: 旅行予約サイト最大手
-        sector: 一般消費財
-        earnings:
-          date: 2026-10-27
-          status: estimated
-      - ticker: NKE
-        description: スポーツ用品最大手。業績立て直し中
-        sector: 一般消費財
-      - ticker: TJX
-        description: オフプライス衣料小売（T.J.Maxx）
-        sector: 一般消費財
-        earnings:
-          date: 2026-11-18
-          status: estimated
-      - ticker: ABNB
-        description: 民泊仲介プラットフォーム
-        sector: 一般消費財
-        earnings:
-          date: 2026-11-05
-          status: estimated
-      - ticker: SBUX
-        description: コーヒーチェーン最大手。立て直し中
-        sector: 一般消費財
-        earnings:
-          date: 2026-11-04
-          status: estimated
-      - ticker: WMT
-        description: 小売最大手（スーパー・EC）
-        sector: 生活必需品
-        earnings:
-          date: 2026-11-19
-          status: estimated
-      - ticker: PM
-        description: たばこ大手（加熱式IQOS）
-        sector: 生活必需品
-        earnings:
-          date: 2026-10-20
-          status: estimated
-      - ticker: MO
-        description: 米たばこ大手。高配当
-        sector: 生活必需品
-        earnings:
-          date: 2026-10-29
-          status: estimated
-      - ticker: KHC
-        description: 加工食品大手
-        sector: 生活必需品
-        earnings:
-          date: 2026-11-04
-          status: estimated
-      - ticker: XOM
-        description: 石油メジャー最大手
-        sector: エネルギー
-        earnings:
-          date: 2026-10-30
-          status: estimated
-      - ticker: CVX
-        description: 石油メジャー
-        sector: エネルギー
-        earnings:
-          date: 2026-10-30
-          status: estimated
-      - ticker: VLO
-        description: 石油精製大手
-        sector: エネルギー
-        earnings:
-          date: 2026-10-22
-          status: estimated
-      - ticker: MPC
-        description: 石油精製大手
-        sector: エネルギー
-        earnings:
-          date: 2026-11-03
-          status: estimated
-      - ticker: COP
-        description: 石油・ガス開発（上流）
-        sector: エネルギー
-        earnings:
-          date: 2026-11-05
-          status: estimated
       - ticker: BAC
         description: 米大手銀行
-        sector: 金融
+        tags: [安定ジャブ]
         earnings:
           date: 2026-10-14
           status: estimated
       - ticker: C
         description: 米大手銀行（国際業務）
-        sector: 金融
+        tags: [安定ジャブ]
         earnings:
           date: 2026-10-13
           status: estimated
       - ticker: WFC
         description: 米大手銀行（リテール中心）
-        sector: 金融
+        tags: [安定ジャブ]
         earnings:
           date: 2026-10-14
           status: estimated
       - ticker: MS
         description: 投資銀行・資産運用
-        sector: 金融
+        tags: [安定ジャブ]
         earnings:
           date: 2026-10-14
           status: estimated
       - ticker: SCHW
         description: ネット証券・資産運用
-        sector: 金融
+        tags: [安定ジャブ]
         earnings:
           date: 2026-10-15
           status: estimated
       - ticker: SPGI
         description: 格付け・指数・金融データ
-        sector: 金融
+        tags: [安定ジャブ]
         earnings:
           date: 2026-10-27
           status: estimated
       - ticker: COF
         description: クレジットカード・銀行
-        sector: 金融
+        tags: [安定ジャブ]
         earnings:
           date: 2026-10-20
           status: estimated
       - ticker: PYPL
         description: オンライン決済
-        sector: 金融
+        tags: [安定ジャブ]
         earnings:
           date: 2026-10-27
           status: estimated
       - ticker: IBKR
         description: ネット証券（Interactive Brokers）
-        sector: 金融
+        tags: [安定ジャブ]
         earnings:
           date: 2026-10-15
           status: estimated
-      - ticker: UNH
-        description: 医療保険最大手
-        sector: ヘルスケア
-        earnings:
-          date: 2026-10-13
-          status: estimated
-      - ticker: MRK
-        description: 製薬大手（がん免疫薬）
-        sector: ヘルスケア
-        earnings:
-          date: 2026-10-29
-          status: estimated
-      - ticker: AMGN
-        description: バイオ医薬大手
-        sector: ヘルスケア
-        earnings:
-          date: 2026-11-03
-          status: estimated
-      - ticker: MDT
-        description: 医療機器大手
-        sector: ヘルスケア
-        earnings:
-          date: 2026-11-17
-          status: estimated
-      - ticker: BSX
-        description: 医療機器（心臓・血管）
-        sector: ヘルスケア
-        earnings:
-          date: 2026-10-28
-          status: estimated
-      - ticker: ISRG
-        description: 手術支援ロボット（ダヴィンチ）
-        sector: ヘルスケア
-        earnings:
-          date: 2026-10-20
-          status: estimated
-      - ticker: DHR
-        description: ライフサイエンス・診断機器
-        sector: ヘルスケア
-        earnings:
-          date: 2026-10-21
-          status: estimated
-      - ticker: BA
-        description: 航空機大手。値動き大きめ
-        sector: 資本財
-        earnings:
-          date: 2026-11-04
-          status: estimated
-      - ticker: GE
-        description: 航空機エンジン
-        sector: 資本財
-        earnings:
-          date: 2026-10-20
-          status: estimated
-      - ticker: UBER
-        description: 配車・宅配プラットフォーム
-        sector: 資本財
-        earnings:
-          date: 2026-11-03
-          status: estimated
-      - ticker: RTX
-        description: 防衛・航空機部品
-        sector: 資本財
-        earnings:
-          date: 2026-10-20
-          status: estimated
-      - ticker: HON
-        description: 産業機器・航空部品の複合企業
-        sector: 資本財
-        earnings:
-          date: 2026-10-22
-          status: estimated
-      - ticker: DAL
-        description: 米航空大手
-        sector: 資本財
-        earnings:
-          date: 2026-10-09
-          status: estimated
-      - ticker: MMM
-        description: 産業素材・製品の複合企業
-        sector: 資本財
-        earnings:
-          date: 2026-10-20
-          status: estimated
-      - ticker: AAPL
-        description: iPhone・サービス
-        sector: IT・ソフト
-        earnings:
-          date: 2026-10-29
-          status: estimated
-      - ticker: CDNS
-        description: 半導体設計ソフト（EDA）
-        sector: IT・ソフト
-        earnings:
-          date: 2026-10-26
-          status: estimated
-      - ticker: FTNT
-        description: ネットワークセキュリティ
-        sector: IT・ソフト
-        earnings:
-          date: 2026-11-04
-          status: estimated
-      - ticker: ADSK
-        description: 設計ソフト（AutoCAD）
-        sector: IT・ソフト
-        earnings:
-          date: 2026-11-24
-          status: estimated
-      - ticker: NEM
-        description: 金鉱山最大手
-        sector: 素材
-        earnings:
-          date: 2026-10-22
-          status: estimated
-      - ticker: FCX
-        description: 銅・金鉱山
-        sector: 素材
-        earnings:
-          date: 2026-10-22
-          status: estimated
-      - ticker: SHW
-        description: 塗料最大手
-        sector: 素材
-        earnings:
-          date: 2026-10-27
-          status: estimated
-      - ticker: AMT
-        description: 通信鉄塔REIT
-        sector: 不動産
-        earnings:
-          date: 2026-10-27
-          status: estimated
-      - ticker: VMRK
-        description: 賃貸住宅REIT
-        sector: 不動産
-        earnings:
-          date: 2026-10-27
-          status: estimated
-      - ticker: ETR
-        description: 電力会社（米南部）
-        sector: 公益
-        earnings:
-          date: 2026-11-04
-          status: estimated
-      - ticker: EIX
-        description: 電力会社（カリフォルニア）
-        sector: 公益
-        earnings:
-          date: 2026-10-29
-          status: estimated
-      - ticker: NOW
-        description: 業務クラウドソフト
-        sector: IT・ソフト
-        earnings:
-          date: 2026-11-04
-          status: estimated
-      - ticker: TYL
-        description: 自治体向けソフト
-        sector: IT・ソフト
-        earnings:
-          date: 2026-11-04
-          status: estimated
-      - ticker: RCL
-        description: クルーズ運航
-        sector: 一般消費財
-        earnings:
-          date: 2026-10-27
-          status: estimated
-      - ticker: F
-        description: 自動車大手
-        sector: 一般消費財
-        earnings:
-          date: 2026-10-22
-          status: estimated
-      - ticker: FANG
-        description: シェール石油
-        sector: エネルギー
-        earnings:
-          date: 2026-11-02
-          status: estimated
-      - ticker: CMG
-        description: ファストカジュアル外食
-        sector: 一般消費財
-        earnings:
-          date: 2026-10-28
-          status: estimated
-      - ticker: CI
-        description: 医療保険
-        sector: ヘルスケア
-        earnings:
-          date: 2026-10-29
-          status: estimated
       - ticker: MCO
         description: 信用格付け
-        sector: 金融
+        tags: [安定ジャブ]
         earnings:
           date: 2026-10-28
           status: estimated
       - ticker: MSCI
         description: 株価指数・分析
-        sector: 金融
+        tags: [安定ジャブ]
         earnings:
           date: 2026-10-20
           status: estimated
-      - ticker: DRI
-        description: レストランチェーン
-        sector: 一般消費財
+      - ticker: PGR
+        description: 自動車保険
+        tags: [安定ジャブ]
         earnings:
-          date: 2026-12-17
+          date: 2026-10-21
           status: estimated
-      - ticker: GEHC
-        description: 医療機器（画像診断）
-        sector: ヘルスケア
+
+  - id: health
+    name: ヘルスケア
+    tickers:
+      - ticker: UNH
+        description: 医療保険最大手
+        tags: [安定ジャブ]
         earnings:
-          date: 2026-11-04
+          date: 2026-10-13
           status: estimated
-      - ticker: IFF
-        description: 香料・食品素材
-        sector: 素材
+      - ticker: MRK
+        description: 製薬大手（がん免疫薬）
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-29
+          status: estimated
+      - ticker: AMGN
+        description: バイオ医薬大手
+        tags: [安定ジャブ]
         earnings:
           date: 2026-11-03
           status: estimated
-      - ticker: STLD
-        description: 電炉鉄鋼
-        sector: 素材
+      - ticker: MDT
+        description: 医療機器大手
+        tags: [安定ジャブ]
         earnings:
-          date: 2026-10-19
+          date: 2026-11-17
           status: estimated
-      - ticker: DVN
-        description: シェール石油・ガス
-        sector: エネルギー
+      - ticker: BSX
+        description: 医療機器（心臓・血管）
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-28
+          status: estimated
+      - ticker: ISRG
+        description: 手術支援ロボット（ダヴィンチ）
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-20
+          status: estimated
+      - ticker: DHR
+        description: ライフサイエンス・診断機器
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-21
+          status: estimated
+      - ticker: CI
+        description: 医療保険
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-29
+          status: estimated
+      - ticker: GEHC
+        description: 医療機器（画像診断）
+        tags: [安定ジャブ]
         earnings:
           date: 2026-11-04
           status: estimated
-      - ticker: OXY
-        description: 石油・化学
-        sector: エネルギー
-        earnings:
-          date: 2026-11-09
-          status: estimated
-      - ticker: EOG
-        description: シェール石油の大手
-        sector: エネルギー
-        earnings:
-          date: 2026-11-05
-          status: estimated
       - ticker: EW
         description: 心臓弁の医療機器
-        sector: ヘルスケア
+        tags: [安定ジャブ]
         earnings:
           date: 2026-10-29
           status: estimated
       - ticker: DGX
         description: 臨床検査
-        sector: ヘルスケア
+        tags: [安定ジャブ]
         earnings:
           date: 2026-10-22
           status: estimated
-      - ticker: VRSK
-        description: 保険データ分析
-        sector: 資本財
+
+  - id: industrials
+    name: 資本財・工業
+    tickers:
+      - ticker: BA
+        description: 航空機大手。値動き大きめ
+        tags: [安定ジャブ]
         earnings:
           date: 2026-11-04
           status: estimated
-      - ticker: MOS
-        description: 肥料
-        sector: 素材
+      - ticker: GE
+        description: 航空機エンジン
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-20
+          status: estimated
+      - ticker: UBER
+        description: 配車・宅配プラットフォーム
+        tags: [安定ジャブ]
         earnings:
           date: 2026-11-03
           status: estimated
+      - ticker: RTX
+        description: 防衛・航空機部品
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-20
+          status: estimated
+      - ticker: HON
+        description: 産業機器・航空部品の複合企業
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-22
+          status: estimated
+      - ticker: DAL
+        description: 米航空大手
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-09
+          status: estimated
+      - ticker: MMM
+        description: 産業素材・製品の複合企業
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-20
+          status: estimated
+      - ticker: VRSK
+        description: 保険データ分析
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-04
+          status: estimated
       - ticker: FERG
         description: 配管・設備の卸
-        sector: 資本財
-      - ticker: DIS
-        description: テーマパーク・配信
-        sector: 通信
+        tags: [安定ジャブ]
+      - ticker: CPRT
+        description: 中古車オークション
+        tags: [安定ジャブ]
         earnings:
-          date: 2026-11-12
+          date: 2026-11-19
           status: estimated
-      - ticker: WELL
-        description: 高齢者住宅REIT
-        sector: 不動産
+
+  - id: discretionary
+    name: 一般消費財
+    tickers:
+      - ticker: TSLA
+        description: EV・蓄電池。値動き大きめ
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-28
+          status: estimated
+      - ticker: BKNG
+        description: 旅行予約サイト最大手
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-27
+          status: estimated
+      - ticker: NKE
+        description: スポーツ用品最大手。業績立て直し中
+        tags: [安定ジャブ]
+      - ticker: TJX
+        description: オフプライス衣料小売（T.J.Maxx）
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-18
+          status: estimated
+      - ticker: ABNB
+        description: 民泊仲介プラットフォーム
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-05
+          status: estimated
+      - ticker: SBUX
+        description: コーヒーチェーン最大手。立て直し中
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-04
+          status: estimated
+      - ticker: RCL
+        description: クルーズ運航
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-27
+          status: estimated
+      - ticker: F
+        description: 自動車大手
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-22
+          status: estimated
+      - ticker: CMG
+        description: ファストカジュアル外食
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-28
+          status: estimated
+      - ticker: DRI
+        description: レストランチェーン
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-12-17
+          status: estimated
+
+  - id: staples
+    name: 生活必需品
+    tickers:
+      - ticker: WMT
+        description: 小売最大手（スーパー・EC）
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-19
+          status: estimated
+      - ticker: PM
+        description: たばこ大手（加熱式IQOS）
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-20
+          status: estimated
+      - ticker: MO
+        description: 米たばこ大手。高配当
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-29
+          status: estimated
+      - ticker: KHC
+        description: 加工食品大手
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-04
+          status: estimated
+      - ticker: ADM
+        description: 穀物・食品加工
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-03
+          status: estimated
+
+  - id: energy
+    name: エネルギー
+    tickers:
+      - ticker: XOM
+        description: 石油メジャー最大手
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-30
+          status: estimated
+      - ticker: CVX
+        description: 石油メジャー
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-30
+          status: estimated
+      - ticker: VLO
+        description: 石油精製大手
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-22
+          status: estimated
+      - ticker: MPC
+        description: 石油精製大手
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-03
+          status: estimated
+      - ticker: COP
+        description: 石油・ガス開発（上流）
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-05
+          status: estimated
+      - ticker: FANG
+        description: シェール石油
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-02
+          status: estimated
+      - ticker: DVN
+        description: シェール石油・ガス
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-04
+          status: estimated
+      - ticker: OXY
+        description: 石油・化学
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-09
+          status: estimated
+      - ticker: EOG
+        description: シェール石油の大手
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-05
+          status: estimated
+
+  - id: communication
+    name: 通信
+    tickers:
+      - ticker: NFLX
+        description: 動画配信の最大手
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-20
+          status: estimated
+      - ticker: VZ
+        description: 米通信大手（携帯・固定）。高配当
+        tags: [安定ジャブ]
         earnings:
           date: 2026-10-26
           status: estimated
-      - ticker: PGR
-        description: 自動車保険
-        sector: 金融
+      - ticker: T
+        description: 米通信大手（携帯・光回線）
+        tags: [安定ジャブ]
         earnings:
           date: 2026-10-21
           status: estimated
+      - ticker: TMUS
+        description: 米携帯キャリア（5G）
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-28
+          status: estimated
+      - ticker: DIS
+        description: テーマパーク・配信
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-12
+          status: estimated
       - ticker: TTWO
         description: ゲームソフト
-        sector: 通信
+        tags: [安定ジャブ]
         earnings:
           date: 2026-11-05
           status: estimated
       - ticker: CHTR
         description: ケーブル通信
-        sector: 通信
+        tags: [安定ジャブ]
         earnings:
           date: 2026-10-30
           status: estimated
       - ticker: LYV
         description: ライブ興行
-        sector: 通信
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-03
+          status: estimated
+
+  - id: software
+    name: IT・ソフト
+    tickers:
+      - ticker: AAPL
+        description: iPhone・サービス
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-29
+          status: estimated
+      - ticker: CDNS
+        description: 半導体設計ソフト（EDA）
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-26
+          status: estimated
+      - ticker: FTNT
+        description: ネットワークセキュリティ
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-04
+          status: estimated
+      - ticker: ADSK
+        description: 設計ソフト（AutoCAD）
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-24
+          status: estimated
+      - ticker: NOW
+        description: 業務クラウドソフト
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-04
+          status: estimated
+      - ticker: TYL
+        description: 自治体向けソフト
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-04
+          status: estimated
+
+  - id: materials
+    name: 素材
+    tickers:
+      - ticker: NEM
+        description: 金鉱山最大手
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-22
+          status: estimated
+      - ticker: FCX
+        description: 銅・金鉱山
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-22
+          status: estimated
+      - ticker: SHW
+        description: 塗料最大手
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-27
+          status: estimated
+      - ticker: IFF
+        description: 香料・食品素材
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-11-03
+          status: estimated
+      - ticker: STLD
+        description: 電炉鉄鋼
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-19
+          status: estimated
+      - ticker: MOS
+        description: 肥料
+        tags: [安定ジャブ]
         earnings:
           date: 2026-11-03
           status: estimated
       - ticker: APD
         description: 産業ガス
-        sector: 素材
+        tags: [安定ジャブ]
         earnings:
           date: 2026-11-05
           status: estimated
-      - ticker: CPRT
-        description: 中古車オークション
-        sector: 資本財
+
+  - id: utilities
+    name: 公益
+    tickers:
+      - ticker: ETR
+        description: 電力会社（米南部）
+        tags: [安定ジャブ]
         earnings:
-          date: 2026-11-19
+          date: 2026-11-04
           status: estimated
-      - ticker: ADM
-        description: 穀物・食品加工
-        sector: 生活必需品
+      - ticker: EIX
+        description: 電力会社（カリフォルニア）
+        tags: [安定ジャブ]
         earnings:
-          date: 2026-11-03
+          date: 2026-10-29
+          status: estimated
+
+  - id: realestate
+    name: 不動産
+    tickers:
+      - ticker: AMT
+        description: 通信鉄塔REIT
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-27
+          status: estimated
+      - ticker: VMRK
+        description: 賃貸住宅REIT
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-27
+          status: estimated
+      - ticker: WELL
+        description: 高齢者住宅REIT
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-26
           status: estimated
