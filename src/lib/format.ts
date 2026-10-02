@@ -143,6 +143,14 @@ export function formatDollar(n: number): string {
   return frac === "00" ? `$${grouped}` : `$${grouped}.${frac}`;
 }
 
+/** +$53.60 / −$8 / $0 for realized P&L. */
+export function formatPnl(n: number): string {
+  if (!Number.isFinite(n)) return "—";
+  const body = formatDollar(Math.abs(n));
+  if (Math.round(n * 100) === 0) return body;
+  return n > 0 ? `+${body}` : `−${body}`;
+}
+
 export function formatShares10(shares: number | null, cost: number | null): string {
   if (shares == null || cost == null || !Number.isFinite(shares) || !Number.isFinite(cost)) return "—";
   return `${shares}株 / ${formatDollar(cost)}`;

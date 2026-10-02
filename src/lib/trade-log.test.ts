@@ -185,3 +185,29 @@ describe("merging imports", () => {
     assert.equal(isFill({ id: "x" }), false);
   });
 });
+
+describe("browser storage", () => {
+  it("round-trips fills and drops malformed rows", async () => {
+    const { backupOf, loadFills, readBackup, saveFills, FILLS_KEY } = await import("./fill-store");
+    const { formatPnl } = await import("./format");
+    const fills = parseIbkrStatement(fixture("ibkr-history.synthetic.csv")).fills;
+    const map = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => map.get(key) ?? null,
+      setItem: (key: string, value: string) => void map.set(key, value),
+      removeItem: (key: string) => void map.delete(key),
+    };
+    saveFills(fills, storage);
+    assert.deepEqual(loadFills(storage), fills);
+    assert.ok(!map.get(FILLS_KEY)?.includes("U0000000"));
+    saveFills([], storage);
+    assert.equal(map.has(FILLS_KEY), false);
+
+    const backup = JSON.stringify({ ...backupOf(fills), fills: [...fills, { id: "bad" }] });
+    assert.deepEqual(readBackup(backup), { fills, rejected: 1 });
+    assert.throws(() => readBackup("{}"));
+    assert.equal(formatPnl(53.6), "+$53.60");
+    assert.equal(formatPnl(-8), "−$8");
+    assert.equal(formatPnl(0.001), "$0");
+  });
+});
