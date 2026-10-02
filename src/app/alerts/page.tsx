@@ -14,7 +14,7 @@ export default async function AlertsPage() {
   let error: string | null = null;
   let payload: Awaited<ReturnType<typeof getAlertsPayload>> | null = null;
   try {
-    payload = await getAlertsPayload({ since: null });
+    payload = await getAlertsPayload({ since: null, edgarWaitMs: 4_000 });
   } catch (err) {
     error = err instanceof Error ? err.message : "アラートを作れなかった";
   }

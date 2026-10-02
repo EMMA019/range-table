@@ -10,27 +10,24 @@ import {
   filterSince,
   sortAlerts,
   type AlertItem,
-  type AlertSourceStatus,
   type AlertsPayload,
 } from "./alerts";
 import { entryAlerts, finalBars, type EntryCandidate } from "./alerts-entry";
+import { edgarItems, edgarStatus, refreshEdgar } from "./edgar-feed";
 
 export type AlertsQuery = {
   since: string | null;
+  /** Override for how long to wait on a running EDGAR sweep. */
+  edgarWaitMs?: number;
 };
 
-const EDGAR_OFF: AlertSourceStatus = {
-  ok: true,
-  enabled: false,
-  checkedAtJst: null,
-  error: null,
-  complete: true,
-};
+/** How long one poll waits for a running EDGAR sweep before answering with what is done. */
+const EDGAR_WAIT_MS = 12_000;
 
 /** Waits for due prices (unlike the table) so a poll right after the close sees the final bar. */
 export async function getAlertsPayload(query: AlertsQuery, now = new Date()): Promise<AlertsPayload> {
   const list = loadWatchlist();
-  const cache = await ensureSeries(list, [], { fresh: true });
+  const [cache] = await Promise.all([ensureSeries(list, [], { fresh: true }), refreshEdgar(query.edgarWaitMs ?? EDGAR_WAIT_MS, now)]);
   const today = todayEt(now);
   const tickers = list.groups.flatMap((group) => group.tickers);
 
@@ -45,7 +42,7 @@ export async function getAlertsPayload(query: AlertsQuery, now = new Date()): Pr
     };
   });
 
-  const items: AlertItem[] = [...entryAlerts(candidates, today, now)];
+  const items: AlertItem[] = [...entryAlerts(candidates, today, now), ...edgarItems()];
 
   const spy = cache.series.SPY?.bars;
   const spyFinal = spy ? finalBars(spy, now) : [];
@@ -69,7 +66,7 @@ export async function getAlertsPayload(query: AlertsQuery, now = new Date()): Pr
     failCount,
     staleCount,
   };
-  const edgar = EDGAR_OFF;
+  const edgar = edgarStatus();
   return {
     v: 1,
     generatedAt: now.toISOString(),

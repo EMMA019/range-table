@@ -14,3 +14,6 @@ services:
       # Private holdings JSON. Set in the Render Dashboard; never committed.
       - key: HOLDINGS_JSON
         sync: false
+      # "range-table <contact email>". SEC rejects requests without a contact email.
+      - key: SEC_USER_AGENT
+        sync: false

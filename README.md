@@ -49,6 +49,22 @@ APIキーは不要。価格はサーバが [Yahoo Finance の日足チャート]
 
 `ticker` と `shares` 以外は省略できる。`npm test` のプライバシーテストは、`U` + 7〜8桁の口座番号、CSV などの明細ファイル、`data/` 内の株数を見つけると失敗する。
 
+## アラート `/api/alerts`
+
+外部のアシスタントがポーリングして通知に使う JSON。サイトは通知を送らない。画面は `/alerts`。
+
+- 項目ごとの `id` は市場データや提出番号だけから決まる。再起動しても同じ出来事は同じ `id` なので、アシスタントは `id` で重複を除けばよい。
+- `eventAt`（UTC）と `eventAtJst`。入口シグナルはその日の引け（16:00 ET）、EDGAR は受付時刻。
+- `priority` は `critical` / `high` / `normal` / `low`。`?since=<ISO>` で `eventAt` 以降だけに絞れる。
+- `complete: false` のときは EDGAR の巡回が途中。1分ほどあとにもう一度読む。
+
+| kind | 条件 |
+|---|---|
+| `entry_in_ok` | IN OK・ATR14が終値の3%以上・決算5営業日以内なし。監視のみと ONDS は除く。決算日未登録は `low` と `no_earnings_date`。id は `entry:{T}:{IN OKが続いている初日}` |
+| `anthropic_s1` | 提出者名が Anthropic 本体と完全一致する S-1/S-1/A/F-1/424B4。`critical`。直近30日 |
+
+EDGAR は Render の環境変数 `SEC_USER_AGENT`（例 `range-table you@example.com`）が無いと止まる。SEC は連絡先メールの無い User-Agent に 403 を返すため。メールはリポジトリに書かない。
+
 ## チーム注目
 
 `data/team_picks.json` は配列。空のときは「チームの推奨は朝に更新されます」と出る。中身を足すと `/picks` のカードと `/api/picks` に載る。ウォッチリストに無いティッカーだけ、同じ同時数で日足を取る。
