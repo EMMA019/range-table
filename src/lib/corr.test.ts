@@ -2,34 +2,61 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   basketReturnSeries,
+  buildCorrBasket,
   buildCorrelations,
   corrOnWindow,
   dailyReturns,
   loadCorrBasket,
-  parseCorrBasket,
+  loadCorrSettings,
+  parseCorrSettings,
   pearson,
 } from "./corr";
+import { envHoldingsSource, setHoldingsSource } from "./holdings";
 
 function bars(closes: number[]): Array<{ date: string; c: number }> {
   return closes.map((c, i) => ({ date: `2026-01-${String(i + 1).padStart(2, "0")}`, c }));
 }
 
 describe("correlation", () => {
-  it("reads the committed basket", () => {
-    const basket = loadCorrBasket();
-    assert.equal(basket?.window, 60);
-    assert.equal(basket?.benchmark, "SOXX");
-    assert.deepEqual(
-      basket?.holdings.map((holding) => [holding.ticker, holding.shares]),
-      [
-        ["ON", 3],
-        ["AVGO", 1],
-        ["VRT", 3],
-        ["ONDS", 15],
-      ],
+  it("reads only the window and benchmark from the committed file", () => {
+    const settings = loadCorrSettings();
+    assert.deepEqual(settings, { window: 60, benchmark: "SOXX" });
+    assert.deepEqual(parseCorrSettings({ window: 1, benchmark: " qqq " }), { window: 60, benchmark: "QQQ" });
+    assert.deepEqual(parseCorrSettings(null), { window: 60, benchmark: "SOXX" });
+  });
+
+  it("builds the basket from the private source and drops ONDS", () => {
+    const settings = { window: 60, benchmark: "SOXX" };
+    assert.equal(buildCorrBasket(settings, []), null);
+    assert.equal(buildCorrBasket(settings, [{ ticker: "ONDS", shares: 9 }]), null);
+    assert.equal(buildCorrBasket(settings, [{ ticker: "AAA", shares: 0 }]), null);
+    assert.deepEqual(buildCorrBasket(settings, [{ ticker: "aaa", shares: 2 }, { ticker: "onds", shares: 9 }])?.holdings, [
+      { ticker: "AAA", shares: 2 },
+    ]);
+  });
+
+  it("falls back to no basket when HOLDINGS_JSON is unset", () => {
+    setHoldingsSource(envHoldingsSource({}));
+    try {
+      assert.equal(loadCorrBasket(), null);
+    } finally {
+      setHoldingsSource(envHoldingsSource());
+    }
+  });
+
+  it("ignores ONDS even when a basket is passed straight in", () => {
+    const up = bars([100, 110, 99, 120]);
+    const down = bars([100, 90, 99, 78]);
+    const corr = buildCorrelations(
+      { AAA: up, ONDS: down, BENCH: up },
+      { window: 3, benchmark: "BENCH", holdings: [{ ticker: "AAA", shares: 1 }, { ticker: "ONDS", shares: 100 }] },
     );
-    assert.equal(parseCorrBasket({ holdings: [] }), null);
-    assert.equal(parseCorrBasket({ holdings: [{ ticker: "ON", shares: 0 }] }), null);
+    assert.equal(corr.get("AAA")?.basket, 1);
+    const onlyIgnored = buildCorrelations(
+      { ONDS: down, BENCH: up },
+      { window: 3, benchmark: "BENCH", holdings: [{ ticker: "ONDS", shares: 1 }] },
+    );
+    assert.equal(onlyIgnored.size, 0);
   });
 
   it("uses close-to-close simple returns", () => {
@@ -62,8 +89,8 @@ describe("correlation", () => {
     const flat = bars([50, 50, 50, 50]);
     const soxx = bars([10, 11, 9.9, 12]);
     const corr = buildCorrelations(
-      { AAA: up, BBB: down, CCC: flat, ON: up, BENCH: soxx },
-      { window: 3, benchmark: "BENCH", holdings: [{ ticker: "ON", shares: 2 }] },
+      { AAA: up, BBB: down, CCC: flat, HHH: up, BENCH: soxx },
+      { window: 3, benchmark: "BENCH", holdings: [{ ticker: "HHH", shares: 2 }] },
     );
     assert.equal(corr.get("AAA")?.basket, 1);
     assert.equal(corr.get("AAA")?.soxx, 1);

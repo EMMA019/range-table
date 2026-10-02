@@ -1,6 +1,9 @@
 /** Thresholds and windows. The UI labels these in Japanese so the basis stays visible. */
 export const BENCHMARKS = ["SPY", "QQQ", "SOXX"] as const;
 
+/** Never counted as a holding, in correlation, alerts, KPIs, or the pre-buy check. */
+export const IGNORED_TICKERS = ["ONDS"] as const;
+
 export const CACHE_TTL_MS = 15 * 60 * 1000;
 
 /** Trailing and forward EPS change slowly, so a successful read is cached much longer than prices. */

@@ -73,7 +73,7 @@ describe("watchlist", () => {
     assert.equal(tickers.find((item) => item.ticker === "NVDA")?.tags.includes("安定ジャブ"), false);
   });
 
-  it("distributes the original IBKR names and keeps the holding notes", () => {
+  it("distributes the original IBKR names without marking holdings", () => {
     const groupOf = (ticker: string) => list.groups.find((group) => group.tickers.some((item) => item.ticker === ticker));
     const original = tickers.filter((item) => item.tags.includes("IBKR元リスト"));
     assert.equal(original.length, 22);
@@ -85,13 +85,10 @@ describe("watchlist", () => {
       ],
     );
     assert.equal(groupOf("AVGO")?.name, "半導体");
-    assert.equal(groupOf("AVGO")?.tickers.find((item) => item.ticker === "AVGO")?.notes, "保有");
     assert.equal(groupOf("ON")?.name, "半導体");
-    assert.equal(groupOf("ON")?.tickers.find((item) => item.ticker === "ON")?.notes, "保有");
     assert.equal(groupOf("VRT")?.name, "電力設備・冷却");
-    assert.equal(groupOf("VRT")?.tickers.find((item) => item.ticker === "VRT")?.notes, "保有");
     assert.equal(groupOf("ONDS")?.name, "資本財・工業");
-    assert.equal(groupOf("ONDS")?.tickers.find((item) => item.ticker === "ONDS")?.notes, "保有");
+    assert.equal(tickers.some((item) => item.notes === "保有"), false);
     assert.deepEqual(groupOf("ONDS")?.tickers.find((item) => item.ticker === "ONDS")?.tags, ["高ボラ", "IBKR元リスト"]);
     assert.equal(groupOf("LRCX")?.name, "半導体装置・材料");
     assert.equal(groupOf("COHR")?.name, "ネットワーク・光通信");

@@ -14,6 +14,7 @@ import { epsIsFresh, epsTtlMs, hasEpsValue, peView, pickEpsBatch } from "./pe";
 import { buildCorrelations, loadCorrBasket, type CorrPair } from "./corr";
 import { chartPoints, computeQuote } from "./compute";
 import { classifyEarnings } from "./earnings";
+import { holdingsSource } from "./holdings";
 import { formatJst, friendlyFetchError } from "./format";
 import { buildPickCard, loadTeamPicks } from "./picks";
 import type {
@@ -137,6 +138,7 @@ function symbolsFor(list: Watchlist): string[] {
   for (const group of list.groups) {
     for (const ticker of group.tickers) set.add(ticker.ticker);
   }
+  for (const holding of holdingsSource().load().holdings) set.add(holding.ticker);
   return [...set];
 }
 
@@ -251,11 +253,13 @@ function memoPayload(cache: CacheBody, list: Watchlist): MarketPayload {
 }
 
 function basketStamp(): string {
+  let mtime = "0";
   try {
-    return String(fs.statSync(path.join(process.cwd(), "data", "corr_basket.json")).mtimeMs);
+    mtime = String(fs.statSync(path.join(process.cwd(), "data", "corr_basket.json")).mtimeMs);
   } catch {
-    return "0";
+    // Settings file is optional; defaults apply.
   }
+  return `${mtime}:${holdingsSource().stamp()}`;
 }
 
 function epsStamp(): string {

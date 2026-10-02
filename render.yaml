@@ -6,6 +6,11 @@ services:
     # 384MB old-space leaves headroom under the free plan's 512MB container limit.
     startCommand: node --max-old-space-size=384 node_modules/next/dist/bin/next start -H 0.0.0.0 -p $PORT
     healthCheckPath: /api/health
+    # Deploy a main commit only after its GitHub checks (CI) pass.
+    autoDeployTrigger: checksPass
     envVars:
       - key: NODE_VERSION
         value: "22.14.0"
+      # Private holdings JSON. Set in the Render Dashboard; never committed.
+      - key: HOLDINGS_JSON
+        sync: false

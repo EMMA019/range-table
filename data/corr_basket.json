@@ -1,23 +1,5 @@
 {
-  "note": "保有バスケット。保有が変わったらsharesを書き換える。重みは最新終値×株数で自動計算",
+  "note": "相関の窓とベンチマークだけ。保有はRenderのSecret環境変数 HOLDINGS_JSON から読む。株数をここに書かない",
   "window": 60,
-  "benchmark": "SOXX",
-  "holdings": [
-    {
-      "ticker": "ON",
-      "shares": 3
-    },
-    {
-      "ticker": "AVGO",
-      "shares": 1
-    },
-    {
-      "ticker": "VRT",
-      "shares": 3
-    },
-    {
-      "ticker": "ONDS",
-      "shares": 15
-    }
-  ]
+  "benchmark": "SOXX"
 }

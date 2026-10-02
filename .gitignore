@@ -42,3 +42,12 @@ next-env.d.ts
 
 # fetched market cache
 /data/.cache/
+
+# never commit brokerage exports (public repo); synthetic test fixtures only
+*.csv
+*.tsv
+*.xls
+*.xlsx
+*.ofx
+*.qfx
+!src/lib/fixtures/**/*.synthetic.csv

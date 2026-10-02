@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { CORR_WINDOW } from "./constants";
+import { holdingsSource, isIgnoredTicker } from "./holdings";
 
 export type CorrHolding = {
   ticker: string;
@@ -18,36 +19,49 @@ export type CorrPair = {
   soxx: number | null;
 };
 
-const BASKET_PATH = path.join(process.cwd(), "data", "corr_basket.json");
+export type CorrSettings = {
+  window: number;
+  benchmark: string;
+};
 
-export function loadCorrBasket(file = BASKET_PATH): CorrBasket | null {
+const SETTINGS_PATH = path.join(process.cwd(), "data", "corr_basket.json");
+
+/** Window and benchmark only. Holdings come from the private source, never this file. */
+export function loadCorrSettings(file = SETTINGS_PATH): CorrSettings {
   try {
-    return parseCorrBasket(JSON.parse(fs.readFileSync(file, "utf8")) as unknown);
+    return parseCorrSettings(JSON.parse(fs.readFileSync(file, "utf8")) as unknown);
   } catch (error) {
-    console.error("[range] corr basket", error);
-    return null;
+    console.error("[range] corr settings", error);
+    return { window: CORR_WINDOW, benchmark: "SOXX" };
   }
 }
 
-export function parseCorrBasket(json: unknown): CorrBasket | null {
-  if (!json || typeof json !== "object") return null;
-  const row = json as Record<string, unknown>;
+export function parseCorrSettings(json: unknown): CorrSettings {
+  const row = json && typeof json === "object" ? (json as Record<string, unknown>) : {};
   const window =
     typeof row.window === "number" && Number.isInteger(row.window) && row.window >= 2
       ? row.window
       : CORR_WINDOW;
   const benchmark = typeof row.benchmark === "string" && row.benchmark.trim() ? row.benchmark.trim().toUpperCase() : "SOXX";
-  if (!Array.isArray(row.holdings) || row.holdings.length === 0) return null;
-  const holdings: CorrHolding[] = [];
-  for (const item of row.holdings) {
-    if (!item || typeof item !== "object") return null;
-    const holding = item as Record<string, unknown>;
-    const ticker = typeof holding.ticker === "string" ? holding.ticker.trim().toUpperCase() : "";
-    const shares = holding.shares;
-    if (!ticker || typeof shares !== "number" || !Number.isFinite(shares) || !(shares > 0)) return null;
-    holdings.push({ ticker, shares });
+  return { window, benchmark };
+}
+
+/** Null when no holding is left after dropping ignored tickers, so the UI shows a dash. */
+export function buildCorrBasket(settings: CorrSettings, holdings: CorrHolding[]): CorrBasket | null {
+  const kept: CorrHolding[] = [];
+  for (const holding of holdings) {
+    const ticker = holding.ticker.trim().toUpperCase();
+    if (!ticker || isIgnoredTicker(ticker)) continue;
+    if (!Number.isFinite(holding.shares) || !(holding.shares > 0)) continue;
+    kept.push({ ticker, shares: holding.shares });
   }
-  return { window, benchmark, holdings };
+  if (kept.length === 0) return null;
+  return { ...settings, holdings: kept };
+}
+
+export function loadCorrBasket(): CorrBasket | null {
+  const holdings = holdingsSource().load().holdings;
+  return buildCorrBasket(loadCorrSettings(), holdings);
 }
 
 /** Close-to-close simple return, keyed by the date of the later bar. */
@@ -133,11 +147,13 @@ export function buildCorrelations(
   const empty = new Map<string, CorrPair>();
   const weighted: Weighted[] = [];
   for (const holding of basket.holdings) {
+    if (isIgnoredTicker(holding.ticker)) continue;
     const bars = closes[holding.ticker];
     const last = bars?.[bars.length - 1];
     if (!bars || !last || !(last.c > 0)) return empty;
     weighted.push({ weight: holding.shares * last.c, returns: dailyReturns(bars) });
   }
+  if (weighted.length === 0) return empty;
   const basketReturns = basketReturnSeries(weighted);
   const benchmarkBars = closes[basket.benchmark];
   if (!benchmarkBars) return empty;

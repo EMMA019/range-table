@@ -80,14 +80,14 @@ describe("P/E from price and cached EPS", () => {
   });
 
   it("flags a trailing P/E at least twice the forward P/E", () => {
-    const recovering = peView(200, { trailingEps: 2, forwardEps: 8 });
+    const recovering = peView(200, { trailingEps: 2, forwardEps: 8, error: null });
     assert.equal(recovering.trailingPe, 100);
     assert.equal(recovering.forwardPe, 25);
     assert.equal(recovering.recovering, true);
     assert.equal(isRecovering(20, 10), true);
     assert.equal(isRecovering(19.99, 10), false);
 
-    const loss = peView(120.21, { trailingEps: -2.16, forwardEps: 2.06208 });
+    const loss = peView(120.21, { trailingEps: -2.16, forwardEps: 2.06208, error: null });
     assert.equal(loss.trailingPe, null);
     assert.equal(loss.forwardPe, 120.21 / 2.06208);
     assert.equal(loss.recovering, false);

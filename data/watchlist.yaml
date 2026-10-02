@@ -112,11 +112,9 @@ groups:
         watchOnly: true
       - ticker: AVGO
         description: AI向けカスタムチップ・ネットワーク半導体
-        notes: 保有
         tags: [IBKR元リスト]
       - ticker: ON
         description: 車載・産業向けパワー半導体（SiC）
-        notes: 保有
         tags: [IBKR元リスト]
       - ticker: MRVL
         description: データセンター向けカスタムチップ・光通信DSP
@@ -410,7 +408,6 @@ groups:
           status: estimated
       - ticker: VRT
         description: データセンター向け電源・冷却設備
-        notes: 保有
         tags: [IBKR元リスト]
 
   - id: generation
@@ -701,7 +698,6 @@ groups:
           status: estimated
       - ticker: ONDS
         description: ドローン・産業向け無線通信（小型・高ボラ）
-        notes: 保有
         tags: [高ボラ, IBKR元リスト]
 
   - id: discretionary

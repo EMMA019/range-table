@@ -25,7 +25,7 @@ export const BASIS = {
   recovering: `実績PERが予想PERの${PE_RECOVERY_MULTIPLE}倍以上。過去12か月の利益が薄く、予想利益の方が大きい`,
   slope: `Yahoo Finance の確定終値で作った20日単純移動平均。今日の値 ÷ ${MA_SLOPE_LOOKBACK}営業日前の値 − 1。±${MA_SLOPE_FLAT_PCT}%未満は横ばい`,
   volume: "出来高=Yahoo日足。倍率=直近日の出来高÷直前20日平均。薄商い<0.7倍、急増≧1.5倍。売買代金=終値×出来高の20日平均。",
-  corr: "60営業日の日次リターン相関。保有バスケット=data/corr_basket.json の株数×最新終値で加重。",
+  corr: "60営業日の日次リターン相関。保有バスケット=非公開設定(HOLDINGS_JSON)の株数×最新終値で加重。ONDSは除外。未設定なら—。",
   guide: "20日箱(直近20営業日の高値・安値)から計算。反発=20日安値後の連続陽線数",
   entryInOk: "反発が1日以上続き、終値が20日箱の15%〜25%にある。",
   entryEarly: "終値が15%ラインより下、または箱の底付近で反発がまだ確認できない。",
