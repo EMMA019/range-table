@@ -41,7 +41,10 @@ export type Feat = {
   ma50: number | null;
   ma200: number | null;
   rsi2: number | null;
+  ret10: number | null;
   ret20: number | null;
+  ret40: number | null;
+  ret60: number | null;
   ret63: number | null;
   down3: boolean;
   /** Open ÷ previous close − 1. Null on the first bar. */
@@ -119,7 +122,10 @@ export function buildFeatures(bars: Bar[]): Feat[] {
       ma50: i >= 49 ? sum50 / 50 : null,
       ma200: i >= 199 ? sum200 / 200 : null,
       rsi2,
+      ret10: i >= 10 && bars[i - 10].c > 0 ? c / bars[i - 10].c - 1 : null,
       ret20: i >= 20 && bars[i - 20].c > 0 ? c / bars[i - 20].c - 1 : null,
+      ret40: i >= 40 && bars[i - 40].c > 0 ? c / bars[i - 40].c - 1 : null,
+      ret60: i >= 60 && bars[i - 60].c > 0 ? c / bars[i - 60].c - 1 : null,
       ret63: i >= 63 && bars[i - 63].c > 0 ? c / bars[i - 63].c - 1 : null,
       down3: i >= 3 && c < bars[i - 1].c && bars[i - 1].c < bars[i - 2].c && bars[i - 2].c < bars[i - 3].c,
       gapPct: prev != null && prev > 0 ? bar.o / prev - 1 : null,
@@ -140,7 +146,10 @@ export type MarketDay = {
   spyClose: number;
   spyMa50: number | null;
   spyMa200: number | null;
+  spyRet10: number | null;
   spyRet20: number | null;
+  spyRet40: number | null;
+  spyRet60: number | null;
   soxxClose: number | null;
   soxxMa50: number | null;
   soxxMa200: number | null;
@@ -155,7 +164,10 @@ export function marketByDate(spy: Feat[], soxx: Feat[]): Map<string, MarketDay> 
       spyClose: bar.c,
       spyMa50: bar.ma50,
       spyMa200: bar.ma200,
+      spyRet10: bar.ret10,
       spyRet20: bar.ret20,
+      spyRet40: bar.ret40,
+      spyRet60: bar.ret60,
       soxxClose: other?.c ?? null,
       soxxMa50: other?.ma50 ?? null,
       soxxMa200: other?.ma200 ?? null,
@@ -212,6 +224,11 @@ export type Candidate = {
   boxPct: number | null;
   rebound: number | null;
   rs20: number | null;
+  rs10?: number | null;
+  rs40?: number | null;
+  rs60?: number | null;
+  /** Stop known on the signal day. The box rule uses that day's 20-day low. */
+  stop?: number | null;
   /** ceil($10 / ATR). 0 when this candidate is not a $10-sized range trade. */
   qty10: number;
   reason: ExitReason;
@@ -226,6 +243,8 @@ type ExitSpec = {
   skipIfOpenThrough: boolean;
   sharp: boolean;
   stopClose: number | null;
+  /** After the entry day, an open below the stop fills at that open. */
+  gapThroughStop?: boolean;
   trail: boolean;
   exitMa5: boolean;
   maxHold: number | null;
@@ -293,6 +312,7 @@ function simulate(feats: Feat[], signalIndex: number, spec: ExitSpec, qty10: num
   for (let j = entryIndex; j <= lastIndex; j += 1) {
     const bar = feats[j];
     if (spec.target != null && j > entryIndex && bar.o >= spec.target) return finish(j, bar.o, "target", "open");
+    if (spec.gapThroughStop && spec.stopClose != null && j > entryIndex && bar.o < spec.stopClose) return finish(j, bar.o, "stop", "open");
     if (spec.target != null && bar.h >= spec.target) return finish(j, spec.target, "target", "intraday");
     if (spec.exitMa5 && bar.ma5 != null && bar.c > bar.ma5) return finish(j, bar.c, "ma", "close");
     if (spec.sharp && bar.c >= feats[j - 1].c + atr) return finish(j, bar.c, "sharp", "close");
@@ -327,6 +347,8 @@ export type RangeRules = {
   priceMax: number | null;
   dollarMin: number | null;
   semisOnly: boolean;
+  /** Open below the signal stop fills at that open, after the entry day. */
+  gapThroughStop: boolean;
 };
 
 export const BASE_RULES: RangeRules = {
@@ -345,6 +367,7 @@ export const BASE_RULES: RangeRules = {
   priceMax: null,
   dollarMin: null,
   semisOnly: false,
+  gapThroughStop: false,
 };
 
 export function withRules(patch: Partial<RangeRules> & Pick<RangeRules, "id" | "label">): RangeRules {
@@ -369,8 +392,17 @@ function marketAllows(rules: RangeRules, semi: boolean, day: MarketDay | undefin
   return true;
 }
 
-function isRangeBar(feat: Feat, rules: RangeRules, semi: boolean, day: MarketDay | undefined, sessions: string[], earnings: readonly string[]): boolean {
-  if (feat.date < STUDY_FROM || feat.date > STUDY_TO) return false;
+function isRangeBar(
+  feat: Feat,
+  rules: RangeRules,
+  semi: boolean,
+  day: MarketDay | undefined,
+  sessions: string[],
+  earnings: readonly string[],
+  from = STUDY_FROM,
+  to = STUDY_TO,
+): boolean {
+  if (feat.date < from || feat.date > to) return false;
   if (rules.semisOnly && !semi) return false;
   if (feat.gapWarning || feat.atr == null || !(feat.atr > 0) || feat.low20 == null || feat.line15 == null || feat.boxPct == null) return false;
   if ((feat.rebound ?? 0) < rules.minRebound) return false;
@@ -388,17 +420,30 @@ function isRangeBar(feat: Feat, rules: RangeRules, semi: boolean, day: MarketDay
   return true;
 }
 
-export function rangeCandidates(name: NameSeries, rules: RangeRules, market: Map<string, MarketDay>, sessions: string[]): Candidate[] {
+function excess(stock: number | null, spy: number | null | undefined): number | null {
+  if (stock == null || spy == null) return null;
+  return stock - spy;
+}
+
+export function rangeCandidates(
+  name: NameSeries,
+  rules: RangeRules,
+  market: Map<string, MarketDay>,
+  sessions: string[],
+  bounds?: { from: string; to: string },
+): Candidate[] {
+  const from = bounds?.from ?? STUDY_FROM;
+  const to = bounds?.to ?? STUDY_TO;
   const { feats } = name;
   const out: Candidate[] = [];
   for (let i = 0; i < feats.length - 1; i += 1) {
     const feat = feats[i];
-    if (!isRangeBar(feat, rules, name.semi, market.get(feat.date), sessions, name.earnings)) continue;
+    if (!isRangeBar(feat, rules, name.semi, market.get(feat.date), sessions, name.earnings, from, to)) continue;
     const sized = sharesForMove(feat.atr, feats[i + 1].o);
     if (sized.shares10 == null) continue;
     const stopClose = rules.stop === "low20" ? feat.low20 : rules.stop === "half" ? (feat.low20 as number) - 0.5 * (feat.atr as number) : null;
     const day = market.get(feat.date);
-    const rs20 = feat.ret20 != null && day?.spyRet20 != null ? feat.ret20 - day.spyRet20 : null;
+    const rs20 = excess(feat.ret20, day?.spyRet20);
     const trade = simulate(
       feats,
       i,
@@ -407,6 +452,7 @@ export function rangeCandidates(name: NameSeries, rules: RangeRules, market: Map
         skipIfOpenThrough: false,
         sharp: rules.sharp,
         stopClose,
+        gapThroughStop: rules.gapThroughStop,
         trail: false,
         exitMa5: false,
         maxHold: rules.maxHold,
@@ -415,7 +461,13 @@ export function rangeCandidates(name: NameSeries, rules: RangeRules, market: Map
       { ticker: name.ticker, sector: name.sector, semi: name.semi },
       rs20,
     );
-    if (trade && trade.entryDate <= STUDY_TO) out.push(trade);
+    if (trade && trade.entryDate <= to) {
+      trade.stop = stopClose;
+      trade.rs10 = excess(feat.ret10, day?.spyRet10);
+      trade.rs40 = excess(feat.ret40, day?.spyRet40);
+      trade.rs60 = excess(feat.ret60, day?.spyRet60);
+      out.push(trade);
+    }
   }
   return out;
 }
@@ -572,6 +624,8 @@ export type Book = {
   maxConsecLosses: number;
   totalUsd: number;
   maxDrawdownUsd: number;
+  /** Daily equity with open positions carried at cost. Absent on the original study JSON. */
+  realizedDrawdownUsd?: number;
   endEquity: number;
   worstMonth: string | null;
   worstMonthUsd: number | null;
@@ -587,10 +641,23 @@ export type Book = {
   skippedCash: number;
   year1: StudyStats;
   year2: StudyStats;
-  restartYear1: { n: number; totalUsd: number; maxDrawdownUsd: number; daysRealized10: number };
-  restartYear2: { n: number; totalUsd: number; maxDrawdownUsd: number; daysRealized10: number };
+  restartYear1: YearRestart;
+  restartYear2: YearRestart;
   equity: Array<{ month: string; equity: number }>;
+  skippedSemi?: number;
+  fills?: Array<{ ticker: string; pnlUsd: number; entryDate: string; exitDate: string }>;
+  daily?: Array<{ date: string; equity: number; realizedEquity: number }>;
 };
+
+export type YearRestart = {
+  n: number;
+  totalUsd: number;
+  maxDrawdownUsd: number;
+  realizedDrawdownUsd?: number;
+  daysRealized10: number;
+};
+
+const EMPTY_RESTART: YearRestart = { n: 0, totalUsd: 0, maxDrawdownUsd: 0, realizedDrawdownUsd: 0, daysRealized10: 0 };
 
 type CloseMap = Map<string, Map<string, number>>;
 
@@ -630,6 +697,18 @@ export type PortfolioOpts = {
   capital?: number;
   maxPositions?: number;
   withRestart?: boolean;
+  /** Restart boundary. Defaults to the in-sample year-2 start. */
+  yearSplit?: string;
+  /** Replaces the named rank when more than one signal falls on the same open. */
+  order?: (list: Candidate[]) => void;
+  /** At most this many semiconductor or equipment names among the open slots. */
+  maxSemi?: number;
+  /** Below starting capital, cap the book at 2 slots and 1 new buy. */
+  throttleBelowStart?: boolean;
+  /** Replaces the $300–$450 lot. Null skips the name. */
+  size?: (cand: Candidate, morningEquity: number) => number | null;
+  keepFills?: boolean;
+  keepDaily?: boolean;
   closes: CloseMap;
 };
 
@@ -639,12 +718,19 @@ export function runPortfolio(opts: PortfolioOpts, cands: Candidate[]): Book {
 
 function bookFrom(opts: PortfolioOpts, cands: Candidate[]): Book {
   const full = walkBook(opts, cands);
-  const y1Sessions = opts.sessions.filter((date) => date < YEAR2_FROM);
-  const y2Sessions = opts.sessions.filter((date) => date >= YEAR2_FROM);
-  const restart = (sessions: string[]) => {
-    if (!opts.withRestart || sessions.length === 0) return { n: 0, totalUsd: 0, maxDrawdownUsd: 0, daysRealized10: 0 };
-    const walked = walkBook({ ...opts, sessions, flatten: true, withRestart: false }, cands);
-    return { n: walked.n, totalUsd: walked.totalUsd, maxDrawdownUsd: walked.maxDrawdownUsd, daysRealized10: walked.daysRealized10 };
+  const split = opts.yearSplit ?? YEAR2_FROM;
+  const y1Sessions = opts.sessions.filter((date) => date < split);
+  const y2Sessions = opts.sessions.filter((date) => date >= split);
+  const restart = (sessions: string[]): YearRestart => {
+    if (!opts.withRestart || sessions.length === 0) return EMPTY_RESTART;
+    const walked = walkBook({ ...opts, sessions, flatten: true, withRestart: false, keepFills: false, keepDaily: false }, cands);
+    return {
+      n: walked.n,
+      totalUsd: walked.totalUsd,
+      maxDrawdownUsd: walked.maxDrawdownUsd,
+      realizedDrawdownUsd: walked.realizedDrawdownUsd,
+      daysRealized10: walked.daysRealized10,
+    };
   };
   return { ...full, restartYear1: restart(y1Sessions), restartYear2: restart(y2Sessions) };
 }
@@ -661,7 +747,10 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     else byEntry.set(cand.entryDate, [cand]);
   }
   const cmp = rankCompare(opts.rank === "none" ? "ticker" : opts.rank);
-  for (const list of byEntry.values()) list.sort(cmp);
+  for (const list of byEntry.values()) {
+    if (opts.order) opts.order(list);
+    else list.sort(cmp);
+  }
 
   const capital = opts.capital ?? START_CAPITAL;
   const maxPositions = opts.maxPositions ?? MAX_POSITIONS;
@@ -672,8 +761,11 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
   let skippedPrice = 0;
   let skippedSlot = 0;
   let skippedCash = 0;
+  let skippedSemi = 0;
   const sessionIndex = new Map(sessions.map((date, index) => [date, index]));
   const equityPath: number[] = [];
+  const realizedPath: number[] = [];
+  const daily: Array<{ date: string; equity: number; realizedEquity: number }> = [];
   const nextSession = new Map<string, string>();
   for (let i = 0; i < sessions.length - 1; i += 1) nextSession.set(sessions[i], sessions[i + 1]);
 
@@ -710,7 +802,8 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     });
   };
 
-  for (const date of sessions) {
+  for (let si = 0; si < sessions.length; si += 1) {
+    const date = sessions[si];
     release(date);
     for (let i = positions.length - 1; i >= 0; i -= 1) {
       const pos = positions[i];
@@ -719,16 +812,31 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         positions.splice(i, 1);
       }
     }
+    const prevDate = si > 0 ? sessions[si - 1] : null;
+    let morning = settled + pending.reduce((sum, lot) => sum + lot.amount, 0);
+    for (const pos of positions) {
+      const px = prevDate ? closePx(pos.cand.ticker, prevDate, pos.cand.entry) : pos.cand.entry;
+      morning += pos.qty * px;
+    }
+    const throttled = opts.throttleBelowStart === true && morning < capital - 1e-9;
+    const slotCap = throttled ? Math.min(maxPositions, 2) : maxPositions;
+    const newCap = throttled ? 1 : Number.POSITIVE_INFINITY;
+    let opened = 0;
+    let semisHeld = positions.reduce((sum, pos) => sum + (pos.cand.semi ? 1 : 0), 0);
     const todays = byEntry.get(date) ?? [];
     const held = new Set(positions.map((pos) => pos.cand.ticker));
     for (const cand of todays) {
       if (held.has(cand.ticker)) continue;
-      const qty = sharesForBudget(cand.entry);
+      const qty = opts.size ? opts.size(cand, morning) : sharesForBudget(cand.entry);
       if (qty == null) {
         skippedPrice += 1;
         continue;
       }
-      if (positions.length >= maxPositions) {
+      if (opts.maxSemi != null && cand.semi && semisHeld >= opts.maxSemi) {
+        skippedSemi += 1;
+        continue;
+      }
+      if (positions.length >= slotCap || opened >= newCap) {
         skippedSlot += 1;
         continue;
       }
@@ -739,6 +847,8 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
       }
       settled -= cost;
       held.add(cand.ticker);
+      opened += 1;
+      if (cand.semi) semisHeld += 1;
       const exitDate = cand.exitDate > last ? last : cand.exitDate;
       const forced = cand.exitDate > last;
       positions.push({
@@ -764,13 +874,22 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         positions.splice(i, 1);
       }
     }
-    let marked = settled + pending.reduce((sum, lot) => sum + lot.amount, 0);
-    for (const pos of positions) marked += pos.qty * closePx(pos.cand.ticker, date, pos.cand.entry);
+    const cash = settled + pending.reduce((sum, lot) => sum + lot.amount, 0);
+    let marked = cash;
+    let realizedEq = cash;
+    for (const pos of positions) {
+      marked += pos.qty * closePx(pos.cand.ticker, date, pos.cand.entry);
+      realizedEq += pos.qty * pos.cand.entry;
+    }
     equityPath.push(marked);
+    realizedPath.push(realizedEq);
+    if (opts.keepDaily) daily.push({ date, equity: round(marked), realizedEquity: round(realizedEq) });
   }
 
   let peak = capital;
   let maxDd = 0;
+  let realizedPeak = capital;
+  let realizedDd = 0;
   let daysMtm10 = 0;
   let prev = capital;
   const monthEnd = new Map<string, number>();
@@ -779,6 +898,9 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     if (equity - prev >= 10) daysMtm10 += 1;
     peak = Math.max(peak, equity);
     maxDd = Math.max(maxDd, peak - equity);
+    const realizedEquity = realizedPath[i] ?? capital;
+    realizedPeak = Math.max(realizedPeak, realizedEquity);
+    realizedDd = Math.max(realizedDd, realizedPeak - realizedEquity);
     prev = equity;
     monthEnd.set(sessions[i].slice(0, 7), equity);
   }
@@ -802,6 +924,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
   const scored = statsOf(fills);
   const weeks = weeksOf(sessions.length);
   const endEquity = equityPath.length ? equityPath[equityPath.length - 1] : capital;
+  const split = opts.yearSplit ?? YEAR2_FROM;
   return {
     id: opts.id,
     label: opts.label,
@@ -814,6 +937,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     maxConsecLosses: scored.maxConsecLosses,
     totalUsd: round(endEquity - capital),
     maxDrawdownUsd: round(maxDd),
+    realizedDrawdownUsd: round(realizedDd),
     endEquity: round(endEquity),
     worstMonth,
     worstMonthUsd: worstMonthUsd == null ? null : round(worstMonthUsd),
@@ -827,21 +951,33 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     skippedPrice,
     skippedSlot,
     skippedCash,
-    year1: statsOf(fills.filter((fill) => fill.entryDate < YEAR2_FROM)),
-    year2: statsOf(fills.filter((fill) => fill.entryDate >= YEAR2_FROM)),
-    restartYear1: { n: 0, totalUsd: 0, maxDrawdownUsd: 0, daysRealized10: 0 },
-    restartYear2: { n: 0, totalUsd: 0, maxDrawdownUsd: 0, daysRealized10: 0 },
+    skippedSemi,
+    year1: statsOf(fills.filter((fill) => fill.entryDate < split)),
+    year2: statsOf(fills.filter((fill) => fill.entryDate >= split)),
+    restartYear1: { ...EMPTY_RESTART },
+    restartYear2: { ...EMPTY_RESTART },
     equity: months.map(([month, equity]) => ({ month, equity: round(equity) })),
+    ...(opts.keepFills
+      ? { fills: fills.map((fill) => ({ ticker: fill.ticker, pnlUsd: round(fill.pnlUsd), entryDate: fill.entryDate, exitDate: fill.exitDate })) }
+      : {}),
+    ...(opts.keepDaily ? { daily } : {}),
   };
 }
 
-function methodCandidates(name: NameSeries, kind: MethodKind, market: Map<string, MarketDay>): Candidate[] {
+export function methodCandidates(
+  name: NameSeries,
+  kind: MethodKind,
+  market: Map<string, MarketDay>,
+  bounds?: { from: string; to: string },
+): Candidate[] {
+  const from = bounds?.from ?? STUDY_FROM;
+  const to = bounds?.to ?? STUDY_TO;
   const { feats } = name;
   const meta = { ticker: name.ticker, sector: name.sector, semi: name.semi };
   const out: Candidate[] = [];
   for (let i = 0; i < feats.length - 1; i += 1) {
     const feat = feats[i];
-    if (feat.date < STUDY_FROM || feat.date > STUDY_TO || feat.gapWarning) continue;
+    if (feat.date < from || feat.date > to || feat.gapWarning) continue;
     const day = market.get(feat.date);
     const rs20 = feat.ret20 != null && day?.spyRet20 != null ? feat.ret20 - day.spyRet20 : null;
     const atr = feat.atr ?? 0;
@@ -865,7 +1001,7 @@ function methodCandidates(name: NameSeries, kind: MethodKind, market: Map<string
     }
     if (!spec) continue;
     const trade = simulate(feats, i, spec, 0, meta, rs20);
-    if (trade && trade.entryDate <= STUDY_TO) out.push(trade);
+    if (trade && trade.entryDate <= to) out.push(trade);
   }
   return out;
 }
@@ -1044,6 +1180,10 @@ export function runBuyHold(id: string, label: string, feats: Feat[], from = STUD
     const fee = index === inWindow.length - 1 ? ROUND_TRIP_FEE : 0;
     return cash + qty * bar.c - fee;
   });
+  const realizedPath = inWindow.map((bar, index) => {
+    if (index === inWindow.length - 1) return cash + qty * bar.c - ROUND_TRIP_FEE;
+    return cash + qty * first.o;
+  });
   const pnl = qty * (last.c - first.o) - ROUND_TRIP_FEE;
   const fills = [
     {
@@ -1067,6 +1207,7 @@ export function runBuyHold(id: string, label: string, feats: Feat[], from = STUD
     skippedCash: 0,
     fills,
     equityPath,
+    realizedPath,
     capital,
   });
 }
@@ -1100,11 +1241,15 @@ function finishPath(args: {
   skippedCash: number;
   fills: Array<{ exitDate: string; ticker: string; pnlUsd: number; hold: number; reason: ExitReason; entryDate: string }>;
   equityPath: number[];
+  realizedPath?: number[];
   capital: number;
 }): Book {
   const { sessions, equityPath, fills, capital } = args;
+  const realizedPath = args.realizedPath ?? equityPath.map(() => capital);
   let peak = capital;
   let maxDd = 0;
+  let realizedPeak = capital;
+  let realizedDd = 0;
   let daysMtm10 = 0;
   let prev = capital;
   const monthEnd = new Map<string, number>();
@@ -1113,6 +1258,9 @@ function finishPath(args: {
     if (equity - prev >= 10) daysMtm10 += 1;
     peak = Math.max(peak, equity);
     maxDd = Math.max(maxDd, peak - equity);
+    const realizedEquity = realizedPath[i] ?? capital;
+    realizedPeak = Math.max(realizedPeak, realizedEquity);
+    realizedDd = Math.max(realizedDd, realizedPeak - realizedEquity);
     prev = equity;
     monthEnd.set(sessions[i].slice(0, 7), equity);
   }
@@ -1137,8 +1285,8 @@ function finishPath(args: {
   const endEquity = equityPath.length ? equityPath[equityPath.length - 1] : capital;
   const y1Sessions = sessions.filter((date) => date < YEAR2_FROM);
   const y2Sessions = sessions.filter((date) => date >= YEAR2_FROM);
-  const sliceRestart = (sub: string[]) => {
-    if (!sub.length) return { n: 0, totalUsd: 0, maxDrawdownUsd: 0, daysRealized10: 0 };
+  const sliceRestart = (sub: string[]): YearRestart => {
+    if (!sub.length) return { ...EMPTY_RESTART };
     const from = sub[0];
     const to = sub[sub.length - 1];
     const subFills = fills.filter((fill) => fill.entryDate >= from && fill.entryDate <= to && fill.exitDate <= to);
@@ -1157,7 +1305,15 @@ function finishPath(args: {
       previous = equity;
     }
     const end = path.length ? path[path.length - 1] : base;
-    return { n: subFills.length, totalUsd: round(end - base), maxDrawdownUsd: round(dd), daysRealized10: days };
+    const rpath = startI >= 0 && endI >= startI ? realizedPath.slice(startI, endI + 1) : [];
+    const rbase = startI > 0 ? (realizedPath[startI - 1] ?? capital) : capital;
+    let rpeak = rbase;
+    let rdd = 0;
+    for (const equity of rpath) {
+      rpeak = Math.max(rpeak, equity);
+      rdd = Math.max(rdd, rpeak - equity);
+    }
+    return { n: subFills.length, totalUsd: round(end - base), maxDrawdownUsd: round(dd), realizedDrawdownUsd: round(rdd), daysRealized10: days };
   };
   return {
     id: args.id,
@@ -1171,6 +1327,7 @@ function finishPath(args: {
     maxConsecLosses: scored.maxConsecLosses,
     totalUsd: round(endEquity - capital),
     maxDrawdownUsd: round(maxDd),
+    realizedDrawdownUsd: round(realizedDd),
     endEquity: round(endEquity),
     worstMonth,
     worstMonthUsd: worstMonthUsd == null ? null : round(worstMonthUsd),
@@ -1488,8 +1645,8 @@ export function buildStudy(input: StudyInput): StudyReport {
   const mom = runMomentum(core, sessions, closes, calendar);
   const mom1 = runMomentum(core, sessions.filter((date) => date < YEAR2_FROM), closes, calendar);
   const mom2 = runMomentum(core, sessions.filter((date) => date >= YEAR2_FROM), closes, calendar);
-  mom.restartYear1 = { n: mom1.n, totalUsd: mom1.totalUsd, maxDrawdownUsd: mom1.maxDrawdownUsd, daysRealized10: mom1.daysRealized10 };
-  mom.restartYear2 = { n: mom2.n, totalUsd: mom2.totalUsd, maxDrawdownUsd: mom2.maxDrawdownUsd, daysRealized10: mom2.daysRealized10 };
+  mom.restartYear1 = { n: mom1.n, totalUsd: mom1.totalUsd, maxDrawdownUsd: mom1.maxDrawdownUsd, realizedDrawdownUsd: mom1.realizedDrawdownUsd, daysRealized10: mom1.daysRealized10 };
+  mom.restartYear2 = { n: mom2.n, totalUsd: mom2.totalUsd, maxDrawdownUsd: mom2.maxDrawdownUsd, realizedDrawdownUsd: mom2.realizedDrawdownUsd, daysRealized10: mom2.daysRealized10 };
   methods.push(mom);
   for (const [id, label, feats] of [
     ["spy", "SPYを口座いっぱい保有", spy],
@@ -1499,8 +1656,8 @@ export function buildStudy(input: StudyInput): StudyReport {
     const book = runBuyHold(id, label, feats);
     const first = runBuyHold(id, label, feats, STUDY_FROM, y1Last);
     const second = runBuyHold(id, label, feats, y2First, STUDY_TO);
-    book.restartYear1 = { n: first.n, totalUsd: first.totalUsd, maxDrawdownUsd: first.maxDrawdownUsd, daysRealized10: first.daysRealized10 };
-    book.restartYear2 = { n: second.n, totalUsd: second.totalUsd, maxDrawdownUsd: second.maxDrawdownUsd, daysRealized10: second.daysRealized10 };
+    book.restartYear1 = { n: first.n, totalUsd: first.totalUsd, maxDrawdownUsd: first.maxDrawdownUsd, realizedDrawdownUsd: first.realizedDrawdownUsd, daysRealized10: first.daysRealized10 };
+    book.restartYear2 = { n: second.n, totalUsd: second.totalUsd, maxDrawdownUsd: second.maxDrawdownUsd, realizedDrawdownUsd: second.realizedDrawdownUsd, daysRealized10: second.daysRealized10 };
     methods.push(book);
   }
 

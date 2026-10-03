@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SiteNav } from "@/components/site-nav";
+import { FollowUpSection } from "@/components/followup-section";
 import { StudySection } from "@/components/study-section";
 import { ThemeToggle } from "@/components/theme-toggle";
 import type { Stats } from "@/lib/backtest";
@@ -142,6 +143,7 @@ export default function BacktestPage() {
         </details>
 
         <StudySection />
+        <FollowUpSection />
 
         <section>
           <h2 className="mb-1 text-sm font-medium">分かっている偏り</h2>
