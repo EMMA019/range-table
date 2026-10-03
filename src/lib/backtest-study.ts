@@ -436,6 +436,7 @@ export function rangeCandidates(
   sessions: string[],
   bounds?: { from: string; to: string },
   forceExitOn?: (entryDate: string) => string | null,
+  stopAt?: (feat: Feat) => number | null,
 ): Candidate[] {
   const from = bounds?.from ?? STUDY_FROM;
   const to = bounds?.to ?? STUDY_TO;
@@ -447,7 +448,13 @@ export function rangeCandidates(
     if (!isRangeBar(feat, rules, name.semi, market.get(feat.date), sessions, name.earnings, from, to)) continue;
     const sized = sharesForMove(feat.atr, feats[i + 1].o);
     if (sized.shares10 == null) continue;
-    const stopClose = rules.stop === "low20" ? feat.low20 : rules.stop === "half" ? (feat.low20 as number) - 0.5 * (feat.atr as number) : null;
+    const stopClose = stopAt
+      ? stopAt(feat)
+      : rules.stop === "low20"
+        ? feat.low20
+        : rules.stop === "half"
+          ? (feat.low20 as number) - 0.5 * (feat.atr as number)
+          : null;
     const day = market.get(feat.date);
     const rs20 = excess(feat.ret20, day?.spyRet20);
     const trade = simulate(

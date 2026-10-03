@@ -216,6 +216,17 @@ describe("range trades match the published engine", () => {
     assert.equal(cut[0].exitDate, plain[0].exitDate);
     assert.equal(cut[0].reason, plain[0].reason);
   });
+
+  it("keeps the box-low stop unless a replacement stop is supplied", () => {
+    const bars = series([[98, 100, 97, 97.8], [97, 98, 90, 91], [89, 90, 88, 89.5]]);
+    const rules = withRules({ id: "gap", label: "gap", gapThroughStop: true });
+    const base = rangeCandidates(nameOf(bars), rules, market, []);
+    const wide = rangeCandidates(nameOf(bars), rules, market, [], undefined, undefined, () => 1);
+    assert.equal(base.length, 1);
+    assert.equal(wide.length, 1);
+    assert.equal(base[0].reason, "stop");
+    assert.ok(wide[0].exitIndex > base[0].exitIndex);
+  });
 });
 
 describe("portfolio constraints", () => {
