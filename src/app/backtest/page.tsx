@@ -1,5 +1,15 @@
 import type { Metadata } from "next";
 import { SiteNav } from "@/components/site-nav";
+import { BiasSection } from "@/components/bias-section";
+import { Round2Section } from "@/components/round2-section";
+import { DecomposeSection } from "@/components/decompose-section";
+import { Round4Section } from "@/components/round4-section";
+import { Round5Section } from "@/components/round5-section";
+import { Round6Section } from "@/components/round6-section";
+import { Round7Section } from "@/components/round7-section";
+import { Round7bSection } from "@/components/round7b-section";
+import { Round3Section } from "@/components/round3-section";
+import { StopsSection } from "@/components/stops-section";
 import { FollowUpSection } from "@/components/followup-section";
 import { StudySection } from "@/components/study-section";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -144,6 +154,16 @@ export default function BacktestPage() {
 
         <StudySection />
         <FollowUpSection />
+        <BiasSection />
+        <Round2Section />
+        <StopsSection />
+        <Round3Section />
+        <DecomposeSection />
+        <Round4Section />
+        <Round5Section />
+        <Round6Section />
+        <Round7Section />
+        <Round7bSection />
 
         <section>
           <h2 className="mb-1 text-sm font-medium">分かっている偏り</h2>
