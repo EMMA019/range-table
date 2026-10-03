@@ -5,6 +5,7 @@ import { Round2Section } from "@/components/round2-section";
 import { DecomposeSection } from "@/components/decompose-section";
 import { Round4Section } from "@/components/round4-section";
 import { Round5Section } from "@/components/round5-section";
+import { Round6Section } from "@/components/round6-section";
 import { Round3Section } from "@/components/round3-section";
 import { StopsSection } from "@/components/stops-section";
 import { FollowUpSection } from "@/components/followup-section";
@@ -158,6 +159,7 @@ export default function BacktestPage() {
         <DecomposeSection />
         <Round4Section />
         <Round5Section />
+        <Round6Section />
 
         <section>
           <h2 className="mb-1 text-sm font-medium">分かっている偏り</h2>
