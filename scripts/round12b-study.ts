@@ -43,6 +43,7 @@ import { totalNet190 } from "../src/lib/round8";
 import { etfExitPrice } from "../src/lib/round11";
 import {
   ROUND12B_PREREG,
+  ROUND12C_PREREG,
   bucketOf,
   bucketTable,
   flowOf,
@@ -57,7 +58,8 @@ import { loadWatchlist } from "../src/lib/watchlist";
 import { readCachedBars } from "./cache-bars";
 
 /**
- * Round 12b unlimited budget. Rules are locked in docs/ROUND12B_PREREG.md.
+ * Round 12c unlimited budget. Rules are locked in docs/ROUND12C_PREREG.md.
+ * Round 12b stopped on the one-name overlap. This runner records those fills as displaced.
  * Analysis only. Does not call EDGAR. Writes data/backtest/round12b.json.
  * Trade rows go to /opt/cursor/artifacts/round_unlimited_trades/ and are not committed.
  *   npx tsx scripts/round12b-study.ts
@@ -359,7 +361,7 @@ function keyOf(row: { ticker: string; entryDate: string }): string {
 }
 
 function main() {
-  console.log(`prereg ${ROUND12B_PREREG}`);
+  console.log(`prereg ${ROUND12C_PREREG} prior ${ROUND12B_PREREG}`);
   const sp500 = listedFrom(table(fs.readFileSync(path.join(WIKI, "sp500.html"), "utf8"), "Symbol"));
   const sp400 = listedFrom(table(fs.readFileSync(path.join(WIKI, "sp400.html"), "utf8"), "Symbol"));
   const changes500 = changes("sp500-hist.html");
@@ -547,8 +549,15 @@ function main() {
       const byKey = new Map(stocks.map((trade) => [keyOf(trade), trade]));
       if (byKey.size !== stocks.length) throw new Error(`無制限の約定が重複 ${source.universe} ${window.id}`);
       const heldByBaseline = new Set((limited.fills ?? []).map(keyOf));
-      const missing = [...heldByBaseline].filter((key) => !byKey.has(key));
-      if (missing.length) throw new Error(`無制限に無い基準の約定 ${source.universe} ${window.id} ${missing.length} ${missing.slice(0, 8).join(" ")}`);
+      const missing = (limited.fills ?? []).filter((fill) => !byKey.has(keyOf(fill)));
+      if (missing.length) {
+        console.log(
+          `${window.id} ${source.universe} displaced ${missing.length} ${missing
+            .slice(0, 8)
+            .map((fill) => keyOf(fill))
+            .join(" ")}`,
+        );
+      }
       const deployed = open.deployed;
       if (!deployed || !(deployed.usd > 0)) throw new Error(`必要資金が0 ${source.universe} ${window.id}`);
       const refusals = limited.refusals ?? [];
@@ -570,6 +579,13 @@ function main() {
         path.push(trade);
         if (slotKeys.has(key)) slot.push(trade);
         if (semiKeys.has(key)) semi.push(trade);
+      }
+      const overlap = stocks.filter((trade) => heldByBaseline.has(keyOf(trade))).length;
+      if (overlap + missing.length !== (limited.fills ?? []).length) {
+        throw new Error(`基準の内訳が合わない ${source.universe} ${window.id}`);
+      }
+      if (overlap + cashTaken.length + path.length !== stocks.length) {
+        throw new Error(`無制限の内訳が合わない ${source.universe} ${window.id}`);
       }
       const stockNet = totalNet190(stocks);
       const sectors = sectorTable(stocks);
@@ -594,6 +610,7 @@ function main() {
         engineReturnOnDeployed: r6(open.totalUsd / deployed.usd),
         cash: flowOf(cashTaken),
         cashUnfilled,
+        displaced: flowOf(missing.map((fill) => ({ pnlUsd: fill.pnlUsd, sells: fill.legs?.length || 1 }))),
         path: { n: path.length, pnlUsd: flowOf(path).pnlUsd },
         slot: { n: slot.length, pnlUsd: flowOf(slot).pnlUsd },
         semi: { n: semi.length, pnlUsd: flowOf(semi).pnlUsd },
@@ -608,7 +625,7 @@ function main() {
       }
       trades.push(...stockTrades(open, admitted, "unlimited", source.universe, label, sectorBy, watchGroup));
       console.log(
-        `${window.id} ${source.universe} stock ${cell.stockUsd} net ${cell.stockNetUsd} n ${cell.stockN} deployed ${cell.deployedUsd} ${cell.deployedDate} ret ${cell.returnOnDeployed} cash ${cell.cash.n}/${cell.cash.pnlUsd} unfilled ${cell.cashUnfilled} path ${cell.path.n}/${cell.path.pnlUsd} slot ${cell.slot.n} semi ${cell.semi.n} top ${cell.topSector} bottom ${cell.bottomSector}`,
+        `${window.id} ${source.universe} stock ${cell.stockUsd} net ${cell.stockNetUsd} n ${cell.stockN} deployed ${cell.deployedUsd} ${cell.deployedDate} ret ${cell.returnOnDeployed} cash ${cell.cash.n}/${cell.cash.pnlUsd} unfilled ${cell.cashUnfilled} displaced ${cell.displaced.n}/${cell.displaced.pnlUsd} path ${cell.path.n}/${cell.path.pnlUsd} slot ${cell.slot.n} semi ${cell.semi.n} top ${cell.topSector} bottom ${cell.bottomSector}`,
       );
       cells.push(cell);
     }
@@ -617,8 +634,9 @@ function main() {
   if (cells.length !== 3 * windows.length) throw new Error(`行数が違う ${cells.length}`);
   const report: Round12bReport = {
     v: 1,
-    prereg: ROUND12B_PREREG,
-    rulesCommit: ROUND12B_PREREG,
+    prereg: ROUND12C_PREREG,
+    rulesCommit: ROUND12C_PREREG,
+    priorPrereg: ROUND12B_PREREG,
     generatedAt: new Date().toISOString(),
     hypothesisOnly: true,
     cells,
@@ -750,7 +768,7 @@ function writeTrades(trades: readonly TradeRow[], cells: readonly Round12bCell[]
   const note = [
     "# Round 12b unlimited-budget trade export",
     "",
-    `Study pre-registration \`${ROUND12B_PREREG}\`. Hypothesis generation only. Nothing from this export is committed.`,
+    `Study pre-registration \`${ROUND12C_PREREG}\`. Round 12b \`${ROUND12B_PREREG}\` stopped on the one-name overlap; displaced fills are the constrained trades the unlimited book did not take. Hypothesis generation only. Nothing from this export is committed.`,
     "",
     "Rows are the unlimited stock book plus the separate SOXX sleeve. SOXX is written once per window. It is not mixed into a stock universe. `sector` and `atr_pct` are empty on SOXX rows.",
     "",

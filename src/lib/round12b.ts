@@ -3,6 +3,9 @@ import { totalNet190 } from "./round8";
 /** Pre-registration commit. Results must cite this and must not relax the rules. */
 export const ROUND12B_PREREG = "d8716af07cc58fdead478be5bddc16f92aaa4f6b";
 
+/** Overlap accounting, locked after round 12b stopped and before any table. */
+export const ROUND12C_PREREG = "9f1c6bd09b6c4d609c6dd34c8ea69e053c3391d6";
+
 export const LARGE_LOSS = -60;
 export const BUCKETS = ["<3", "3-4", "4-5", "5-6", "6-8", "8-10", ">=10"] as const;
 export type Bucket = (typeof BUCKETS)[number];
@@ -122,6 +125,8 @@ export type Round12bCell = {
   engineReturnOnDeployed: number;
   cash: Flow;
   cashUnfilled: number;
+  /** Constrained fills the unlimited book did not take because the ticker was already open. */
+  displaced: Flow;
   path: { n: number; pnlUsd: number };
   slot: { n: number; pnlUsd: number };
   semi: { n: number; pnlUsd: number };
@@ -136,6 +141,7 @@ export type Round12bReport = {
   v: 1;
   prereg: string;
   rulesCommit: string;
+  priorPrereg: string;
   generatedAt: string;
   hypothesisOnly: true;
   cells: Round12bCell[];

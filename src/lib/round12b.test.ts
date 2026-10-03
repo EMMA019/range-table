@@ -63,6 +63,54 @@ describe("unlimited budget book", () => {
     assert.equal(open.deployed?.date, sessions[1]);
     assert.equal(open.totalUsd, 80 - 1.4);
   });
+
+  it("skips a later signal in a ticker the earlier extra fill is still holding", () => {
+    const sessions = ["2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05", "2024-01-08", "2024-01-09"];
+    const named = (ticker: string, entryIndex: number, exitIndex: number): Candidate => ({
+      ticker,
+      sector: "",
+      semi: false,
+      signalIndex: entryIndex - 1,
+      entryIndex,
+      exitIndex,
+      signalDate: sessions[entryIndex - 1],
+      entryDate: sessions[entryIndex],
+      exitDate: sessions[exitIndex],
+      entry: 100,
+      exit: 110,
+      atr: 4,
+      atrPct: 4,
+      boxPct: 20,
+      rebound: 1,
+      rs20: 0,
+      qty10: 1,
+      reason: "target",
+      exitTiming: "close",
+      voided: false,
+    });
+    const cands = [named("AAA", 1, 2), named("MMM", 1, 4), named("MMM", 3, 5)];
+    const closes = new Map(["AAA", "MMM"].map((ticker) => [ticker, new Map(sessions.map((date) => [date, 100]))]));
+    const base = {
+      id: "base",
+      label: "base",
+      universe: "core",
+      rank: "ticker" as const,
+      sessions,
+      flatten: true,
+      withRestart: false,
+      capital: 500,
+      closes,
+      keepFills: true,
+      keepRefusals: true,
+    };
+    const limited = runPortfolio(base, cands);
+    const open = runPortfolio({ ...base, id: "open", unlimited: true, capital: 3200 }, cands);
+    const ids = (book: { fills?: Array<{ ticker: string; entryDate: string }> }) =>
+      (book.fills ?? []).map((fill) => `${fill.ticker}|${fill.entryDate}`).sort();
+    assert.deepEqual(ids(limited), ["AAA|2024-01-03", "MMM|2024-01-05"]);
+    assert.deepEqual(ids(open), ["AAA|2024-01-03", "MMM|2024-01-03"]);
+    assert.equal(limited.refusals?.some((row) => row.ticker === "MMM" && row.entryDate === "2024-01-03" && row.reason === "cash"), true);
+  });
 });
 
 describe("sector and ATR tables", () => {
