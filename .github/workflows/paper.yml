@@ -1,0 +1,38 @@
+name: Paper forward test
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 22:30 UTC is after the US cash close, including daylight time.
+    - cron: "30 22 * * 1-5"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: paper-forward
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run paper
+      - name: Commit the snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/backtest/paper.json
+          if git diff --cached --quiet; then
+            echo "paper snapshot unchanged"
+          else
+            git commit -m "Update the paper forward-test snapshot"
+            git push
+          fi
