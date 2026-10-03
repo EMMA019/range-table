@@ -12,6 +12,7 @@
     "backtest": "tsx scripts/backtest.ts",
     "backtest:study": "tsx scripts/backtest-study.ts",
     "robustness": "tsx scripts/robustness.ts",
+    "bias": "tsx scripts/bias-study.ts",
     "paper": "tsx scripts/paper.ts"
   },
   "dependencies": {
