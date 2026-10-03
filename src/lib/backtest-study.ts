@@ -704,6 +704,33 @@ export type Book = {
   exposure?: { investedFraction: number | null; daysOpenShare: number | null };
   etfFills?: EtfFill[];
   sleeve?: SleeveStats;
+  park?: ParkStats;
+};
+
+export type ParkBar = { o: number; h: number; l: number; c: number; symbol: string };
+
+export type ParkOpts = {
+  bars: Map<string, ParkBar>;
+  /** Cash dividend per share, keyed by the ex-date. */
+  dividends: Map<string, number>;
+};
+
+export type ParkSell = {
+  date: string;
+  symbol: string;
+  qty: number;
+  price: number;
+  pnlUsd: number;
+  reason: "fund" | "window";
+};
+
+export type ParkStats = {
+  dividendsUsd: number;
+  priceUsd: number;
+  sellN: number;
+  cycles: number;
+  feesUsd: number;
+  sells: ParkSell[];
 };
 
 export type EtfSleeveOpts = {
@@ -855,6 +882,11 @@ export type PortfolioOpts = {
   keepExposure?: boolean;
   /** Idle-cash ETF. Omitted books do not sell shares to fund a stock. */
   etfSleeve?: EtfSleeveOpts;
+  /**
+   * Hold idle settled cash in a T-bill ETF. Omitted books do not buy one.
+   * The published walk does not set this.
+   */
+  park?: ParkOpts;
   /** Stock and ETF mark totals. Omitted books leave `sleeve` unset. */
   keepSleeveStats?: boolean;
   /** Adds holding sessions and per-leg exit reasons. Omitted books stay unchanged. */
@@ -960,6 +992,88 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
   let prevStockMark = 0;
   let prevEtfMark = 0;
   let bothNegative = 0;
+  const parkOpt = opts.park ?? null;
+  let parkQty = 0;
+  let parkCost = 0;
+  let parkSymbol = "";
+  let parkCycle = false;
+  let parkCycles = 0;
+  let parkDiv = 0;
+  let parkPrice = 0;
+  let parkFees = 0;
+  const parkSells: ParkSell[] = [];
+  const parkBar = (date: string): ParkBar | null => parkOpt?.bars.get(date) ?? null;
+  const creditParkDiv = (date: string) => {
+    if (!parkOpt || parkQty < 1) return;
+    const per = parkOpt.dividends.get(date) ?? 0;
+    if (!(per > 0)) return;
+    settled += parkQty * per;
+    parkDiv += parkQty * per;
+  };
+  const parkPower = (open: number) => {
+    if (parkQty < 1 || !(open > 0)) return settled;
+    return settled + Math.max(0, parkQty * open - exitFee(parkQty, open));
+  };
+  const fundPark = (shortfall: number, date: string) => {
+    if (!parkOpt || !(shortfall > 1e-9) || parkQty < 1) return;
+    const bar = parkBar(date);
+    if (!bar) throw new Error(`パークの日足がない ${date}`);
+    if (parkSymbol && bar.symbol !== parkSymbol) throw new Error(`パークの銘柄が違う ${date}`);
+    const qty = preemptQty(shortfall, bar.o, parkQty, ROUND_TRIP_FEE);
+    if (qty == null || qty < 1) return;
+    const fee = exitFee(qty, bar.o);
+    const proceeds = qty * bar.o - fee;
+    settled += proceeds;
+    const avg = parkCost / parkQty;
+    const pnl = qty * (bar.o - avg) - fee;
+    parkPrice += pnl;
+    parkFees += fee;
+    parkCost -= avg * qty;
+    parkQty -= qty;
+    parkSells.push({ date, symbol: bar.symbol, qty, price: bar.o, pnlUsd: pnl, reason: "fund" });
+    if (parkQty <= 1e-9) {
+      parkQty = 0;
+      parkCost = 0;
+      parkSymbol = "";
+      parkCycle = false;
+    }
+  };
+  const sweepPark = (date: string) => {
+    if (!parkOpt) return;
+    const bar = parkBar(date);
+    if (!bar || !(bar.o > 0)) {
+      if (parkQty > 0) throw new Error(`パークの日足がない ${date}`);
+      return;
+    }
+    if (parkSymbol && bar.symbol !== parkSymbol && parkQty > 0) throw new Error(`パークの銘柄が違う ${date}`);
+    const qty = Math.floor((settled + 1e-9) / bar.o);
+    if (qty < 1) return;
+    settled -= qty * bar.o;
+    if (!parkCycle) {
+      parkCycle = true;
+      parkCycles += 1;
+      parkSymbol = bar.symbol;
+    }
+    parkCost += qty * bar.o;
+    parkQty += qty;
+  };
+  const flattenPark = (date: string) => {
+    if (!parkOpt || parkQty < 1) return;
+    const bar = parkBar(date);
+    if (!bar) throw new Error(`パークの日足がない ${date}`);
+    const qty = parkQty;
+    const fee = exitFee(qty, bar.c);
+    const avg = parkCost / qty;
+    const pnl = qty * (bar.c - avg) - fee;
+    settled += qty * bar.c - fee;
+    parkPrice += pnl;
+    parkFees += fee;
+    parkSells.push({ date, symbol: bar.symbol, qty, price: bar.c, pnlUsd: pnl, reason: "window" });
+    parkQty = 0;
+    parkCost = 0;
+    parkSymbol = "";
+    parkCycle = false;
+  };
   let stockUtilSum = 0;
   let etfUtilSum = 0;
   const stockCash = (amount: number, date: string, reason: string) => {
@@ -1127,6 +1241,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
   for (let si = 0; si < sessions.length; si += 1) {
     const date = sessions[si];
     release(date);
+    creditParkDiv(date);
     if (etfQty > 0) {
       const bar = etfOpt?.bars.get(date);
       if (bar) {
@@ -1179,6 +1294,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         continue;
       }
       const cost = qty * cand.entry + entryFee(qty, cand.entry);
+      if (parkOpt && cost > settled + 1e-9) fundPark(cost - settled, date);
       if (etfOpt && etfQty > 0 && cost > settled + 1e-9) {
         const bar = etfOpt.bars.get(date);
         const qtyEtf = bar ? preemptQty(cost - settled, bar.o, etfQty) : null;
@@ -1221,8 +1337,10 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
       if (etfOpt.exit === "atr") {
         if (order && bar && order.atr != null && order.atr > 0 && bar.o < order.target && bar.o > order.stop) {
           const levels = atrExit(bar.o, order.atr);
-          const sized = etfAtrShares(bar.o, order.atr, settled);
+          const room = parkOpt ? parkPower(bar.o) : settled;
+          const sized = etfAtrShares(bar.o, order.atr, room);
           const etfCost = sized.qty * bar.o;
+          if (parkOpt && levels && sized.qty >= 1 && etfCost > settled + 1e-9) fundPark(etfCost - settled, date);
           if (levels && sized.qty >= 1 && etfCost <= settled + 1e-9) {
             settled -= etfCost;
             etfFlow -= etfCost;
@@ -1238,8 +1356,10 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
           }
         }
       } else if (order && bar && bar.o < order.target && bar.o > order.stop) {
-        const qtyEtf = etfShares(bar.o, order.stop, settled);
+        const room = parkOpt ? parkPower(bar.o) : settled;
+        const qtyEtf = etfShares(bar.o, order.stop, room);
         const etfCost = qtyEtf * bar.o;
+        if (parkOpt && qtyEtf >= 1 && etfCost > settled + 1e-9) fundPark(etfCost - settled, date);
         if (qtyEtf >= 1 && etfCost <= settled + 1e-9) {
           settled -= etfCost;
           etfFlow -= etfCost;
@@ -1255,6 +1375,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         }
       }
     }
+    if (parkOpt) sweepPark(date);
     for (let i = positions.length - 1; i >= 0; i -= 1) {
       const pos = positions[i];
       if (pos.cand.round7Legs) {
@@ -1312,6 +1433,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
       const price = etfOpt?.bars.get(date)?.c ?? etfEntryPx;
       sellEtf(date, etfQty, price, "window", "next");
     }
+    if (parkOpt && opts.flatten && date === last) flattenPark(date);
     const cash = settled + pending.reduce((sum, lot) => sum + lot.amount, 0);
     let marked = cash;
     let realizedEq = cash;
@@ -1328,6 +1450,12 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     if (etfQty > 0) {
       marked += etfMark;
       realizedEq += etfQty * etfEntryPx;
+    }
+    if (parkOpt && parkQty > 0) {
+      const bar = parkBar(date);
+      if (!bar) throw new Error(`パークの日足がない ${date}`);
+      marked += parkQty * bar.c;
+      realizedEq += parkCost;
     }
     if (track) {
       const stockDay = stockMark - prevStockMark + stockFlow;
@@ -1465,6 +1593,18 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         }
       : {}),
     ...(opts.keepDaily ? { daily } : {}),
+    ...(parkOpt
+      ? {
+          park: {
+            dividendsUsd: round(parkDiv),
+            priceUsd: round(parkPrice),
+            sellN: parkSells.length,
+            cycles: parkCycles,
+            feesUsd: round(parkFees),
+            sells: parkSells.map((sell) => ({ ...sell, pnlUsd: round(sell.pnlUsd) })),
+          },
+        }
+      : {}),
   };
 }
 
