@@ -19,9 +19,8 @@ export const PAPER_START = "2026-10-05";
 
 /**
  * Commit that froze these rules. The scheduled job copies this string and does not advance it.
- * PENDING until the rules commit exists.
  */
-export const PAPER_RULES_COMMIT = "PENDING";
+export const PAPER_RULES_COMMIT = "83181044326c4d5cbd5f84b52c3815438ee00de2";
 
 export const PAPER_RULES = [
   "開始は 2026-10-05。ブックは4つ、それぞれ現金 $3,200。箱と RSI は同時5件、1件 $300–$450、整数株、往復手数料 $0.70。売却代金は翌セッションまで使えない。",

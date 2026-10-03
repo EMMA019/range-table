@@ -176,6 +176,7 @@ describe("paper books", () => {
     const name: NameSeries = { ticker: "AAA", sector: "t", semi: false, core: true, broad: false, feats, earnings: [] };
     const report = buildPaper({ names: [name], spy: feats, qqq: feats, generatedAt: "2026-10-03" });
     assert.equal(report.start, PAPER_START);
+    assert.match(report.rulesCommit, /^[0-9a-f]{40}$/);
     assert.equal(report.asOf, null);
     assert.equal(report.books.length, 4);
     assert.ok(report.books.every((book) => book.endEquity === 3200 && book.n === 0));
