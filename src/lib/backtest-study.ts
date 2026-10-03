@@ -1,5 +1,6 @@
 import { computeQuote, sharesForMove } from "./compute";
 import { CHART_SESSIONS, GAP_THRESHOLD } from "./constants";
+import { legSplit, scaleActions, type ScaleAction } from "./scale-exit";
 import type { Bar, EntrySignal } from "./types";
 
 /**
@@ -235,7 +236,24 @@ export type Candidate = {
   exitTiming: ExitTiming;
   /** A 35% gap between entry and exit. The day is consumed and the trade is not scored. */
   voided: boolean;
+  /**
+   * Scale-out planned at the signal. Prices at or below the entry are already null.
+   * The walker sells the midpoint half and the top remainder, and ignores the single exit above.
+   */
+  scale?: ScalePlan;
 };
+
+export type ScalePlan = {
+  mid: number | null;
+  top: number | null;
+  stop: number | null;
+  /** Close of entryIndex + 5. Null when this row has no day-5 check or that session does not exist. */
+  timeStopDate: string | null;
+  /** Close of entryIndex + 20, clipped to the last bar of the series. */
+  maxHoldDate: string;
+};
+
+export type DayQuote = { o: number; h: number; c: number };
 
 type ExitSpec = {
   target: number | null;
@@ -659,8 +677,10 @@ export type Book = {
   restartYear2: YearRestart;
   equity: Array<{ month: string; equity: number }>;
   skippedSemi?: number;
-  fills?: Array<{ ticker: string; pnlUsd: number; entryDate: string; exitDate: string }>;
+  fills?: Array<{ ticker: string; pnlUsd: number; entryDate: string; exitDate: string; qty?: number; riskUsd?: number | null }>;
   daily?: Array<{ date: string; equity: number; realizedEquity: number }>;
+  /** Cash after the session's fills. Present only when the book asked for it. */
+  exposure?: { investedFraction: number | null; daysOpenShare: number | null };
 };
 
 export type YearRestart = {
@@ -698,7 +718,34 @@ function rankCompare(rank: Rank) {
   };
 }
 
-type OpenPos = { cand: Candidate; qty: number; exit: number; exitDate: string; exitTiming: ExitTiming; reason: ExitReason };
+type OpenPos = {
+  cand: Candidate;
+  qty: number;
+  exit: number;
+  exitDate: string;
+  exitTiming: ExitTiming;
+  reason: ExitReason;
+  halfLeft: number;
+  restLeft: number;
+  pnl: number;
+};
+
+type WalkFill = {
+  exitDate: string;
+  ticker: string;
+  pnlUsd: number;
+  hold: number;
+  reason: ExitReason;
+  entryDate: string;
+  qty: number;
+  riskUsd: number | null;
+};
+
+function riskDollars(qty: number, entry: number, stop: number | null | undefined): number | null {
+  if (stop == null || !Number.isFinite(stop)) return null;
+  const risk = qty * (entry - stop);
+  return Number.isFinite(risk) ? risk : null;
+}
 
 export type PortfolioOpts = {
   id: string;
@@ -732,7 +779,13 @@ export type PortfolioOpts = {
    */
   orderFee?: (qty: number, price: number) => number;
   keepFills?: boolean;
+  /** Adds the filled share count and initial dollar risk to each fill. */
+  keepRisk?: boolean;
   keepDaily?: boolean;
+  /** Opens, highs, and closes for a scale-out. Ignored when no candidate carries a scale plan. */
+  quotes?: Map<string, Map<string, DayQuote>>;
+  /** Average invested fraction and the share of sessions still holding a position at the close. */
+  keepExposure?: boolean;
   closes: CloseMap;
 };
 
@@ -781,7 +834,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
   let settled = capital;
   const pending: Array<{ date: string; amount: number }> = [];
   const positions: OpenPos[] = [];
-  const fills: Array<{ exitDate: string; ticker: string; pnlUsd: number; hold: number; reason: ExitReason; entryDate: string }> = [];
+  const fills: WalkFill[] = [];
   let skippedPrice = 0;
   let skippedSlot = 0;
   let skippedCash = 0;
@@ -789,6 +842,8 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
   const sessionIndex = new Map(sessions.map((date, index) => [date, index]));
   const equityPath: number[] = [];
   const realizedPath: number[] = [];
+  const cashRatios: number[] = [];
+  let openDays = 0;
   const daily: Array<{ date: string; equity: number; realizedEquity: number }> = [];
   const nextSession = new Map<string, string>();
   for (let i = 0; i < sessions.length - 1; i += 1) nextSession.set(sessions[i], sessions[i + 1]);
@@ -813,6 +868,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
 
   const exitFee = (qty: number, price: number) => (opts.orderFee ? opts.orderFee(qty, price) : ROUND_TRIP_FEE);
   const entryFee = (qty: number, price: number) => (opts.orderFee ? opts.orderFee(qty, price) : 0);
+  const markedQty = (pos: OpenPos) => (pos.cand.scale ? pos.halfLeft + pos.restLeft : pos.qty);
   const sell = (pos: OpenPos, date: string, price: number, reason: ExitReason) => {
     const proceeds = pos.qty * price - exitFee(pos.qty, price);
     creditSale(date, proceeds);
@@ -825,7 +881,71 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
       hold: exitI - entryI,
       reason,
       entryDate: pos.cand.entryDate,
+      qty: pos.qty,
+      riskUsd: riskDollars(pos.qty, pos.cand.entry, pos.cand.stop),
     });
+  };
+  const quoteOf = (ticker: string, date: string): DayQuote | null => opts.quotes?.get(ticker)?.get(date) ?? null;
+  const finishScale = (pos: OpenPos, date: string) => {
+    const entryI = sessionIndex.get(pos.cand.entryDate) ?? 0;
+    const exitI = sessionIndex.get(date) ?? entryI;
+    fills.push({
+      exitDate: date,
+      ticker: pos.cand.ticker,
+      pnlUsd: pos.pnl,
+      hold: exitI - entryI,
+      reason: pos.reason,
+      entryDate: pos.cand.entryDate,
+      qty: pos.qty,
+      riskUsd: riskDollars(pos.qty, pos.cand.entry, pos.cand.scale?.stop ?? pos.cand.stop),
+    });
+  };
+  const applyScale = (pos: OpenPos, date: string, actions: ScaleAction[]) => {
+    for (const action of actions) {
+      const qty = action.qty === "half" ? pos.halfLeft : action.qty === "rest" ? pos.restLeft : pos.halfLeft + pos.restLeft;
+      if (!(qty > 0)) continue;
+      const fee = exitFee(qty, action.price);
+      creditSale(date, qty * action.price - fee);
+      pos.pnl += qty * (action.price - pos.cand.entry) - fee;
+      pos.reason = action.reason;
+      pos.exit = action.price;
+      pos.exitDate = date;
+      pos.exitTiming = action.timing;
+      if (action.qty === "half") pos.halfLeft = 0;
+      else if (action.qty === "rest") pos.restLeft = 0;
+      else {
+        pos.halfLeft = 0;
+        pos.restLeft = 0;
+      }
+    }
+  };
+  const runScale = (pos: OpenPos, date: string, phase: "open" | "rest"): boolean => {
+    const plan = pos.cand.scale;
+    if (!plan) return false;
+    const bar = quoteOf(pos.cand.ticker, date);
+    if (!bar) return false;
+    applyScale(
+      pos,
+      date,
+      scaleActions({
+        phase,
+        isEntryDay: date === pos.cand.entryDate,
+        open: bar.o,
+        high: bar.h,
+        close: bar.c,
+        entry: pos.cand.entry,
+        mid: plan.mid,
+        top: plan.top,
+        stop: plan.stop,
+        halfOpen: pos.halfLeft > 0,
+        restOpen: pos.restLeft > 0,
+        timeStop: plan.timeStopDate === date,
+        timeout: plan.maxHoldDate === date,
+      }),
+    );
+    if (pos.halfLeft + pos.restLeft > 0) return false;
+    finishScale(pos, date);
+    return true;
   };
 
   for (let si = 0; si < sessions.length; si += 1) {
@@ -833,7 +953,9 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     release(date);
     for (let i = positions.length - 1; i >= 0; i -= 1) {
       const pos = positions[i];
-      if (pos.exitDate === date && pos.exitTiming === "open") {
+      if (pos.cand.scale) {
+        if (runScale(pos, date, "open")) positions.splice(i, 1);
+      } else if (pos.exitDate === date && pos.exitTiming === "open") {
         sell(pos, date, pos.exit, pos.reason);
         positions.splice(i, 1);
       }
@@ -842,7 +964,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     let morning = settled + pending.reduce((sum, lot) => sum + lot.amount, 0);
     for (const pos of positions) {
       const px = prevDate ? closePx(pos.cand.ticker, prevDate, pos.cand.entry) : pos.cand.entry;
-      morning += pos.qty * px;
+      morning += markedQty(pos) * px;
     }
     const throttled = opts.throttleBelowStart === true && morning < capital - 1e-9;
     const slotCap = throttled ? Math.min(maxPositions, 2) : maxPositions;
@@ -882,19 +1004,25 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
       if (cand.semi) semisHeld += 1;
       else if (opts.maxNonSemi != null) nonSemiHeld += 1;
       const exitDate = cand.exitDate > last ? last : cand.exitDate;
-      const forced = cand.exitDate > last;
+      const forced = !cand.scale && cand.exitDate > last;
+      const legs = cand.scale ? legSplit(qty, cand.scale.mid != null) : { halfLeft: 0, restLeft: 0 };
       positions.push({
         cand,
         qty,
         exit: forced ? closePx(cand.ticker, last, cand.entry) : cand.exit,
-        exitDate,
+        exitDate: cand.scale ? cand.exitDate : exitDate,
         exitTiming: forced ? "close" : cand.exitTiming,
         reason: forced ? "window" : cand.reason,
+        halfLeft: legs.halfLeft,
+        restLeft: legs.restLeft,
+        pnl: cand.scale ? -entryFee(qty, cand.entry) : 0,
       });
     }
     for (let i = positions.length - 1; i >= 0; i -= 1) {
       const pos = positions[i];
-      if (pos.exitDate === date && pos.exitTiming !== "open") {
+      if (pos.cand.scale) {
+        if (runScale(pos, date, "rest")) positions.splice(i, 1);
+      } else if (pos.exitDate === date && pos.exitTiming !== "open") {
         sell(pos, date, pos.exit, pos.reason);
         positions.splice(i, 1);
       }
@@ -902,7 +1030,21 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     if (opts.flatten && date === last) {
       for (let i = positions.length - 1; i >= 0; i -= 1) {
         const pos = positions[i];
-        sell(pos, date, closePx(pos.cand.ticker, date, pos.exit), "window");
+        if (pos.cand.scale) {
+          const left = pos.halfLeft + pos.restLeft;
+          if (left > 0) {
+            const price = closePx(pos.cand.ticker, date, pos.cand.entry);
+            const fee = exitFee(left, price);
+            creditSale(date, left * price - fee);
+            pos.pnl += left * (price - pos.cand.entry) - fee;
+            pos.reason = "window";
+            pos.halfLeft = 0;
+            pos.restLeft = 0;
+            finishScale(pos, date);
+          }
+        } else {
+          sell(pos, date, closePx(pos.cand.ticker, date, pos.exit), "window");
+        }
         positions.splice(i, 1);
       }
     }
@@ -910,11 +1052,16 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     let marked = cash;
     let realizedEq = cash;
     for (const pos of positions) {
-      marked += pos.qty * closePx(pos.cand.ticker, date, pos.cand.entry);
-      realizedEq += pos.qty * pos.cand.entry;
+      const qty = markedQty(pos);
+      marked += qty * closePx(pos.cand.ticker, date, pos.cand.entry);
+      realizedEq += qty * pos.cand.entry;
     }
     equityPath.push(marked);
     realizedPath.push(realizedEq);
+    if (opts.keepExposure) {
+      if (marked > 0) cashRatios.push(cash / marked);
+      if (positions.length > 0) openDays += 1;
+    }
     if (opts.keepDaily) daily.push({ date, equity: round(marked), realizedEquity: round(realizedEq) });
   }
 
@@ -989,8 +1136,24 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     restartYear1: { ...EMPTY_RESTART },
     restartYear2: { ...EMPTY_RESTART },
     equity: months.map(([month, equity]) => ({ month, equity: round(equity) })),
+    ...(opts.keepExposure
+      ? {
+          exposure: {
+            investedFraction: cashRatios.length ? round(1 - cashRatios.reduce((sum, value) => sum + value, 0) / cashRatios.length, 4) : null,
+            daysOpenShare: sessions.length ? round(openDays / sessions.length, 4) : null,
+          },
+        }
+      : {}),
     ...(opts.keepFills
-      ? { fills: fills.map((fill) => ({ ticker: fill.ticker, pnlUsd: round(fill.pnlUsd), entryDate: fill.entryDate, exitDate: fill.exitDate })) }
+      ? {
+          fills: fills.map((fill) => ({
+            ticker: fill.ticker,
+            pnlUsd: round(fill.pnlUsd),
+            entryDate: fill.entryDate,
+            exitDate: fill.exitDate,
+            ...(opts.keepRisk ? { qty: fill.qty, riskUsd: fill.riskUsd == null ? null : round(fill.riskUsd, 4) } : {}),
+          })),
+        }
       : {}),
     ...(opts.keepDaily ? { daily } : {}),
   };
