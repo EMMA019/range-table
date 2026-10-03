@@ -60,11 +60,11 @@ import { readCachedBars } from "./cache-bars";
 /**
  * Round 12c unlimited budget. Rules are locked in docs/ROUND12C_PREREG.md.
  * Round 12b stopped on the one-name overlap. This runner records those fills as displaced.
- * Analysis only. Does not call EDGAR. Writes data/backtest/round12b.json.
+ * Analysis only. Does not call EDGAR. Writes data/backtest/round12c.json.
  * Trade rows go to /opt/cursor/artifacts/round_unlimited_trades/ and are not committed.
  *   npx tsx scripts/round12b-study.ts
  */
-const OUT = path.join(process.cwd(), "data", "backtest", "round12b.json");
+const OUT = path.join(process.cwd(), "data", "backtest", "round12c.json");
 const ART = "/opt/cursor/artifacts/round_unlimited_trades";
 const WIKI = path.join(process.cwd(), "data", ".cache", "wiki");
 const HOLD = path.join(process.cwd(), "data", ".cache", "holdings");
@@ -766,7 +766,7 @@ function writeTrades(trades: readonly TradeRow[], cells: readonly Round12bCell[]
   const names = fs.readdirSync(ART).sort();
   if (names.join(",") !== "all_trades.csv") throw new Error(`書き出したファイルが違う ${names.join(",")}`);
   const note = [
-    "# Round 12b unlimited-budget trade export",
+    "# Round 12c unlimited-budget trade export",
     "",
     `Study pre-registration \`${ROUND12C_PREREG}\`. Round 12b \`${ROUND12B_PREREG}\` stopped on the one-name overlap; displaced fills are the constrained trades the unlimited book did not take. Hypothesis generation only. Nothing from this export is committed.`,
     "",
