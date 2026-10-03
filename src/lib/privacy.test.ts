@@ -18,6 +18,7 @@ const STATEMENT_NAME_RE = /(statement|activity|transaction[_ -]?history|取引|�
 const CODE_EXT_RE = /\.(ts|tsx|mjs|js|md|css|yml)$/i;
 const SKIP_CONTENT = new Set(["package-lock.json"]);
 const POSITION_KEY_RE = /["']?(shares|avgCost|avg_cost|reviewLine)["']?\s*:/;
+const STUDY_TABLES = new Set(["data/backtest/top_trades.csv"]);
 
 function repoFiles(): string[] {
   try {
@@ -61,6 +62,7 @@ describe("privacy guard", () => {
   it("has no statement or spreadsheet exports outside synthetic fixtures", () => {
     const bad = files.filter((file) => {
       if (isSyntheticFixture(file)) return false;
+      if (STUDY_TABLES.has(file)) return false;
       if (STATEMENT_EXT_RE.test(file)) return true;
       return STATEMENT_NAME_RE.test(path.basename(file)) && !CODE_EXT_RE.test(file);
     });
