@@ -1,5 +1,7 @@
 import { computeQuote, sharesForMove } from "./compute";
 import { CHART_SESSIONS, GAP_THRESHOLD } from "./constants";
+import { atrExit, etfAtrShares, etfOpenExit, etfRestExit, etfShares, preemptQty, timeoutDate, type EtfOrder, type EtfReason } from "./etf-sleeve";
+import { legSplit, scaleActions, type ScaleAction } from "./scale-exit";
 import type { Bar, EntrySignal } from "./types";
 
 /**
@@ -235,7 +237,35 @@ export type Candidate = {
   exitTiming: ExitTiming;
   /** A 35% gap between entry and exit. The day is consumed and the trade is not scored. */
   voided: boolean;
+  /**
+   * Scale-out planned at the signal. Prices at or below the entry are already null.
+   * The walker sells the midpoint half and the top remainder, and ignores the single exit above.
+   */
+  scale?: ScalePlan;
+  /**
+   * Round-7 partial exit. When set, the portfolio sells these legs and ignores the single exit.
+   * Absent on every existing book, including the paper test.
+   */
+  round7Legs?: Array<{
+    date: string;
+    timing: ExitTiming;
+    qty: number;
+    price: number;
+    reason: "target" | "stop" | "breakeven" | "priorLow" | "timeout" | "window";
+  }>;
 };
+
+export type ScalePlan = {
+  mid: number | null;
+  top: number | null;
+  stop: number | null;
+  /** Close of entryIndex + 5. Null when this row has no day-5 check or that session does not exist. */
+  timeStopDate: string | null;
+  /** Close of entryIndex + 20, clipped to the last bar of the series. */
+  maxHoldDate: string;
+};
+
+export type DayQuote = { o: number; h: number; c: number };
 
 type ExitSpec = {
   target: number | null;
@@ -248,6 +278,8 @@ type ExitSpec = {
   trail: boolean;
   exitMa5: boolean;
   maxHold: number | null;
+  /** When set, a trade still open on this bar sells at that close. Earlier target and stop fills stand. */
+  forceExitIndex?: number | null;
 };
 
 function gapInside(feats: Feat[], from: number, to: number): boolean {
@@ -308,7 +340,8 @@ function simulate(feats: Feat[], signalIndex: number, spec: ExitSpec, qty10: num
     return finish(last, feats[last].c, "window", "close");
   }
 
-  const lastIndex = spec.maxHold == null ? feats.length - 1 : Math.min(feats.length - 1, entryIndex + spec.maxHold);
+  const holdEnd = spec.maxHold == null ? feats.length - 1 : Math.min(feats.length - 1, entryIndex + spec.maxHold);
+  const lastIndex = spec.forceExitIndex != null && spec.forceExitIndex >= entryIndex ? Math.min(holdEnd, spec.forceExitIndex) : holdEnd;
   for (let j = entryIndex; j <= lastIndex; j += 1) {
     const bar = feats[j];
     if (spec.target != null && j > entryIndex && bar.o >= spec.target) return finish(j, bar.o, "target", "open");
@@ -317,6 +350,7 @@ function simulate(feats: Feat[], signalIndex: number, spec: ExitSpec, qty10: num
     if (spec.exitMa5 && bar.ma5 != null && bar.c > bar.ma5) return finish(j, bar.c, "ma", "close");
     if (spec.sharp && bar.c >= feats[j - 1].c + atr) return finish(j, bar.c, "sharp", "close");
     if (spec.stopClose != null && bar.c < spec.stopClose) return finish(j, bar.c, "stop", "close");
+    if (spec.forceExitIndex != null && j === spec.forceExitIndex) return finish(j, bar.c, "window", "close");
     if (spec.maxHold != null && j === entryIndex + spec.maxHold) return finish(j, bar.c, "timeout", "close");
   }
   if (spec.maxHold != null && lastIndex < entryIndex + spec.maxHold) {
@@ -431,17 +465,26 @@ export function rangeCandidates(
   market: Map<string, MarketDay>,
   sessions: string[],
   bounds?: { from: string; to: string },
+  forceExitOn?: (entryDate: string) => string | null,
+  stopAt?: (feat: Feat) => number | null,
 ): Candidate[] {
   const from = bounds?.from ?? STUDY_FROM;
   const to = bounds?.to ?? STUDY_TO;
   const { feats } = name;
   const out: Candidate[] = [];
+  const indexOf = forceExitOn ? new Map(feats.map((bar, index) => [bar.date, index])) : null;
   for (let i = 0; i < feats.length - 1; i += 1) {
     const feat = feats[i];
     if (!isRangeBar(feat, rules, name.semi, market.get(feat.date), sessions, name.earnings, from, to)) continue;
     const sized = sharesForMove(feat.atr, feats[i + 1].o);
     if (sized.shares10 == null) continue;
-    const stopClose = rules.stop === "low20" ? feat.low20 : rules.stop === "half" ? (feat.low20 as number) - 0.5 * (feat.atr as number) : null;
+    const stopClose = stopAt
+      ? stopAt(feat)
+      : rules.stop === "low20"
+        ? feat.low20
+        : rules.stop === "half"
+          ? (feat.low20 as number) - 0.5 * (feat.atr as number)
+          : null;
     const day = market.get(feat.date);
     const rs20 = excess(feat.ret20, day?.spyRet20);
     const trade = simulate(
@@ -456,6 +499,7 @@ export function rangeCandidates(
         trail: false,
         exitMa5: false,
         maxHold: rules.maxHold,
+        forceExitIndex: forceExitOn ? (indexOf?.get(forceExitOn(feats[i + 1].date) ?? "") ?? null) : null,
       },
       sized.shares10,
       { ticker: name.ticker, sector: name.sector, semi: name.semi },
@@ -645,8 +689,77 @@ export type Book = {
   restartYear2: YearRestart;
   equity: Array<{ month: string; equity: number }>;
   skippedSemi?: number;
-  fills?: Array<{ ticker: string; pnlUsd: number; entryDate: string; exitDate: string }>;
+  fills?: Array<{
+    ticker: string;
+    pnlUsd: number;
+    entryDate: string;
+    exitDate: string;
+    qty?: number;
+    riskUsd?: number | null;
+    hold?: number;
+    legs?: Array<{ reason: string; qty: number; pnlUsd: number }>;
+  }>;
   daily?: Array<{ date: string; equity: number; realizedEquity: number }>;
+  /** Cash after the session's fills. Present only when the book asked for it. */
+  exposure?: { investedFraction: number | null; daysOpenShare: number | null };
+  etfFills?: EtfFill[];
+  sleeve?: SleeveStats;
+  park?: ParkStats;
+};
+
+export type ParkBar = { o: number; h: number; l: number; c: number; symbol: string };
+
+export type ParkOpts = {
+  bars: Map<string, ParkBar>;
+  /** Cash dividend per share, keyed by the ex-date. */
+  dividends: Map<string, number>;
+};
+
+export type ParkSell = {
+  date: string;
+  symbol: string;
+  qty: number;
+  price: number;
+  pnlUsd: number;
+  reason: "fund" | "window";
+  cycle: number;
+  entryDate: string;
+};
+
+export type ParkStats = {
+  dividendsUsd: number;
+  priceUsd: number;
+  sellN: number;
+  cycles: number;
+  feesUsd: number;
+  sells: ParkSell[];
+};
+
+export type EtfSleeveOpts = {
+  symbol: string;
+  orders: Map<string, EtfOrder>;
+  bars: Map<string, { o: number; h: number; l: number; c: number }>;
+  sessions: readonly string[];
+  /** Omitted means the box low and the box high. `atr` uses the signal ATR14. */
+  exit?: "box" | "atr";
+};
+
+export type EtfFill = {
+  ticker: string;
+  entryDate: string;
+  exitDate: string;
+  pnlUsd: number;
+  hold: number;
+  qty: number;
+  forcedOne: boolean;
+  legs: Array<{ reason: EtfReason; qty: number; pnlUsd: number }>;
+};
+
+export type SleeveStats = {
+  stockUtil: number;
+  etfUtil: number;
+  bothNegativeDays: number;
+  sameDayStops: number;
 };
 
 export type YearRestart = {
@@ -684,7 +797,51 @@ function rankCompare(rank: Rank) {
   };
 }
 
-type OpenPos = { cand: Candidate; qty: number; exit: number; exitDate: string; exitTiming: ExitTiming; reason: ExitReason };
+type Round7Taken = {
+  reason: "target" | "stop" | "breakeven" | "priorLow" | "timeout" | "window";
+  qty: number;
+  pnlUsd: number;
+};
+
+type OpenPos = {
+  cand: Candidate;
+  qty: number;
+  exit: number;
+  exitDate: string;
+  exitTiming: ExitTiming;
+  reason: ExitReason;
+  halfLeft: number;
+  restLeft: number;
+  pnl: number;
+  /** Shares still open. Round-7 legs reduce this. Other books leave it equal to qty. */
+  left: number;
+  taken: Round7Taken[];
+};
+
+type WalkFill = {
+  exitDate: string;
+  ticker: string;
+  pnlUsd: number;
+  hold: number;
+  reason: ExitReason;
+  entryDate: string;
+  qty: number;
+  riskUsd: number | null;
+  legs?: Round7Taken[];
+};
+
+function engineReason(reason: Round7Taken["reason"]): ExitReason {
+  if (reason === "target") return "target";
+  if (reason === "timeout") return "timeout";
+  if (reason === "window") return "window";
+  return "stop";
+}
+
+function riskDollars(qty: number, entry: number, stop: number | null | undefined): number | null {
+  if (stop == null || !Number.isFinite(stop)) return null;
+  const risk = qty * (entry - stop);
+  return Number.isFinite(risk) ? risk : null;
+}
 
 export type PortfolioOpts = {
   id: string;
@@ -703,12 +860,39 @@ export type PortfolioOpts = {
   order?: (list: Candidate[]) => void;
   /** At most this many semiconductor or equipment names among the open slots. */
   maxSemi?: number;
+  /**
+   * At most this many non-semiconductor slots. Omitted means no jab cap, so existing
+   * books keep the same fills. A skip increments skippedSemi, the same counter as maxSemi.
+   */
+  maxNonSemi?: number;
   /** Below starting capital, cap the book at 2 slots and 1 new buy. */
   throttleBelowStart?: boolean;
   /** Replaces the $300–$450 lot. Null skips the name. */
   size?: (cand: Candidate, morningEquity: number) => number | null;
+  /**
+   * Per-order commission. When omitted, the entry is free and the exit pays the flat round trip,
+   * which is the published book. Round 2 passes IBKR fixed on both orders.
+   */
+  orderFee?: (qty: number, price: number) => number;
   keepFills?: boolean;
+  /** Adds the filled share count and initial dollar risk to each fill. */
+  keepRisk?: boolean;
   keepDaily?: boolean;
+  /** Opens, highs, and closes for a scale-out. Ignored when no candidate carries a scale plan. */
+  quotes?: Map<string, Map<string, DayQuote>>;
+  /** Average invested fraction and the share of sessions still holding a position at the close. */
+  keepExposure?: boolean;
+  /** Idle-cash ETF. Omitted books do not sell shares to fund a stock. */
+  etfSleeve?: EtfSleeveOpts;
+  /**
+   * Hold idle settled cash in a T-bill ETF. Omitted books do not buy one.
+   * The published walk does not set this.
+   */
+  park?: ParkOpts;
+  /** Stock and ETF mark totals. Omitted books leave `sleeve` unset. */
+  keepSleeveStats?: boolean;
+  /** Adds holding sessions and per-leg exit reasons. Omitted books stay unchanged. */
+  keepRound7?: boolean;
   closes: CloseMap;
 };
 
@@ -757,7 +941,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
   let settled = capital;
   const pending: Array<{ date: string; amount: number }> = [];
   const positions: OpenPos[] = [];
-  const fills: Array<{ exitDate: string; ticker: string; pnlUsd: number; hold: number; reason: ExitReason; entryDate: string }> = [];
+  const fills: WalkFill[] = [];
   let skippedPrice = 0;
   let skippedSlot = 0;
   let skippedCash = 0;
@@ -765,6 +949,8 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
   const sessionIndex = new Map(sessions.map((date, index) => [date, index]));
   const equityPath: number[] = [];
   const realizedPath: number[] = [];
+  const cashRatios: number[] = [];
+  let openDays = 0;
   const daily: Array<{ date: string; equity: number; realizedEquity: number }> = [];
   const nextSession = new Map<string, string>();
   for (let i = 0; i < sessions.length - 1; i += 1) nextSession.set(sessions[i], sessions[i + 1]);
@@ -787,27 +973,295 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
 
   const closePx = (ticker: string, date: string, fallback: number) => opts.closes.get(ticker)?.get(date) ?? fallback;
 
+  const exitFee = (qty: number, price: number) => (opts.orderFee ? opts.orderFee(qty, price) : ROUND_TRIP_FEE);
+  const entryFee = (qty: number, price: number) => (opts.orderFee ? opts.orderFee(qty, price) : 0);
+  const track = opts.keepSleeveStats === true || opts.etfSleeve != null;
+  const etfOpt = opts.etfSleeve ?? null;
+  let etfQty = 0;
+  let etfEntryPx = 0;
+  let etfEntryDate = "";
+  let etfStop = 0;
+  let etfTarget = 0;
+  let etfTimeout: string | null = null;
+  let etfForced = false;
+  let etfPnl = 0;
+  const etfLegs: EtfFill["legs"] = [];
+  const etfFills: EtfFill[] = [];
+  let etfFlow = 0;
+  let stockFlow = 0;
+  const stockStopDates = new Set<string>();
+  const etfStopDates = new Set<string>();
+  let prevStockMark = 0;
+  let prevEtfMark = 0;
+  let bothNegative = 0;
+  const parkOpt = opts.park ?? null;
+  let parkQty = 0;
+  let parkCost = 0;
+  let parkSymbol = "";
+  let parkEntry = "";
+  let parkCycle = false;
+  let parkCycles = 0;
+  let parkDiv = 0;
+  let parkPrice = 0;
+  let parkFees = 0;
+  const parkSells: ParkSell[] = [];
+  const parkBar = (date: string): ParkBar | null => parkOpt?.bars.get(date) ?? null;
+  const creditParkDiv = (date: string) => {
+    if (!parkOpt || parkQty < 1) return;
+    const per = parkOpt.dividends.get(date) ?? 0;
+    if (!(per > 0)) return;
+    settled += parkQty * per;
+    parkDiv += parkQty * per;
+  };
+  const parkPower = (open: number) => {
+    if (parkQty < 1 || !(open > 0)) return settled;
+    return settled + Math.max(0, parkQty * open - exitFee(parkQty, open));
+  };
+  const fundPark = (shortfall: number, date: string) => {
+    if (!parkOpt || !(shortfall > 1e-9) || parkQty < 1) return;
+    const bar = parkBar(date);
+    if (!bar) throw new Error(`パークの日足がない ${date}`);
+    if (parkSymbol && bar.symbol !== parkSymbol) throw new Error(`パークの銘柄が違う ${date}`);
+    const qty = preemptQty(shortfall, bar.o, parkQty, ROUND_TRIP_FEE);
+    if (qty == null || qty < 1) return;
+    const fee = exitFee(qty, bar.o);
+    const proceeds = qty * bar.o - fee;
+    settled += proceeds;
+    const avg = parkCost / parkQty;
+    const pnl = qty * (bar.o - avg) - fee;
+    parkPrice += pnl;
+    parkFees += fee;
+    parkCost -= avg * qty;
+    parkQty -= qty;
+    parkSells.push({ date, symbol: bar.symbol, qty, price: bar.o, pnlUsd: pnl, reason: "fund", cycle: parkCycles, entryDate: parkEntry });
+    if (parkQty <= 1e-9) {
+      parkQty = 0;
+      parkCost = 0;
+      parkSymbol = "";
+      parkEntry = "";
+      parkCycle = false;
+    }
+  };
+  const sweepPark = (date: string) => {
+    if (!parkOpt) return;
+    const bar = parkBar(date);
+    if (!bar || !(bar.o > 0)) {
+      if (parkQty > 0) throw new Error(`パークの日足がない ${date}`);
+      return;
+    }
+    if (parkSymbol && bar.symbol !== parkSymbol && parkQty > 0) throw new Error(`パークの銘柄が違う ${date}`);
+    const qty = Math.floor((settled + 1e-9) / bar.o);
+    if (qty < 1) return;
+    settled -= qty * bar.o;
+    if (!parkCycle) {
+      parkCycle = true;
+      parkCycles += 1;
+      parkSymbol = bar.symbol;
+      parkEntry = date;
+    }
+    parkCost += qty * bar.o;
+    parkQty += qty;
+  };
+  const flattenPark = (date: string) => {
+    if (!parkOpt || parkQty < 1) return;
+    const bar = parkBar(date);
+    if (!bar) throw new Error(`パークの日足がない ${date}`);
+    const qty = parkQty;
+    const fee = exitFee(qty, bar.c);
+    const avg = parkCost / qty;
+    const pnl = qty * (bar.c - avg) - fee;
+    settled += qty * bar.c - fee;
+    parkPrice += pnl;
+    parkFees += fee;
+    parkSells.push({ date, symbol: bar.symbol, qty, price: bar.c, pnlUsd: pnl, reason: "window", cycle: parkCycles, entryDate: parkEntry });
+    parkQty = 0;
+    parkCost = 0;
+    parkSymbol = "";
+    parkEntry = "";
+    parkCycle = false;
+  };
+  let stockUtilSum = 0;
+  let etfUtilSum = 0;
+  const stockCash = (amount: number, date: string, reason: string) => {
+    if (!track) return;
+    stockFlow += amount;
+    if (reason === "stop") stockStopDates.add(date);
+  };
+  const finishEtf = (date: string) => {
+    const entryI = sessionIndex.get(etfEntryDate) ?? 0;
+    const exitI = sessionIndex.get(date) ?? entryI;
+    etfFills.push({
+      ticker: etfOpt?.symbol ?? "",
+      entryDate: etfEntryDate,
+      exitDate: date,
+      pnlUsd: etfPnl,
+      hold: exitI - entryI,
+      qty: etfLegs.reduce((sum, leg) => sum + leg.qty, 0),
+      forcedOne: etfForced,
+      legs: etfLegs.map((leg) => ({ ...leg })),
+    });
+    etfQty = 0;
+    etfPnl = 0;
+    etfLegs.length = 0;
+    etfEntryDate = "";
+    etfTimeout = null;
+    etfForced = false;
+  };
+  const sellEtf = (date: string, qty: number, price: number, reason: EtfReason, settle: "now" | "next") => {
+    if (!(qty > 0) || qty > etfQty + 1e-9) return;
+    const fee = exitFee(qty, price);
+    const proceeds = qty * price - fee;
+    if (settle === "now") settled += proceeds;
+    else creditSale(date, proceeds);
+    etfFlow += proceeds;
+    const pnl = qty * (price - etfEntryPx) - fee;
+    etfPnl += pnl;
+    etfLegs.push({ reason, qty, pnlUsd: pnl });
+    if (reason === "stop") etfStopDates.add(date);
+    etfQty -= qty;
+    if (etfQty <= 1e-9) finishEtf(date);
+  };
+  const markedQty = (pos: OpenPos) => {
+    if (pos.cand.round7Legs) return pos.left;
+    return pos.cand.scale ? pos.halfLeft + pos.restLeft : pos.qty;
+  };
   const sell = (pos: OpenPos, date: string, price: number, reason: ExitReason) => {
-    const proceeds = pos.qty * price - ROUND_TRIP_FEE;
+    const proceeds = pos.qty * price - exitFee(pos.qty, price);
     creditSale(date, proceeds);
+    stockCash(proceeds, date, reason);
     const entryI = sessionIndex.get(pos.cand.entryDate) ?? 0;
     const exitI = sessionIndex.get(date) ?? entryI;
     fills.push({
       exitDate: date,
       ticker: pos.cand.ticker,
-      pnlUsd: pos.qty * (price - pos.cand.entry) - ROUND_TRIP_FEE,
+      pnlUsd: pos.qty * (price - pos.cand.entry) - entryFee(pos.qty, pos.cand.entry) - exitFee(pos.qty, price),
       hold: exitI - entryI,
       reason,
       entryDate: pos.cand.entryDate,
+      qty: pos.qty,
+      riskUsd: riskDollars(pos.qty, pos.cand.entry, pos.cand.stop),
     });
+  };
+  const quoteOf = (ticker: string, date: string): DayQuote | null => opts.quotes?.get(ticker)?.get(date) ?? null;
+  const finishScale = (pos: OpenPos, date: string) => {
+    const entryI = sessionIndex.get(pos.cand.entryDate) ?? 0;
+    const exitI = sessionIndex.get(date) ?? entryI;
+    fills.push({
+      exitDate: date,
+      ticker: pos.cand.ticker,
+      pnlUsd: pos.pnl,
+      hold: exitI - entryI,
+      reason: pos.reason,
+      entryDate: pos.cand.entryDate,
+      qty: pos.qty,
+      riskUsd: riskDollars(pos.qty, pos.cand.entry, pos.cand.scale?.stop ?? pos.cand.stop),
+    });
+  };
+  const applyScale = (pos: OpenPos, date: string, actions: ScaleAction[]) => {
+    for (const action of actions) {
+      const qty = action.qty === "half" ? pos.halfLeft : action.qty === "rest" ? pos.restLeft : pos.halfLeft + pos.restLeft;
+      if (!(qty > 0)) continue;
+      const fee = exitFee(qty, action.price);
+      creditSale(date, qty * action.price - fee);
+      stockCash(qty * action.price - fee, date, action.reason);
+      pos.pnl += qty * (action.price - pos.cand.entry) - fee;
+      pos.reason = action.reason;
+      pos.exit = action.price;
+      pos.exitDate = date;
+      pos.exitTiming = action.timing;
+      if (action.qty === "half") pos.halfLeft = 0;
+      else if (action.qty === "rest") pos.restLeft = 0;
+      else {
+        pos.halfLeft = 0;
+        pos.restLeft = 0;
+      }
+    }
+  };
+  const runScale = (pos: OpenPos, date: string, phase: "open" | "rest"): boolean => {
+    const plan = pos.cand.scale;
+    if (!plan) return false;
+    const bar = quoteOf(pos.cand.ticker, date);
+    if (!bar) return false;
+    applyScale(
+      pos,
+      date,
+      scaleActions({
+        phase,
+        isEntryDay: date === pos.cand.entryDate,
+        open: bar.o,
+        high: bar.h,
+        close: bar.c,
+        entry: pos.cand.entry,
+        mid: plan.mid,
+        top: plan.top,
+        stop: plan.stop,
+        halfOpen: pos.halfLeft > 0,
+        restOpen: pos.restLeft > 0,
+        timeStop: plan.timeStopDate === date,
+        timeout: plan.maxHoldDate === date,
+      }),
+    );
+    if (pos.halfLeft + pos.restLeft > 0) return false;
+    finishScale(pos, date);
+    return true;
+  };
+  const finishRound7 = (pos: OpenPos, date: string) => {
+    const entryI = sessionIndex.get(pos.cand.entryDate) ?? 0;
+    const exitI = sessionIndex.get(date) ?? entryI;
+    const lastLeg = pos.taken[pos.taken.length - 1];
+    fills.push({
+      exitDate: date,
+      ticker: pos.cand.ticker,
+      pnlUsd: pos.pnl,
+      hold: exitI - entryI,
+      reason: engineReason(lastLeg?.reason ?? "window"),
+      entryDate: pos.cand.entryDate,
+      qty: pos.qty,
+      riskUsd: riskDollars(pos.qty, pos.cand.entry, pos.cand.stop),
+      legs: pos.taken.map((leg) => ({ ...leg })),
+    });
+  };
+  const takeRound7 = (pos: OpenPos, date: string, phase: "open" | "rest"): boolean => {
+    const planned = pos.cand.round7Legs;
+    if (!planned) return false;
+    if (phase === "open" && date === pos.cand.entryDate) return false;
+    for (const leg of planned) {
+      if (leg.date !== date) continue;
+      if (phase === "open" && leg.timing !== "open") continue;
+      if (phase === "rest" && leg.timing === "open") continue;
+      if (!(leg.qty > 0)) continue;
+      if (leg.qty > pos.left + 1e-9) throw new Error(`round7の売却が残株を超える ${pos.cand.ticker} ${date}`);
+      const fee = exitFee(leg.qty, leg.price);
+      creditSale(date, leg.qty * leg.price - fee);
+      stockCash(leg.qty * leg.price - fee, date, leg.reason);
+      const pnl = leg.qty * (leg.price - pos.cand.entry) - fee;
+      pos.pnl += pnl;
+      pos.left -= leg.qty;
+      pos.taken.push({ reason: leg.reason, qty: leg.qty, pnlUsd: pnl });
+    }
+    if (pos.left > 1e-9) return false;
+    finishRound7(pos, date);
+    return true;
   };
 
   for (let si = 0; si < sessions.length; si += 1) {
     const date = sessions[si];
     release(date);
+    creditParkDiv(date);
+    if (etfQty > 0) {
+      const bar = etfOpt?.bars.get(date);
+      if (bar) {
+        const hit = etfOpenExit({ entryDay: date === etfEntryDate, open: bar.o, stop: etfStop, target: etfTarget });
+        if (hit) sellEtf(date, etfQty, hit.price, hit.reason, "next");
+      }
+    }
     for (let i = positions.length - 1; i >= 0; i -= 1) {
       const pos = positions[i];
-      if (pos.exitDate === date && pos.exitTiming === "open") {
+      if (pos.cand.round7Legs) {
+        if (takeRound7(pos, date, "open")) positions.splice(i, 1);
+      } else if (pos.cand.scale) {
+        if (runScale(pos, date, "open")) positions.splice(i, 1);
+      } else if (pos.exitDate === date && pos.exitTiming === "open") {
         sell(pos, date, pos.exit, pos.reason);
         positions.splice(i, 1);
       }
@@ -816,13 +1270,14 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     let morning = settled + pending.reduce((sum, lot) => sum + lot.amount, 0);
     for (const pos of positions) {
       const px = prevDate ? closePx(pos.cand.ticker, prevDate, pos.cand.entry) : pos.cand.entry;
-      morning += pos.qty * px;
+      morning += markedQty(pos) * px;
     }
     const throttled = opts.throttleBelowStart === true && morning < capital - 1e-9;
     const slotCap = throttled ? Math.min(maxPositions, 2) : maxPositions;
     const newCap = throttled ? 1 : Number.POSITIVE_INFINITY;
     let opened = 0;
     let semisHeld = positions.reduce((sum, pos) => sum + (pos.cand.semi ? 1 : 0), 0);
+    let nonSemiHeld = opts.maxNonSemi == null ? 0 : positions.reduce((sum, pos) => sum + (pos.cand.semi ? 0 : 1), 0);
     const todays = byEntry.get(date) ?? [];
     const held = new Set(positions.map((pos) => pos.cand.ticker));
     for (const cand of todays) {
@@ -836,33 +1291,104 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         skippedSemi += 1;
         continue;
       }
+      if (opts.maxNonSemi != null && !cand.semi && nonSemiHeld >= opts.maxNonSemi) {
+        skippedSemi += 1;
+        continue;
+      }
       if (positions.length >= slotCap || opened >= newCap) {
         skippedSlot += 1;
         continue;
       }
-      const cost = qty * cand.entry;
+      const cost = qty * cand.entry + entryFee(qty, cand.entry);
+      if (parkOpt && cost > settled + 1e-9) fundPark(cost - settled, date);
+      if (etfOpt && etfQty > 0 && cost > settled + 1e-9) {
+        const bar = etfOpt.bars.get(date);
+        const qtyEtf = bar ? preemptQty(cost - settled, bar.o, etfQty) : null;
+        if (bar && qtyEtf != null && qtyEtf > 0) sellEtf(date, qtyEtf, bar.o, "preempted", "now");
+      }
       if (cost > settled + 1e-9) {
         skippedCash += 1;
         continue;
       }
       settled -= cost;
+      stockCash(-cost, date, "buy");
       held.add(cand.ticker);
       opened += 1;
       if (cand.semi) semisHeld += 1;
+      else if (opts.maxNonSemi != null) nonSemiHeld += 1;
+      if (cand.round7Legs) {
+        const planned = cand.round7Legs.reduce((sum, leg) => sum + leg.qty, 0);
+        if (planned !== qty) throw new Error(`round7の株数が違う ${cand.ticker} ${cand.entryDate} ${planned} ${qty}`);
+      }
       const exitDate = cand.exitDate > last ? last : cand.exitDate;
-      const forced = cand.exitDate > last;
+      const forced = !cand.scale && !cand.round7Legs && cand.exitDate > last;
+      const legs = cand.scale ? legSplit(qty, cand.scale.mid != null) : { halfLeft: 0, restLeft: 0 };
       positions.push({
         cand,
         qty,
         exit: forced ? closePx(cand.ticker, last, cand.entry) : cand.exit,
-        exitDate,
+        exitDate: cand.scale ? cand.exitDate : exitDate,
         exitTiming: forced ? "close" : cand.exitTiming,
         reason: forced ? "window" : cand.reason,
+        halfLeft: legs.halfLeft,
+        restLeft: legs.restLeft,
+        pnl: cand.scale || cand.round7Legs ? -entryFee(qty, cand.entry) : 0,
+        left: qty,
+        taken: [],
       });
     }
+    if (etfOpt && etfQty === 0) {
+      const order = etfOpt.orders.get(date);
+      const bar = etfOpt.bars.get(date);
+      if (etfOpt.exit === "atr") {
+        if (order && bar && order.atr != null && order.atr > 0 && bar.o < order.target && bar.o > order.stop) {
+          const levels = atrExit(bar.o, order.atr);
+          const room = parkOpt ? parkPower(bar.o) : settled;
+          const sized = etfAtrShares(bar.o, order.atr, room);
+          const etfCost = sized.qty * bar.o;
+          if (parkOpt && levels && sized.qty >= 1 && etfCost > settled + 1e-9) fundPark(etfCost - settled, date);
+          if (levels && sized.qty >= 1 && etfCost <= settled + 1e-9) {
+            settled -= etfCost;
+            etfFlow -= etfCost;
+            etfQty = sized.qty;
+            etfEntryPx = bar.o;
+            etfEntryDate = date;
+            etfStop = levels.stop;
+            etfTarget = levels.target;
+            etfTimeout = timeoutDate(etfOpt.sessions, date);
+            etfPnl = 0;
+            etfLegs.length = 0;
+            etfForced = sized.forcedOne;
+          }
+        }
+      } else if (order && bar && bar.o < order.target && bar.o > order.stop) {
+        const room = parkOpt ? parkPower(bar.o) : settled;
+        const qtyEtf = etfShares(bar.o, order.stop, room);
+        const etfCost = qtyEtf * bar.o;
+        if (parkOpt && qtyEtf >= 1 && etfCost > settled + 1e-9) fundPark(etfCost - settled, date);
+        if (qtyEtf >= 1 && etfCost <= settled + 1e-9) {
+          settled -= etfCost;
+          etfFlow -= etfCost;
+          etfQty = qtyEtf;
+          etfEntryPx = bar.o;
+          etfEntryDate = date;
+          etfStop = order.stop;
+          etfTarget = order.target;
+          etfTimeout = timeoutDate(etfOpt.sessions, date);
+          etfPnl = 0;
+          etfLegs.length = 0;
+          etfForced = false;
+        }
+      }
+    }
+    if (parkOpt) sweepPark(date);
     for (let i = positions.length - 1; i >= 0; i -= 1) {
       const pos = positions[i];
-      if (pos.exitDate === date && pos.exitTiming !== "open") {
+      if (pos.cand.round7Legs) {
+        if (takeRound7(pos, date, "rest")) positions.splice(i, 1);
+      } else if (pos.cand.scale) {
+        if (runScale(pos, date, "rest")) positions.splice(i, 1);
+      } else if (pos.exitDate === date && pos.exitTiming !== "open") {
         sell(pos, date, pos.exit, pos.reason);
         positions.splice(i, 1);
       }
@@ -870,19 +1396,90 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     if (opts.flatten && date === last) {
       for (let i = positions.length - 1; i >= 0; i -= 1) {
         const pos = positions[i];
-        sell(pos, date, closePx(pos.cand.ticker, date, pos.exit), "window");
+        if (pos.cand.round7Legs) {
+          if (pos.left > 0) {
+            const price = closePx(pos.cand.ticker, date, pos.cand.entry);
+            const qty = pos.left;
+            const fee = exitFee(qty, price);
+            creditSale(date, qty * price - fee);
+            stockCash(qty * price - fee, date, "window");
+            const pnl = qty * (price - pos.cand.entry) - fee;
+            pos.pnl += pnl;
+            pos.left = 0;
+            pos.taken.push({ reason: "window", qty, pnlUsd: pnl });
+            finishRound7(pos, date);
+          }
+        } else if (pos.cand.scale) {
+          const left = pos.halfLeft + pos.restLeft;
+          if (left > 0) {
+            const price = closePx(pos.cand.ticker, date, pos.cand.entry);
+            const fee = exitFee(left, price);
+            creditSale(date, left * price - fee);
+            stockCash(left * price - fee, date, "window");
+            pos.pnl += left * (price - pos.cand.entry) - fee;
+            pos.reason = "window";
+            pos.halfLeft = 0;
+            pos.restLeft = 0;
+            finishScale(pos, date);
+          }
+        } else {
+          sell(pos, date, closePx(pos.cand.ticker, date, pos.exit), "window");
+        }
         positions.splice(i, 1);
       }
     }
+    if (etfQty > 0) {
+      const bar = etfOpt?.bars.get(date);
+      if (bar) {
+        const hit = etfRestExit({ high: bar.h, close: bar.c, stop: etfStop, target: etfTarget, timeout: etfTimeout === date });
+        if (hit) sellEtf(date, etfQty, hit.price, hit.reason, "next");
+      }
+    }
+    if (opts.flatten && date === last && etfQty > 0) {
+      const price = etfOpt?.bars.get(date)?.c ?? etfEntryPx;
+      sellEtf(date, etfQty, price, "window", "next");
+    }
+    if (parkOpt && opts.flatten && date === last) flattenPark(date);
     const cash = settled + pending.reduce((sum, lot) => sum + lot.amount, 0);
     let marked = cash;
     let realizedEq = cash;
+    let stockMark = 0;
     for (const pos of positions) {
-      marked += pos.qty * closePx(pos.cand.ticker, date, pos.cand.entry);
-      realizedEq += pos.qty * pos.cand.entry;
+      const qty = markedQty(pos);
+      const px = closePx(pos.cand.ticker, date, pos.cand.entry);
+      marked += qty * px;
+      stockMark += qty * px;
+      realizedEq += qty * pos.cand.entry;
+    }
+    const etfClose = etfOpt?.bars.get(date)?.c ?? etfEntryPx;
+    const etfMark = etfQty * etfClose;
+    if (etfQty > 0) {
+      marked += etfMark;
+      realizedEq += etfQty * etfEntryPx;
+    }
+    if (parkOpt && parkQty > 0) {
+      const bar = parkBar(date);
+      if (!bar) throw new Error(`パークの日足がない ${date}`);
+      marked += parkQty * bar.c;
+      realizedEq += parkCost;
+    }
+    if (track) {
+      const stockDay = stockMark - prevStockMark + stockFlow;
+      const etfDay = etfMark - prevEtfMark + etfFlow;
+      if (stockDay < -1e-6 && etfDay < -1e-6) bothNegative += 1;
+      stockUtilSum += stockMark / capital;
+      etfUtilSum += etfMark / capital;
+      prevStockMark = stockMark;
+      prevEtfMark = etfMark;
+      stockFlow = 0;
+      etfFlow = 0;
     }
     equityPath.push(marked);
     realizedPath.push(realizedEq);
+    if (opts.keepExposure) {
+      if (marked > 0) cashRatios.push(cash / marked);
+      if (positions.length > 0) openDays += 1;
+    }
     if (opts.keepDaily) daily.push({ date, equity: round(marked), realizedEquity: round(realizedEq) });
   }
 
@@ -957,10 +1554,63 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     restartYear1: { ...EMPTY_RESTART },
     restartYear2: { ...EMPTY_RESTART },
     equity: months.map(([month, equity]) => ({ month, equity: round(equity) })),
+    ...(opts.keepExposure
+      ? {
+          exposure: {
+            investedFraction: cashRatios.length ? round(1 - cashRatios.reduce((sum, value) => sum + value, 0) / cashRatios.length, 4) : null,
+            daysOpenShare: sessions.length ? round(openDays / sessions.length, 4) : null,
+          },
+        }
+      : {}),
+    ...(track
+      ? {
+          etfFills: etfFills.map((fill) => ({
+            ...fill,
+            pnlUsd: round(fill.pnlUsd) ?? 0,
+            legs: fill.legs.map((leg) => ({ ...leg, pnlUsd: round(leg.pnlUsd) ?? 0 })),
+          })),
+          sleeve: {
+            stockUtil: round(sessions.length ? stockUtilSum / sessions.length : 0, 4) ?? 0,
+            etfUtil: round(sessions.length ? etfUtilSum / sessions.length : 0, 4) ?? 0,
+            bothNegativeDays: bothNegative,
+            sameDayStops: [...stockStopDates].filter((date) => etfStopDates.has(date)).length,
+          },
+        }
+      : {}),
     ...(opts.keepFills
-      ? { fills: fills.map((fill) => ({ ticker: fill.ticker, pnlUsd: round(fill.pnlUsd), entryDate: fill.entryDate, exitDate: fill.exitDate })) }
+      ? {
+          fills: fills.map((fill) => ({
+            ticker: fill.ticker,
+            pnlUsd: round(fill.pnlUsd),
+            entryDate: fill.entryDate,
+            exitDate: fill.exitDate,
+            ...(opts.keepRisk ? { qty: fill.qty, riskUsd: fill.riskUsd == null ? null : round(fill.riskUsd, 4) } : {}),
+            ...(opts.keepRound7
+              ? {
+                  hold: fill.hold,
+                  legs: (fill.legs ?? [{ reason: fill.reason, qty: fill.qty, pnlUsd: fill.pnlUsd }]).map((leg) => ({
+                    reason: leg.reason,
+                    qty: leg.qty,
+                    pnlUsd: round(leg.pnlUsd),
+                  })),
+                }
+              : {}),
+          })),
+        }
       : {}),
     ...(opts.keepDaily ? { daily } : {}),
+    ...(parkOpt
+      ? {
+          park: {
+            dividendsUsd: round(parkDiv),
+            priceUsd: round(parkPrice),
+            sellN: parkSells.length,
+            cycles: parkCycles,
+            feesUsd: round(parkFees),
+            sells: parkSells.map((sell) => ({ ...sell, pnlUsd: round(sell.pnlUsd) })),
+          },
+        }
+      : {}),
   };
 }
 
