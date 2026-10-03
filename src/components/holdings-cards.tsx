@@ -1,5 +1,15 @@
 import type { HoldingsView } from "@/lib/holdings-view";
-import { entrySignalClass, entrySignalLabel, formatDollar, formatPnl, formatYen, shortDate } from "@/lib/format";
+import {
+  earningsBadge,
+  entrySignalClass,
+  entrySignalLabel,
+  formatDollar,
+  formatEarnings,
+  formatPnl,
+  formatRs,
+  formatYen,
+  shortDate,
+} from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 function pct(n: number | null, digits = 1): string {
@@ -62,10 +72,16 @@ export function HoldingCards({ view }: { view: HoldingsView }) {
             {row.entrySignal && (
               <span className={cn("rounded-full px-2 py-0.5 text-[10px]", entrySignalClass(row.entrySignal))}>{entrySignalLabel(row.entrySignal)}</span>
             )}
-            {row.earnings?.warn && <span className="rounded-full bg-rust-soft px-2 py-0.5 text-[10px] text-rust">決算{row.earnings.tradingDays ?? 0}営業日</span>}
+            {earningsBadge(row.earnings) && (
+              <span className="rounded-full bg-rust-soft px-2 py-0.5 text-[10px] text-rust">{earningsBadge(row.earnings)}</span>
+            )}
             {row.stale && <span className="rounded-full bg-chip px-2 py-0.5 text-[10px] text-muted">前回の日足</span>}
             <span className="ml-auto text-xs tabular-nums text-muted">{row.weight == null ? "" : `${(row.weight * 100).toFixed(0)}%`}</span>
           </div>
+          <p className="mt-1 text-[11px] text-muted">{formatEarnings(row.earnings)}</p>
+          <p className="text-[11px] text-muted">
+            対SPY <span className={cn("font-mono", tone(row.rs20 == null ? null : row.rs20 * 100))}>{formatRs(row.rs20)}</span>
+          </p>
           {row.close == null ? (
             <p className="mt-1 text-xs text-rust">{row.error}</p>
           ) : (

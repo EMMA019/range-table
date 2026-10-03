@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { alertSlot, countAlerts, dedupeAlerts, filterSince, sortAlerts, type AlertItem } from "./alerts";
-import { entryAlerts, finalBars, inOkStreakStart, type EntryCandidate } from "./alerts-entry";
+import { alertSlot, countAlerts, dedupeAlerts, filterSince, orderEntryAlertsByRs, sortAlerts, type AlertItem } from "./alerts";
+import { entryAlerts, finalBars, holdingEarningsAlerts, inOkStreakStart, type EntryCandidate } from "./alerts-entry";
 import type { Bar } from "./types";
 
 function day(i: number): string {
@@ -47,6 +47,9 @@ describe("entry alerts", () => {
     assert.equal(item.eventAtJst, "2026-09-09 05:00 JST");
     assert.equal(item.facts.reboundDays, 2);
     assert.match(item.title, /^AAA IN OK/);
+    assert.match(item.body, /決算まであと\d+営業日/);
+    assert.match(item.body, /対SPY/);
+    assert.equal(item.facts.rs20, null);
   });
 
   it("keeps the same id while the setup continues", () => {
@@ -61,7 +64,9 @@ describe("entry alerts", () => {
     const [item] = entryAlerts([candidate({ earnings: null })], TODAY, AFTER_CLOSE);
     assert.equal(item.priority, "low");
     assert.deepEqual(item.flags, ["no_earnings_date"]);
-    assert.match(item.title, /決算日未登録/);
+    assert.match(item.title, /決算日不明/);
+    assert.match(item.body, /決算日不明/);
+    assert.equal(item.facts.rs20, null);
     assert.equal(item.facts.earningsDate, null);
   });
 
@@ -98,6 +103,37 @@ describe("entry alerts", () => {
     assert.equal(entryAlerts([candidate()], "2026-09-08", during).length, 0);
     const after = new Date("2026-09-08T20:21:00Z");
     assert.equal(entryAlerts([candidate()], "2026-09-08", after).length, 1);
+  });
+
+  it("orders IN OK items by 20-day excess return versus SPY and marks a full semi book", () => {
+    const spy = inOkBars().map((bar) => ({ ...bar, o: 100, h: 101, l: 99, c: 100 }));
+    const lift = (factor: number): Bar[] => {
+      const bars = inOkBars();
+      const cut = bars.length - 20;
+      return bars.map((bar, i) => (i < cut ? bar : { ...bar, o: bar.o * factor, h: bar.h * factor, l: bar.l * factor, c: bar.c * factor }));
+    };
+    const other = inOkBars().map((bar, i) => ({ ...bar, date: `2024-03-${String(i + 1).padStart(2, "0")}` }));
+    const items = entryAlerts(
+      [
+        candidate({ ticker: "LOW", bars: lift(1.02) }),
+        candidate({ ticker: "HIGH", bars: lift(1.2), semi: true }),
+        candidate({ ticker: "NONE", bars: other }),
+      ],
+      TODAY,
+      AFTER_CLOSE,
+      { spyBars: spy, semiFull: true },
+    );
+    assert.deepEqual(
+      items.map((item) => item.ticker),
+      ["HIGH", "LOW", "NONE"],
+    );
+    assert.equal(typeof items[0]?.facts.rs20, "number");
+    assert.equal(typeof items[1]?.facts.rs20, "number");
+    assert.ok((items[0]?.facts.rs20 as number) > (items[1]?.facts.rs20 as number));
+    assert.equal(items[2]?.facts.rs20, null);
+    assert.deepEqual(items[0]?.flags, ["semi_cap"]);
+    assert.match(items[0]?.title ?? "", /半導体2枠埋まり/);
+    assert.deepEqual(items[1]?.flags, []);
   });
 });
 
@@ -142,5 +178,45 @@ describe("alert feed helpers", () => {
     assert.equal(alertSlot(new Date("2026-10-02T12:00:00Z")), "pre_open");
     assert.equal(alertSlot(new Date("2026-10-02T15:00:00Z")), "session");
     assert.equal(alertSlot(new Date("2026-10-03T15:00:00Z")), "post_close");
+  });
+
+  it("orders entry items by relative strength without moving other kinds", () => {
+    const entry = (id: string, rs: number | null): AlertItem => ({
+      ...item(id, "high", "2026-09-09T00:00:00Z"),
+      ticker: id,
+      facts: { rs20: rs },
+    });
+    const other = (id: string): AlertItem => ({ ...item(id, "critical", "2026-09-09T00:00:00Z"), kind: "sec_8k" });
+    assert.deepEqual(
+      orderEntryAlertsByRs([other("sec"), entry("LOW", 0.01), entry("HIGH", 0.2), entry("NONE", null), other("late")]).map(
+        (row) => row.id,
+      ),
+      ["sec", "HIGH", "LOW", "NONE", "late"],
+    );
+  });
+});
+
+describe("holding earnings alerts", () => {
+  const book = (ticker: string) => ({ ticker });
+  const dates = new Map<string, { date: string; status: "confirmed" | "estimated" } | null>([
+    ["AAA", { date: "2026-09-14", status: "confirmed" }],
+    ["BBB", { date: "2026-09-15", status: "estimated" }],
+    ["CCC", { date: "2026-08-01", status: "confirmed" }],
+    ["DDD", null],
+    ["ONDS", { date: "2026-09-10", status: "confirmed" }],
+  ]);
+
+  it("emits a sell judgment within three trading days and skips the rest", () => {
+    const items = holdingEarningsAlerts([book("BBB"), book("AAA"), book("AAA"), book("CCC"), book("DDD"), book("ONDS")], dates, TODAY);
+    assert.deepEqual(
+      items.map((item) => item.ticker),
+      ["AAA"],
+    );
+    assert.equal(items[0]?.kind, "earnings_hold");
+    assert.equal(items[0]?.id, "earn-hold:AAA:2026-09-14");
+    assert.match(items[0]?.title ?? "", /決算まであと3営業日/);
+    assert.match(items[0]?.title ?? "", /決算前に売るか判断/);
+    assert.equal(items[0]?.facts.earningsTradingDays, 3);
+    assert.equal("shares" in (items[0]?.facts ?? {}), false);
   });
 });

@@ -5,6 +5,7 @@ import { pastResult } from "@/lib/backtest-view";
 import { BASIS, CORR_NOTE, TOP_BREAKOUT_NOTE, VOLUME_NOTE } from "@/lib/copy";
 import { formatPe, PE_SOURCE_NOTE } from "@/lib/pe";
 import {
+  SEMI_CAP_BADGE,
   earningsBadge,
   formatAtr,
   formatBox,
@@ -14,6 +15,7 @@ import {
   formatDollarVolume,
   formatPnl,
   formatPx,
+  formatRs,
   formatShares,
   guideLineText,
   reboundText,
@@ -109,6 +111,9 @@ export function DetailPanel({
               <div className="mt-4 flex flex-wrap gap-1">
                 {row.quote.brokeHigh && <Pill tone="rust">上抜け</Pill>}
                 {earningsBadge(row.earnings) && <Pill tone="rust">{earningsBadge(row.earnings)}</Pill>}
+                {row.semi && row.semiFull && row.quote.entrySignal === "in_ok" && !row.watchOnly && (
+                  <Pill tone="rust">{SEMI_CAP_BADGE}</Pill>
+                )}
                 {row.quote.gapWarning && <Pill tone="rust">価格が飛んでいる</Pill>}
               </div>
               <div className="mt-4 grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
@@ -137,6 +142,12 @@ export function DetailPanel({
                           : undefined
                   }
                 />
+                <Stat
+                  label="対SPY"
+                  value={formatRs(row.rs20)}
+                  basis={BASIS.rs}
+                  tone={row.rs20 == null ? undefined : row.rs20 > 0 ? "sage" : row.rs20 < 0 ? "rust" : undefined}
+                />
                 <Stat label="20日安値" value={formatPx(row.quote.low20)} basis={BASIS.low20} />
                 <Stat label="20日高値" value={formatPx(row.quote.high20)} basis={BASIS.high20} />
                 <Stat label="箱の位置" value={formatBox(row.quote.boxPct)} basis={BASIS.box} tone={zoneTone(row.quote.boxPct)} />
@@ -162,7 +173,7 @@ export function DetailPanel({
                   value={formatEarnings(row.earnings)}
                   basis={
                     row.earnings
-                      ? `${BASIS.earnings}。${row.earnings.status === "confirmed" ? "日付は確定（確）" : "日付は推定"}`
+                      ? `${BASIS.earnings}。${row.earnings.date}（${row.earnings.status === "confirmed" ? "日付は確定（確）" : "日付は推定"}）`
                       : "data/watchlist.yaml に決算日がない"
                   }
                   tone={row.earnings?.warn ? "rust" : undefined}

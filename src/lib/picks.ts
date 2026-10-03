@@ -30,6 +30,7 @@ export function buildPickCard(
   quote: PickQuote | null,
   error: string | null,
   today: string,
+  rs20: number | null = null,
 ): PickCard {
   const close = quote?.close;
   const earnings = pick.earningsDate
@@ -46,7 +47,9 @@ export function buildPickCard(
     reviewLine: pick.reviewLine,
     reviewBasis: pick.reviewBasis,
     earningsDate: pick.earningsDate,
+    earnings,
     earningsWarn: Boolean(earnings?.warn),
+    rs20,
     status: pick.status,
     recommendedBy: pick.recommendedBy,
     asOf: pick.asOf,

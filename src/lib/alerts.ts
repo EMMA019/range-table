@@ -8,6 +8,7 @@ import { isTradingDay, minutesEt, todayEt } from "./calendar";
  */
 export type AlertKind =
   | "entry_in_ok"
+  | "earnings_hold"
   | "review_break"
   | "sec_8k"
   | "sec_form4_sell"
@@ -63,6 +64,34 @@ export type AlertsPayload = {
 };
 
 const PRIORITY_ORDER: Record<AlertPriority, number> = { critical: 0, high: 1, normal: 2, low: 3 };
+
+function rsFact(item: AlertItem): number | null {
+  const value = item.facts.rs20;
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+/** Higher relative strength first. Missing values last, then ticker. */
+export function compareEntryRs(a: AlertItem, b: AlertItem): number {
+  const av = rsFact(a);
+  const bv = rsFact(b);
+  if (av == null && bv == null) return (a.ticker ?? "").localeCompare(b.ticker ?? "") || a.id.localeCompare(b.id);
+  if (av == null) return 1;
+  if (bv == null) return -1;
+  if (av !== bv) return av > bv ? -1 : 1;
+  return (a.ticker ?? "").localeCompare(b.ticker ?? "") || a.id.localeCompare(b.id);
+}
+
+/**
+ * Keeps non-entry items where they are and orders the entry_in_ok block by relative strength.
+ * The block stays at the first entry item, so a critical filing still leads the feed.
+ */
+export function orderEntryAlertsByRs(items: AlertItem[]): AlertItem[] {
+  const first = items.findIndex((item) => item.kind === "entry_in_ok");
+  if (first < 0) return items;
+  const entries = items.filter((item) => item.kind === "entry_in_ok").sort(compareEntryRs);
+  const others = items.filter((item) => item.kind !== "entry_in_ok");
+  return [...others.slice(0, first), ...entries, ...others.slice(first)];
+}
 
 /** Critical first, then newest first, then id so the order is stable. */
 export function sortAlerts(items: AlertItem[]): AlertItem[] {

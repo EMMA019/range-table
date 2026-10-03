@@ -8,13 +8,15 @@ import {
   countAlerts,
   dedupeAlerts,
   filterSince,
+  orderEntryAlertsByRs,
   sortAlerts,
   type AlertItem,
   type AlertsPayload,
 } from "./alerts";
-import { entryAlerts, finalBars, type EntryCandidate } from "./alerts-entry";
+import { entryAlerts, finalBars, holdingEarningsAlerts, type EntryCandidate } from "./alerts-entry";
 import { reviewAlerts } from "./alerts-review";
 import { holdingsSource } from "./holdings";
+import { semiSlotsFull, semiTickerSet } from "./semis";
 import { edgarItems, edgarStatus, refreshEdgar } from "./edgar-feed";
 
 export type AlertsQuery = {
@@ -34,6 +36,11 @@ export async function getAlertsPayload(query: AlertsQuery, now = new Date()): Pr
   const [cache] = await Promise.all([ensureSeries(list, [], { fresh: true }), refreshEdgar(query.edgarWaitMs ?? EDGAR_WAIT_MS, now)]);
   const today = todayEt(now);
   const tickers = list.groups.flatMap((group) => group.tickers);
+  const semis = semiTickerSet(list.groups);
+  const config = holdingsSource().load();
+  const semiFull = semiSlotsFull(config.holdings, semis);
+  const spy = cache.series.SPY?.bars;
+  const spyFinal = spy ? finalBars(spy, now) : [];
 
   const candidates: EntryCandidate[] = tickers.map((ticker) => {
     const entry = cache.series[ticker.ticker];
@@ -43,15 +50,20 @@ export async function getAlertsPayload(query: AlertsQuery, now = new Date()): Pr
       earnings: ticker.earnings,
       bars: entry?.bars,
       stale: isStale(entry),
+      semi: semis.has(ticker.ticker),
     };
   });
 
-  const items: AlertItem[] = [...entryAlerts(candidates, today, now), ...edgarItems()];
-  const config = holdingsSource().load();
+  const items: AlertItem[] = [
+    ...entryAlerts(candidates, today, now, { spyBars: spyFinal, semiFull }),
+    ...edgarItems(),
+  ];
   const withLine = config.holdings.filter((holding) => holding.reviewLine != null);
   if (query.authorized) {
     const series = Object.fromEntries(withLine.map((holding) => [holding.ticker, cache.series[holding.ticker]?.bars]));
     items.push(...reviewAlerts(withLine, series, now));
+    const earningsByTicker = new Map(tickers.map((ticker) => [ticker.ticker, ticker.earnings]));
+    items.push(...holdingEarningsAlerts(config.holdings, earningsByTicker, today));
   }
   const holdings = {
     ok: !query.authorized || withLine.every((holding) => cache.series[holding.ticker]?.bars),
@@ -61,8 +73,6 @@ export async function getAlertsPayload(query: AlertsQuery, now = new Date()): Pr
     complete: true,
   };
 
-  const spy = cache.series.SPY?.bars;
-  const spyFinal = spy ? finalBars(spy, now) : [];
   const barDate = spyFinal.at(-1)?.date ?? null;
   const failCount = tickers.filter((ticker) => !cache.series[ticker.ticker]?.bars).length;
   const staleCount = tickers.filter((ticker) => isStale(cache.series[ticker.ticker])).length;
@@ -72,7 +82,7 @@ export async function getAlertsPayload(query: AlertsQuery, now = new Date()): Pr
     now.getTime(),
   );
 
-  const finalItems = sortAlerts(dedupeAlerts(filterSince(items, query.since)));
+  const finalItems = orderEntryAlertsByRs(sortAlerts(dedupeAlerts(filterSince(items, query.since))));
   const prices = {
     ok: failCount < tickers.length / 2,
     enabled: true,

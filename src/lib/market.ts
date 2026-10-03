@@ -18,6 +18,8 @@ import { classifyEarnings } from "./earnings";
 import { holdingsSource } from "./holdings";
 import { formatJst, friendlyFetchError } from "./format";
 import { buildPickCard, loadTeamPicks } from "./picks";
+import { rs20 } from "./rs";
+import { semiSlotsFull, semiTickerSet } from "./semis";
 import type {
   ChartPayload,
   EpsSnapshot,
@@ -99,13 +101,16 @@ export async function getPicksPayload(): Promise<PicksPayload> {
   );
   const today = todayEt();
   const fetchedAt = oldestOkAt(cache, picks.map((pick) => pick.ticker), Date.now());
+  const spyBars = cache.series.SPY?.bars ?? [];
   return {
     fetchedAt,
     fetchedAtJst: formatJst(new Date(fetchedAt)),
     empty: false,
     picks: picks.map((pick) => {
-      const built = quoteFromEntry(cache.series[pick.ticker]);
-      return buildPickCard(pick, toPickQuote(built.quote), built.error, today);
+      const entry = cache.series[pick.ticker];
+      const built = quoteFromEntry(entry);
+      const relative = built.quote && entry?.bars ? rs20(entry.bars, spyBars) : null;
+      return buildPickCard(pick, toPickQuote(built.quote), built.error, today, relative);
     }),
   };
 }
@@ -380,6 +385,9 @@ function buildPayload(
 ): MarketPayload {
   const today = todayEt();
   const corr = correlationsOf(cache);
+  const spyBars = cache.series.SPY?.bars ?? [];
+  const semis = semiTickerSet(list.groups);
+  const semiFull = semiSlotsFull(holdingsSource().load().holdings, semis);
   const rows: TickerRow[] = [];
   for (const group of list.groups) {
     for (const ticker of group.tickers) {
@@ -398,6 +406,9 @@ function buildPayload(
         earnings: classifyEarnings(today, ticker.earnings),
         corrBasket: pair?.basket ?? null,
         corrSoxx: pair?.soxx ?? null,
+        rs20: built.quote && entry?.bars ? rs20(entry.bars, spyBars) : null,
+        semi: semis.has(ticker.ticker),
+        semiFull,
         quote: built.quote,
         pe: peView(built.quote?.close, eps[ticker.ticker] ?? null),
         error: built.error,

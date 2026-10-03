@@ -119,6 +119,12 @@ export type TickerRow = {
   corrBasket: number | null;
   /** 60-day daily-return correlation versus the basket file's benchmark (SOXX). */
   corrSoxx: number | null;
+  /** 20-session return minus SPY's 20-session return on the same date. Null when either series is short. */
+  rs20: number | null;
+  /** Semiconductor or equipment watchlist group. */
+  semi: boolean;
+  /** HOLDINGS_JSON already has two semiconductor or equipment names. ONDS does not count. */
+  semiFull: boolean;
   quote: Quote | null;
   pe: PeView;
   error: string | null;
@@ -198,7 +204,10 @@ export type PickCard = {
   reviewLine: number;
   reviewBasis: string;
   earningsDate: string | null;
+  earnings: EarningsView | null;
   earningsWarn: boolean;
+  /** 20-session return minus SPY. Null when either series is short. */
+  rs20: number | null;
   status: PickStatus;
   recommendedBy: string;
   asOf: string;

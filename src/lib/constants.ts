@@ -62,6 +62,12 @@ export const VOLUME_CONFIRM_RATIO = 1;
 
 export const EARNINGS_WARN_DAYS = 5;
 
+/** Holdings alert when the next earnings date is this many trading days away, or today. */
+export const EARNINGS_HOLD_DAYS = 3;
+
+/** New semiconductor or equipment entries are marked once this many of those names are already held. */
+export const SEMI_SLOT_CAP = 2;
+
 /** Entry alerts need ATR(14) at least this percent of the close. */
 export const ALERT_MIN_ATR_PCT = 3;
 
