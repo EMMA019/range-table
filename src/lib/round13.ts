@@ -87,7 +87,7 @@ export type Round13Report = {
   generatedAt: string;
   hindsight: true;
   primary: 8;
-  reference: readonly [7, 10];
+  reference: readonly number[];
   focus: readonly string[];
   spy: typeof SPY_BENCH;
   rows: Round13Row[];
