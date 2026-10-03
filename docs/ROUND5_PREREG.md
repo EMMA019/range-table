@@ -66,7 +66,7 @@ The class is small next to the full books, which produced about 350 trades from 
 
 - Current list: 69 names.
 - Point-in-time on 2022-10-03: 47 names. On 2024-10-03: 52 names. None of the class members on those dates lacked bars.
-- ADV top 200, names that appear at least once: 30 in the first window, 47 in the second.
+- ADV top 200, names that appear at least once: 30 in the first window, 48 in the second. The rank is the round-4 rank: benchmark and sector ETFs are not names in that top 200.
 
 A judged window can finish under 100 trades. Under 100 trades the window is a hold, and a non-positive total does not turn that hold into a fail.
 
@@ -82,7 +82,7 @@ Point-in-time on 2024-10-03 (52): ADI, ALGM, AMAT, AMD, AMKR, ANET, APH, AVGO, C
 
 ADV top 200, first window (30): ADI, AMAT, AMD, ANET, APH, ARM, ASML, AVGO, CSCO, DELL, ETN, FSLR, GEV, INTC, KLAC, LRCX, MCHP, MPWR, MRVL, MU, NVDA, NXPI, ON, QCOM, SMCI, TSM, TT, TXN, VRT, WDC.
 
-ADV top 200, second window (47): AAOI, ADI, ALAB, AMAT, AMD, ANET, APH, ARM, ASML, AVGO, CIEN, CLS, COHR, CRDO, CSCO, DELL, ETN, FN, FSLR, GEV, GLW, HPE, INTC, KLAC, LITE, LRCX, MCHP, MPWR, MRVL, MU, NOK, NVDA, NVTS, NXPI, ON, PWR, QCOM, SMCI, SNDK, STM, STX, TER, TSM, TT, TXN, VRT, WDC.
+ADV top 200, second window (48): AAOI, ADI, ALAB, AMAT, AMD, ANET, APH, ARM, ASML, AVGO, CIEN, CLS, COHR, CRDO, CSCO, DELL, ETN, FN, FSLR, GEV, GLW, HPE, INTC, KLAC, LITE, LRCX, MCHP, MPWR, MRVL, MU, NOK, NVDA, NVTS, NXPI, ON, PWR, QCOM, SMCI, SNDK, STM, STX, TEL, TER, TSM, TT, TXN, VRT, WDC.
 
 The study recomputes these sets from `data/watchlist.yaml`, the cached Wikipedia tables, and the cached bars. A different set stops the study.
 
