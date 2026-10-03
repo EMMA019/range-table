@@ -135,7 +135,7 @@ The filter is applied after selection, not before it.
 2. Run the portfolio with no F1i and no F2. This is the unfiltered engine.
 3. Drop a fill that F1i would skip or that F2 would skip. The dropped fill is not replaced. A name the first run did not take does not enter.
 4. Run the portfolio again with only the kept fills as candidates. Nothing else is eligible.
-5. If the second run's trade count is not the kept fill count, the study stops.
+5. The second run is the reported book. It can refuse a kept fill when the order costs more than the cash settled that morning. That refusal is the cash limit, and the row records how many kept fills were refused. A refusal for a full book, a price rule, or a duplicated candidate stops the study.
 
 The reported P&L, drawdown, and invested fraction are the second run.
 
@@ -165,6 +165,7 @@ For each row, on the second-run fills:
 - Invested fraction, the same cash-ratio definition as round 3.
 - Scaled SPY: the full SPY total for that window multiplied by the invested fraction. This column is not used for pass, fail, or hold.
 - Per ticker, the sum of that row's fill P&L. The five largest sums and the five smallest sums, with the ticker. Fewer than five tickers lists every ticker. Ties break by ticker A–Z.
+- Unfunded count: kept fills the second run refused because the cash was not there.
 
 ## Pass, fail, and hold
 
