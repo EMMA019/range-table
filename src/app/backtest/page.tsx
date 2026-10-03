@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SiteNav } from "@/components/site-nav";
+import { StudySection } from "@/components/study-section";
 import { ThemeToggle } from "@/components/theme-toggle";
 import type { Stats } from "@/lib/backtest";
 import { BACKTEST } from "@/lib/backtest-view";
@@ -139,6 +140,8 @@ export default function BacktestPage() {
             </tbody>
           </table>
         </details>
+
+        <StudySection />
 
         <section>
           <h2 className="mb-1 text-sm font-medium">分かっている偏り</h2>

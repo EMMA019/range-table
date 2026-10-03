@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "tsx --test src/lib/*.test.ts",
     "typecheck": "tsc --noEmit",
-    "backtest": "tsx scripts/backtest.ts"
+    "backtest": "tsx scripts/backtest.ts",
+    "backtest:study": "tsx scripts/backtest-study.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.3.3",
