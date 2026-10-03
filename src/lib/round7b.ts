@@ -1,6 +1,6 @@
 import { ROUND4_PREREG } from "./round4";
 import { SPY_BENCH, type Round3Universe, type Round3Window } from "./round3";
-import type { ExitTotals, Round7Reason } from "./round7";
+import type { ExitTotals } from "./round7";
 
 /** Pre-registration commit. Results must cite this and must not relax the rules. */
 export const ROUND7B_PREREG = "98704c07b43b4ed8aa266d8a7bf736f1d3acb866";
@@ -99,6 +99,8 @@ export type Round7bCell = {
   worst: Round7bWorst | null;
 };
 
+export type Round7bThemeTotal = Round7bCell & { theme: Round7bTheme };
+
 export type Round7bName = {
   ticker: string;
   list: "transition" | "remove";
@@ -153,7 +155,7 @@ export type Round7bReport = {
   spy: typeof SPY_BENCH;
   rows: Round7bRow[];
   names: Round7bName[];
-  themeTotals: Round7bCell[];
+  themeTotals: Round7bThemeTotal[];
 };
 
 export function cellOf(fills: readonly Round7bFill[], exit: Round7bExit, universe: Round3Universe, window: Round3Window): Round7bCell {
@@ -205,8 +207,8 @@ export function sumCells(cells: readonly Round7bCell[], exit: Round7bExit, unive
   return { exit, universe, window, n, wins, losses, flats, totalUsd: Math.round(total * 100) / 100, worst };
 }
 
-export function themeTotals(names: readonly Round7bName[]): Round7bCell[] {
-  const out: Round7bCell[] = [];
+export function themeTotals(names: readonly Round7bName[]): Round7bThemeTotal[] {
+  const out: Round7bThemeTotal[] = [];
   for (const theme of THEME_IDS) {
     const mine = names.filter((name) => name.theme === theme);
     for (const exit of ["A", "C"] as const) {
@@ -217,14 +219,12 @@ export function themeTotals(names: readonly Round7bName[]): Round7bCell[] {
             if (!cell) throw new Error(`セルがない ${theme} ${name.ticker} ${exit} ${universe} ${window}`);
             return cell;
           });
-          out.push(sumCells(cells, exit, universe, window));
+          out.push({ theme, ...sumCells(cells, exit, universe, window) });
         }
       }
     }
   }
   return out;
 }
-
-export const EXIT_REASON_ORDER: Round7Reason[] = ["target", "stop", "breakeven", "priorLow", "timeout", "window"];
 
 export { ROUND4_PREREG, SPY_BENCH };

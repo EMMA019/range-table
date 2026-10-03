@@ -379,7 +379,7 @@ function main() {
       const row = score(book, item.id, window.id);
       console.log(`${window.id} ${item.id} n ${row.n} pnl ${row.totalUsd} dd ${row.mtmDdUsd} N ${row.nRequired}`);
       rows.push(row);
-      if (item.id === "currentA" || item.id === "currentC") coreBooks.set(item.exit, book);
+      if (item.exit === "A" || item.exit === "C") coreBooks.set(item.exit, book);
     }
 
     for (const source of sources) {
