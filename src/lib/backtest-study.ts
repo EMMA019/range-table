@@ -248,6 +248,8 @@ type ExitSpec = {
   trail: boolean;
   exitMa5: boolean;
   maxHold: number | null;
+  /** When set, a trade still open on this bar sells at that close. Earlier target and stop fills stand. */
+  forceExitIndex?: number | null;
 };
 
 function gapInside(feats: Feat[], from: number, to: number): boolean {
@@ -308,7 +310,8 @@ function simulate(feats: Feat[], signalIndex: number, spec: ExitSpec, qty10: num
     return finish(last, feats[last].c, "window", "close");
   }
 
-  const lastIndex = spec.maxHold == null ? feats.length - 1 : Math.min(feats.length - 1, entryIndex + spec.maxHold);
+  const holdEnd = spec.maxHold == null ? feats.length - 1 : Math.min(feats.length - 1, entryIndex + spec.maxHold);
+  const lastIndex = spec.forceExitIndex != null && spec.forceExitIndex >= entryIndex ? Math.min(holdEnd, spec.forceExitIndex) : holdEnd;
   for (let j = entryIndex; j <= lastIndex; j += 1) {
     const bar = feats[j];
     if (spec.target != null && j > entryIndex && bar.o >= spec.target) return finish(j, bar.o, "target", "open");
@@ -317,6 +320,7 @@ function simulate(feats: Feat[], signalIndex: number, spec: ExitSpec, qty10: num
     if (spec.exitMa5 && bar.ma5 != null && bar.c > bar.ma5) return finish(j, bar.c, "ma", "close");
     if (spec.sharp && bar.c >= feats[j - 1].c + atr) return finish(j, bar.c, "sharp", "close");
     if (spec.stopClose != null && bar.c < spec.stopClose) return finish(j, bar.c, "stop", "close");
+    if (spec.forceExitIndex != null && j === spec.forceExitIndex) return finish(j, bar.c, "window", "close");
     if (spec.maxHold != null && j === entryIndex + spec.maxHold) return finish(j, bar.c, "timeout", "close");
   }
   if (spec.maxHold != null && lastIndex < entryIndex + spec.maxHold) {
@@ -431,17 +435,26 @@ export function rangeCandidates(
   market: Map<string, MarketDay>,
   sessions: string[],
   bounds?: { from: string; to: string },
+  forceExitOn?: (entryDate: string) => string | null,
+  stopAt?: (feat: Feat) => number | null,
 ): Candidate[] {
   const from = bounds?.from ?? STUDY_FROM;
   const to = bounds?.to ?? STUDY_TO;
   const { feats } = name;
   const out: Candidate[] = [];
+  const indexOf = forceExitOn ? new Map(feats.map((bar, index) => [bar.date, index])) : null;
   for (let i = 0; i < feats.length - 1; i += 1) {
     const feat = feats[i];
     if (!isRangeBar(feat, rules, name.semi, market.get(feat.date), sessions, name.earnings, from, to)) continue;
     const sized = sharesForMove(feat.atr, feats[i + 1].o);
     if (sized.shares10 == null) continue;
-    const stopClose = rules.stop === "low20" ? feat.low20 : rules.stop === "half" ? (feat.low20 as number) - 0.5 * (feat.atr as number) : null;
+    const stopClose = stopAt
+      ? stopAt(feat)
+      : rules.stop === "low20"
+        ? feat.low20
+        : rules.stop === "half"
+          ? (feat.low20 as number) - 0.5 * (feat.atr as number)
+          : null;
     const day = market.get(feat.date);
     const rs20 = excess(feat.ret20, day?.spyRet20);
     const trade = simulate(
@@ -456,6 +469,7 @@ export function rangeCandidates(
         trail: false,
         exitMa5: false,
         maxHold: rules.maxHold,
+        forceExitIndex: forceExitOn ? (indexOf?.get(forceExitOn(feats[i + 1].date) ?? "") ?? null) : null,
       },
       sized.shares10,
       { ticker: name.ticker, sector: name.sector, semi: name.semi },
@@ -703,10 +717,20 @@ export type PortfolioOpts = {
   order?: (list: Candidate[]) => void;
   /** At most this many semiconductor or equipment names among the open slots. */
   maxSemi?: number;
+  /**
+   * At most this many non-semiconductor slots. Omitted means no jab cap, so existing
+   * books keep the same fills. A skip increments skippedSemi, the same counter as maxSemi.
+   */
+  maxNonSemi?: number;
   /** Below starting capital, cap the book at 2 slots and 1 new buy. */
   throttleBelowStart?: boolean;
   /** Replaces the $300–$450 lot. Null skips the name. */
   size?: (cand: Candidate, morningEquity: number) => number | null;
+  /**
+   * Per-order commission. When omitted, the entry is free and the exit pays the flat round trip,
+   * which is the published book. Round 2 passes IBKR fixed on both orders.
+   */
+  orderFee?: (qty: number, price: number) => number;
   keepFills?: boolean;
   keepDaily?: boolean;
   closes: CloseMap;
@@ -787,15 +811,17 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
 
   const closePx = (ticker: string, date: string, fallback: number) => opts.closes.get(ticker)?.get(date) ?? fallback;
 
+  const exitFee = (qty: number, price: number) => (opts.orderFee ? opts.orderFee(qty, price) : ROUND_TRIP_FEE);
+  const entryFee = (qty: number, price: number) => (opts.orderFee ? opts.orderFee(qty, price) : 0);
   const sell = (pos: OpenPos, date: string, price: number, reason: ExitReason) => {
-    const proceeds = pos.qty * price - ROUND_TRIP_FEE;
+    const proceeds = pos.qty * price - exitFee(pos.qty, price);
     creditSale(date, proceeds);
     const entryI = sessionIndex.get(pos.cand.entryDate) ?? 0;
     const exitI = sessionIndex.get(date) ?? entryI;
     fills.push({
       exitDate: date,
       ticker: pos.cand.ticker,
-      pnlUsd: pos.qty * (price - pos.cand.entry) - ROUND_TRIP_FEE,
+      pnlUsd: pos.qty * (price - pos.cand.entry) - entryFee(pos.qty, pos.cand.entry) - exitFee(pos.qty, price),
       hold: exitI - entryI,
       reason,
       entryDate: pos.cand.entryDate,
@@ -823,6 +849,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     const newCap = throttled ? 1 : Number.POSITIVE_INFINITY;
     let opened = 0;
     let semisHeld = positions.reduce((sum, pos) => sum + (pos.cand.semi ? 1 : 0), 0);
+    let nonSemiHeld = opts.maxNonSemi == null ? 0 : positions.reduce((sum, pos) => sum + (pos.cand.semi ? 0 : 1), 0);
     const todays = byEntry.get(date) ?? [];
     const held = new Set(positions.map((pos) => pos.cand.ticker));
     for (const cand of todays) {
@@ -836,11 +863,15 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         skippedSemi += 1;
         continue;
       }
+      if (opts.maxNonSemi != null && !cand.semi && nonSemiHeld >= opts.maxNonSemi) {
+        skippedSemi += 1;
+        continue;
+      }
       if (positions.length >= slotCap || opened >= newCap) {
         skippedSlot += 1;
         continue;
       }
-      const cost = qty * cand.entry;
+      const cost = qty * cand.entry + entryFee(qty, cand.entry);
       if (cost > settled + 1e-9) {
         skippedCash += 1;
         continue;
@@ -849,6 +880,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
       held.add(cand.ticker);
       opened += 1;
       if (cand.semi) semisHeld += 1;
+      else if (opts.maxNonSemi != null) nonSemiHeld += 1;
       const exitDate = cand.exitDate > last ? last : cand.exitDate;
       const forced = cand.exitDate > last;
       positions.push({

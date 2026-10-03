@@ -199,6 +199,34 @@ describe("range trades match the published engine", () => {
     assert.equal(trade.exit, 113.6);
     assert.ok(trade.exit < trade.entry + trade.atr);
   });
+
+  it("sells at the forced close unless the stop fills first", () => {
+    const bars = series(Array.from({ length: 22 }, () => [98, 99, 97, 97.6] as [number, number, number, number]));
+    const open = rangeCandidates(nameOf(bars), BASE_RULES, market, []);
+    const forced = rangeCandidates(nameOf(bars), BASE_RULES, market, [], undefined, (entry) => entry);
+    assert.equal(open.length, 1);
+    assert.equal(forced.length, 1);
+    assert.equal(forced[0].exitDate, forced[0].entryDate);
+    assert.equal(forced[0].exit, 97.6);
+    assert.notEqual(open[0].exitDate, forced[0].exitDate);
+
+    const stopped = series([[98, 100, 97, 97.8], [97, 98, 90, 91], [89, 90, 88, 89.5]]);
+    const cut = rangeCandidates(nameOf(stopped), BASE_RULES, market, [], undefined, () => day(40));
+    const plain = rangeCandidates(nameOf(stopped), BASE_RULES, market, []);
+    assert.equal(cut[0].exitDate, plain[0].exitDate);
+    assert.equal(cut[0].reason, plain[0].reason);
+  });
+
+  it("keeps the box-low stop unless a replacement stop is supplied", () => {
+    const bars = series([[98, 100, 97, 97.8], [97, 98, 90, 91], [89, 90, 88, 89.5]]);
+    const rules = withRules({ id: "gap", label: "gap", gapThroughStop: true });
+    const base = rangeCandidates(nameOf(bars), rules, market, []);
+    const wide = rangeCandidates(nameOf(bars), rules, market, [], undefined, undefined, () => 1);
+    assert.equal(base.length, 1);
+    assert.equal(wide.length, 1);
+    assert.equal(base[0].reason, "stop");
+    assert.ok(wide[0].exitIndex > base[0].exitIndex);
+  });
 });
 
 describe("portfolio constraints", () => {
@@ -306,6 +334,48 @@ describe("portfolio constraints", () => {
     assert.ok(boxBook.totalUsd > rsBook.totalUsd || boxBook.avgUsd !== atrBook.avgUsd);
     assert.ok(boxBook.totalUsd > atrBook.totalUsd);
     assert.ok(rsBook.totalUsd > atrBook.totalUsd);
+  });
+
+  it("caps non-semiconductor slots only when maxNonSemi is set", () => {
+    const semis = ["S1", "S2"].map((ticker) => cand(ticker, sessions[0], sessions[1], 100, 110, { semi: true }));
+    const others = ["A", "B", "C", "D"].map((ticker) => cand(ticker, sessions[0], sessions[1], 100, 120));
+    const names = [...others, ...semis].map((row) => row.ticker);
+    const open = {
+      id: "slots",
+      label: "slots",
+      universe: "core",
+      rank: "ticker" as const,
+      sessions,
+      flatten: true,
+      maxPositions: 5,
+      closes: closes(names),
+      withRestart: false,
+    };
+    const base = runPortfolio(open, [...semis, ...others]);
+    const capped = runPortfolio({ ...open, maxSemi: 2, maxNonSemi: 1 }, [...semis, ...others]);
+    assert.equal(base.n, 5);
+    assert.equal(base.skippedSemi, 0);
+    assert.equal(capped.n, 3);
+    assert.equal(capped.skippedSemi, 3);
+  });
+
+  it("charges a per-order fee on the entry and the exit only when one is supplied", () => {
+    const trade = cand("AAA", sessions[0], sessions[1], 50, 55);
+    const open = {
+      id: "fee",
+      label: "fee",
+      universe: "core",
+      rank: "ticker" as const,
+      sessions,
+      flatten: true,
+      maxPositions: 1,
+      closes: closes(["AAA"]),
+      withRestart: false,
+    };
+    const flat = runPortfolio(open, [trade]);
+    const ibkr = runPortfolio({ ...open, orderFee: () => 1 }, [trade]);
+    assert.equal(flat.totalUsd, 44.3);
+    assert.equal(ibkr.totalUsd, 43);
   });
 });
 
