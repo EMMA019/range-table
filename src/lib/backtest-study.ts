@@ -241,6 +241,17 @@ export type Candidate = {
    * The walker sells the midpoint half and the top remainder, and ignores the single exit above.
    */
   scale?: ScalePlan;
+  /**
+   * Round-7 partial exit. When set, the portfolio sells these legs and ignores the single exit.
+   * Absent on every existing book, including the paper test.
+   */
+  round7Legs?: Array<{
+    date: string;
+    timing: ExitTiming;
+    qty: number;
+    price: number;
+    reason: "target" | "stop" | "breakeven" | "priorLow" | "timeout" | "window";
+  }>;
 };
 
 export type ScalePlan = {
@@ -677,7 +688,16 @@ export type Book = {
   restartYear2: YearRestart;
   equity: Array<{ month: string; equity: number }>;
   skippedSemi?: number;
-  fills?: Array<{ ticker: string; pnlUsd: number; entryDate: string; exitDate: string; qty?: number; riskUsd?: number | null }>;
+  fills?: Array<{
+    ticker: string;
+    pnlUsd: number;
+    entryDate: string;
+    exitDate: string;
+    qty?: number;
+    riskUsd?: number | null;
+    hold?: number;
+    legs?: Array<{ reason: string; qty: number; pnlUsd: number }>;
+  }>;
   daily?: Array<{ date: string; equity: number; realizedEquity: number }>;
   /** Cash after the session's fills. Present only when the book asked for it. */
   exposure?: { investedFraction: number | null; daysOpenShare: number | null };
@@ -718,6 +738,12 @@ function rankCompare(rank: Rank) {
   };
 }
 
+type Round7Taken = {
+  reason: "target" | "stop" | "breakeven" | "priorLow" | "timeout" | "window";
+  qty: number;
+  pnlUsd: number;
+};
+
 type OpenPos = {
   cand: Candidate;
   qty: number;
@@ -728,6 +754,9 @@ type OpenPos = {
   halfLeft: number;
   restLeft: number;
   pnl: number;
+  /** Shares still open. Round-7 legs reduce this. Other books leave it equal to qty. */
+  left: number;
+  taken: Round7Taken[];
 };
 
 type WalkFill = {
@@ -739,7 +768,15 @@ type WalkFill = {
   entryDate: string;
   qty: number;
   riskUsd: number | null;
+  legs?: Round7Taken[];
 };
+
+function engineReason(reason: Round7Taken["reason"]): ExitReason {
+  if (reason === "target") return "target";
+  if (reason === "timeout") return "timeout";
+  if (reason === "window") return "window";
+  return "stop";
+}
 
 function riskDollars(qty: number, entry: number, stop: number | null | undefined): number | null {
   if (stop == null || !Number.isFinite(stop)) return null;
@@ -786,6 +823,8 @@ export type PortfolioOpts = {
   quotes?: Map<string, Map<string, DayQuote>>;
   /** Average invested fraction and the share of sessions still holding a position at the close. */
   keepExposure?: boolean;
+  /** Adds holding sessions and per-leg exit reasons. Omitted books stay unchanged. */
+  keepRound7?: boolean;
   closes: CloseMap;
 };
 
@@ -868,7 +907,10 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
 
   const exitFee = (qty: number, price: number) => (opts.orderFee ? opts.orderFee(qty, price) : ROUND_TRIP_FEE);
   const entryFee = (qty: number, price: number) => (opts.orderFee ? opts.orderFee(qty, price) : 0);
-  const markedQty = (pos: OpenPos) => (pos.cand.scale ? pos.halfLeft + pos.restLeft : pos.qty);
+  const markedQty = (pos: OpenPos) => {
+    if (pos.cand.round7Legs) return pos.left;
+    return pos.cand.scale ? pos.halfLeft + pos.restLeft : pos.qty;
+  };
   const sell = (pos: OpenPos, date: string, price: number, reason: ExitReason) => {
     const proceeds = pos.qty * price - exitFee(pos.qty, price);
     creditSale(date, proceeds);
@@ -947,13 +989,52 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     finishScale(pos, date);
     return true;
   };
+  const finishRound7 = (pos: OpenPos, date: string) => {
+    const entryI = sessionIndex.get(pos.cand.entryDate) ?? 0;
+    const exitI = sessionIndex.get(date) ?? entryI;
+    const lastLeg = pos.taken[pos.taken.length - 1];
+    fills.push({
+      exitDate: date,
+      ticker: pos.cand.ticker,
+      pnlUsd: pos.pnl,
+      hold: exitI - entryI,
+      reason: engineReason(lastLeg?.reason ?? "window"),
+      entryDate: pos.cand.entryDate,
+      qty: pos.qty,
+      riskUsd: riskDollars(pos.qty, pos.cand.entry, pos.cand.stop),
+      legs: pos.taken.map((leg) => ({ ...leg })),
+    });
+  };
+  const takeRound7 = (pos: OpenPos, date: string, phase: "open" | "rest"): boolean => {
+    const planned = pos.cand.round7Legs;
+    if (!planned) return false;
+    if (phase === "open" && date === pos.cand.entryDate) return false;
+    for (const leg of planned) {
+      if (leg.date !== date) continue;
+      if (phase === "open" && leg.timing !== "open") continue;
+      if (phase === "rest" && leg.timing === "open") continue;
+      if (!(leg.qty > 0)) continue;
+      if (leg.qty > pos.left + 1e-9) throw new Error(`round7の売却が残株を超える ${pos.cand.ticker} ${date}`);
+      const fee = exitFee(leg.qty, leg.price);
+      creditSale(date, leg.qty * leg.price - fee);
+      const pnl = leg.qty * (leg.price - pos.cand.entry) - fee;
+      pos.pnl += pnl;
+      pos.left -= leg.qty;
+      pos.taken.push({ reason: leg.reason, qty: leg.qty, pnlUsd: pnl });
+    }
+    if (pos.left > 1e-9) return false;
+    finishRound7(pos, date);
+    return true;
+  };
 
   for (let si = 0; si < sessions.length; si += 1) {
     const date = sessions[si];
     release(date);
     for (let i = positions.length - 1; i >= 0; i -= 1) {
       const pos = positions[i];
-      if (pos.cand.scale) {
+      if (pos.cand.round7Legs) {
+        if (takeRound7(pos, date, "open")) positions.splice(i, 1);
+      } else if (pos.cand.scale) {
         if (runScale(pos, date, "open")) positions.splice(i, 1);
       } else if (pos.exitDate === date && pos.exitTiming === "open") {
         sell(pos, date, pos.exit, pos.reason);
@@ -1003,8 +1084,12 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
       opened += 1;
       if (cand.semi) semisHeld += 1;
       else if (opts.maxNonSemi != null) nonSemiHeld += 1;
+      if (cand.round7Legs) {
+        const planned = cand.round7Legs.reduce((sum, leg) => sum + leg.qty, 0);
+        if (planned !== qty) throw new Error(`round7の株数が違う ${cand.ticker} ${cand.entryDate} ${planned} ${qty}`);
+      }
       const exitDate = cand.exitDate > last ? last : cand.exitDate;
-      const forced = !cand.scale && cand.exitDate > last;
+      const forced = !cand.scale && !cand.round7Legs && cand.exitDate > last;
       const legs = cand.scale ? legSplit(qty, cand.scale.mid != null) : { halfLeft: 0, restLeft: 0 };
       positions.push({
         cand,
@@ -1015,12 +1100,16 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         reason: forced ? "window" : cand.reason,
         halfLeft: legs.halfLeft,
         restLeft: legs.restLeft,
-        pnl: cand.scale ? -entryFee(qty, cand.entry) : 0,
+        pnl: cand.scale || cand.round7Legs ? -entryFee(qty, cand.entry) : 0,
+        left: qty,
+        taken: [],
       });
     }
     for (let i = positions.length - 1; i >= 0; i -= 1) {
       const pos = positions[i];
-      if (pos.cand.scale) {
+      if (pos.cand.round7Legs) {
+        if (takeRound7(pos, date, "rest")) positions.splice(i, 1);
+      } else if (pos.cand.scale) {
         if (runScale(pos, date, "rest")) positions.splice(i, 1);
       } else if (pos.exitDate === date && pos.exitTiming !== "open") {
         sell(pos, date, pos.exit, pos.reason);
@@ -1030,7 +1119,19 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     if (opts.flatten && date === last) {
       for (let i = positions.length - 1; i >= 0; i -= 1) {
         const pos = positions[i];
-        if (pos.cand.scale) {
+        if (pos.cand.round7Legs) {
+          if (pos.left > 0) {
+            const price = closePx(pos.cand.ticker, date, pos.cand.entry);
+            const qty = pos.left;
+            const fee = exitFee(qty, price);
+            creditSale(date, qty * price - fee);
+            const pnl = qty * (price - pos.cand.entry) - fee;
+            pos.pnl += pnl;
+            pos.left = 0;
+            pos.taken.push({ reason: "window", qty, pnlUsd: pnl });
+            finishRound7(pos, date);
+          }
+        } else if (pos.cand.scale) {
           const left = pos.halfLeft + pos.restLeft;
           if (left > 0) {
             const price = closePx(pos.cand.ticker, date, pos.cand.entry);
@@ -1152,6 +1253,16 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
             entryDate: fill.entryDate,
             exitDate: fill.exitDate,
             ...(opts.keepRisk ? { qty: fill.qty, riskUsd: fill.riskUsd == null ? null : round(fill.riskUsd, 4) } : {}),
+            ...(opts.keepRound7
+              ? {
+                  hold: fill.hold,
+                  legs: (fill.legs ?? [{ reason: fill.reason, qty: fill.qty, pnlUsd: fill.pnlUsd }]).map((leg) => ({
+                    reason: leg.reason,
+                    qty: leg.qty,
+                    pnlUsd: round(leg.pnlUsd),
+                  })),
+                }
+              : {}),
           })),
         }
       : {}),
