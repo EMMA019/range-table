@@ -80,6 +80,8 @@ describe("T-bill park", () => {
     assert.equal(book.park?.priceUsd, -0.7);
     assert.equal(book.park?.feesUsd, 0.7);
     assert.equal(book.totalUsd, 15.3);
+    assert.equal(book.park?.sells[0]?.cycle, 1);
+    assert.equal(book.park?.sells[0]?.entryDate, sessions[0]);
   });
 
   it("sells the minimum shares at the open before a stock buy", () => {
@@ -106,6 +108,8 @@ describe("T-bill park", () => {
     assert.equal(book.park?.sells[0]?.reason, "fund");
     assert.equal(book.park?.sells[0]?.date, sessions[2]);
     assert.equal(book.park?.sells[0]?.qty, 5);
+    assert.equal(book.park?.sells[0]?.cycle, 1);
+    assert.equal(book.park?.sells[0]?.entryDate, sessions[0]);
   });
 
   it("cuts a window into calendar years on the last session of each year", () => {

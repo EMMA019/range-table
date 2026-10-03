@@ -28,3 +28,59 @@ export function equityChange(daily: readonly { date: string; equity: number }[],
   const start = prior ? prior.equity : capital;
   return Math.round((end.equity - start) * 100) / 100;
 }
+
+export function lowestEquity(daily: readonly { date: string; equity: number }[]): { usd: number; date: string } {
+  const first = daily[0];
+  if (!first) throw new Error("日次がない");
+  let best = first;
+  for (const row of daily) if (row.equity < best.equity) best = row;
+  return { usd: best.equity, date: best.date };
+}
+
+/** One $1.90 per position, plus cash dividends that are not a position. */
+export function netWithDividends(trades: readonly { pnlUsd: number; sells: number }[], dividends: number): number {
+  const sum = trades.reduce((total, trade) => total + trade.pnlUsd + 0.7 * trade.sells - 1.9, 0) + dividends;
+  return Math.round(sum * 100) / 100;
+}
+
+export type YearUplift = { year: string; from: string; to: string; upliftUsd: number; upliftFrac: number };
+
+export type Round14Side = {
+  totalUsd: number;
+  totalNetUsd: number;
+  stockUsd: number;
+  soxxUsd: number;
+  stockN: number;
+  soxxN: number;
+  mtmDdUsd: number;
+  lowUsd: number;
+  lowDate: string;
+};
+
+export type Round14Cell = {
+  universe: "core" | "pit" | "adv";
+  window: "oos" | "in";
+  baseline: Round14Side;
+  parked: Round14Side & {
+    parkPriceUsd: number;
+    parkDivUsd: number;
+    parkUsd: number;
+    sellN: number;
+    cycles: number;
+    feesUsd: number;
+    bilSessions: number;
+  };
+  upliftUsd: number;
+  upliftNetUsd: number;
+  upliftFrac: number;
+  upliftNetFrac: number;
+  years: YearUplift[];
+};
+
+export type Round14Report = {
+  v: 1;
+  prereg: string;
+  rulesCommit: string;
+  generatedAt: string;
+  cells: Round14Cell[];
+};

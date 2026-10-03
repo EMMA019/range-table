@@ -722,6 +722,8 @@ export type ParkSell = {
   price: number;
   pnlUsd: number;
   reason: "fund" | "window";
+  cycle: number;
+  entryDate: string;
 };
 
 export type ParkStats = {
@@ -996,6 +998,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
   let parkQty = 0;
   let parkCost = 0;
   let parkSymbol = "";
+  let parkEntry = "";
   let parkCycle = false;
   let parkCycles = 0;
   let parkDiv = 0;
@@ -1030,11 +1033,12 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     parkFees += fee;
     parkCost -= avg * qty;
     parkQty -= qty;
-    parkSells.push({ date, symbol: bar.symbol, qty, price: bar.o, pnlUsd: pnl, reason: "fund" });
+    parkSells.push({ date, symbol: bar.symbol, qty, price: bar.o, pnlUsd: pnl, reason: "fund", cycle: parkCycles, entryDate: parkEntry });
     if (parkQty <= 1e-9) {
       parkQty = 0;
       parkCost = 0;
       parkSymbol = "";
+      parkEntry = "";
       parkCycle = false;
     }
   };
@@ -1053,6 +1057,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
       parkCycle = true;
       parkCycles += 1;
       parkSymbol = bar.symbol;
+      parkEntry = date;
     }
     parkCost += qty * bar.o;
     parkQty += qty;
@@ -1068,10 +1073,11 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     settled += qty * bar.c - fee;
     parkPrice += pnl;
     parkFees += fee;
-    parkSells.push({ date, symbol: bar.symbol, qty, price: bar.c, pnlUsd: pnl, reason: "window" });
+    parkSells.push({ date, symbol: bar.symbol, qty, price: bar.c, pnlUsd: pnl, reason: "window", cycle: parkCycles, entryDate: parkEntry });
     parkQty = 0;
     parkCost = 0;
     parkSymbol = "";
+    parkEntry = "";
     parkCycle = false;
   };
   let stockUtilSum = 0;
