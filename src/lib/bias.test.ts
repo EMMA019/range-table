@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import { describe, it } from "node:test";
+import type { CoreBridge } from "./bias";
 import {
   aboveMovingAverage,
   advLeaders,
@@ -260,5 +263,25 @@ describe("rowspan helper", () => {
       ["June 22, 2020", "JWN"],
       ["June 22, 2020", "HOG"],
     ]);
+  });
+});
+
+describe("published book bridge", () => {
+  it("steps from the published RS total to the bias core total", () => {
+    const report = JSON.parse(fs.readFileSync(path.join(process.cwd(), "data/backtest/bias.json"), "utf8")) as { bridge: CoreBridge };
+    const bridge = report.bridge;
+    assert.equal(bridge.fromUsd, 2052.87);
+    assert.equal(bridge.steps[1]?.totalUsd, 1470.64);
+    assert.equal(bridge.side.totalUsd, 1774.75);
+    assert.equal(bridge.toUsd, 490.12);
+    assert.equal(bridge.steps.at(-1)?.totalUsd, 490.12);
+    assert.equal(bridge.unchanged.dropCapUsd, 2052.87);
+    assert.equal(bridge.unchanged.dropCapOnStackedUsd, 490.12);
+    assert.equal(bridge.namesTraded, 186);
+    let cursor = bridge.steps[0]?.totalUsd ?? 0;
+    for (const step of bridge.steps.slice(1)) {
+      cursor = Math.round((cursor + step.deltaUsd) * 100) / 100;
+      assert.equal(step.totalUsd, cursor);
+    }
   });
 });

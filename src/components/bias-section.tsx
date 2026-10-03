@@ -97,6 +97,25 @@ export function BiasSection() {
           {data.bestBenchmark.map((row) => ` ${row.window === "oos" ? "期間外" : "期間内"} ${row.id} ${money(row.totalUsd)}`).join("、")}
           。
         </p>
+        {data.bridge ? (
+          <div className="mt-2 border-t border-line pt-2 text-[11px] leading-relaxed text-muted">
+            <p>
+              公開の{money(data.bridge.fromUsd)}（2024-10〜2026-10、対SPY）から、この欄の{money(data.bridge.toUsd)}までの差は次の順。
+            </p>
+            {data.bridge.steps.map((step, index) => (
+              <p key={step.label} className="mt-1">
+                {index + 1}. {step.label}。{step.n}件、{money(step.totalUsd)}
+                {index === 0 ? "" : `（${money(step.deltaUsd)}）`}。
+              </p>
+            ))}
+            <p className="mt-1">
+              {data.bridge.side.label}。{data.bridge.side.n}件、{money(data.bridge.side.totalUsd)}（{money(data.bridge.side.deltaUsd)}）。
+            </p>
+            <p className="mt-1">
+              $550の上限を外しても公開の本は{money(data.bridge.unchanged.dropCapUsd)}のまま。上限を外したこの欄のルールも{money(data.bridge.unchanged.dropCapOnStackedUsd)}。ATRは両方3%以上。手数料は往復$0.70、1枠$300–$450、資金$3,200、枠は5つ。最終足は{data.bridge.lastBar}で、2026-10-02はセッションがない。ウォッチリストは{data.bridge.namesInFile}行で、{data.bridge.ignored}は両方から外した{data.bridge.namesTraded}銘柄。Item 2.02が無い{data.bridge.withoutItem202}銘柄のシグナルは残している。
+            </p>
+          </div>
+        ) : null}
         {(["oos", "in"] as const).map((window) => {
           const rows = data.books.filter((row) => row.window === window && row.n != null);
           const count = (ok: (row: (typeof rows)[number]) => boolean) => rows.filter(ok).length;

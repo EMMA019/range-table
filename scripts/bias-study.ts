@@ -1014,6 +1014,10 @@ async function main() {
     universe,
   };
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
+  if (fs.existsSync(OUT)) {
+    const previous = JSON.parse(fs.readFileSync(OUT, "utf8")) as { bridge?: unknown };
+    if (previous.bridge) (report as { bridge?: unknown }).bridge = previous.bridge;
+  }
   fs.writeFileSync(OUT, JSON.stringify(report));
   console.log(`wrote ${OUT}`);
   for (const row of biasRows) {

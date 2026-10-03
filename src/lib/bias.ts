@@ -585,6 +585,26 @@ export type BellWindow = {
   avoid: { n: number; totalUsd: number; mtmDdUsd: number } | null;
 };
 
+export type CoreBridge = {
+  fromUsd: number;
+  toUsd: number;
+  namesInFile: number;
+  namesTraded: number;
+  ignored: string;
+  lastBar: string;
+  withItem202: number;
+  withoutItem202: number;
+  edgarMissing: number;
+  steps: Array<{ label: string; n: number; totalUsd: number; deltaUsd: number }>;
+  side: { label: string; n: number; totalUsd: number; deltaUsd: number };
+  unchanged: {
+    dropCapUsd: number;
+    dropCapOnStackedUsd: number;
+    sameTradesWhenCapDrops: boolean;
+    stackedMatchesBias: boolean;
+  };
+};
+
 export type BiasReport = {
   v: 1;
   generatedAt: string;
@@ -610,6 +630,8 @@ export type BiasReport = {
     unknownGics: number;
     knownSemis: number;
   }>;
+  /** Step-by-step dollars from the published RS book to this study's core book. */
+  bridge?: CoreBridge;
 };
 
 export function earningsDatesFrom(blocks: readonly FilingBlock[]): { item202: string[]; foreign6k: string[] } {
