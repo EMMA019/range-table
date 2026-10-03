@@ -53,7 +53,7 @@ export class EdgarHttpError extends Error {
   }
 }
 
-export async function edgarGet(url: string, accept = "application/json"): Promise<string> {
+export async function edgarGet(url: string, accept = "application/json", maxBytes = MAX_BYTES): Promise<string> {
   const userAgent = secUserAgent();
   if (!userAgent) throw new EdgarDisabledError();
   await pace();
@@ -92,7 +92,7 @@ export async function edgarGet(url: string, accept = "application/json"): Promis
         };
         stream.on("data", (chunk: Buffer) => {
           received += chunk.length;
-          if (received > MAX_BYTES) {
+          if (received > maxBytes) {
             fail(new Error("EDGARの応答が大きすぎる"));
             return;
           }
@@ -117,6 +117,6 @@ export async function edgarGet(url: string, accept = "application/json"): Promis
   });
 }
 
-export async function edgarJson<T>(url: string): Promise<T> {
-  return JSON.parse(await edgarGet(url, "application/json")) as T;
+export async function edgarJson<T>(url: string, maxBytes = MAX_BYTES): Promise<T> {
+  return JSON.parse(await edgarGet(url, "application/json", maxBytes)) as T;
 }
