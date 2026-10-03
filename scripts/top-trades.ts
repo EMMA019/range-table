@@ -71,10 +71,53 @@ const EXPECTED: Array<{ filter: BookId; universe: UniverseId; window: WindowId; 
 ];
 
 /** Official SEC SIC phrase to a short Japanese line. Unlisted phrases stay in English. */
-const SIC_JA: Record<string, string> = {};
+const SIC_JA: Record<string, string> = {
+  "Electronic Computers": "電子計算機",
+  "Services-Offices & Clinics of  Doctors of  Medicine": "医業の診療所",
+  "Telephone & Telegraph Apparatus": "電話・電信機器",
+  "Services-Prepackaged Software": "パッケージソフト",
+  "Electric Services": "電力",
+  "Rubber & Plastics Footwear": "ゴム・プラスチックの靴",
+  "Motor Vehicles & Passenger Car Bodies": "自動車と車体",
+  "Services-Computer Processing & Data Preparation": "計算機処理とデータ準備",
+  "Cogeneration Services & Small Power Producers": "コージェネレーションと小規模発電",
+  "Services-Business Services, NEC": "他に分類されない事業サービス",
+  "Retail-Auto Dealers & Gasoline Stations": "自動車販売と給油所",
+  "Surgical & Medical Instruments & Apparatus": "外科・医療用機器",
+  "Computer Communications Equipment": "コンピュータ通信機器",
+  "Finance Services": "金融サービス",
+  "Metal Mining": "金属鉱業",
+  "Semiconductors & Related Devices": "半導体と関連装置",
+  "Communications Services, NEC": "他に分類されない通信サービス",
+  "Services-Computer Programming, Data Processing, Etc.": "コンピュータプログラミングとデータ処理",
+  "Services-Help Supply Services": "人材派遣",
+  "Men's & Boys' Furnishgs, Work Clothg, & Allied Garments": "紳士・少年向け衣料",
+  "Optical Instruments & Lenses": "光学機器とレンズ",
+  "Security Brokers, Dealers & Flotation Companies": "証券ブローカーとディーラー",
+  "Printed Circuit Boards": "プリント基板",
+  "Air Transportation, Scheduled": "定期航空輸送",
+  "Special Industry Machinery, NEC": "他に分類されない特殊産業用機械",
+  "Food and Kindred Products": "食品および関連製品",
+  "Biological Products, (No Diagnostic Substances)": "生物学的製剤（診断用を除く）",
+  "Computer Storage Devices": "コンピュータ記憶装置",
+  "Canned, Frozen & Preservd Fruit, Veg & Food Specialties": "缶詰・冷凍の果実、野菜、食品",
+};
 
-/** Verified news only. Key is ticker|entryDate|exitDate. */
-const NEWS: Record<string, { text: string; url: string }> = {};
+/** Verified items whose date falls inside the hold. Key is ticker|entryDate|exitDate. */
+const NEWS: Record<string, { text: string; url: string }> = {
+  "DELL|2024-02-26|2024-03-01": {
+    text: "2024-02-29の決算で、AI向けサーバの受注が前四半期比で約40%増え、受注残は29億ドルだったと説明。",
+    url: "https://www.reuters.com/technology/dell-shares-soar-annual-forecast-gets-boost-ai-adoption-2024-03-01/",
+  },
+  "SMCI|2024-11-08|2024-11-14": {
+    text: "2024-11-13に10-Qの期限延長届を提出。監査法人の辞任後、後任が未定だと記載。",
+    url: "https://d18rn0p25nwr6d.cloudfront.net/CIK-0001375365/0f60054b-7835-4438-9c3e-91b27c9287e7.html",
+  },
+  "NVDA|2025-02-18|2025-03-04": {
+    text: "2025-03-03、関税の表明を受けて同日の株価が下落したとForbesが報じた。",
+    url: "https://www.forbes.com/sites/dereksaul/2025/03/03/nvidia-falls-9-as-trumps-tariffs-pledge-routs-stocks-on-monday/",
+  },
+};
 
 type Snap = {
   f1: TtmStatus;

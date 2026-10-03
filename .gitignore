@@ -51,3 +51,4 @@ next-env.d.ts
 *.ofx
 *.qfx
 !src/lib/fixtures/**/*.synthetic.csv
+!data/backtest/top_trades.csv
