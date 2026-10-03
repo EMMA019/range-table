@@ -1,5 +1,5 @@
 import type { Book } from "./backtest-study";
-import type { EtfReason } from "./etf-sleeve";
+import type { EtfEntryName, EtfReason } from "./etf-sleeve";
 import { MAIN_Q, MAIN_Z, bootstrapMean, type Verdict } from "./round2";
 import { SPY_BENCH, round3Verdict, type Round3Universe, type Round3Window } from "./round3";
 import { ROUND7_PREREG } from "./round7";
@@ -8,6 +8,8 @@ import { ROUND7_PREREG } from "./round7";
 export const ROUND8_PREREG = "4235eface3528f5e1ca4a13e1cf1d0a75742a1f5";
 /** Amendment commit. The ATR exit cites this. The box exit stays on the original lock. */
 export const ROUND8_AMENDMENT = "52b73ed249d46e5d3af26d61c1148af5e83397a5";
+/** Second amendment. The entry grid cites this. E15 stays the published fresh cross. */
+export const ROUND8_AMENDMENT2 = "54dcc909b06c22fe7e1a0c36be8aa334ee910eda";
 
 export type EtfExitName = "box" | "atr";
 
@@ -37,6 +39,8 @@ export type Round8Row = {
   window: Round3Window;
   /** Null on the stock book alone. */
   exit: EtfExitName | null;
+  /** Null on the stock book alone. E15 is the published fresh cross. */
+  entry: EtfEntryName | null;
   totalUsd: number;
   mtmDdUsd: number;
   stockUtil: number;
@@ -74,10 +78,11 @@ export type Round8Hold = {
 };
 
 export type Round8Report = {
-  v: 2;
+  v: 3;
   prereg: string;
   rulesCommit: string;
   amendment: string;
+  amendment2: string;
   round7Commit: string;
   generatedAt: string;
   fill: string;
@@ -144,7 +149,15 @@ export function buyAndHold(
   };
 }
 
-export function scoreBook(book: Book, id: Round8Id, universe: Round3Universe, window: Round3Window, exit: EtfExitName | null, judged: boolean): Round8Row {
+export function scoreBook(
+  book: Book,
+  id: Round8Id,
+  universe: Round3Universe,
+  window: Round3Window,
+  exit: EtfExitName | null,
+  entry: EtfEntryName | null,
+  judged: boolean,
+): Round8Row {
   const stock = book.fills;
   const etf = book.etfFills;
   const sleeve = book.sleeve;
@@ -180,6 +193,7 @@ export function scoreBook(book: Book, id: Round8Id, universe: Round3Universe, wi
     universe,
     window,
     exit,
+    entry,
     totalUsd: book.totalUsd,
     mtmDdUsd: book.maxDrawdownUsd,
     stockUtil: sleeve.stockUtil,
@@ -215,4 +229,5 @@ export function scoreBook(book: Book, id: Round8Id, universe: Round3Universe, wi
   };
 }
 
+export type { EtfEntryName };
 export { ROUND7_PREREG, SPY_BENCH };

@@ -223,4 +223,39 @@ describe("round 8 etf sleeve", () => {
     assert.equal(box.etfFills?.[0]?.qty, 16);
     assert.equal(box.etfFills?.[0]?.forcedOne, false);
   });
+
+  it("keeps E15 on the 15% cross and moves E25 to the 25% cross", () => {
+    const bars = [
+      bar("d0", 10, 12, 8, 8.2),
+      bar("d1", 9, 12, 8, 8.2),
+      bar("d2", 9, 12, 8, 8.7),
+      bar("d3", 9, 12, 8, 10),
+      bar("d4", 10, 12, 8, 11),
+    ];
+    const sessions = ["d0", "d1", "d2", "d3", "d4"];
+    const e15 = etfOrders(bars, 2, sessions, "E15");
+    const e25 = etfOrders(bars, 2, sessions, "E25");
+    assert.equal(e15.has("d2"), false);
+    assert.equal(e15.get("d3")?.stop, 8);
+    assert.equal(e15.get("d3")?.target, 12);
+    assert.equal(e15.has("d4"), false);
+    assert.equal(e25.has("d3"), false);
+    assert.equal(e25.get("d4")?.stop, 8);
+    assert.equal(e25.get("d4")?.target, 12);
+  });
+
+  it("signals E30 inside the lower 30% without a prior close", () => {
+    const sessions = ["d0", "d1", "d2"];
+    const inside = [bar("d0", 10, 12, 8, 11), bar("d1", 9, 12, 8, 8.5), bar("d2", 9, 12, 8, 10)];
+    const hit = etfOrders(inside, 2, sessions, "E30");
+    assert.equal(hit.has("d1"), false);
+    assert.equal(hit.get("d2")?.stop, 8);
+    assert.equal(hit.get("d2")?.target, 12);
+    const onLow = [bar("d0", 10, 12, 8, 11), bar("d1", 9, 12, 8, 8), bar("d2", 9, 12, 8, 10)];
+    assert.equal(etfOrders(onLow, 2, sessions, "E30").size, 0);
+    const above = [bar("d0", 10, 12, 8, 11), bar("d1", 9, 12, 8, 9.3), bar("d2", 9, 12, 8, 10)];
+    assert.equal(etfOrders(above, 2, sessions, "E30").size, 0);
+    const flat = [bar("d0", 10, 10, 10, 10), bar("d1", 10, 10, 10, 10), bar("d2", 10, 10, 10, 10)];
+    assert.equal(etfOrders(flat, 2, sessions, "E30").size, 0);
+  });
 });

@@ -7,12 +7,17 @@ export const ETF_HOLD = 20;
 export type EtfBar = { date: string; o: number; h: number; l: number; c: number };
 export type EtfReason = "target" | "stop" | "timeout" | "preempted" | "window";
 export type EtfOrder = { stop: number; target: number; atr: number | null };
+export type EtfEntryName = "E15" | "E25" | "E30";
 
 const ATR_WINDOW = 14;
 
+export function lineOf(low: number, high: number, fraction: number): number | null {
+  if (!(high > low) || !(fraction > 0)) return null;
+  return Math.round((low + fraction * (high - low)) * 10000) / 10000;
+}
+
 export function line15(low: number, high: number): number | null {
-  if (!(high > low)) return null;
-  return Math.round((low + 0.15 * (high - low)) * 10000) / 10000;
+  return lineOf(low, high, 0.15);
 }
 
 export function boxAt(bars: readonly { h: number; l: number }[], index: number, n: number): { low: number; high: number } | null {
@@ -61,20 +66,31 @@ export function etfAtrShares(entry: number, atr: number, cash: number): { qty: n
   return { qty: 0, forcedOne: false };
 }
 
-/** Fresh cross of the 15% line. Entry is the next clock session, filled at that open by the walker. */
-export function etfOrders(bars: readonly EtfBar[], n: number, sessions: readonly string[]): Map<string, EtfOrder> {
+/**
+ * E15 and E25 are a fresh cross of that session's own line.
+ * E30 is a close strictly above the box low and at or below the 30% line.
+ * Entry is the next clock session, filled at that open by the walker.
+ */
+export function etfOrders(bars: readonly EtfBar[], n: number, sessions: readonly string[], entryName: EtfEntryName = "E15"): Map<string, EtfOrder> {
   const out = new Map<string, EtfOrder>();
   const next = new Map<string, string>();
   for (let i = 0; i < sessions.length - 1; i += 1) next.set(sessions[i], sessions[i + 1]);
   const index = new Map(bars.map((bar, i) => [bar.date, i]));
+  const fraction = entryName === "E25" ? 0.25 : entryName === "E30" ? 0.3 : 0.15;
   for (let i = 1; i < bars.length; i += 1) {
     const box = boxAt(bars, i, n);
-    const prev = boxAt(bars, i - 1, n);
-    if (!box || !prev) continue;
-    const line = line15(box.low, box.high);
-    const prevLine = line15(prev.low, prev.high);
-    if (line == null || prevLine == null) continue;
-    if (!(bars[i].c >= line) || !(bars[i - 1].c < prevLine)) continue;
+    if (!box) continue;
+    const line = lineOf(box.low, box.high, fraction);
+    if (line == null) continue;
+    if (entryName === "E30") {
+      if (!(bars[i].c > box.low) || !(bars[i].c <= line)) continue;
+    } else {
+      const prev = boxAt(bars, i - 1, n);
+      if (!prev) continue;
+      const prevLine = lineOf(prev.low, prev.high, fraction);
+      if (prevLine == null) continue;
+      if (!(bars[i].c >= line) || !(bars[i - 1].c < prevLine)) continue;
+    }
     let entry = next.get(bars[i].date) ?? null;
     if (!entry) {
       entry = sessions.find((date) => date > bars[i].date) ?? null;
