@@ -704,6 +704,9 @@ export type Book = {
   exposure?: { investedFraction: number | null; daysOpenShare: number | null };
   etfFills?: EtfFill[];
   sleeve?: SleeveStats;
+  refusals?: Array<{ ticker: string; entryDate: string; reason: "cash" | "slot" | "semi" }>;
+  /** Earliest session where unsettled stock entry cost peaked. */
+  deployed?: { usd: number; date: string };
 };
 
 export type EtfSleeveOpts = {
@@ -859,6 +862,15 @@ export type PortfolioOpts = {
   keepSleeveStats?: boolean;
   /** Adds holding sessions and per-leg exit reasons. Omitted books stay unchanged. */
   keepRound7?: boolean;
+  /**
+   * No cash test and no position cap. The semiconductor cap still applies when `maxSemi` is set.
+   * Omitted books keep the $3,200 cash test and the five-slot cap.
+   */
+  unlimited?: boolean;
+  /** Records cash, slot, and semiconductor refusals. Omitted books do not. */
+  keepRefusals?: boolean;
+  /** Peak of unsettled stock entry cost, measured after that session's buys. */
+  keepDeployed?: boolean;
   closes: CloseMap;
 };
 
@@ -962,6 +974,33 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
   let bothNegative = 0;
   let stockUtilSum = 0;
   let etfUtilSum = 0;
+  const refusals: Array<{ ticker: string; entryDate: string; reason: "cash" | "slot" | "semi" }> = [];
+  const refuse = (cand: Candidate, reason: "cash" | "slot" | "semi") => {
+    if (opts.keepRefusals) refusals.push({ ticker: cand.ticker, entryDate: cand.entryDate, reason });
+  };
+  type DeployedLot = { pos: OpenPos; cost: number; settle: string | null };
+  const openLots: DeployedLot[] = [];
+  let peakDeployed = 0;
+  let peakDeployedDate = sessions[0] ?? "";
+  const dropSettled = (date: string) => {
+    if (!opts.keepDeployed) return;
+    for (let i = openLots.length - 1; i >= 0; i -= 1) {
+      const settle = openLots[i].settle;
+      if (settle != null && settle <= date) openLots.splice(i, 1);
+    }
+  };
+  const closeLots = (date: string) => {
+    if (!opts.keepDeployed) return;
+    const still = new Set(positions);
+    const when = nextSession.get(date) ?? null;
+    for (let i = openLots.length - 1; i >= 0; i -= 1) {
+      const lot = openLots[i];
+      if (lot.settle != null || still.has(lot.pos)) continue;
+      if (when) lot.settle = when;
+      else openLots.splice(i, 1);
+    }
+  };
+  const deployedNow = () => openLots.reduce((sum, lot) => sum + lot.cost, 0);
   const stockCash = (amount: number, date: string, reason: string) => {
     if (!track) return;
     stockFlow += amount;
@@ -1127,6 +1166,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
   for (let si = 0; si < sessions.length; si += 1) {
     const date = sessions[si];
     release(date);
+    dropSettled(date);
     if (etfQty > 0) {
       const bar = etfOpt?.bars.get(date);
       if (bar) {
@@ -1145,15 +1185,16 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         positions.splice(i, 1);
       }
     }
+    closeLots(date);
     const prevDate = si > 0 ? sessions[si - 1] : null;
     let morning = settled + pending.reduce((sum, lot) => sum + lot.amount, 0);
     for (const pos of positions) {
       const px = prevDate ? closePx(pos.cand.ticker, prevDate, pos.cand.entry) : pos.cand.entry;
       morning += markedQty(pos) * px;
     }
-    const throttled = opts.throttleBelowStart === true && morning < capital - 1e-9;
-    const slotCap = throttled ? Math.min(maxPositions, 2) : maxPositions;
-    const newCap = throttled ? 1 : Number.POSITIVE_INFINITY;
+    const throttled = !opts.unlimited && opts.throttleBelowStart === true && morning < capital - 1e-9;
+    const slotCap = opts.unlimited ? Number.POSITIVE_INFINITY : throttled ? Math.min(maxPositions, 2) : maxPositions;
+    const newCap = opts.unlimited ? Number.POSITIVE_INFINITY : throttled ? 1 : Number.POSITIVE_INFINITY;
     let opened = 0;
     let semisHeld = positions.reduce((sum, pos) => sum + (pos.cand.semi ? 1 : 0), 0);
     let nonSemiHeld = opts.maxNonSemi == null ? 0 : positions.reduce((sum, pos) => sum + (pos.cand.semi ? 0 : 1), 0);
@@ -1167,24 +1208,28 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         continue;
       }
       if (opts.maxSemi != null && cand.semi && semisHeld >= opts.maxSemi) {
+        refuse(cand, "semi");
         skippedSemi += 1;
         continue;
       }
       if (opts.maxNonSemi != null && !cand.semi && nonSemiHeld >= opts.maxNonSemi) {
+        refuse(cand, "semi");
         skippedSemi += 1;
         continue;
       }
       if (positions.length >= slotCap || opened >= newCap) {
+        refuse(cand, "slot");
         skippedSlot += 1;
         continue;
       }
       const cost = qty * cand.entry + entryFee(qty, cand.entry);
-      if (etfOpt && etfQty > 0 && cost > settled + 1e-9) {
+      if (!opts.unlimited && etfOpt && etfQty > 0 && cost > settled + 1e-9) {
         const bar = etfOpt.bars.get(date);
         const qtyEtf = bar ? preemptQty(cost - settled, bar.o, etfQty) : null;
         if (bar && qtyEtf != null && qtyEtf > 0) sellEtf(date, qtyEtf, bar.o, "preempted", "now");
       }
-      if (cost > settled + 1e-9) {
+      if (!opts.unlimited && cost > settled + 1e-9) {
+        refuse(cand, "cash");
         skippedCash += 1;
         continue;
       }
@@ -1214,6 +1259,17 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         left: qty,
         taken: [],
       });
+      if (opts.keepDeployed) {
+        const openedPos = positions[positions.length - 1];
+        openLots.push({ pos: openedPos, cost: qty * cand.entry, settle: null });
+      }
+    }
+    if (opts.keepDeployed) {
+      const now = deployedNow();
+      if (now > peakDeployed) {
+        peakDeployed = now;
+        peakDeployedDate = date;
+      }
     }
     if (etfOpt && etfQty === 0) {
       const order = etfOpt.orders.get(date);
@@ -1301,6 +1357,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         positions.splice(i, 1);
       }
     }
+    closeLots(date);
     if (etfQty > 0) {
       const bar = etfOpt?.bars.get(date);
       if (bar) {
@@ -1465,6 +1522,8 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         }
       : {}),
     ...(opts.keepDaily ? { daily } : {}),
+    ...(opts.keepRefusals ? { refusals } : {}),
+    ...(opts.keepDeployed ? { deployed: { usd: round(peakDeployed), date: peakDeployedDate } } : {}),
   };
 }
 
