@@ -703,6 +703,11 @@ export type PortfolioOpts = {
   order?: (list: Candidate[]) => void;
   /** At most this many semiconductor or equipment names among the open slots. */
   maxSemi?: number;
+  /**
+   * At most this many non-semiconductor slots. Omitted means no jab cap, so existing
+   * books keep the same fills. A skip increments skippedSemi, the same counter as maxSemi.
+   */
+  maxNonSemi?: number;
   /** Below starting capital, cap the book at 2 slots and 1 new buy. */
   throttleBelowStart?: boolean;
   /** Replaces the $300–$450 lot. Null skips the name. */
@@ -823,6 +828,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     const newCap = throttled ? 1 : Number.POSITIVE_INFINITY;
     let opened = 0;
     let semisHeld = positions.reduce((sum, pos) => sum + (pos.cand.semi ? 1 : 0), 0);
+    let nonSemiHeld = opts.maxNonSemi == null ? 0 : positions.reduce((sum, pos) => sum + (pos.cand.semi ? 0 : 1), 0);
     const todays = byEntry.get(date) ?? [];
     const held = new Set(positions.map((pos) => pos.cand.ticker));
     for (const cand of todays) {
@@ -833,6 +839,10 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         continue;
       }
       if (opts.maxSemi != null && cand.semi && semisHeld >= opts.maxSemi) {
+        skippedSemi += 1;
+        continue;
+      }
+      if (opts.maxNonSemi != null && !cand.semi && nonSemiHeld >= opts.maxNonSemi) {
         skippedSemi += 1;
         continue;
       }
@@ -849,6 +859,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
       held.add(cand.ticker);
       opened += 1;
       if (cand.semi) semisHeld += 1;
+      else if (opts.maxNonSemi != null) nonSemiHeld += 1;
       const exitDate = cand.exitDate > last ? last : cand.exitDate;
       const forced = cand.exitDate > last;
       positions.push({
