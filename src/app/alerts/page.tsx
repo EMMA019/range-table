@@ -46,7 +46,7 @@ export default async function AlertsPage() {
           <p className="pt-6 text-sm leading-relaxed text-muted">いま行動が必要な項目はない。</p>
         )}
         <p className="pt-2 text-[11px] leading-relaxed text-muted">
-          IN OK・ATR3%以上・決算5営業日以内なしの銘柄。決算日が未登録の銘柄は「低」で出す。同じ内容は同じIDのまま。JSONは /api/alerts。
+          IN OK・ATR3%以上・決算5営業日以内なしの銘柄を、対SPYの20日強さ順に出す。決算日が無い銘柄は「低」で「決算日不明」。保有の決算が3営業日以内のときは、ログイン中に「決算前に売るか判断」を出す。同じ内容は同じIDのまま。JSONは /api/alerts。
         </p>
       </main>
     </div>

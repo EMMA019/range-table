@@ -7,6 +7,7 @@ import {
   MA_SLOPE_LOOKBACK,
   PE_RECOVERY_MULTIPLE,
 } from "./constants";
+import { EARNINGS_AVOID_BADGE } from "./format";
 
 export const BASIS = {
   close: "確定した日足の終値。場中の未確定の足は入れない",
@@ -26,6 +27,7 @@ export const BASIS = {
   slope: `Yahoo Finance の確定終値で作った20日単純移動平均。今日の値 ÷ ${MA_SLOPE_LOOKBACK}営業日前の値 − 1。±${MA_SLOPE_FLAT_PCT}%未満は横ばい`,
   volume: "出来高=Yahoo日足。倍率=直近日の出来高÷直前20日平均。薄商い<0.7倍、急増≧1.5倍。売買代金=終値×出来高の20日平均。",
   corr: "60営業日の日次リターン相関。保有バスケット=非公開設定(HOLDINGS_JSON)の株数×最新終値で加重。ONDSは除外。未設定なら—。",
+  rs: "終値 ÷ 20本前の終値 − 1。同じ計算の SPY を引いた差。強いほど上",
   guide: "20日箱(直近20営業日の高値・安値)から計算。反発=20日安値後の連続陽線数",
   entryInOk: "反発が1日以上続き、終値が20日箱の15%〜25%にある。",
   entryEarly: "終値が15%ラインより下、または箱の底付近で反発がまだ確認できない。",
@@ -59,7 +61,7 @@ export const TAG_SECTORS = [
 export const TEAM_PICKS_EMPTY = "チームの推奨は朝に更新されます";
 export const PICK_ENTRY_BADGE = "エントリー圏";
 export const PICK_WATCH_BADGE = "監視のみ";
-export const PICK_EARNINGS_BADGE = "決算5営業日以内";
+export const PICK_EARNINGS_BADGE = EARNINGS_AVOID_BADGE;
 export const PICK_DISTANCE_NOTE = "距離=(終値 − ライン) ÷ ライン";
 
 export const SORT_OPTIONS = [
@@ -71,6 +73,7 @@ export const SORT_OPTIONS = [
   { id: "fwdPeAsc", label: "予想PERの低い順" },
   { id: "slopeDesc", label: "20日線の上向きから" },
   { id: "volDesc", label: "出来高倍率の高い順" },
+  { id: "rsDesc", label: "対SPY強い順" },
 ] as const;
 
 export type SortId = (typeof SORT_OPTIONS)[number]["id"];

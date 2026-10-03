@@ -50,6 +50,9 @@ function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow
     sectorLabel: null,
     corrBasket: null,
     corrSoxx: null,
+    rs20: null,
+    semi: false,
+    semiFull: false,
     stale: false,
     ...partial,
   };
@@ -204,6 +207,16 @@ describe("applyView", () => {
     assert.deepEqual(
       applyView(names, { ...filters, sort: "volDesc" }).map((item) => item.ticker),
       ["HOT", "FLAT", "QUIET", "NONE"],
+    );
+    const byRs = [
+      row({ ticker: "WEAK", rs20: -0.02 }),
+      row({ ticker: "STRONG", rs20: 0.08 }),
+      row({ ticker: "FLATRS", rs20: 0 }),
+      row({ ticker: "MISS", rs20: null }),
+    ];
+    assert.deepEqual(
+      applyView(byRs, { ...filters, sort: "rsDesc" }).map((item) => item.ticker),
+      ["STRONG", "FLATRS", "WEAK", "MISS"],
     );
   });
 

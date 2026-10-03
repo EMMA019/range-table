@@ -23,6 +23,8 @@ export type HoldingRow = {
   atr14: number | null;
   entrySignal: EntrySignal | null;
   earnings: EarningsView | null;
+  /** 20-session return minus SPY. Null when either series is short. */
+  rs20: number | null;
   stale: boolean;
   error: string | null;
   note: string | null;
@@ -58,8 +60,9 @@ export function buildHoldingsView(input: {
   earnings: Record<string, EarningsView | null | undefined>;
   usdJpy: { rate: number; date: string } | null;
   today: string;
+  rs?: Record<string, number | null | undefined>;
 }): HoldingsView {
-  const { config, quotes, earnings, usdJpy, today } = input;
+  const { config, quotes, earnings, usdJpy, today, rs } = input;
   const holdings = config.holdings.filter((holding) => !isIgnoredTicker(holding.ticker));
   const base = holdings.map((holding) => {
     const entry = quotes[holding.ticker];
@@ -85,6 +88,7 @@ export function buildHoldingsView(input: {
       atr14: atr,
       entrySignal: quote?.entrySignal ?? null,
       earnings: earnings[holding.ticker] ?? null,
+      rs20: rs?.[holding.ticker] ?? null,
       stale: entry?.stale ?? false,
       error: quote ? null : (entry?.error ?? "日足がまだない"),
       note: holding.note,

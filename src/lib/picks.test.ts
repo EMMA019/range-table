@@ -63,7 +63,7 @@ describe("team picks", () => {
     assert.equal(TEAM_PICKS_EMPTY, "チームの推奨は朝に更新されます");
     assert.equal(PICK_ENTRY_BADGE, "エントリー圏");
     assert.equal(PICK_WATCH_BADGE, "監視のみ");
-    assert.equal(PICK_EARNINGS_BADGE, "決算5営業日以内");
+    assert.equal(PICK_EARNINGS_BADGE, "決算前・新規は避けて");
   });
 
   it("reads the committed fields and uppercases the ticker", () => {

@@ -3,11 +3,21 @@ import { EntryBadge } from "@/components/entry-badge";
 import { Shares10 } from "@/components/shares10";
 import {
   PICK_DISTANCE_NOTE,
-  PICK_EARNINGS_BADGE,
   PICK_ENTRY_BADGE,
   PICK_WATCH_BADGE,
 } from "@/lib/copy";
-import { formatAtr, formatDev, formatPx, formatVolumeRatio, guideLineText, reboundText, shortDate } from "@/lib/format";
+import {
+  earningsBadge,
+  formatAtr,
+  formatDev,
+  formatEarnings,
+  formatPx,
+  formatRs,
+  formatVolumeRatio,
+  guideLineText,
+  reboundText,
+  shortDate,
+} from "@/lib/format";
 import type { PickCard } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +37,7 @@ function PickCardView({ pick }: { pick: PickCard }) {
   const badges = [
     pick.entryZone ? PICK_ENTRY_BADGE : null,
     pick.watchOnly ? PICK_WATCH_BADGE : null,
-    pick.earningsWarn ? PICK_EARNINGS_BADGE : null,
+    earningsBadge(pick.earnings),
   ].filter((badge): badge is string => Boolean(badge));
 
   return (
@@ -67,6 +77,10 @@ function PickCardView({ pick }: { pick: PickCard }) {
           <BoxBar pct={quote.boxPct} />
           <p className="text-[11px] leading-relaxed text-muted">{guideLineText(quote.line15, quote.line25)}</p>
           <p className="text-[11px] text-ink">{reboundText(quote.reboundDays)}</p>
+          <p className="text-[11px] text-muted">{formatEarnings(pick.earnings)}</p>
+          <p className="text-[11px] text-muted">
+            対SPY <b className="font-mono font-medium tabular-nums text-ink">{formatRs(pick.rs20)}</b>
+          </p>
           <p className="text-[11px] text-muted">
             ATR(14) <b className="font-mono font-medium text-ink tabular-nums">{formatAtr(quote.atr14)}</b>
             {" · "}
@@ -80,7 +94,10 @@ function PickCardView({ pick }: { pick: PickCard }) {
           </p>
         </div>
       ) : (
-        <p className="mt-3 text-sm text-muted">{pick.error ?? "日足がまだない"}</p>
+        <>
+          <p className="mt-2 text-[11px] text-muted">{formatEarnings(pick.earnings)}</p>
+          <p className="mt-3 text-sm text-muted">{pick.error ?? "日足がまだない"}</p>
+        </>
       )}
 
       <dl className="mt-3 space-y-2 text-sm">

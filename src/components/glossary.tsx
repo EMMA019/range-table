@@ -17,6 +17,7 @@ const ITEMS = [
   ["$10株数", BASIS.shares10],
   ["上抜け", BASIS.breakout],
   ["決算までの営業日", BASIS.earnings],
+  ["対SPY", BASIS.rs],
   ["実績PER", BASIS.trailingPe],
   ["予想PER", BASIS.forwardPe],
   ["利益回復中", BASIS.recovering],

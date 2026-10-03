@@ -195,19 +195,35 @@ export function formatAge(fetchedAt: number, now = Date.now()): string {
   return `${min}分前に取得`;
 }
 
-export function formatEarnings(e: EarningsView | null): string {
-  if (!e) return "決算日の記載なし";
-  const when = shortDate(e.date);
-  const status = e.status === "confirmed" ? "確" : "推定";
-  if (e.state === "past") return `決算済 ${when}（${status}）`;
-  if (e.state === "today") return `本日決算（${status}）`;
-  return `決算 ${when}（${status}）· あと${e.tradingDays}営業日`;
+export const EARNINGS_UNKNOWN = "決算日不明";
+export const EARNINGS_AVOID_BADGE = "決算前・新規は避けて";
+export const SEMI_CAP_BADGE = "半導体2枠埋まり";
+
+/** Countdown for a known next earnings date. Null once that date is in the past. */
+export function earningsCountdown(e: EarningsView | null): string | null {
+  if (!e || e.state === "past") return null;
+  return `決算まであと${e.tradingDays ?? 0}営業日`;
 }
 
+export function formatEarnings(e: EarningsView | null): string {
+  if (!e) return EARNINGS_UNKNOWN;
+  const countdown = earningsCountdown(e);
+  if (countdown) return countdown;
+  const when = shortDate(e.date);
+  const status = e.status === "confirmed" ? "確" : "推定";
+  return `決算済 ${when}（${status}）`;
+}
+
+/** Red badge once the next earnings date is inside five trading days, including today. */
 export function earningsBadge(e: EarningsView | null): string | null {
   if (!e?.warn) return null;
-  if (e.state === "today") return "本日決算";
-  return `決算あと${e.tradingDays}営業日`;
+  return EARNINGS_AVOID_BADGE;
+}
+
+/** Signed percent. `rs` is a return difference (0.024 = +2.4%). */
+export function formatRs(rs: number | null): string {
+  if (rs == null || !Number.isFinite(rs)) return "—";
+  return formatDev(rs * 100);
 }
 
 export function friendlyFetchError(message: string): string {

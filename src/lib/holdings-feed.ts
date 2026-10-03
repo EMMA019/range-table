@@ -3,6 +3,7 @@ import { classifyEarnings } from "./earnings";
 import { holdingsSource, isIgnoredTicker } from "./holdings";
 import { buildHoldingsView, type HoldingsView, type QuoteInput } from "./holdings-view";
 import { ensureSeries, quoteFromEntry, usdJpyOf } from "./market";
+import { rs20 } from "./rs";
 import { nextTradeDate, precheck, type PrecheckResult } from "./precheck";
 import type { Bar, EarningsView, Watchlist } from "./types";
 import { loadWatchlist } from "./watchlist";
@@ -19,8 +20,21 @@ export async function getHoldingsView(now = new Date()): Promise<HoldingsView> {
   const cache = await ensureSeries(list);
   const config = holdingsSource().load();
   const quotes: Record<string, QuoteInput> = {};
-  for (const holding of config.holdings) quotes[holding.ticker] = quoteFromEntry(cache.series[holding.ticker]);
-  return buildHoldingsView({ config, quotes, earnings: earningsMap(list, todayEt(now)), usdJpy: usdJpyOf(cache), today: todayEt(now) });
+  const rs: Record<string, number | null> = {};
+  const spyBars = cache.series.SPY?.bars ?? [];
+  for (const holding of config.holdings) {
+    const bars = cache.series[holding.ticker]?.bars;
+    quotes[holding.ticker] = quoteFromEntry(cache.series[holding.ticker]);
+    rs[holding.ticker] = bars ? rs20(bars, spyBars) : null;
+  }
+  return buildHoldingsView({
+    config,
+    quotes,
+    earnings: earningsMap(list, todayEt(now)),
+    usdJpy: usdJpyOf(cache),
+    today: todayEt(now),
+    rs,
+  });
 }
 
 const TICKER_RE = /^[A-Z][A-Z0-9.\-]{0,9}$/;

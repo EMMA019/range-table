@@ -5,13 +5,16 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CHIPS, SORT_OPTIONS, type ChipKey, type SortId } from "@/lib/copy";
 import { formatPe } from "@/lib/pe";
 import {
+  SEMI_CAP_BADGE,
   earningsBadge,
   formatAge,
   formatDev,
   formatAtr,
   formatCompactShares,
   formatCorr,
+  formatEarnings,
   formatPx,
+  formatRs,
   formatVolumeRatio,
   guideLineText,
   reboundText,
@@ -493,6 +496,7 @@ function TickerCard({
   const badges = [
     quote?.brokeHigh ? "上抜け" : null,
     earningsBadge(row.earnings),
+    row.semi && row.semiFull && quote?.entrySignal === "in_ok" && !row.watchOnly ? SEMI_CAP_BADGE : null,
     row.watchOnly ? "監視のみ" : null,
     quote?.gapWarning ? "価格が飛んでいる" : null,
     row.tags.includes("高ボラ") ? "高ボラ" : null,
@@ -561,7 +565,8 @@ function TickerCard({
             <div className="mb-1 text-[11px] text-muted">箱の位置</div>
             <BoxBar pct={quote.boxPct} />
           </div>
-          <p className="mt-2 text-[11px] leading-relaxed text-muted">{guideLineText(quote.line15, quote.line25)}</p>
+          <p className="mt-2 text-[11px] text-muted">{formatEarnings(row.earnings)}</p>
+          <p className="mt-1 text-[11px] leading-relaxed text-muted">{guideLineText(quote.line15, quote.line25)}</p>
           <p className="text-[11px] text-ink">{reboundText(quote.reboundDays)}</p>
           <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-muted">
             <span>
@@ -599,6 +604,19 @@ function TickerCard({
               </b>
             </span>
             <span>
+              対SPY{" "}
+              <b
+                className={cn(
+                  "font-mono font-medium tabular-nums",
+                  row.rs20 != null && row.rs20 > 0 && "text-sage",
+                  row.rs20 != null && row.rs20 < 0 && "text-rust",
+                  (row.rs20 == null || row.rs20 === 0) && "text-ink",
+                )}
+              >
+                {formatRs(row.rs20)}
+              </b>
+            </span>
+            <span>
               20日安値 <b className="font-mono font-medium text-ink tabular-nums">{formatPx(quote.low20)}</b>
             </span>
             <span>
@@ -607,10 +625,13 @@ function TickerCard({
           </div>
         </>
       ) : (
-        <p className="mt-2 text-sm text-rust">
-          {row.error}
-          {row.errorDetail && row.errorDetail !== row.error ? `（${row.errorDetail}）` : ""}
-        </p>
+        <>
+          <p className="mt-2 text-[11px] text-muted">{formatEarnings(row.earnings)}</p>
+          <p className="mt-2 text-sm text-rust">
+            {row.error}
+            {row.errorDetail && row.errorDetail !== row.error ? `（${row.errorDetail}）` : ""}
+          </p>
+        </>
       )}
       <p className="mt-2 text-[11px] leading-snug text-muted">
         実績PER{" "}

@@ -124,6 +124,16 @@ function compareRows(a: TickerRow, b: TickerRow, sort: SortId): number {
     return a.ticker.localeCompare(b.ticker);
   }
 
+  if (sort === "rsDesc") {
+    const av = a.rs20;
+    const bv = b.rs20;
+    if (av == null && bv == null) return a.ticker.localeCompare(b.ticker);
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (av !== bv) return av > bv ? -1 : 1;
+    return a.ticker.localeCompare(b.ticker);
+  }
+
   if (sort === "slopeDesc") {
     const av = a.quote?.maSlopePct;
     const bv = b.quote?.maSlopePct;

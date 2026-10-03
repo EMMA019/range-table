@@ -16,10 +16,11 @@ const PRIORITY_CLASS: Record<AlertPriority, string> = {
 };
 
 const FLAG_LABEL: Record<string, string> = {
-  no_earnings_date: "決算日未登録",
+  no_earnings_date: "決算日不明",
   price_over_450: "1株$450超",
   stale_data: "前回の日足",
   amended: "訂正",
+  semi_cap: "半導体2枠埋まり",
 };
 
 export function AlertCards({ items }: { items: AlertItem[] }) {
