@@ -1,5 +1,6 @@
 import { computeQuote, sharesForMove } from "./compute";
 import { CHART_SESSIONS, GAP_THRESHOLD } from "./constants";
+import { etfOpenExit, etfRestExit, etfShares, preemptQty, timeoutDate, type EtfReason } from "./etf-sleeve";
 import { legSplit, scaleActions, type ScaleAction } from "./scale-exit";
 import type { Bar, EntrySignal } from "./types";
 
@@ -701,6 +702,31 @@ export type Book = {
   daily?: Array<{ date: string; equity: number; realizedEquity: number }>;
   /** Cash after the session's fills. Present only when the book asked for it. */
   exposure?: { investedFraction: number | null; daysOpenShare: number | null };
+  etfFills?: EtfFill[];
+  sleeve?: SleeveStats;
+};
+
+export type EtfSleeveOpts = {
+  symbol: string;
+  orders: Map<string, { stop: number; target: number }>;
+  bars: Map<string, { o: number; h: number; l: number; c: number }>;
+  sessions: readonly string[];
+};
+
+export type EtfFill = {
+  ticker: string;
+  entryDate: string;
+  exitDate: string;
+  pnlUsd: number;
+  hold: number;
+  legs: Array<{ reason: EtfReason; qty: number; pnlUsd: number }>;
+};
+
+export type SleeveStats = {
+  stockUtil: number;
+  etfUtil: number;
+  bothNegativeDays: number;
+  sameDayStops: number;
 };
 
 export type YearRestart = {
@@ -823,6 +849,10 @@ export type PortfolioOpts = {
   quotes?: Map<string, Map<string, DayQuote>>;
   /** Average invested fraction and the share of sessions still holding a position at the close. */
   keepExposure?: boolean;
+  /** Idle-cash ETF. Omitted books do not sell shares to fund a stock. */
+  etfSleeve?: EtfSleeveOpts;
+  /** Stock and ETF mark totals. Omitted books leave `sleeve` unset. */
+  keepSleeveStats?: boolean;
   /** Adds holding sessions and per-leg exit reasons. Omitted books stay unchanged. */
   keepRound7?: boolean;
   closes: CloseMap;
@@ -907,6 +937,62 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
 
   const exitFee = (qty: number, price: number) => (opts.orderFee ? opts.orderFee(qty, price) : ROUND_TRIP_FEE);
   const entryFee = (qty: number, price: number) => (opts.orderFee ? opts.orderFee(qty, price) : 0);
+  const track = opts.keepSleeveStats === true || opts.etfSleeve != null;
+  const etfOpt = opts.etfSleeve ?? null;
+  let etfQty = 0;
+  let etfEntryPx = 0;
+  let etfEntryDate = "";
+  let etfStop = 0;
+  let etfTarget = 0;
+  let etfTimeout: string | null = null;
+  let etfPnl = 0;
+  const etfLegs: EtfFill["legs"] = [];
+  const etfFills: EtfFill[] = [];
+  let etfFlow = 0;
+  let stockFlow = 0;
+  const stockStopDates = new Set<string>();
+  const etfStopDates = new Set<string>();
+  let prevStockMark = 0;
+  let prevEtfMark = 0;
+  let bothNegative = 0;
+  let stockUtilSum = 0;
+  let etfUtilSum = 0;
+  const stockCash = (amount: number, date: string, reason: string) => {
+    if (!track) return;
+    stockFlow += amount;
+    if (reason === "stop") stockStopDates.add(date);
+  };
+  const finishEtf = (date: string) => {
+    const entryI = sessionIndex.get(etfEntryDate) ?? 0;
+    const exitI = sessionIndex.get(date) ?? entryI;
+    etfFills.push({
+      ticker: etfOpt?.symbol ?? "",
+      entryDate: etfEntryDate,
+      exitDate: date,
+      pnlUsd: etfPnl,
+      hold: exitI - entryI,
+      legs: etfLegs.map((leg) => ({ ...leg })),
+    });
+    etfQty = 0;
+    etfPnl = 0;
+    etfLegs.length = 0;
+    etfEntryDate = "";
+    etfTimeout = null;
+  };
+  const sellEtf = (date: string, qty: number, price: number, reason: EtfReason, settle: "now" | "next") => {
+    if (!(qty > 0) || qty > etfQty + 1e-9) return;
+    const fee = exitFee(qty, price);
+    const proceeds = qty * price - fee;
+    if (settle === "now") settled += proceeds;
+    else creditSale(date, proceeds);
+    etfFlow += proceeds;
+    const pnl = qty * (price - etfEntryPx) - fee;
+    etfPnl += pnl;
+    etfLegs.push({ reason, qty, pnlUsd: pnl });
+    if (reason === "stop") etfStopDates.add(date);
+    etfQty -= qty;
+    if (etfQty <= 1e-9) finishEtf(date);
+  };
   const markedQty = (pos: OpenPos) => {
     if (pos.cand.round7Legs) return pos.left;
     return pos.cand.scale ? pos.halfLeft + pos.restLeft : pos.qty;
@@ -914,6 +1000,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
   const sell = (pos: OpenPos, date: string, price: number, reason: ExitReason) => {
     const proceeds = pos.qty * price - exitFee(pos.qty, price);
     creditSale(date, proceeds);
+    stockCash(proceeds, date, reason);
     const entryI = sessionIndex.get(pos.cand.entryDate) ?? 0;
     const exitI = sessionIndex.get(date) ?? entryI;
     fills.push({
@@ -948,6 +1035,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
       if (!(qty > 0)) continue;
       const fee = exitFee(qty, action.price);
       creditSale(date, qty * action.price - fee);
+      stockCash(qty * action.price - fee, date, action.reason);
       pos.pnl += qty * (action.price - pos.cand.entry) - fee;
       pos.reason = action.reason;
       pos.exit = action.price;
@@ -1017,6 +1105,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
       if (leg.qty > pos.left + 1e-9) throw new Error(`round7の売却が残株を超える ${pos.cand.ticker} ${date}`);
       const fee = exitFee(leg.qty, leg.price);
       creditSale(date, leg.qty * leg.price - fee);
+      stockCash(leg.qty * leg.price - fee, date, leg.reason);
       const pnl = leg.qty * (leg.price - pos.cand.entry) - fee;
       pos.pnl += pnl;
       pos.left -= leg.qty;
@@ -1030,6 +1119,13 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
   for (let si = 0; si < sessions.length; si += 1) {
     const date = sessions[si];
     release(date);
+    if (etfQty > 0) {
+      const bar = etfOpt?.bars.get(date);
+      if (bar) {
+        const hit = etfOpenExit({ entryDay: date === etfEntryDate, open: bar.o, stop: etfStop, target: etfTarget });
+        if (hit) sellEtf(date, etfQty, hit.price, hit.reason, "next");
+      }
+    }
     for (let i = positions.length - 1; i >= 0; i -= 1) {
       const pos = positions[i];
       if (pos.cand.round7Legs) {
@@ -1075,11 +1171,17 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         continue;
       }
       const cost = qty * cand.entry + entryFee(qty, cand.entry);
+      if (etfOpt && etfQty > 0 && cost > settled + 1e-9) {
+        const bar = etfOpt.bars.get(date);
+        const qtyEtf = bar ? preemptQty(cost - settled, bar.o, etfQty) : null;
+        if (bar && qtyEtf != null && qtyEtf > 0) sellEtf(date, qtyEtf, bar.o, "preempted", "now");
+      }
       if (cost > settled + 1e-9) {
         skippedCash += 1;
         continue;
       }
       settled -= cost;
+      stockCash(-cost, date, "buy");
       held.add(cand.ticker);
       opened += 1;
       if (cand.semi) semisHeld += 1;
@@ -1105,6 +1207,26 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         taken: [],
       });
     }
+    if (etfOpt && etfQty === 0) {
+      const order = etfOpt.orders.get(date);
+      const bar = etfOpt.bars.get(date);
+      if (order && bar && bar.o < order.target && bar.o > order.stop) {
+        const qtyEtf = etfShares(bar.o, order.stop, settled);
+        const etfCost = qtyEtf * bar.o;
+        if (qtyEtf >= 1 && etfCost <= settled + 1e-9) {
+          settled -= etfCost;
+          etfFlow -= etfCost;
+          etfQty = qtyEtf;
+          etfEntryPx = bar.o;
+          etfEntryDate = date;
+          etfStop = order.stop;
+          etfTarget = order.target;
+          etfTimeout = timeoutDate(etfOpt.sessions, date);
+          etfPnl = 0;
+          etfLegs.length = 0;
+        }
+      }
+    }
     for (let i = positions.length - 1; i >= 0; i -= 1) {
       const pos = positions[i];
       if (pos.cand.round7Legs) {
@@ -1125,6 +1247,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
             const qty = pos.left;
             const fee = exitFee(qty, price);
             creditSale(date, qty * price - fee);
+            stockCash(qty * price - fee, date, "window");
             const pnl = qty * (price - pos.cand.entry) - fee;
             pos.pnl += pnl;
             pos.left = 0;
@@ -1137,6 +1260,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
             const price = closePx(pos.cand.ticker, date, pos.cand.entry);
             const fee = exitFee(left, price);
             creditSale(date, left * price - fee);
+            stockCash(left * price - fee, date, "window");
             pos.pnl += left * (price - pos.cand.entry) - fee;
             pos.reason = "window";
             pos.halfLeft = 0;
@@ -1149,13 +1273,44 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         positions.splice(i, 1);
       }
     }
+    if (etfQty > 0) {
+      const bar = etfOpt?.bars.get(date);
+      if (bar) {
+        const hit = etfRestExit({ high: bar.h, close: bar.c, stop: etfStop, target: etfTarget, timeout: etfTimeout === date });
+        if (hit) sellEtf(date, etfQty, hit.price, hit.reason, "next");
+      }
+    }
+    if (opts.flatten && date === last && etfQty > 0) {
+      const price = etfOpt?.bars.get(date)?.c ?? etfEntryPx;
+      sellEtf(date, etfQty, price, "window", "next");
+    }
     const cash = settled + pending.reduce((sum, lot) => sum + lot.amount, 0);
     let marked = cash;
     let realizedEq = cash;
+    let stockMark = 0;
     for (const pos of positions) {
       const qty = markedQty(pos);
-      marked += qty * closePx(pos.cand.ticker, date, pos.cand.entry);
+      const px = closePx(pos.cand.ticker, date, pos.cand.entry);
+      marked += qty * px;
+      stockMark += qty * px;
       realizedEq += qty * pos.cand.entry;
+    }
+    const etfClose = etfOpt?.bars.get(date)?.c ?? etfEntryPx;
+    const etfMark = etfQty * etfClose;
+    if (etfQty > 0) {
+      marked += etfMark;
+      realizedEq += etfQty * etfEntryPx;
+    }
+    if (track) {
+      const stockDay = stockMark - prevStockMark + stockFlow;
+      const etfDay = etfMark - prevEtfMark + etfFlow;
+      if (stockDay < -1e-6 && etfDay < -1e-6) bothNegative += 1;
+      stockUtilSum += stockMark / capital;
+      etfUtilSum += etfMark / capital;
+      prevStockMark = stockMark;
+      prevEtfMark = etfMark;
+      stockFlow = 0;
+      etfFlow = 0;
     }
     equityPath.push(marked);
     realizedPath.push(realizedEq);
@@ -1242,6 +1397,21 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
           exposure: {
             investedFraction: cashRatios.length ? round(1 - cashRatios.reduce((sum, value) => sum + value, 0) / cashRatios.length, 4) : null,
             daysOpenShare: sessions.length ? round(openDays / sessions.length, 4) : null,
+          },
+        }
+      : {}),
+    ...(track
+      ? {
+          etfFills: etfFills.map((fill) => ({
+            ...fill,
+            pnlUsd: round(fill.pnlUsd) ?? 0,
+            legs: fill.legs.map((leg) => ({ ...leg, pnlUsd: round(leg.pnlUsd) ?? 0 })),
+          })),
+          sleeve: {
+            stockUtil: round(sessions.length ? stockUtilSum / sessions.length : 0, 4) ?? 0,
+            etfUtil: round(sessions.length ? etfUtilSum / sessions.length : 0, 4) ?? 0,
+            bothNegativeDays: bothNegative,
+            sameDayStops: [...stockStopDates].filter((date) => etfStopDates.has(date)).length,
           },
         }
       : {}),
