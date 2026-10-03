@@ -6,7 +6,7 @@ export const ETF_HOLD = 20;
 
 export type EtfBar = { date: string; o: number; h: number; l: number; c: number };
 export type EtfReason = "target" | "stop" | "timeout" | "preempted" | "window";
-export type EtfOrder = { stop: number; target: number; atr: number | null };
+export type EtfOrder = { stop: number; target: number; atr: number | null; signalDate?: string };
 export type EtfEntryName = "E15" | "E25" | "E30";
 
 const ATR_WINDOW = 14;
@@ -96,7 +96,7 @@ export function etfOrders(bars: readonly EtfBar[], n: number, sessions: readonly
       entry = sessions.find((date) => date > bars[i].date) ?? null;
     }
     if (!entry || out.has(entry) || !index.has(entry)) continue;
-    out.set(entry, { stop: box.low, target: box.high, atr: atr14At(bars, i) });
+    out.set(entry, { stop: box.low, target: box.high, atr: atr14At(bars, i), signalDate: bars[i].date });
   }
   return out;
 }
