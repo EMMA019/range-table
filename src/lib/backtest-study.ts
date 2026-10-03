@@ -1,6 +1,6 @@
 import { computeQuote, sharesForMove } from "./compute";
 import { CHART_SESSIONS, GAP_THRESHOLD } from "./constants";
-import { etfOpenExit, etfRestExit, etfShares, preemptQty, timeoutDate, type EtfReason } from "./etf-sleeve";
+import { atrExit, etfAtrShares, etfOpenExit, etfRestExit, etfShares, preemptQty, timeoutDate, type EtfOrder, type EtfReason } from "./etf-sleeve";
 import { legSplit, scaleActions, type ScaleAction } from "./scale-exit";
 import type { Bar, EntrySignal } from "./types";
 
@@ -708,9 +708,11 @@ export type Book = {
 
 export type EtfSleeveOpts = {
   symbol: string;
-  orders: Map<string, { stop: number; target: number }>;
+  orders: Map<string, EtfOrder>;
   bars: Map<string, { o: number; h: number; l: number; c: number }>;
   sessions: readonly string[];
+  /** Omitted means the box low and the box high. `atr` uses the signal ATR14. */
+  exit?: "box" | "atr";
 };
 
 export type EtfFill = {
@@ -719,6 +721,8 @@ export type EtfFill = {
   exitDate: string;
   pnlUsd: number;
   hold: number;
+  qty: number;
+  forcedOne: boolean;
   legs: Array<{ reason: EtfReason; qty: number; pnlUsd: number }>;
 };
 
@@ -945,6 +949,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
   let etfStop = 0;
   let etfTarget = 0;
   let etfTimeout: string | null = null;
+  let etfForced = false;
   let etfPnl = 0;
   const etfLegs: EtfFill["legs"] = [];
   const etfFills: EtfFill[] = [];
@@ -971,6 +976,8 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
       exitDate: date,
       pnlUsd: etfPnl,
       hold: exitI - entryI,
+      qty: etfLegs.reduce((sum, leg) => sum + leg.qty, 0),
+      forcedOne: etfForced,
       legs: etfLegs.map((leg) => ({ ...leg })),
     });
     etfQty = 0;
@@ -978,6 +985,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     etfLegs.length = 0;
     etfEntryDate = "";
     etfTimeout = null;
+    etfForced = false;
   };
   const sellEtf = (date: string, qty: number, price: number, reason: EtfReason, settle: "now" | "next") => {
     if (!(qty > 0) || qty > etfQty + 1e-9) return;
@@ -1210,7 +1218,26 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     if (etfOpt && etfQty === 0) {
       const order = etfOpt.orders.get(date);
       const bar = etfOpt.bars.get(date);
-      if (order && bar && bar.o < order.target && bar.o > order.stop) {
+      if (etfOpt.exit === "atr") {
+        if (order && bar && order.atr != null && order.atr > 0 && bar.o < order.target && bar.o > order.stop) {
+          const levels = atrExit(bar.o, order.atr);
+          const sized = etfAtrShares(bar.o, order.atr, settled);
+          const etfCost = sized.qty * bar.o;
+          if (levels && sized.qty >= 1 && etfCost <= settled + 1e-9) {
+            settled -= etfCost;
+            etfFlow -= etfCost;
+            etfQty = sized.qty;
+            etfEntryPx = bar.o;
+            etfEntryDate = date;
+            etfStop = levels.stop;
+            etfTarget = levels.target;
+            etfTimeout = timeoutDate(etfOpt.sessions, date);
+            etfPnl = 0;
+            etfLegs.length = 0;
+            etfForced = sized.forcedOne;
+          }
+        }
+      } else if (order && bar && bar.o < order.target && bar.o > order.stop) {
         const qtyEtf = etfShares(bar.o, order.stop, settled);
         const etfCost = qtyEtf * bar.o;
         if (qtyEtf >= 1 && etfCost <= settled + 1e-9) {
@@ -1224,6 +1251,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
           etfTimeout = timeoutDate(etfOpt.sessions, date);
           etfPnl = 0;
           etfLegs.length = 0;
+          etfForced = false;
         }
       }
     }

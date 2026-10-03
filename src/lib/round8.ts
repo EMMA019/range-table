@@ -6,6 +6,10 @@ import { ROUND7_PREREG } from "./round7";
 
 /** Pre-registration commit. Results must cite this and must not relax the rules. */
 export const ROUND8_PREREG = "4235eface3528f5e1ca4a13e1cf1d0a75742a1f5";
+/** Amendment commit. The ATR exit cites this. The box exit stays on the original lock. */
+export const ROUND8_AMENDMENT = "52b73ed249d46e5d3af26d61c1148af5e83397a5";
+
+export type EtfExitName = "box" | "atr";
 
 /**
  * Close confirms the signal. The fill is the next session's open.
@@ -31,14 +35,24 @@ export type Round8Row = {
   id: Round8Id;
   universe: Round3Universe;
   window: Round3Window;
+  /** Null on the stock book alone. */
+  exit: EtfExitName | null;
   totalUsd: number;
   mtmDdUsd: number;
   stockUtil: number;
   etfUtil: number;
   etfPnlUsd: number;
   etfN: number;
+  etfWinRate: number | null;
+  etfAvgWinUsd: number | null;
+  etfAvgLossUsd: number | null;
+  etfNet190Usd: number;
+  meanQty: number | null;
+  forcedOneN: number;
   etfExits: EtfExitTotals;
   bothNegativeDays: number;
+  /** Same count as bothNegativeDays: both sleeves down on the day. */
+  jointLossDays: number;
   sameDayStops: number;
   totalNet190Usd: number;
   n: number;
@@ -53,16 +67,17 @@ export type Round8Row = {
 export type Round8Hold = {
   symbol: "SPY" | "QQQ" | "SOXX";
   window: Round3Window;
-  shares: number;
+  units: number;
   pnlUsd: number;
   mtmDdUsd: number;
   pnlNet190Usd: number;
 };
 
 export type Round8Report = {
-  v: 1;
+  v: 2;
   prereg: string;
   rulesCommit: string;
+  amendment: string;
   round7Commit: string;
   generatedAt: string;
   fill: string;
@@ -129,7 +144,7 @@ export function buyAndHold(
   };
 }
 
-export function scoreBook(book: Book, id: Round8Id, universe: Round3Universe, window: Round3Window, judged: boolean): Round8Row {
+export function scoreBook(book: Book, id: Round8Id, universe: Round3Universe, window: Round3Window, exit: EtfExitName | null, judged: boolean): Round8Row {
   const stock = book.fills;
   const etf = book.etfFills;
   const sleeve = book.sleeve;
@@ -153,6 +168,10 @@ export function scoreBook(book: Book, id: Round8Id, universe: Round3Universe, wi
     }
   }
   for (const reason of ETF_REASONS) exits[reason].pnlUsd = r2(exits[reason].pnlUsd);
+  const etfWins = etf.filter((fill) => fill.pnlUsd > 0);
+  const etfLosses = etf.filter((fill) => fill.pnlUsd < 0);
+  const etfTrades = etf.map((fill) => ({ pnlUsd: fill.pnlUsd, sells: fill.legs.length }));
+  const shareSum = etf.reduce((sum, fill) => sum + (fill.qty || fill.legs.reduce((qty, leg) => qty + leg.qty, 0)), 0);
   const boot = bootstrapMean(pnls, MAIN_Q, MAIN_Z);
   const ratio = book.maxDrawdownUsd > 0 ? r2(book.totalUsd / book.maxDrawdownUsd) : null;
   const spy = SPY_BENCH[window];
@@ -160,14 +179,22 @@ export function scoreBook(book: Book, id: Round8Id, universe: Round3Universe, wi
     id,
     universe,
     window,
+    exit,
     totalUsd: book.totalUsd,
     mtmDdUsd: book.maxDrawdownUsd,
     stockUtil: sleeve.stockUtil,
     etfUtil: sleeve.etfUtil,
     etfPnlUsd: r2(etf.reduce((sum, fill) => sum + fill.pnlUsd, 0)),
     etfN: etf.length,
+    etfWinRate: etf.length ? r4(etfWins.length / etf.length) : null,
+    etfAvgWinUsd: etfWins.length ? r2(etfWins.reduce((sum, fill) => sum + fill.pnlUsd, 0) / etfWins.length) : null,
+    etfAvgLossUsd: etfLosses.length ? r2(etfLosses.reduce((sum, fill) => sum + fill.pnlUsd, 0) / etfLosses.length) : null,
+    etfNet190Usd: totalNet190(etfTrades),
+    meanQty: etf.length ? r2(shareSum / etf.length) : null,
+    forcedOneN: etf.filter((fill) => fill.forcedOne).length,
     etfExits: exits,
     bothNegativeDays: sleeve.bothNegativeDays,
+    jointLossDays: sleeve.bothNegativeDays,
     sameDayStops: sleeve.sameDayStops,
     totalNet190Usd: totalNet190(trades),
     n: pnls.length,

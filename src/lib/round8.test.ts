@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { runPortfolio, sharesForBudget, type Candidate } from "./backtest-study";
-import { etfOpenExit, etfOrders, etfRestExit, etfShares, preemptQty, type EtfBar } from "./etf-sleeve";
+import { atr14At, atrExit, etfAtrShares, etfOpenExit, etfOrders, etfRestExit, etfShares, preemptQty, type EtfBar } from "./etf-sleeve";
 import { buyAndHold, totalNet190 } from "./round8";
 import { planRound7Exit, type ExitBar } from "./round7";
 
@@ -185,5 +185,42 @@ describe("round 8 etf sleeve", () => {
     assert.equal(held.pnlUsd, -0.7);
     assert.equal(held.mtmDdUsd, 320);
     assert.equal(held.pnlNet190Usd, -1.9);
+  });
+
+  it("sizes the ATR exit from 1.5 times ATR and flags a one-share entry", () => {
+    const flat = Array.from({ length: 15 }, (_, index) => bar(`d${index}`, 11, 12, 10, 11));
+    assert.equal(atr14At(flat, 14), 2);
+    assert.equal(atr14At(flat, 13), null);
+    assert.deepEqual(atrExit(100, 10), { stop: 85, target: 120 });
+    assert.deepEqual(etfAtrShares(100, 10, 10000), { qty: 2, forcedOne: false });
+    assert.deepEqual(etfAtrShares(100, 30, 10000), { qty: 1, forcedOne: true });
+    assert.deepEqual(etfAtrShares(100, 30, 50), { qty: 0, forcedOne: false });
+    const days = ["2024-01-02", "2024-01-03", "2024-01-04"];
+    const etf = days.map((date) => bar(date, 10, 11, 9, 10));
+    const orders = new Map([[days[0], { stop: 8, target: 12, atr: 30 }]]);
+    const run = (exit: "box" | "atr") =>
+      runPortfolio(
+        {
+          id: exit,
+          label: exit,
+          universe: "core",
+          rank: "ticker",
+          sessions: days,
+          flatten: true,
+          withRestart: false,
+          capital: 500,
+          closes: new Map(),
+          keepFills: true,
+          keepSleeveStats: true,
+          etfSleeve: { symbol: "SOXX", orders, bars: new Map(etf.map((row) => [row.date, row])), sessions: days, exit },
+        },
+        [],
+      );
+    const atr = run("atr");
+    const box = run("box");
+    assert.equal(atr.etfFills?.[0]?.qty, 1);
+    assert.equal(atr.etfFills?.[0]?.forcedOne, true);
+    assert.equal(box.etfFills?.[0]?.qty, 16);
+    assert.equal(box.etfFills?.[0]?.forcedOne, false);
   });
 });

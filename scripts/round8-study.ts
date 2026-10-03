@@ -41,12 +41,13 @@ import { admits, aboveBoxTop, ttmAt, type ConceptFacts, type TtmStatus } from ".
 import { withRound7Exit } from "../src/lib/round7";
 import {
   ROUND7_PREREG,
+  ROUND8_AMENDMENT,
   ROUND8_FILL,
-  ROUND8_IDS,
   ROUND8_PREREG,
   SPY_BENCH,
   buyAndHold,
   scoreBook,
+  type EtfExitName,
   type Round8Hold,
   type Round8Id,
   type Round8Report,
@@ -165,6 +166,30 @@ function loadEtf(symbol: string): { bars: EtfBar[]; byDate: Map<string, EtfBar> 
   return { bars, byDate: new Map(bars.map((bar) => [bar.date, bar])) };
 }
 
+type PublishedRow = {
+  id: Round8Id;
+  universe: Round3Universe;
+  window: Round3Window;
+  totalUsd: number;
+  mtmDdUsd: number;
+  etfPnlUsd: number;
+  etfN: number;
+  stockN: number;
+  n: number;
+  bothNegativeDays: number;
+  sameDayStops: number;
+  totalNet190Usd: number;
+  verdict: string;
+  exit?: "box" | "atr" | null;
+};
+
+function loadPublished(): PublishedRow[] {
+  const raw = JSON.parse(fs.readFileSync(OUT, "utf8")) as { rows: PublishedRow[] };
+  const rows = (raw.rows ?? []).filter((row) => row.exit == null || row.exit === "box");
+  if (!rows.length) throw new Error("公開済みの箱出口がない");
+  return rows;
+}
+
 function cashAgrees(book: Book, id: string): void {
   const stock = (book.fills ?? []).reduce((sum, fill) => sum + fill.pnlUsd, 0);
   const etf = (book.etfFills ?? []).reduce((sum, fill) => sum + fill.pnlUsd, 0);
@@ -174,7 +199,8 @@ function cashAgrees(book: Book, id: string): void {
 }
 
 function main() {
-  console.log(`prereg ${ROUND8_PREREG}`);
+  console.log(`prereg ${ROUND8_PREREG} amendment ${ROUND8_AMENDMENT}`);
+  const published = loadPublished();
   const sp500 = listedFrom(table(fs.readFileSync(path.join(WIKI, "sp500.html"), "utf8"), "Symbol"));
   const sp400 = listedFrom(table(fs.readFileSync(path.join(WIKI, "sp400.html"), "utf8"), "Symbol"));
   const changes500 = changes("sp500-hist.html");
@@ -262,7 +288,7 @@ function main() {
     const windowSessions = calendar.filter((date) => date >= window.from && date <= window.to);
     for (const symbol of ["SPY", "QQQ", "SOXX"] as const) {
       const pathHold = buyAndHold(windowSessions, packs[symbol].byDate);
-      hold.push({ symbol, window: window.id, ...pathHold });
+      hold.push({ symbol, window: window.id, units: pathHold.shares, pnlUsd: pathHold.pnlUsd, mtmDdUsd: pathHold.mtmDdUsd, pnlNet190Usd: pathHold.pnlNet190Usd });
       console.log(`hold ${symbol} ${window.id} pnl ${pathHold.pnlUsd} dd ${pathHold.mtmDdUsd} sh ${pathHold.shares}`);
     }
     const pitSet = new Set(
@@ -292,34 +318,37 @@ function main() {
       for (const sleeve of SLEEVES) {
         const pack = sleeve.symbol ? packs[sleeve.symbol] : null;
         const orders = pack ? etfOrders(pack.bars, sleeve.box, windowSessions) : null;
-        const portfolio = runPortfolio(
-          {
-            id: `${sleeve.id}-${source.universe}-${window.id}`,
-            label: sleeve.id,
-            universe: source.universe,
-            rank: "rs",
-            sessions: windowSessions,
-            flatten: true,
-            withRestart: false,
-            yearSplit: YEAR2_FROM,
-            closes,
-            maxSemi: 2,
-            keepFills: true,
-            keepRound7: true,
-            keepSleeveStats: true,
-            ...(pack && orders
-              ? { etfSleeve: { symbol: sleeve.symbol ?? "", orders, bars: pack.byDate, sessions: windowSessions } }
-              : {}),
-          },
-          admitted,
-        );
-        cashAgrees(portfolio, `${sleeve.id} ${source.universe} ${window.id}`);
-        const judged = (sleeve.id === "SOXX20" || sleeve.id === "QQQ20") && source.universe !== "core";
-        const row = scoreBook(portfolio, sleeve.id, source.universe, window.id, judged);
-        console.log(
-          `${window.id} ${sleeve.id} ${source.universe} ${row.verdict} n ${row.n} stock ${row.stockN} etf ${row.etfN} pnl ${row.totalUsd} etfPnl ${row.etfPnlUsd} dd ${row.mtmDdUsd}`,
-        );
-        rows.push(row);
+        const modes: Array<EtfExitName | null> = sleeve.symbol ? ["box", "atr"] : [null];
+        for (const mode of modes) {
+          const portfolio = runPortfolio(
+            {
+              id: `${sleeve.id}-${mode ?? "stock"}-${source.universe}-${window.id}`,
+              label: sleeve.id,
+              universe: source.universe,
+              rank: "rs",
+              sessions: windowSessions,
+              flatten: true,
+              withRestart: false,
+              yearSplit: YEAR2_FROM,
+              closes,
+              maxSemi: 2,
+              keepFills: true,
+              keepRound7: true,
+              keepSleeveStats: true,
+              ...(pack && orders && mode
+                ? { etfSleeve: { symbol: sleeve.symbol ?? "", orders, bars: pack.byDate, sessions: windowSessions, exit: mode } }
+                : {}),
+            },
+            admitted,
+          );
+          cashAgrees(portfolio, `${sleeve.id} ${mode ?? "C"} ${source.universe} ${window.id}`);
+          const judged = mode === "box" && (sleeve.id === "SOXX20" || sleeve.id === "QQQ20") && source.universe !== "core";
+          const row = scoreBook(portfolio, sleeve.id, source.universe, window.id, mode, judged);
+          console.log(
+            `${window.id} ${sleeve.id} ${mode ?? "C"} ${source.universe} ${row.verdict} n ${row.n} stock ${row.stockN} etf ${row.etfN} pnl ${row.totalUsd} etfPnl ${row.etfPnlUsd} dd ${row.mtmDdUsd} win ${row.etfWinRate} qty ${row.meanQty} flag ${row.forcedOneN} joint ${row.jointLossDays}`,
+          );
+          rows.push(row);
+        }
       }
     }
   }
@@ -330,18 +359,25 @@ function main() {
       throw new Error(`C ${cell.universe} ${cell.window} が ${cell.total} / ${cell.n} ではない: ${row?.totalUsd} / ${row?.stockN}`);
     }
   }
+  for (const prior of published) {
+    const match = rows.find((item) => item.id === prior.id && item.universe === prior.universe && item.window === prior.window && (prior.id === "C" ? item.exit == null : item.exit === "box"));
+    if (!match || match.totalUsd !== prior.totalUsd || match.mtmDdUsd !== prior.mtmDdUsd || match.etfPnlUsd !== prior.etfPnlUsd || match.etfN !== prior.etfN || match.stockN !== prior.stockN || match.n !== prior.n || match.bothNegativeDays !== prior.bothNegativeDays || match.sameDayStops !== prior.sameDayStops || match.totalNet190Usd !== prior.totalNet190Usd || match.verdict !== prior.verdict) {
+      throw new Error(`箱出口が公開値と違う ${prior.id} ${prior.universe} ${prior.window}: ${match?.totalUsd} / ${match?.etfN}`);
+    }
+  }
 
   const summary: Round8Report["summary"] = [];
   for (const id of ["SOXX20", "QQQ20"] as const) {
-    const of = (universe: Round3Universe) => rows.filter((row) => row.id === id && row.universe === universe).map((row) => row.verdict);
+    const of = (universe: Round3Universe) => rows.filter((row) => row.id === id && row.universe === universe && row.exit === "box").map((row) => row.verdict);
     const pit = overallVerdict(of("pit"));
     const adv = overallVerdict(of("adv"));
     summary.push({ id, pit, adv, verdict: overallVerdict([...of("pit"), ...of("adv")]) });
   }
   const report: Round8Report = {
-    v: 1,
+    v: 2,
     prereg: ROUND8_PREREG,
     rulesCommit: ROUND8_PREREG,
+    amendment: ROUND8_AMENDMENT,
     round7Commit: ROUND7_PREREG,
     generatedAt: new Date().toISOString(),
     fill: ROUND8_FILL,
@@ -350,7 +386,8 @@ function main() {
     rows,
     summary,
   };
-  if (rows.length !== ROUND8_IDS.length * 3 * windows.length) throw new Error(`行数が違う ${rows.length}`);
+  const sleeveRows = 6 * 2 * 3 * windows.length;
+  if (rows.length !== 3 * windows.length + sleeveRows) throw new Error(`行数が違う ${rows.length}`);
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   fs.writeFileSync(OUT, JSON.stringify(report));
   console.log(`wrote ${OUT}`);

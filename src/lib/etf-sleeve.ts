@@ -6,6 +6,9 @@ export const ETF_HOLD = 20;
 
 export type EtfBar = { date: string; o: number; h: number; l: number; c: number };
 export type EtfReason = "target" | "stop" | "timeout" | "preempted" | "window";
+export type EtfOrder = { stop: number; target: number; atr: number | null };
+
+const ATR_WINDOW = 14;
 
 export function line15(low: number, high: number): number | null {
   if (!(high > low)) return null;
@@ -24,9 +27,43 @@ export function boxAt(bars: readonly { h: number; l: number }[], index: number, 
   return { low, high };
 }
 
+/** Simple average of the 14 true ranges ending at `index`, rounded to 4 decimals. */
+export function atr14At(bars: readonly { h: number; l: number; c: number }[], index: number): number | null {
+  if (index < ATR_WINDOW || index >= bars.length) return null;
+  let sum = 0;
+  for (let i = index - ATR_WINDOW + 1; i <= index; i += 1) {
+    const prev = bars[i - 1].c;
+    const tr = Math.max(bars[i].h - bars[i].l, Math.abs(bars[i].h - prev), Math.abs(bars[i].l - prev));
+    sum += tr;
+  }
+  return Math.round((sum / ATR_WINDOW) * 10000) / 10000;
+}
+
+/** Stop and target from the fill and the signal ATR. Both prices are rounded to 4 decimals. */
+export function atrExit(entry: number, atr: number): { stop: number; target: number } | null {
+  if (!(entry > 0) || !(atr > 0)) return null;
+  const stop = Math.round((entry - 1.5 * atr) * 10000) / 10000;
+  const target = Math.round((entry + 2 * atr) * 10000) / 10000;
+  if (!(stop < entry) || !(target > entry)) return null;
+  return { stop, target };
+}
+
+/**
+ * Whole shares from $32 over 1.5×ATR and the idle cash.
+ * A risk budget of zero shares becomes one flagged share when the cash can buy it.
+ */
+export function etfAtrShares(entry: number, atr: number, cash: number): { qty: number; forcedOne: boolean } {
+  if (!(entry > 0) || !(atr > 0) || !(cash >= entry)) return { qty: 0, forcedOne: false };
+  const risk = Math.floor(ETF_RISK / (1.5 * atr));
+  const room = Math.floor(cash / entry);
+  if (risk >= 1) return { qty: Math.min(risk, room), forcedOne: false };
+  if (room >= 1) return { qty: 1, forcedOne: true };
+  return { qty: 0, forcedOne: false };
+}
+
 /** Fresh cross of the 15% line. Entry is the next clock session, filled at that open by the walker. */
-export function etfOrders(bars: readonly EtfBar[], n: number, sessions: readonly string[]): Map<string, { stop: number; target: number }> {
-  const out = new Map<string, { stop: number; target: number }>();
+export function etfOrders(bars: readonly EtfBar[], n: number, sessions: readonly string[]): Map<string, EtfOrder> {
+  const out = new Map<string, EtfOrder>();
   const next = new Map<string, string>();
   for (let i = 0; i < sessions.length - 1; i += 1) next.set(sessions[i], sessions[i + 1]);
   const index = new Map(bars.map((bar, i) => [bar.date, i]));
@@ -43,7 +80,7 @@ export function etfOrders(bars: readonly EtfBar[], n: number, sessions: readonly
       entry = sessions.find((date) => date > bars[i].date) ?? null;
     }
     if (!entry || out.has(entry) || !index.has(entry)) continue;
-    out.set(entry, { stop: box.low, target: box.high });
+    out.set(entry, { stop: box.low, target: box.high, atr: atr14At(bars, i) });
   }
   return out;
 }
