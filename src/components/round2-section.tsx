@@ -120,7 +120,7 @@ export function Round2Section() {
           事前登録 {data.preregCommit.slice(0, 7)}。作成 {made}。ライブの通知とペーパーのルールは変えていない。A1は決算反応日で見る。8-K Item 2.02の受付が16:00 ET以降なら翌営業日、09:30より前ならその日、場中ならその日。ギャップ、陽線、出来高はその日。入りは翌日の始値。損切りはその日の安値。
         </p>
         <p className="mt-2 text-[11px] leading-relaxed text-muted">
-          合格は、両方の期間で合計がプラス、合計÷最大DDが同じ手数料のSPYより大きい、1回あたり期待値の下側98%がプラス、件数nが必要件数N以上。プラスでもnがN未満は保留。A1'とA2'は元が合格したユニバースだけ判定する。Novaは未実施。
+          合格は、両方の期間で合計がプラス、合計÷最大DDが同じ手数料のSPYより大きい、1回あたり期待値の下側98%がプラス、件数nが必要件数N以上。プラスでもnがN未満は保留。A1&apos;とA2&apos;は元が合格したユニバースだけ判定する。Novaは未実施。
         </p>
         <ul className="mt-2 space-y-1 text-xs">
           {data.summary.map((row) => (

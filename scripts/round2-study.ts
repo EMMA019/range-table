@@ -31,7 +31,6 @@ import {
 } from "../src/lib/backtest-study";
 import type { FilingBlock } from "../src/lib/bias";
 import {
-  BOOTSTRAP_DRAWS,
   MAIN_Q,
   MAIN_Z,
   PRIMED_Q,
