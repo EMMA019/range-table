@@ -307,6 +307,48 @@ describe("portfolio constraints", () => {
     assert.ok(boxBook.totalUsd > atrBook.totalUsd);
     assert.ok(rsBook.totalUsd > atrBook.totalUsd);
   });
+
+  it("caps non-semiconductor slots only when maxNonSemi is set", () => {
+    const semis = ["S1", "S2"].map((ticker) => cand(ticker, sessions[0], sessions[1], 100, 110, { semi: true }));
+    const others = ["A", "B", "C", "D"].map((ticker) => cand(ticker, sessions[0], sessions[1], 100, 120));
+    const names = [...others, ...semis].map((row) => row.ticker);
+    const open = {
+      id: "slots",
+      label: "slots",
+      universe: "core",
+      rank: "ticker" as const,
+      sessions,
+      flatten: true,
+      maxPositions: 5,
+      closes: closes(names),
+      withRestart: false,
+    };
+    const base = runPortfolio(open, [...semis, ...others]);
+    const capped = runPortfolio({ ...open, maxSemi: 2, maxNonSemi: 1 }, [...semis, ...others]);
+    assert.equal(base.n, 5);
+    assert.equal(base.skippedSemi, 0);
+    assert.equal(capped.n, 3);
+    assert.equal(capped.skippedSemi, 3);
+  });
+
+  it("charges a per-order fee on the entry and the exit only when one is supplied", () => {
+    const trade = cand("AAA", sessions[0], sessions[1], 50, 55);
+    const open = {
+      id: "fee",
+      label: "fee",
+      universe: "core",
+      rank: "ticker" as const,
+      sessions,
+      flatten: true,
+      maxPositions: 1,
+      closes: closes(["AAA"]),
+      withRestart: false,
+    };
+    const flat = runPortfolio(open, [trade]);
+    const ibkr = runPortfolio({ ...open, orderFee: () => 1 }, [trade]);
+    assert.equal(flat.totalUsd, 44.3);
+    assert.equal(ibkr.totalUsd, 43);
+  });
 });
 
 describe("rule selection guards", () => {
