@@ -1,0 +1,6932 @@
+{
+ "v": 1,
+ "generatedAt": "2026-10-03T00:22:48.855Z",
+ "period": {
+  "from": "2024-10-03",
+  "to": "2026-10-01",
+  "sessions": 500,
+  "year2From": "2025-10-03"
+ },
+ "universe": {
+  "core": 186,
+  "broadListed": 518,
+  "broadWithData": 518,
+  "liquid50": [
+   "NVDA",
+   "TSLA",
+   "AAPL",
+   "MSFT",
+   "META",
+   "AMZN",
+   "AMD",
+   "AVGO",
+   "GOOGL",
+   "SMCI",
+   "TSM",
+   "MU",
+   "NFLX",
+   "UNH",
+   "INTC",
+   "PLTR",
+   "BAC",
+   "XOM",
+   "QCOM",
+   "WMT",
+   "ASML",
+   "DELL",
+   "ARM",
+   "TXN",
+   "ORCL",
+   "BA",
+   "CVX",
+   "LRCX",
+   "UBER",
+   "MRK",
+   "NKE",
+   "NOW",
+   "WFC",
+   "CSCO",
+   "SBUX",
+   "BKNG",
+   "DIS",
+   "GE",
+   "CMG",
+   "C",
+   "MRVL",
+   "TMUS",
+   "VZ",
+   "ADI",
+   "PYPL",
+   "ETN",
+   "COP",
+   "RTX",
+   "KLAC",
+   "VRT"
+  ],
+  "liquidNote": "2024-07-05..2024-10-02 の売買代金中央値。テスト期間の前だけ。",
+  "missingCore": [],
+  "priceMax": 550,
+  "atrMin": 3,
+  "dollarMin": 5000000
+ },
+ "earnings": {
+  "tickersWithDate": 186,
+  "knownDates": 1574,
+  "signalsWithin5": 864,
+  "calendarDays": 500,
+  "calendarGaps": 1,
+  "source": "Nasdaq earnings calendar（取得できた日）と watchlist の決算日。日付が無いシグナルは残す。"
+ },
+ "base": {
+  "id": "base",
+  "label": "基準（反発≥1・終値≥15%線・利確1ATR・20日安値・20営業日）",
+  "rawSignals": 5521,
+  "signalsPerWeek": 55.21,
+  "open": 33,
+  "stats": {
+   "n": 3253,
+   "winRate": 0.6686,
+   "avgUsd": 0.61,
+   "profitFactor": 1.07,
+   "maxConsecLosses": 54,
+   "maxDrawdownUsd": 3438.79,
+   "totalUsd": 1991.56,
+   "avgHold": 4.4,
+   "targets": 2163,
+   "stops": 986,
+   "timeouts": 104,
+   "sharps": 0
+  },
+  "year1": {
+   "n": 1423,
+   "winRate": 0.6444,
+   "avgUsd": -0.45,
+   "profitFactor": 0.95,
+   "maxConsecLosses": 54,
+   "maxDrawdownUsd": 3438.79,
+   "totalUsd": -643.87,
+   "avgHold": 4.3,
+   "targets": 911,
+   "stops": 476,
+   "timeouts": 36,
+   "sharps": 0
+  },
+  "year2": {
+   "n": 1830,
+   "winRate": 0.6874,
+   "avgUsd": 1.44,
+   "profitFactor": 1.16,
+   "maxConsecLosses": 15,
+   "maxDrawdownUsd": 1936.19,
+   "totalUsd": 2635.43,
+   "avgHold": 4.5,
+   "targets": 1252,
+   "stops": 510,
+   "timeouts": 68,
+   "sharps": 0
+  }
+ },
+ "variations": {
+  "atr": [
+   {
+    "id": "atr_3_6",
+    "label": "ATR 3–6%",
+    "rawSignals": 2266,
+    "signalsPerWeek": 22.66,
+    "open": 13,
+    "stats": {
+     "n": 1328,
+     "winRate": 0.683,
+     "avgUsd": 1.47,
+     "profitFactor": 1.17,
+     "maxConsecLosses": 29,
+     "maxDrawdownUsd": 1755.6,
+     "totalUsd": 1948.44,
+     "avgHold": 4.7,
+     "targets": 903,
+     "stops": 371,
+     "timeouts": 54,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 528,
+     "winRate": 0.6439,
+     "avgUsd": -0.6,
+     "profitFactor": 0.93,
+     "maxConsecLosses": 29,
+     "maxDrawdownUsd": 1755.6,
+     "totalUsd": -314.58,
+     "avgHold": 4.7,
+     "targets": 339,
+     "stops": 173,
+     "timeouts": 16,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 800,
+     "winRate": 0.7088,
+     "avgUsd": 2.83,
+     "profitFactor": 1.35,
+     "maxConsecLosses": 15,
+     "maxDrawdownUsd": 793.75,
+     "totalUsd": 2263.02,
+     "avgHold": 4.7,
+     "targets": 564,
+     "stops": 198,
+     "timeouts": 38,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "atr_4_6",
+    "label": "ATR 4–6%",
+    "rawSignals": 1100,
+    "signalsPerWeek": 11,
+    "open": 7,
+    "stats": {
+     "n": 666,
+     "winRate": 0.7057,
+     "avgUsd": 2.39,
+     "profitFactor": 1.28,
+     "maxConsecLosses": 27,
+     "maxDrawdownUsd": 1033.9,
+     "totalUsd": 1593.28,
+     "avgHold": 4.8,
+     "targets": 468,
+     "stops": 173,
+     "timeouts": 25,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 233,
+     "winRate": 0.6395,
+     "avgUsd": -0.32,
+     "profitFactor": 0.96,
+     "maxConsecLosses": 27,
+     "maxDrawdownUsd": 1033.9,
+     "totalUsd": -74.94,
+     "avgHold": 4.5,
+     "targets": 149,
+     "stops": 81,
+     "timeouts": 3,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 433,
+     "winRate": 0.7413,
+     "avgUsd": 3.85,
+     "profitFactor": 1.45,
+     "maxConsecLosses": 7,
+     "maxDrawdownUsd": 541.4,
+     "totalUsd": 1668.22,
+     "avgHold": 4.9,
+     "targets": 319,
+     "stops": 92,
+     "timeouts": 22,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "atr_3_7",
+    "label": "ATR 3–7%",
+    "rawSignals": 2534,
+    "signalsPerWeek": 25.34,
+    "open": 18,
+    "stats": {
+     "n": 1481,
+     "winRate": 0.686,
+     "avgUsd": 1.53,
+     "profitFactor": 1.18,
+     "maxConsecLosses": 32,
+     "maxDrawdownUsd": 1929.27,
+     "totalUsd": 2258.98,
+     "avgHold": 4.7,
+     "targets": 1009,
+     "stops": 409,
+     "timeouts": 63,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 590,
+     "winRate": 0.6525,
+     "avgUsd": -0.35,
+     "profitFactor": 0.96,
+     "maxConsecLosses": 32,
+     "maxDrawdownUsd": 1929.27,
+     "totalUsd": -206.2,
+     "avgHold": 4.7,
+     "targets": 381,
+     "stops": 188,
+     "timeouts": 21,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 891,
+     "winRate": 0.7082,
+     "avgUsd": 2.77,
+     "profitFactor": 1.33,
+     "maxConsecLosses": 12,
+     "maxDrawdownUsd": 739.36,
+     "totalUsd": 2465.18,
+     "avgHold": 4.7,
+     "targets": 628,
+     "stops": 221,
+     "timeouts": 42,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "atr_ge3",
+    "label": "ATR ≥3%（上限なし）",
+    "rawSignals": 3301,
+    "signalsPerWeek": 33.01,
+    "open": 20,
+    "stats": {
+     "n": 1940,
+     "winRate": 0.6727,
+     "avgUsd": 1.33,
+     "profitFactor": 1.15,
+     "maxConsecLosses": 43,
+     "maxDrawdownUsd": 2524.08,
+     "totalUsd": 2586.97,
+     "avgHold": 4.8,
+     "targets": 1297,
+     "stops": 559,
+     "timeouts": 84,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 751,
+     "winRate": 0.6352,
+     "avgUsd": -0.42,
+     "profitFactor": 0.95,
+     "maxConsecLosses": 43,
+     "maxDrawdownUsd": 2524.08,
+     "totalUsd": -317.15,
+     "avgHold": 4.7,
+     "targets": 472,
+     "stops": 254,
+     "timeouts": 25,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 1189,
+     "winRate": 0.6964,
+     "avgUsd": 2.44,
+     "profitFactor": 1.27,
+     "maxConsecLosses": 14,
+     "maxDrawdownUsd": 2187.62,
+     "totalUsd": 2904.12,
+     "avgHold": 4.8,
+     "targets": 825,
+     "stops": 305,
+     "timeouts": 59,
+     "sharps": 0
+    }
+   }
+  ],
+  "entry": [
+   {
+    "id": "band_in_ok",
+    "label": "15–25%（IN OK）",
+    "rawSignals": 1566,
+    "signalsPerWeek": 15.66,
+    "open": 11,
+    "stats": {
+     "n": 1221,
+     "winRate": 0.5921,
+     "avgUsd": 0.28,
+     "profitFactor": 1.04,
+     "maxConsecLosses": 22,
+     "maxDrawdownUsd": 946.03,
+     "totalUsd": 345.51,
+     "avgHold": 3.6,
+     "targets": 721,
+     "stops": 491,
+     "timeouts": 9,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 553,
+     "winRate": 0.5913,
+     "avgUsd": -0.16,
+     "profitFactor": 0.98,
+     "maxConsecLosses": 22,
+     "maxDrawdownUsd": 946.03,
+     "totalUsd": -89.4,
+     "avgHold": 3.5,
+     "targets": 327,
+     "stops": 224,
+     "timeouts": 2,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 668,
+     "winRate": 0.5928,
+     "avgUsd": 0.65,
+     "profitFactor": 1.08,
+     "maxConsecLosses": 10,
+     "maxDrawdownUsd": 598.32,
+     "totalUsd": 434.92,
+     "avgHold": 3.6,
+     "targets": 394,
+     "stops": 267,
+     "timeouts": 7,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "band_35",
+    "label": "15–35%",
+    "rawSignals": 2796,
+    "signalsPerWeek": 27.96,
+    "open": 18,
+    "stats": {
+     "n": 1928,
+     "winRate": 0.6177,
+     "avgUsd": 0.42,
+     "profitFactor": 1.05,
+     "maxConsecLosses": 41,
+     "maxDrawdownUsd": 1910.75,
+     "totalUsd": 816.9,
+     "avgHold": 3.8,
+     "targets": 1186,
+     "stops": 719,
+     "timeouts": 23,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 883,
+     "winRate": 0.6014,
+     "avgUsd": -0.48,
+     "profitFactor": 0.94,
+     "maxConsecLosses": 41,
+     "maxDrawdownUsd": 1910.75,
+     "totalUsd": -421.22,
+     "avgHold": 3.7,
+     "targets": 528,
+     "stops": 347,
+     "timeouts": 8,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 1045,
+     "winRate": 0.6316,
+     "avgUsd": 1.18,
+     "profitFactor": 1.14,
+     "maxConsecLosses": 13,
+     "maxDrawdownUsd": 974.06,
+     "totalUsd": 1238.12,
+     "avgHold": 3.8,
+     "targets": 658,
+     "stops": 372,
+     "timeouts": 15,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "band_50",
+    "label": "15–50%",
+    "rawSignals": 3953,
+    "signalsPerWeek": 39.53,
+    "open": 20,
+    "stats": {
+     "n": 2489,
+     "winRate": 0.6388,
+     "avgUsd": 0.63,
+     "profitFactor": 1.08,
+     "maxConsecLosses": 63,
+     "maxDrawdownUsd": 2829.8,
+     "totalUsd": 1571.73,
+     "avgHold": 3.9,
+     "targets": 1582,
+     "stops": 865,
+     "timeouts": 42,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 1127,
+     "winRate": 0.614,
+     "avgUsd": -0.67,
+     "profitFactor": 0.92,
+     "maxConsecLosses": 63,
+     "maxDrawdownUsd": 2829.8,
+     "totalUsd": -755.44,
+     "avgHold": 3.9,
+     "targets": 687,
+     "stops": 424,
+     "timeouts": 16,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 1362,
+     "winRate": 0.6593,
+     "avgUsd": 1.71,
+     "profitFactor": 1.21,
+     "maxConsecLosses": 16,
+     "maxDrawdownUsd": 1013.59,
+     "totalUsd": 2327.17,
+     "avgHold": 3.9,
+     "targets": 895,
+     "stops": 441,
+     "timeouts": 26,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "band_above15",
+    "label": "15%以上（上限なし）",
+    "rawSignals": 5521,
+    "signalsPerWeek": 55.21,
+    "open": 33,
+    "stats": {
+     "n": 3253,
+     "winRate": 0.6686,
+     "avgUsd": 0.61,
+     "profitFactor": 1.07,
+     "maxConsecLosses": 54,
+     "maxDrawdownUsd": 3438.79,
+     "totalUsd": 1991.56,
+     "avgHold": 4.4,
+     "targets": 2163,
+     "stops": 986,
+     "timeouts": 104,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 1423,
+     "winRate": 0.6444,
+     "avgUsd": -0.45,
+     "profitFactor": 0.95,
+     "maxConsecLosses": 54,
+     "maxDrawdownUsd": 3438.79,
+     "totalUsd": -643.87,
+     "avgHold": 4.3,
+     "targets": 911,
+     "stops": 476,
+     "timeouts": 36,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 1830,
+     "winRate": 0.6874,
+     "avgUsd": 1.44,
+     "profitFactor": 1.16,
+     "maxConsecLosses": 15,
+     "maxDrawdownUsd": 1936.19,
+     "totalUsd": 2635.43,
+     "avgHold": 4.5,
+     "targets": 1252,
+     "stops": 510,
+     "timeouts": 68,
+     "sharps": 0
+    }
+   }
+  ],
+  "exit": [
+   {
+    "id": "tp_0.5",
+    "label": "利確 0.5 ATR",
+    "rawSignals": 5522,
+    "signalsPerWeek": 55.22,
+    "open": 24,
+    "stats": {
+     "n": 4286,
+     "winRate": 0.8077,
+     "avgUsd": 0.22,
+     "profitFactor": 1.04,
+     "maxConsecLosses": 16,
+     "maxDrawdownUsd": 2346.88,
+     "totalUsd": 934.65,
+     "avgHold": 2.2,
+     "targets": 3460,
+     "stops": 779,
+     "timeouts": 47,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 1859,
+     "winRate": 0.7945,
+     "avgUsd": -0.27,
+     "profitFactor": 0.95,
+     "maxConsecLosses": 16,
+     "maxDrawdownUsd": 2346.88,
+     "totalUsd": -499.46,
+     "avgHold": 2.2,
+     "targets": 1476,
+     "stops": 367,
+     "timeouts": 16,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 2427,
+     "winRate": 0.8179,
+     "avgUsd": 0.59,
+     "profitFactor": 1.11,
+     "maxConsecLosses": 9,
+     "maxDrawdownUsd": 1431.16,
+     "totalUsd": 1434.1,
+     "avgHold": 2.2,
+     "targets": 1984,
+     "stops": 412,
+     "timeouts": 31,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "tp_1",
+    "label": "利確 1 ATR",
+    "rawSignals": 5521,
+    "signalsPerWeek": 55.21,
+    "open": 33,
+    "stats": {
+     "n": 3253,
+     "winRate": 0.6686,
+     "avgUsd": 0.61,
+     "profitFactor": 1.07,
+     "maxConsecLosses": 54,
+     "maxDrawdownUsd": 3438.79,
+     "totalUsd": 1991.56,
+     "avgHold": 4.4,
+     "targets": 2163,
+     "stops": 986,
+     "timeouts": 104,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 1423,
+     "winRate": 0.6444,
+     "avgUsd": -0.45,
+     "profitFactor": 0.95,
+     "maxConsecLosses": 54,
+     "maxDrawdownUsd": 3438.79,
+     "totalUsd": -643.87,
+     "avgHold": 4.3,
+     "targets": 911,
+     "stops": 476,
+     "timeouts": 36,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 1830,
+     "winRate": 0.6874,
+     "avgUsd": 1.44,
+     "profitFactor": 1.16,
+     "maxConsecLosses": 15,
+     "maxDrawdownUsd": 1936.19,
+     "totalUsd": 2635.43,
+     "avgHold": 4.5,
+     "targets": 1252,
+     "stops": 510,
+     "timeouts": 68,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "tp_1.5",
+    "label": "利確 1.5 ATR",
+    "rawSignals": 5517,
+    "signalsPerWeek": 55.17,
+    "open": 43,
+    "stats": {
+     "n": 2805,
+     "winRate": 0.5708,
+     "avgUsd": 0.86,
+     "profitFactor": 1.08,
+     "maxConsecLosses": 51,
+     "maxDrawdownUsd": 3886.66,
+     "totalUsd": 2409.04,
+     "avgHold": 6.2,
+     "targets": 1559,
+     "stops": 1081,
+     "timeouts": 165,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 1235,
+     "winRate": 0.5441,
+     "avgUsd": -0.43,
+     "profitFactor": 0.96,
+     "maxConsecLosses": 51,
+     "maxDrawdownUsd": 3886.66,
+     "totalUsd": -528.06,
+     "avgHold": 6.1,
+     "targets": 649,
+     "stops": 521,
+     "timeouts": 65,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 1570,
+     "winRate": 0.5917,
+     "avgUsd": 1.87,
+     "profitFactor": 1.17,
+     "maxConsecLosses": 20,
+     "maxDrawdownUsd": 2420.02,
+     "totalUsd": 2937.09,
+     "avgHold": 6.3,
+     "targets": 910,
+     "stops": 560,
+     "timeouts": 100,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "tp_2",
+    "label": "利確 2 ATR",
+    "rawSignals": 5512,
+    "signalsPerWeek": 55.12,
+    "open": 52,
+    "stats": {
+     "n": 2601,
+     "winRate": 0.5087,
+     "avgUsd": 1.24,
+     "profitFactor": 1.1,
+     "maxConsecLosses": 87,
+     "maxDrawdownUsd": 4801.87,
+     "totalUsd": 3219.08,
+     "avgHold": 7.6,
+     "targets": 1218,
+     "stops": 1140,
+     "timeouts": 243,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 1166,
+     "winRate": 0.4803,
+     "avgUsd": -0.64,
+     "profitFactor": 0.95,
+     "maxConsecLosses": 87,
+     "maxDrawdownUsd": 4801.87,
+     "totalUsd": -750.05,
+     "avgHold": 7.6,
+     "targets": 503,
+     "stops": 552,
+     "timeouts": 111,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 1435,
+     "winRate": 0.5317,
+     "avgUsd": 2.77,
+     "profitFactor": 1.22,
+     "maxConsecLosses": 28,
+     "maxDrawdownUsd": 2401.71,
+     "totalUsd": 3969.13,
+     "avgHold": 7.6,
+     "targets": 715,
+     "stops": 588,
+     "timeouts": 132,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "sharp",
+    "label": "急騰日で全売り（前日終値+1ATR）",
+    "rawSignals": 5511,
+    "signalsPerWeek": 55.11,
+    "open": 43,
+    "stats": {
+     "n": 2783,
+     "winRate": 0.521,
+     "avgUsd": 0.55,
+     "profitFactor": 1.05,
+     "maxConsecLosses": 62,
+     "maxDrawdownUsd": 5375.99,
+     "totalUsd": 1520.95,
+     "avgHold": 7.1,
+     "targets": 0,
+     "stops": 1122,
+     "timeouts": 274,
+     "sharps": 1387
+    },
+    "year1": {
+     "n": 1226,
+     "winRate": 0.4902,
+     "avgUsd": -1.16,
+     "profitFactor": 0.89,
+     "maxConsecLosses": 62,
+     "maxDrawdownUsd": 5375.99,
+     "totalUsd": -1418,
+     "avgHold": 7,
+     "targets": 0,
+     "stops": 547,
+     "timeouts": 108,
+     "sharps": 571
+    },
+    "year2": {
+     "n": 1557,
+     "winRate": 0.5453,
+     "avgUsd": 1.89,
+     "profitFactor": 1.18,
+     "maxConsecLosses": 18,
+     "maxDrawdownUsd": 2209.75,
+     "totalUsd": 2938.96,
+     "avgHold": 7.2,
+     "targets": 0,
+     "stops": 575,
+     "timeouts": 166,
+     "sharps": 816
+    }
+   },
+   {
+    "id": "sharp_tp1",
+    "label": "利確1ATR、届かなければ急騰日で全売り",
+    "rawSignals": 5521,
+    "signalsPerWeek": 55.21,
+    "open": 28,
+    "stats": {
+     "n": 3360,
+     "winRate": 0.6655,
+     "avgUsd": 0.85,
+     "profitFactor": 1.11,
+     "maxConsecLosses": 54,
+     "maxDrawdownUsd": 3395.49,
+     "totalUsd": 2849.94,
+     "avgHold": 4,
+     "targets": 1968,
+     "stops": 949,
+     "timeouts": 71,
+     "sharps": 372
+    },
+    "year1": {
+     "n": 1460,
+     "winRate": 0.6432,
+     "avgUsd": -0.42,
+     "profitFactor": 0.95,
+     "maxConsecLosses": 54,
+     "maxDrawdownUsd": 3395.49,
+     "totalUsd": -615.57,
+     "avgHold": 3.9,
+     "targets": 830,
+     "stops": 463,
+     "timeouts": 25,
+     "sharps": 142
+    },
+    "year2": {
+     "n": 1900,
+     "winRate": 0.6826,
+     "avgUsd": 1.82,
+     "profitFactor": 1.23,
+     "maxConsecLosses": 15,
+     "maxDrawdownUsd": 1219.82,
+     "totalUsd": 3465.51,
+     "avgHold": 4,
+     "targets": 1138,
+     "stops": 486,
+     "timeouts": 46,
+     "sharps": 230
+    }
+   }
+  ],
+  "stop": [
+   {
+    "id": "stop_low",
+    "label": "終値が20日安値割れ",
+    "rawSignals": 5521,
+    "signalsPerWeek": 55.21,
+    "open": 33,
+    "stats": {
+     "n": 3253,
+     "winRate": 0.6686,
+     "avgUsd": 0.61,
+     "profitFactor": 1.07,
+     "maxConsecLosses": 54,
+     "maxDrawdownUsd": 3438.79,
+     "totalUsd": 1991.56,
+     "avgHold": 4.4,
+     "targets": 2163,
+     "stops": 986,
+     "timeouts": 104,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 1423,
+     "winRate": 0.6444,
+     "avgUsd": -0.45,
+     "profitFactor": 0.95,
+     "maxConsecLosses": 54,
+     "maxDrawdownUsd": 3438.79,
+     "totalUsd": -643.87,
+     "avgHold": 4.3,
+     "targets": 911,
+     "stops": 476,
+     "timeouts": 36,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 1830,
+     "winRate": 0.6874,
+     "avgUsd": 1.44,
+     "profitFactor": 1.16,
+     "maxConsecLosses": 15,
+     "maxDrawdownUsd": 1936.19,
+     "totalUsd": 2635.43,
+     "avgHold": 4.5,
+     "targets": 1252,
+     "stops": 510,
+     "timeouts": 68,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "stop_half",
+    "label": "終値が20日安値−0.5ATR割れ",
+    "rawSignals": 5521,
+    "signalsPerWeek": 55.21,
+    "open": 45,
+    "stats": {
+     "n": 3028,
+     "winRate": 0.7166,
+     "avgUsd": 0.84,
+     "profitFactor": 1.09,
+     "maxConsecLosses": 65,
+     "maxDrawdownUsd": 3803.39,
+     "totalUsd": 2555.04,
+     "avgHold": 5.3,
+     "targets": 2155,
+     "stops": 726,
+     "timeouts": 147,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 1336,
+     "winRate": 0.6939,
+     "avgUsd": -0.17,
+     "profitFactor": 0.98,
+     "maxConsecLosses": 65,
+     "maxDrawdownUsd": 3803.39,
+     "totalUsd": -229.8,
+     "avgHold": 5.3,
+     "targets": 919,
+     "stops": 365,
+     "timeouts": 52,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 1692,
+     "winRate": 0.7346,
+     "avgUsd": 1.65,
+     "profitFactor": 1.18,
+     "maxConsecLosses": 15,
+     "maxDrawdownUsd": 2430.52,
+     "totalUsd": 2784.84,
+     "avgHold": 5.4,
+     "targets": 1236,
+     "stops": 361,
+     "timeouts": 95,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "stop_none",
+    "label": "損切りなし（期限のみ）",
+    "rawSignals": 5517,
+    "signalsPerWeek": 55.17,
+    "open": 61,
+    "stats": {
+     "n": 2549,
+     "winRate": 0.7972,
+     "avgUsd": 3.05,
+     "profitFactor": 1.39,
+     "maxConsecLosses": 23,
+     "maxDrawdownUsd": 2584.09,
+     "totalUsd": 7782.32,
+     "avgHold": 7.8,
+     "targets": 2006,
+     "stops": 0,
+     "timeouts": 543,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 1123,
+     "winRate": 0.7827,
+     "avgUsd": 1.68,
+     "profitFactor": 1.21,
+     "maxConsecLosses": 23,
+     "maxDrawdownUsd": 2584.09,
+     "totalUsd": 1889.21,
+     "avgHold": 8.2,
+     "targets": 868,
+     "stops": 0,
+     "timeouts": 255,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 1426,
+     "winRate": 0.8086,
+     "avgUsd": 4.13,
+     "profitFactor": 1.52,
+     "maxConsecLosses": 10,
+     "maxDrawdownUsd": 1072.18,
+     "totalUsd": 5893.11,
+     "avgHold": 7.5,
+     "targets": 1138,
+     "stops": 0,
+     "timeouts": 288,
+     "sharps": 0
+    }
+   }
+  ],
+  "market": [
+   {
+    "id": "spy50",
+    "label": "SPY終値 > 50日線",
+    "rawSignals": 3921,
+    "signalsPerWeek": 39.21,
+    "open": 26,
+    "stats": {
+     "n": 2341,
+     "winRate": 0.6788,
+     "avgUsd": 0.39,
+     "profitFactor": 1.04,
+     "maxConsecLosses": 23,
+     "maxDrawdownUsd": 2582.53,
+     "totalUsd": 910.04,
+     "avgHold": 4.5,
+     "targets": 1581,
+     "stops": 686,
+     "timeouts": 74,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 970,
+     "winRate": 0.6876,
+     "avgUsd": 1,
+     "profitFactor": 1.14,
+     "maxConsecLosses": 23,
+     "maxDrawdownUsd": 1210.35,
+     "totalUsd": 974.01,
+     "avgHold": 4.5,
+     "targets": 664,
+     "stops": 279,
+     "timeouts": 27,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 1371,
+     "winRate": 0.6725,
+     "avgUsd": -0.05,
+     "profitFactor": 1,
+     "maxConsecLosses": 15,
+     "maxDrawdownUsd": 2582.53,
+     "totalUsd": -63.97,
+     "avgHold": 4.5,
+     "targets": 917,
+     "stops": 407,
+     "timeouts": 47,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "spy200",
+    "label": "SPY終値 > 200日線",
+    "rawSignals": 4859,
+    "signalsPerWeek": 48.59,
+    "open": 33,
+    "stats": {
+     "n": 2875,
+     "winRate": 0.6605,
+     "avgUsd": 0.15,
+     "profitFactor": 1.02,
+     "maxConsecLosses": 23,
+     "maxDrawdownUsd": 2845.86,
+     "totalUsd": 431.99,
+     "avgHold": 4.5,
+     "targets": 1891,
+     "stops": 888,
+     "timeouts": 96,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 1181,
+     "winRate": 0.6427,
+     "avgUsd": -0.56,
+     "profitFactor": 0.93,
+     "maxConsecLosses": 23,
+     "maxDrawdownUsd": 2845.86,
+     "totalUsd": -660.77,
+     "avgHold": 4.3,
+     "targets": 756,
+     "stops": 396,
+     "timeouts": 29,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 1694,
+     "winRate": 0.673,
+     "avgUsd": 0.65,
+     "profitFactor": 1.07,
+     "maxConsecLosses": 15,
+     "maxDrawdownUsd": 1936.19,
+     "totalUsd": 1092.76,
+     "avgHold": 4.6,
+     "targets": 1135,
+     "stops": 492,
+     "timeouts": 67,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "soxx50",
+    "label": "半導体だけ SOXX > 50日線",
+    "rawSignals": 4988,
+    "signalsPerWeek": 49.88,
+    "open": 34,
+    "stats": {
+     "n": 2965,
+     "winRate": 0.6718,
+     "avgUsd": 0.55,
+     "profitFactor": 1.06,
+     "maxConsecLosses": 36,
+     "maxDrawdownUsd": 2368.04,
+     "totalUsd": 1624.28,
+     "avgHold": 4.4,
+     "targets": 1982,
+     "stops": 889,
+     "timeouts": 94,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 1255,
+     "winRate": 0.6582,
+     "avgUsd": 0,
+     "profitFactor": 1,
+     "maxConsecLosses": 36,
+     "maxDrawdownUsd": 2368.04,
+     "totalUsd": 5.45,
+     "avgHold": 4.4,
+     "targets": 822,
+     "stops": 402,
+     "timeouts": 31,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 1710,
+     "winRate": 0.6819,
+     "avgUsd": 0.95,
+     "profitFactor": 1.11,
+     "maxConsecLosses": 19,
+     "maxDrawdownUsd": 1919.9,
+     "totalUsd": 1618.83,
+     "avgHold": 4.4,
+     "targets": 1160,
+     "stops": 487,
+     "timeouts": 63,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "soxx200",
+    "label": "半導体だけ SOXX > 200日線",
+    "rawSignals": 5154,
+    "signalsPerWeek": 51.54,
+    "open": 33,
+    "stats": {
+     "n": 3055,
+     "winRate": 0.6756,
+     "avgUsd": 0.86,
+     "profitFactor": 1.1,
+     "maxConsecLosses": 36,
+     "maxDrawdownUsd": 2298.1,
+     "totalUsd": 2625.77,
+     "avgHold": 4.4,
+     "targets": 2054,
+     "stops": 903,
+     "timeouts": 98,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 1225,
+     "winRate": 0.658,
+     "avgUsd": -0.01,
+     "profitFactor": 1,
+     "maxConsecLosses": 36,
+     "maxDrawdownUsd": 2298.1,
+     "totalUsd": -9.65,
+     "avgHold": 4.3,
+     "targets": 802,
+     "stops": 393,
+     "timeouts": 30,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 1830,
+     "winRate": 0.6874,
+     "avgUsd": 1.44,
+     "profitFactor": 1.16,
+     "maxConsecLosses": 15,
+     "maxDrawdownUsd": 1936.19,
+     "totalUsd": 2635.43,
+     "avgHold": 4.5,
+     "targets": 1252,
+     "stops": 510,
+     "timeouts": 68,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "semis",
+    "label": "半導体・装置のみ（地合いフィルタなし）",
+    "rawSignals": 1162,
+    "signalsPerWeek": 11.62,
+    "open": 1,
+    "stats": {
+     "n": 665,
+     "winRate": 0.6707,
+     "avgUsd": 0.71,
+     "profitFactor": 1.07,
+     "maxConsecLosses": 25,
+     "maxDrawdownUsd": 1530.2,
+     "totalUsd": 474.77,
+     "avgHold": 4.6,
+     "targets": 444,
+     "stops": 188,
+     "timeouts": 33,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 310,
+     "winRate": 0.5806,
+     "avgUsd": -3.73,
+     "profitFactor": 0.66,
+     "maxConsecLosses": 25,
+     "maxDrawdownUsd": 1530.2,
+     "totalUsd": -1157.36,
+     "avgHold": 4.4,
+     "targets": 178,
+     "stops": 121,
+     "timeouts": 11,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 355,
+     "winRate": 0.7493,
+     "avgUsd": 4.6,
+     "profitFactor": 1.48,
+     "maxConsecLosses": 13,
+     "maxDrawdownUsd": 1134.88,
+     "totalUsd": 1632.13,
+     "avgHold": 4.8,
+     "targets": 266,
+     "stops": 67,
+     "timeouts": 22,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "semis_soxx50",
+    "label": "半導体・装置かつ SOXX > 50日線",
+    "rawSignals": 629,
+    "signalsPerWeek": 6.29,
+    "open": 2,
+    "stats": {
+     "n": 377,
+     "winRate": 0.6976,
+     "avgUsd": 0.29,
+     "profitFactor": 1.03,
+     "maxConsecLosses": 13,
+     "maxDrawdownUsd": 1118.6,
+     "totalUsd": 107.49,
+     "avgHold": 4.8,
+     "targets": 263,
+     "stops": 91,
+     "timeouts": 23,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 142,
+     "winRate": 0.6268,
+     "avgUsd": -3.58,
+     "profitFactor": 0.68,
+     "maxConsecLosses": 8,
+     "maxDrawdownUsd": 763.8,
+     "totalUsd": -508.04,
+     "avgHold": 4.8,
+     "targets": 89,
+     "stops": 47,
+     "timeouts": 6,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 235,
+     "winRate": 0.7404,
+     "avgUsd": 2.62,
+     "profitFactor": 1.25,
+     "maxConsecLosses": 13,
+     "maxDrawdownUsd": 1118.6,
+     "totalUsd": 615.53,
+     "avgHold": 4.8,
+     "targets": 174,
+     "stops": 44,
+     "timeouts": 17,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "semis_soxx200",
+    "label": "半導体・装置かつ SOXX > 200日線",
+    "rawSignals": 795,
+    "signalsPerWeek": 7.95,
+    "open": 1,
+    "stats": {
+     "n": 467,
+     "winRate": 0.7173,
+     "avgUsd": 2.37,
+     "profitFactor": 1.23,
+     "maxConsecLosses": 13,
+     "maxDrawdownUsd": 1134.88,
+     "totalUsd": 1108.98,
+     "avgHold": 4.7,
+     "targets": 335,
+     "stops": 105,
+     "timeouts": 27,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 112,
+     "winRate": 0.6161,
+     "avgUsd": -4.67,
+     "profitFactor": 0.61,
+     "maxConsecLosses": 7,
+     "maxDrawdownUsd": 823.8,
+     "totalUsd": -523.15,
+     "avgHold": 4.2,
+     "targets": 69,
+     "stops": 38,
+     "timeouts": 5,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 355,
+     "winRate": 0.7493,
+     "avgUsd": 4.6,
+     "profitFactor": 1.48,
+     "maxConsecLosses": 13,
+     "maxDrawdownUsd": 1134.88,
+     "totalUsd": 1632.13,
+     "avgHold": 4.8,
+     "targets": 266,
+     "stops": 67,
+     "timeouts": 22,
+     "sharps": 0
+    }
+   }
+  ],
+  "rebound": [
+   {
+    "id": "reb1",
+    "label": "反発 1日以上",
+    "rawSignals": 5521,
+    "signalsPerWeek": 55.21,
+    "open": 33,
+    "stats": {
+     "n": 3253,
+     "winRate": 0.6686,
+     "avgUsd": 0.61,
+     "profitFactor": 1.07,
+     "maxConsecLosses": 54,
+     "maxDrawdownUsd": 3438.79,
+     "totalUsd": 1991.56,
+     "avgHold": 4.4,
+     "targets": 2163,
+     "stops": 986,
+     "timeouts": 104,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 1423,
+     "winRate": 0.6444,
+     "avgUsd": -0.45,
+     "profitFactor": 0.95,
+     "maxConsecLosses": 54,
+     "maxDrawdownUsd": 3438.79,
+     "totalUsd": -643.87,
+     "avgHold": 4.3,
+     "targets": 911,
+     "stops": 476,
+     "timeouts": 36,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 1830,
+     "winRate": 0.6874,
+     "avgUsd": 1.44,
+     "profitFactor": 1.16,
+     "maxConsecLosses": 15,
+     "maxDrawdownUsd": 1936.19,
+     "totalUsd": 2635.43,
+     "avgHold": 4.5,
+     "targets": 1252,
+     "stops": 510,
+     "timeouts": 68,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "reb2",
+    "label": "反発 2日以上",
+    "rawSignals": 3244,
+    "signalsPerWeek": 32.44,
+    "open": 24,
+    "stats": {
+     "n": 1961,
+     "winRate": 0.6843,
+     "avgUsd": 0.11,
+     "profitFactor": 1.01,
+     "maxConsecLosses": 46,
+     "maxDrawdownUsd": 2077.59,
+     "totalUsd": 207.75,
+     "avgHold": 5,
+     "targets": 1335,
+     "stops": 536,
+     "timeouts": 90,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 827,
+     "winRate": 0.6518,
+     "avgUsd": -0.71,
+     "profitFactor": 0.92,
+     "maxConsecLosses": 46,
+     "maxDrawdownUsd": 2077.59,
+     "totalUsd": -583.88,
+     "avgHold": 5,
+     "targets": 537,
+     "stops": 259,
+     "timeouts": 31,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 1134,
+     "winRate": 0.7081,
+     "avgUsd": 0.7,
+     "profitFactor": 1.07,
+     "maxConsecLosses": 10,
+     "maxDrawdownUsd": 1900.49,
+     "totalUsd": 791.63,
+     "avgHold": 5.1,
+     "targets": 798,
+     "stops": 277,
+     "timeouts": 59,
+     "sharps": 0
+    }
+   },
+   {
+    "id": "reb3",
+    "label": "反発 3日以上",
+    "rawSignals": 1733,
+    "signalsPerWeek": 17.33,
+    "open": 20,
+    "stats": {
+     "n": 1057,
+     "winRate": 0.7029,
+     "avgUsd": -1.2,
+     "profitFactor": 0.89,
+     "maxConsecLosses": 11,
+     "maxDrawdownUsd": 2579.44,
+     "totalUsd": -1267.43,
+     "avgHold": 5.8,
+     "targets": 738,
+     "stops": 248,
+     "timeouts": 71,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 423,
+     "winRate": 0.6785,
+     "avgUsd": -1.12,
+     "profitFactor": 0.88,
+     "maxConsecLosses": 11,
+     "maxDrawdownUsd": 855.69,
+     "totalUsd": -472.74,
+     "avgHold": 6,
+     "targets": 284,
+     "stops": 113,
+     "timeouts": 26,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 634,
+     "winRate": 0.7192,
+     "avgUsd": -1.25,
+     "profitFactor": 0.89,
+     "maxConsecLosses": 9,
+     "maxDrawdownUsd": 2579.44,
+     "totalUsd": -794.69,
+     "avgHold": 5.7,
+     "targets": 454,
+     "stops": 135,
+     "timeouts": 45,
+     "sharps": 0
+    }
+   }
+  ],
+  "earnings": [
+   {
+    "id": "earn",
+    "label": "決算が5営業日以内のシグナルを除外（日付があるものだけ）",
+    "rawSignals": 4659,
+    "signalsPerWeek": 46.59,
+    "open": 33,
+    "stats": {
+     "n": 2744,
+     "winRate": 0.6684,
+     "avgUsd": 0.48,
+     "profitFactor": 1.06,
+     "maxConsecLosses": 53,
+     "maxDrawdownUsd": 2880.38,
+     "totalUsd": 1323.53,
+     "avgHold": 4.3,
+     "targets": 1824,
+     "stops": 843,
+     "timeouts": 77,
+     "sharps": 0
+    },
+    "year1": {
+     "n": 1193,
+     "winRate": 0.6429,
+     "avgUsd": -0.44,
+     "profitFactor": 0.95,
+     "maxConsecLosses": 53,
+     "maxDrawdownUsd": 2880.38,
+     "totalUsd": -530.7,
+     "avgHold": 4.3,
+     "targets": 761,
+     "stops": 401,
+     "timeouts": 31,
+     "sharps": 0
+    },
+    "year2": {
+     "n": 1551,
+     "winRate": 0.6879,
+     "avgUsd": 1.2,
+     "profitFactor": 1.13,
+     "maxConsecLosses": 16,
+     "maxDrawdownUsd": 2144.82,
+     "totalUsd": 1854.23,
+     "avgHold": 4.4,
+     "targets": 1063,
+     "stops": 442,
+     "timeouts": 46,
+     "sharps": 0
+    }
+   }
+  ]
+ },
+ "chaseSlices": [
+  {
+   "id": "box_15_25",
+   "label": "箱 15–25%（基準トレードの内訳）",
+   "rawSignals": 1138,
+   "signalsPerWeek": 11.38,
+   "open": 0,
+   "stats": {
+    "n": 1138,
+    "winRate": 0.5967,
+    "avgUsd": 0.39,
+    "profitFactor": 1.05,
+    "maxConsecLosses": 19,
+    "maxDrawdownUsd": 861.22,
+    "totalUsd": 439.25,
+    "avgHold": 3.6,
+    "targets": 677,
+    "stops": 453,
+    "timeouts": 8,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 517,
+    "winRate": 0.5919,
+    "avgUsd": -0.18,
+    "profitFactor": 0.97,
+    "maxConsecLosses": 19,
+    "maxDrawdownUsd": 861.22,
+    "totalUsd": -95.58,
+    "avgHold": 3.5,
+    "targets": 306,
+    "stops": 210,
+    "timeouts": 1,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 621,
+    "winRate": 0.6006,
+    "avgUsd": 0.86,
+    "profitFactor": 1.11,
+    "maxConsecLosses": 9,
+    "maxDrawdownUsd": 449.32,
+    "totalUsd": 534.83,
+    "avgHold": 3.6,
+    "targets": 371,
+    "stops": 243,
+    "timeouts": 7,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "box_25_35",
+   "label": "箱 25–35%",
+   "rawSignals": 719,
+   "signalsPerWeek": 7.19,
+   "open": 0,
+   "stats": {
+    "n": 719,
+    "winRate": 0.6579,
+    "avgUsd": 0.59,
+    "profitFactor": 1.07,
+    "maxConsecLosses": 24,
+    "maxDrawdownUsd": 1207.37,
+    "totalUsd": 424.83,
+    "avgHold": 4,
+    "targets": 471,
+    "stops": 235,
+    "timeouts": 13,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 331,
+    "winRate": 0.6224,
+    "avgUsd": -0.86,
+    "profitFactor": 0.9,
+    "maxConsecLosses": 24,
+    "maxDrawdownUsd": 1207.37,
+    "totalUsd": -285.25,
+    "avgHold": 4,
+    "targets": 204,
+    "stops": 121,
+    "timeouts": 6,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 388,
+    "winRate": 0.6881,
+    "avgUsd": 1.83,
+    "profitFactor": 1.2,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 664.4,
+    "totalUsd": 710.08,
+    "avgHold": 4.1,
+    "targets": 267,
+    "stops": 114,
+    "timeouts": 7,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "box_35_50",
+   "label": "箱 35–50%",
+   "rawSignals": 579,
+   "signalsPerWeek": 5.79,
+   "open": 0,
+   "stats": {
+    "n": 579,
+    "winRate": 0.6995,
+    "avgUsd": 1.2,
+    "profitFactor": 1.14,
+    "maxConsecLosses": 21,
+    "maxDrawdownUsd": 893.93,
+    "totalUsd": 692.87,
+    "avgHold": 4.5,
+    "targets": 401,
+    "stops": 157,
+    "timeouts": 21,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 257,
+    "winRate": 0.6498,
+    "avgUsd": -1.29,
+    "profitFactor": 0.87,
+    "maxConsecLosses": 21,
+    "maxDrawdownUsd": 893.93,
+    "totalUsd": -330.5,
+    "avgHold": 4.6,
+    "targets": 164,
+    "stops": 84,
+    "timeouts": 9,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 322,
+    "winRate": 0.7391,
+    "avgUsd": 3.18,
+    "profitFactor": 1.4,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 374.34,
+    "totalUsd": 1023.37,
+    "avgHold": 4.4,
+    "targets": 237,
+    "stops": 73,
+    "timeouts": 12,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "box_above50",
+   "label": "箱 50%超",
+   "rawSignals": 817,
+   "signalsPerWeek": 8.17,
+   "open": 0,
+   "stats": {
+    "n": 817,
+    "winRate": 0.7564,
+    "avgUsd": 0.53,
+    "profitFactor": 1.05,
+    "maxConsecLosses": 8,
+    "maxDrawdownUsd": 1140.24,
+    "totalUsd": 434.62,
+    "avgHold": 5.9,
+    "targets": 614,
+    "stops": 141,
+    "timeouts": 62,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 318,
+    "winRate": 0.7484,
+    "avgUsd": 0.21,
+    "profitFactor": 1.02,
+    "maxConsecLosses": 8,
+    "maxDrawdownUsd": 779.6,
+    "totalUsd": 67.47,
+    "avgHold": 5.9,
+    "targets": 237,
+    "stops": 61,
+    "timeouts": 20,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 499,
+    "winRate": 0.7615,
+    "avgUsd": 0.74,
+    "profitFactor": 1.07,
+    "maxConsecLosses": 5,
+    "maxDrawdownUsd": 1140.24,
+    "totalUsd": 367.15,
+    "avgHold": 5.9,
+    "targets": 377,
+    "stops": 80,
+    "timeouts": 42,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "box_above25",
+   "label": "箱 25%超（追いかけ+遅い）",
+   "rawSignals": 2115,
+   "signalsPerWeek": 21.15,
+   "open": 0,
+   "stats": {
+    "n": 2115,
+    "winRate": 0.7073,
+    "avgUsd": 0.73,
+    "profitFactor": 1.08,
+    "maxConsecLosses": 43,
+    "maxDrawdownUsd": 2767.77,
+    "totalUsd": 1552.31,
+    "avgHold": 4.9,
+    "targets": 1486,
+    "stops": 533,
+    "timeouts": 96,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 906,
+    "winRate": 0.6744,
+    "avgUsd": -0.61,
+    "profitFactor": 0.93,
+    "maxConsecLosses": 43,
+    "maxDrawdownUsd": 2767.77,
+    "totalUsd": -548.28,
+    "avgHold": 4.8,
+    "targets": 605,
+    "stops": 266,
+    "timeouts": 35,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 1209,
+    "winRate": 0.732,
+    "avgUsd": 1.74,
+    "profitFactor": 1.18,
+    "maxConsecLosses": 10,
+    "maxDrawdownUsd": 1789.49,
+    "totalUsd": 2100.59,
+    "avgHold": 4.9,
+    "targets": 881,
+    "stops": 267,
+    "timeouts": 61,
+    "sharps": 0
+   }
+  }
+ ],
+ "sectors": [
+  {
+   "id": "sector_AIクラウド・データセンター",
+   "label": "AIクラウド・データセンター",
+   "rawSignals": 223,
+   "signalsPerWeek": 2.23,
+   "open": 0,
+   "stats": {
+    "n": 223,
+    "winRate": 0.6009,
+    "avgUsd": -1.61,
+    "profitFactor": 0.85,
+    "maxConsecLosses": 15,
+    "maxDrawdownUsd": 726.88,
+    "totalUsd": -358.06,
+    "avgHold": 4.5,
+    "targets": 133,
+    "stops": 82,
+    "timeouts": 8,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 80,
+    "winRate": 0.5125,
+    "avgUsd": -5.31,
+    "profitFactor": 0.55,
+    "maxConsecLosses": 15,
+    "maxDrawdownUsd": 726.88,
+    "totalUsd": -424.42,
+    "avgHold": 4.3,
+    "targets": 40,
+    "stops": 39,
+    "timeouts": 1,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 143,
+    "winRate": 0.6503,
+    "avgUsd": 0.46,
+    "profitFactor": 1.05,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 245.07,
+    "totalUsd": 66.36,
+    "avgHold": 4.7,
+    "targets": 93,
+    "stops": 43,
+    "timeouts": 7,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "sector_IT・ソフト",
+   "label": "IT・ソフト",
+   "rawSignals": 124,
+   "signalsPerWeek": 1.24,
+   "open": 0,
+   "stats": {
+    "n": 124,
+    "winRate": 0.621,
+    "avgUsd": -2.13,
+    "profitFactor": 0.81,
+    "maxConsecLosses": 8,
+    "maxDrawdownUsd": 483.51,
+    "totalUsd": -264.72,
+    "avgHold": 4.4,
+    "targets": 77,
+    "stops": 45,
+    "timeouts": 2,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 51,
+    "winRate": 0.6667,
+    "avgUsd": 0.54,
+    "profitFactor": 1.06,
+    "maxConsecLosses": 4,
+    "maxDrawdownUsd": 173.1,
+    "totalUsd": 27.71,
+    "avgHold": 4.1,
+    "targets": 34,
+    "stops": 17,
+    "timeouts": 0,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 73,
+    "winRate": 0.589,
+    "avgUsd": -4.01,
+    "profitFactor": 0.68,
+    "maxConsecLosses": 8,
+    "maxDrawdownUsd": 411.09,
+    "totalUsd": -292.43,
+    "avgHold": 4.6,
+    "targets": 43,
+    "stops": 28,
+    "timeouts": 2,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "sector_エネルギー",
+   "label": "エネルギー",
+   "rawSignals": 144,
+   "signalsPerWeek": 1.44,
+   "open": 0,
+   "stats": {
+    "n": 144,
+    "winRate": 0.7639,
+    "avgUsd": 4.96,
+    "profitFactor": 2.26,
+    "maxConsecLosses": 5,
+    "maxDrawdownUsd": 165.06,
+    "totalUsd": 714.08,
+    "avgHold": 3.8,
+    "targets": 109,
+    "stops": 35,
+    "timeouts": 0,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 60,
+    "winRate": 0.7167,
+    "avgUsd": 1.92,
+    "profitFactor": 1.33,
+    "maxConsecLosses": 5,
+    "maxDrawdownUsd": 165.06,
+    "totalUsd": 115.4,
+    "avgHold": 4.4,
+    "targets": 43,
+    "stops": 17,
+    "timeouts": 0,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 84,
+    "winRate": 0.7976,
+    "avgUsd": 7.13,
+    "profitFactor": 3.82,
+    "maxConsecLosses": 4,
+    "maxDrawdownUsd": 48.4,
+    "totalUsd": 598.68,
+    "avgHold": 3.3,
+    "targets": 66,
+    "stops": 18,
+    "timeouts": 0,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "sector_サーバー・ストレージ・部品",
+   "label": "サーバー・ストレージ・部品",
+   "rawSignals": 133,
+   "signalsPerWeek": 1.33,
+   "open": 0,
+   "stats": {
+    "n": 133,
+    "winRate": 0.7444,
+    "avgUsd": 5.42,
+    "profitFactor": 1.9,
+    "maxConsecLosses": 5,
+    "maxDrawdownUsd": 110.81,
+    "totalUsd": 721.18,
+    "avgHold": 4.4,
+    "targets": 99,
+    "stops": 32,
+    "timeouts": 2,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 53,
+    "winRate": 0.6792,
+    "avgUsd": 1.2,
+    "profitFactor": 1.17,
+    "maxConsecLosses": 5,
+    "maxDrawdownUsd": 110.81,
+    "totalUsd": 63.77,
+    "avgHold": 3.4,
+    "targets": 36,
+    "stops": 17,
+    "timeouts": 0,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 80,
+    "winRate": 0.7875,
+    "avgUsd": 8.22,
+    "profitFactor": 2.55,
+    "maxConsecLosses": 2,
+    "maxDrawdownUsd": 76.78,
+    "totalUsd": 657.41,
+    "avgHold": 5,
+    "targets": 63,
+    "stops": 15,
+    "timeouts": 2,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "sector_ネットワーク・光通信",
+   "label": "ネットワーク・光通信",
+   "rawSignals": 213,
+   "signalsPerWeek": 2.13,
+   "open": 0,
+   "stats": {
+    "n": 213,
+    "winRate": 0.7277,
+    "avgUsd": 3.34,
+    "profitFactor": 1.37,
+    "maxConsecLosses": 13,
+    "maxDrawdownUsd": 603.25,
+    "totalUsd": 712.22,
+    "avgHold": 3.9,
+    "targets": 155,
+    "stops": 57,
+    "timeouts": 1,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 96,
+    "winRate": 0.7396,
+    "avgUsd": 4.35,
+    "profitFactor": 1.74,
+    "maxConsecLosses": 13,
+    "maxDrawdownUsd": 298.52,
+    "totalUsd": 417.24,
+    "avgHold": 3.7,
+    "targets": 71,
+    "stops": 25,
+    "timeouts": 0,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 117,
+    "winRate": 0.7179,
+    "avgUsd": 2.52,
+    "profitFactor": 1.22,
+    "maxConsecLosses": 10,
+    "maxDrawdownUsd": 603.25,
+    "totalUsd": 294.99,
+    "avgHold": 4,
+    "targets": 84,
+    "stops": 32,
+    "timeouts": 1,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "sector_ヘルスケア",
+   "label": "ヘルスケア",
+   "rawSignals": 216,
+   "signalsPerWeek": 2.16,
+   "open": 0,
+   "stats": {
+    "n": 216,
+    "winRate": 0.7037,
+    "avgUsd": 1.12,
+    "profitFactor": 1.15,
+    "maxConsecLosses": 7,
+    "maxDrawdownUsd": 301.53,
+    "totalUsd": 242.12,
+    "avgHold": 4.4,
+    "targets": 151,
+    "stops": 59,
+    "timeouts": 6,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 103,
+    "winRate": 0.6796,
+    "avgUsd": 1.16,
+    "profitFactor": 1.15,
+    "maxConsecLosses": 7,
+    "maxDrawdownUsd": 188.96,
+    "totalUsd": 119.25,
+    "avgHold": 4.7,
+    "targets": 69,
+    "stops": 29,
+    "timeouts": 5,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 113,
+    "winRate": 0.7257,
+    "avgUsd": 1.09,
+    "profitFactor": 1.14,
+    "maxConsecLosses": 7,
+    "maxDrawdownUsd": 301.53,
+    "totalUsd": 122.86,
+    "avgHold": 4.1,
+    "targets": 82,
+    "stops": 30,
+    "timeouts": 1,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "sector_一般消費財",
+   "label": "一般消費財",
+   "rawSignals": 192,
+   "signalsPerWeek": 1.92,
+   "open": 0,
+   "stats": {
+    "n": 192,
+    "winRate": 0.6354,
+    "avgUsd": -1.18,
+    "profitFactor": 0.87,
+    "maxConsecLosses": 7,
+    "maxDrawdownUsd": 415.74,
+    "totalUsd": -226.44,
+    "avgHold": 4.1,
+    "targets": 121,
+    "stops": 65,
+    "timeouts": 6,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 86,
+    "winRate": 0.6744,
+    "avgUsd": 0.36,
+    "profitFactor": 1.05,
+    "maxConsecLosses": 4,
+    "maxDrawdownUsd": 173.32,
+    "totalUsd": 31.34,
+    "avgHold": 4.7,
+    "targets": 57,
+    "stops": 26,
+    "timeouts": 3,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 106,
+    "winRate": 0.6038,
+    "avgUsd": -2.43,
+    "profitFactor": 0.76,
+    "maxConsecLosses": 7,
+    "maxDrawdownUsd": 415.74,
+    "totalUsd": -257.78,
+    "avgHold": 3.7,
+    "targets": 64,
+    "stops": 39,
+    "timeouts": 3,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "sector_宇宙",
+   "label": "宇宙",
+   "rawSignals": 111,
+   "signalsPerWeek": 1.11,
+   "open": 0,
+   "stats": {
+    "n": 111,
+    "winRate": 0.6667,
+    "avgUsd": 0.5,
+    "profitFactor": 1.07,
+    "maxConsecLosses": 10,
+    "maxDrawdownUsd": 215.07,
+    "totalUsd": 55.6,
+    "avgHold": 4.5,
+    "targets": 74,
+    "stops": 31,
+    "timeouts": 6,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 49,
+    "winRate": 0.6939,
+    "avgUsd": 0.65,
+    "profitFactor": 1.1,
+    "maxConsecLosses": 5,
+    "maxDrawdownUsd": 175.85,
+    "totalUsd": 32.05,
+    "avgHold": 4.1,
+    "targets": 34,
+    "stops": 13,
+    "timeouts": 2,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 62,
+    "winRate": 0.6452,
+    "avgUsd": 0.38,
+    "profitFactor": 1.05,
+    "maxConsecLosses": 10,
+    "maxDrawdownUsd": 215.07,
+    "totalUsd": 23.55,
+    "avgHold": 4.8,
+    "targets": 40,
+    "stops": 18,
+    "timeouts": 4,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "sector_金融",
+   "label": "金融",
+   "rawSignals": 192,
+   "signalsPerWeek": 1.92,
+   "open": 0,
+   "stats": {
+    "n": 192,
+    "winRate": 0.6771,
+    "avgUsd": 0.84,
+    "profitFactor": 1.11,
+    "maxConsecLosses": 11,
+    "maxDrawdownUsd": 375.05,
+    "totalUsd": 161,
+    "avgHold": 4,
+    "targets": 128,
+    "stops": 61,
+    "timeouts": 3,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 79,
+    "winRate": 0.6329,
+    "avgUsd": -1.12,
+    "profitFactor": 0.88,
+    "maxConsecLosses": 11,
+    "maxDrawdownUsd": 375.05,
+    "totalUsd": -88.46,
+    "avgHold": 3.7,
+    "targets": 50,
+    "stops": 29,
+    "timeouts": 0,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 113,
+    "winRate": 0.708,
+    "avgUsd": 2.21,
+    "profitFactor": 1.35,
+    "maxConsecLosses": 8,
+    "maxDrawdownUsd": 208.14,
+    "totalUsd": 249.46,
+    "avgHold": 4.2,
+    "targets": 78,
+    "stops": 32,
+    "timeouts": 3,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "sector_公益",
+   "label": "公益",
+   "rawSignals": 38,
+   "signalsPerWeek": 0.38,
+   "open": 0,
+   "stats": {
+    "n": 38,
+    "winRate": 0.6842,
+    "avgUsd": 1.58,
+    "profitFactor": 1.3,
+    "maxConsecLosses": 2,
+    "maxDrawdownUsd": 39.92,
+    "totalUsd": 60.18,
+    "avgHold": 5.2,
+    "targets": 26,
+    "stops": 10,
+    "timeouts": 2,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 22,
+    "winRate": 0.6818,
+    "avgUsd": 0.7,
+    "profitFactor": 1.11,
+    "maxConsecLosses": 2,
+    "maxDrawdownUsd": 39.92,
+    "totalUsd": 15.49,
+    "avgHold": 6.3,
+    "targets": 15,
+    "stops": 5,
+    "timeouts": 2,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 16,
+    "winRate": 0.6875,
+    "avgUsd": 2.79,
+    "profitFactor": 1.66,
+    "maxConsecLosses": 2,
+    "maxDrawdownUsd": 32.4,
+    "totalUsd": 44.7,
+    "avgHold": 3.7,
+    "targets": 11,
+    "stops": 5,
+    "timeouts": 0,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "sector_資本財・工業",
+   "label": "資本財・工業",
+   "rawSignals": 192,
+   "signalsPerWeek": 1.92,
+   "open": 0,
+   "stats": {
+    "n": 192,
+    "winRate": 0.6458,
+    "avgUsd": -0.24,
+    "profitFactor": 0.97,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 366.56,
+    "totalUsd": -45.19,
+    "avgHold": 3.7,
+    "targets": 124,
+    "stops": 67,
+    "timeouts": 1,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 82,
+    "winRate": 0.6707,
+    "avgUsd": 0.45,
+    "profitFactor": 1.06,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 161.44,
+    "totalUsd": 37.23,
+    "avgHold": 3.4,
+    "targets": 55,
+    "stops": 26,
+    "timeouts": 1,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 110,
+    "winRate": 0.6273,
+    "avgUsd": -0.75,
+    "profitFactor": 0.92,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 334.03,
+    "totalUsd": -82.42,
+    "avgHold": 3.8,
+    "targets": 69,
+    "stops": 41,
+    "timeouts": 0,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "sector_生活必需品",
+   "label": "生活必需品",
+   "rawSignals": 119,
+   "signalsPerWeek": 1.19,
+   "open": 0,
+   "stats": {
+    "n": 119,
+    "winRate": 0.6723,
+    "avgUsd": 0.05,
+    "profitFactor": 1.01,
+    "maxConsecLosses": 5,
+    "maxDrawdownUsd": 205.03,
+    "totalUsd": 5.5,
+    "avgHold": 4.8,
+    "targets": 79,
+    "stops": 35,
+    "timeouts": 5,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 56,
+    "winRate": 0.5714,
+    "avgUsd": -3.11,
+    "profitFactor": 0.65,
+    "maxConsecLosses": 5,
+    "maxDrawdownUsd": 173.94,
+    "totalUsd": -173.94,
+    "avgHold": 4.8,
+    "targets": 32,
+    "stops": 23,
+    "timeouts": 1,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 63,
+    "winRate": 0.7619,
+    "avgUsd": 2.85,
+    "profitFactor": 1.56,
+    "maxConsecLosses": 3,
+    "maxDrawdownUsd": 71.58,
+    "totalUsd": 179.45,
+    "avgHold": 4.8,
+    "targets": 47,
+    "stops": 12,
+    "timeouts": 4,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "sector_素材",
+   "label": "素材",
+   "rawSignals": 125,
+   "signalsPerWeek": 1.25,
+   "open": 0,
+   "stats": {
+    "n": 125,
+    "winRate": 0.672,
+    "avgUsd": 1.25,
+    "profitFactor": 1.18,
+    "maxConsecLosses": 5,
+    "maxDrawdownUsd": 141.49,
+    "totalUsd": 156.76,
+    "avgHold": 4.6,
+    "targets": 84,
+    "stops": 38,
+    "timeouts": 3,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 70,
+    "winRate": 0.7,
+    "avgUsd": 1.29,
+    "profitFactor": 1.2,
+    "maxConsecLosses": 5,
+    "maxDrawdownUsd": 141.49,
+    "totalUsd": 90.53,
+    "avgHold": 4.9,
+    "targets": 49,
+    "stops": 20,
+    "timeouts": 1,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 55,
+    "winRate": 0.6364,
+    "avgUsd": 1.2,
+    "profitFactor": 1.17,
+    "maxConsecLosses": 3,
+    "maxDrawdownUsd": 113.61,
+    "totalUsd": 66.23,
+    "avgHold": 4.3,
+    "targets": 35,
+    "stops": 18,
+    "timeouts": 2,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "sector_通信",
+   "label": "通信",
+   "rawSignals": 180,
+   "signalsPerWeek": 1.8,
+   "open": 0,
+   "stats": {
+    "n": 180,
+    "winRate": 0.5944,
+    "avgUsd": -1.98,
+    "profitFactor": 0.79,
+    "maxConsecLosses": 9,
+    "maxDrawdownUsd": 475.41,
+    "totalUsd": -356.26,
+    "avgHold": 4.5,
+    "targets": 107,
+    "stops": 67,
+    "timeouts": 6,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 58,
+    "winRate": 0.6552,
+    "avgUsd": 1.28,
+    "profitFactor": 1.2,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 149.21,
+    "totalUsd": 74.29,
+    "avgHold": 4.8,
+    "targets": 38,
+    "stops": 18,
+    "timeouts": 2,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 122,
+    "winRate": 0.5656,
+    "avgUsd": -3.53,
+    "profitFactor": 0.68,
+    "maxConsecLosses": 9,
+    "maxDrawdownUsd": 430.55,
+    "totalUsd": -430.55,
+    "avgHold": 4.3,
+    "targets": 69,
+    "stops": 49,
+    "timeouts": 4,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "sector_電力設備・冷却",
+   "label": "電力設備・冷却",
+   "rawSignals": 137,
+   "signalsPerWeek": 1.37,
+   "open": 0,
+   "stats": {
+    "n": 137,
+    "winRate": 0.6642,
+    "avgUsd": 0.59,
+    "profitFactor": 1.05,
+    "maxConsecLosses": 9,
+    "maxDrawdownUsd": 357.85,
+    "totalUsd": 80.59,
+    "avgHold": 4.7,
+    "targets": 90,
+    "stops": 42,
+    "timeouts": 5,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 68,
+    "winRate": 0.6324,
+    "avgUsd": 1.65,
+    "profitFactor": 1.21,
+    "maxConsecLosses": 9,
+    "maxDrawdownUsd": 313.75,
+    "totalUsd": 111.93,
+    "avgHold": 3.9,
+    "targets": 43,
+    "stops": 24,
+    "timeouts": 1,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 69,
+    "winRate": 0.6957,
+    "avgUsd": -0.45,
+    "profitFactor": 0.97,
+    "maxConsecLosses": 4,
+    "maxDrawdownUsd": 357.85,
+    "totalUsd": -31.34,
+    "avgHold": 5.5,
+    "targets": 47,
+    "stops": 18,
+    "timeouts": 4,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "sector_発電・原子力",
+   "label": "発電・原子力",
+   "rawSignals": 181,
+   "signalsPerWeek": 1.81,
+   "open": 0,
+   "stats": {
+    "n": 181,
+    "winRate": 0.6575,
+    "avgUsd": -0.84,
+    "profitFactor": 0.91,
+    "maxConsecLosses": 7,
+    "maxDrawdownUsd": 403.49,
+    "totalUsd": -151.6,
+    "avgHold": 5,
+    "targets": 118,
+    "stops": 53,
+    "timeouts": 10,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 72,
+    "winRate": 0.6944,
+    "avgUsd": 1.33,
+    "profitFactor": 1.18,
+    "maxConsecLosses": 7,
+    "maxDrawdownUsd": 213.91,
+    "totalUsd": 95.77,
+    "avgHold": 4.7,
+    "targets": 50,
+    "stops": 19,
+    "timeouts": 3,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 109,
+    "winRate": 0.633,
+    "avgUsd": -2.27,
+    "profitFactor": 0.8,
+    "maxConsecLosses": 5,
+    "maxDrawdownUsd": 403.49,
+    "totalUsd": -247.37,
+    "avgHold": 5.2,
+    "targets": 68,
+    "stops": 34,
+    "timeouts": 7,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "sector_半導体",
+   "label": "半導体",
+   "rawSignals": 492,
+   "signalsPerWeek": 4.92,
+   "open": 0,
+   "stats": {
+    "n": 492,
+    "winRate": 0.6606,
+    "avgUsd": 0.37,
+    "profitFactor": 1.04,
+    "maxConsecLosses": 17,
+    "maxDrawdownUsd": 1124.83,
+    "totalUsd": 182.62,
+    "avgHold": 4.8,
+    "targets": 323,
+    "stops": 138,
+    "timeouts": 31,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 226,
+    "winRate": 0.5929,
+    "avgUsd": -3.53,
+    "profitFactor": 0.67,
+    "maxConsecLosses": 17,
+    "maxDrawdownUsd": 1124.83,
+    "totalUsd": -797.37,
+    "avgHold": 4.7,
+    "targets": 132,
+    "stops": 84,
+    "timeouts": 10,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 266,
+    "winRate": 0.718,
+    "avgUsd": 3.68,
+    "profitFactor": 1.37,
+    "maxConsecLosses": 12,
+    "maxDrawdownUsd": 1045.16,
+    "totalUsd": 979.99,
+    "avgHold": 4.9,
+    "targets": 191,
+    "stops": 54,
+    "timeouts": 21,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "sector_半導体装置・材料",
+   "label": "半導体装置・材料",
+   "rawSignals": 173,
+   "signalsPerWeek": 1.73,
+   "open": 0,
+   "stats": {
+    "n": 173,
+    "winRate": 0.6994,
+    "avgUsd": 1.69,
+    "profitFactor": 1.17,
+    "maxConsecLosses": 10,
+    "maxDrawdownUsd": 531.51,
+    "totalUsd": 292.15,
+    "avgHold": 4.2,
+    "targets": 121,
+    "stops": 50,
+    "timeouts": 2,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 84,
+    "winRate": 0.5476,
+    "avgUsd": -4.29,
+    "profitFactor": 0.61,
+    "maxConsecLosses": 10,
+    "maxDrawdownUsd": 531.51,
+    "totalUsd": -359.99,
+    "avgHold": 3.5,
+    "targets": 46,
+    "stops": 37,
+    "timeouts": 1,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 89,
+    "winRate": 0.8427,
+    "avgUsd": 7.33,
+    "profitFactor": 1.87,
+    "maxConsecLosses": 3,
+    "maxDrawdownUsd": 281.62,
+    "totalUsd": 652.14,
+    "avgHold": 4.8,
+    "targets": 75,
+    "stops": 13,
+    "timeouts": 1,
+    "sharps": 0
+   }
+  },
+  {
+   "id": "sector_不動産",
+   "label": "不動産",
+   "rawSignals": 68,
+   "signalsPerWeek": 0.68,
+   "open": 0,
+   "stats": {
+    "n": 68,
+    "winRate": 0.6618,
+    "avgUsd": 0.14,
+    "profitFactor": 1.02,
+    "maxConsecLosses": 3,
+    "maxDrawdownUsd": 91.04,
+    "totalUsd": 9.84,
+    "avgHold": 5.3,
+    "targets": 44,
+    "stops": 19,
+    "timeouts": 5,
+    "sharps": 0
+   },
+   "year1": {
+    "n": 28,
+    "winRate": 0.6429,
+    "avgUsd": -1.13,
+    "profitFactor": 0.87,
+    "maxConsecLosses": 3,
+    "maxDrawdownUsd": 87.93,
+    "totalUsd": -31.67,
+    "avgHold": 6.5,
+    "targets": 17,
+    "stops": 8,
+    "timeouts": 3,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 40,
+    "winRate": 0.675,
+    "avgUsd": 1.04,
+    "profitFactor": 1.17,
+    "maxConsecLosses": 3,
+    "maxDrawdownUsd": 91.04,
+    "totalUsd": 41.51,
+    "avgHold": 4.5,
+    "targets": 27,
+    "stops": 11,
+    "timeouts": 2,
+    "sharps": 0
+   }
+  }
+ ],
+ "portfolio": [
+  {
+   "id": "port_ticker",
+   "label": "基準ルール・最大5・$300–450・順位 ticker",
+   "universe": "core",
+   "rank": "ticker",
+   "n": 445,
+   "winRate": 0.6517,
+   "avgUsd": 0.8,
+   "profitFactor": 1.08,
+   "maxConsecLosses": 6,
+   "totalUsd": 357.53,
+   "maxDrawdownUsd": 680.66,
+   "endEquity": 3557.53,
+   "worstMonth": "2026-07",
+   "worstMonthUsd": -446.85,
+   "daysRealized10": 136,
+   "exitDays": 286,
+   "daysMtm10": 179,
+   "sessions": 500,
+   "rawSignals": 5521,
+   "signalsPerWeek": 55.21,
+   "takenPerWeek": 4.45,
+   "skippedPrice": 885,
+   "skippedSlot": 3943,
+   "skippedCash": 0,
+   "year1": {
+    "n": 217,
+    "winRate": 0.6636,
+    "avgUsd": 1.3,
+    "profitFactor": 1.15,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 591.16,
+    "totalUsd": 281.02,
+    "avgHold": 4.7,
+    "targets": 140,
+    "stops": 66,
+    "timeouts": 11,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 228,
+    "winRate": 0.6404,
+    "avgUsd": 0.34,
+    "profitFactor": 1.03,
+    "maxConsecLosses": 5,
+    "maxDrawdownUsd": 591.12,
+    "totalUsd": 76.51,
+    "avgHold": 4.5,
+    "targets": 145,
+    "stops": 68,
+    "timeouts": 10,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 217,
+    "totalUsd": 287.66,
+    "maxDrawdownUsd": 680.66,
+    "daysRealized10": 68
+   },
+   "restartYear2": {
+    "n": 234,
+    "totalUsd": 122.21,
+    "maxDrawdownUsd": 599.32,
+    "daysRealized10": 71
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3141.46
+    },
+    {
+     "month": "2024-11",
+     "equity": 3266.53
+    },
+    {
+     "month": "2024-12",
+     "equity": 3152.85
+    },
+    {
+     "month": "2025-01",
+     "equity": 3266.26
+    },
+    {
+     "month": "2025-02",
+     "equity": 3101.61
+    },
+    {
+     "month": "2025-03",
+     "equity": 2904.45
+    },
+    {
+     "month": "2025-04",
+     "equity": 3102.63
+    },
+    {
+     "month": "2025-05",
+     "equity": 3156.81
+    },
+    {
+     "month": "2025-06",
+     "equity": 3222.46
+    },
+    {
+     "month": "2025-07",
+     "equity": 3370.09
+    },
+    {
+     "month": "2025-08",
+     "equity": 3412.55
+    },
+    {
+     "month": "2025-09",
+     "equity": 3488.25
+    },
+    {
+     "month": "2025-10",
+     "equity": 3521.49
+    },
+    {
+     "month": "2025-11",
+     "equity": 3414.87
+    },
+    {
+     "month": "2025-12",
+     "equity": 3577.05
+    },
+    {
+     "month": "2026-01",
+     "equity": 3708.29
+    },
+    {
+     "month": "2026-02",
+     "equity": 3651.44
+    },
+    {
+     "month": "2026-03",
+     "equity": 3658.96
+    },
+    {
+     "month": "2026-04",
+     "equity": 3963.9
+    },
+    {
+     "month": "2026-05",
+     "equity": 4036.67
+    },
+    {
+     "month": "2026-06",
+     "equity": 4022.13
+    },
+    {
+     "month": "2026-07",
+     "equity": 3575.28
+    },
+    {
+     "month": "2026-08",
+     "equity": 3656.58
+    },
+    {
+     "month": "2026-09",
+     "equity": 3541.45
+    },
+    {
+     "month": "2026-10",
+     "equity": 3557.53
+    }
+   ]
+  },
+  {
+   "id": "port_atr",
+   "label": "基準ルール・最大5・$300–450・順位 atr",
+   "universe": "core",
+   "rank": "atr",
+   "n": 409,
+   "winRate": 0.6895,
+   "avgUsd": 2.52,
+   "profitFactor": 1.17,
+   "maxConsecLosses": 7,
+   "totalUsd": 1031.71,
+   "maxDrawdownUsd": 1007.08,
+   "endEquity": 4231.71,
+   "worstMonth": "2026-07",
+   "worstMonthUsd": -477.97,
+   "daysRealized10": 160,
+   "exitDays": 272,
+   "daysMtm10": 214,
+   "sessions": 500,
+   "rawSignals": 5521,
+   "signalsPerWeek": 55.21,
+   "takenPerWeek": 4.09,
+   "skippedPrice": 881,
+   "skippedSlot": 3981,
+   "skippedCash": 0,
+   "year1": {
+    "n": 207,
+    "winRate": 0.7053,
+    "avgUsd": 4.31,
+    "profitFactor": 1.33,
+    "maxConsecLosses": 7,
+    "maxDrawdownUsd": 937.73,
+    "totalUsd": 891.38,
+    "avgHold": 4.9,
+    "targets": 143,
+    "stops": 53,
+    "timeouts": 11,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 202,
+    "winRate": 0.6733,
+    "avgUsd": 0.69,
+    "profitFactor": 1.04,
+    "maxConsecLosses": 4,
+    "maxDrawdownUsd": 876.32,
+    "totalUsd": 140.33,
+    "avgHold": 5.1,
+    "targets": 135,
+    "stops": 51,
+    "timeouts": 11,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 207,
+    "totalUsd": 893.82,
+    "maxDrawdownUsd": 1007.08,
+    "daysRealized10": 79
+   },
+   "restartYear2": {
+    "n": 206,
+    "totalUsd": 177.49,
+    "maxDrawdownUsd": 923.42,
+    "daysRealized10": 79
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3231.26
+    },
+    {
+     "month": "2024-11",
+     "equity": 3428.72
+    },
+    {
+     "month": "2024-12",
+     "equity": 3168.31
+    },
+    {
+     "month": "2025-01",
+     "equity": 3730.58
+    },
+    {
+     "month": "2025-02",
+     "equity": 3614.38
+    },
+    {
+     "month": "2025-03",
+     "equity": 3337.86
+    },
+    {
+     "month": "2025-04",
+     "equity": 3267.03
+    },
+    {
+     "month": "2025-05",
+     "equity": 3351.4
+    },
+    {
+     "month": "2025-06",
+     "equity": 3683.07
+    },
+    {
+     "month": "2025-07",
+     "equity": 3795.27
+    },
+    {
+     "month": "2025-08",
+     "equity": 3848.89
+    },
+    {
+     "month": "2025-09",
+     "equity": 4041.58
+    },
+    {
+     "month": "2025-10",
+     "equity": 4396.1
+    },
+    {
+     "month": "2025-11",
+     "equity": 4256.39
+    },
+    {
+     "month": "2025-12",
+     "equity": 4283.68
+    },
+    {
+     "month": "2026-01",
+     "equity": 4511.46
+    },
+    {
+     "month": "2026-02",
+     "equity": 4486.06
+    },
+    {
+     "month": "2026-03",
+     "equity": 4447.83
+    },
+    {
+     "month": "2026-04",
+     "equity": 4739.58
+    },
+    {
+     "month": "2026-05",
+     "equity": 4834.07
+    },
+    {
+     "month": "2026-06",
+     "equity": 4849.33
+    },
+    {
+     "month": "2026-07",
+     "equity": 4371.36
+    },
+    {
+     "month": "2026-08",
+     "equity": 4309.57
+    },
+    {
+     "month": "2026-09",
+     "equity": 4202.91
+    },
+    {
+     "month": "2026-10",
+     "equity": 4231.71
+    }
+   ]
+  },
+  {
+   "id": "port_box",
+   "label": "基準ルール・最大5・$300–450・順位 box",
+   "universe": "core",
+   "rank": "box",
+   "n": 504,
+   "winRate": 0.6329,
+   "avgUsd": 0.95,
+   "profitFactor": 1.1,
+   "maxConsecLosses": 7,
+   "totalUsd": 476.36,
+   "maxDrawdownUsd": 683.32,
+   "endEquity": 3676.36,
+   "worstMonth": "2026-07",
+   "worstMonthUsd": -284.18,
+   "daysRealized10": 134,
+   "exitDays": 309,
+   "daysMtm10": 180,
+   "sessions": 500,
+   "rawSignals": 5521,
+   "signalsPerWeek": 55.21,
+   "takenPerWeek": 5.04,
+   "skippedPrice": 879,
+   "skippedSlot": 3833,
+   "skippedCash": 0,
+   "year1": {
+    "n": 236,
+    "winRate": 0.6398,
+    "avgUsd": 1,
+    "profitFactor": 1.11,
+    "maxConsecLosses": 7,
+    "maxDrawdownUsd": 571.56,
+    "totalUsd": 235.02,
+    "avgHold": 4.2,
+    "targets": 147,
+    "stops": 79,
+    "timeouts": 10,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 268,
+    "winRate": 0.6269,
+    "avgUsd": 0.9,
+    "profitFactor": 1.09,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 493.04,
+    "totalUsd": 241.34,
+    "avgHold": 3.6,
+    "targets": 167,
+    "stops": 96,
+    "timeouts": 2,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 236,
+    "totalUsd": 221.61,
+    "maxDrawdownUsd": 683.32,
+    "daysRealized10": 63
+   },
+   "restartYear2": {
+    "n": 272,
+    "totalUsd": 212.46,
+    "maxDrawdownUsd": 472.89,
+    "daysRealized10": 70
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3193.92
+    },
+    {
+     "month": "2024-11",
+     "equity": 3115.62
+    },
+    {
+     "month": "2024-12",
+     "equity": 2926.19
+    },
+    {
+     "month": "2025-01",
+     "equity": 3278.21
+    },
+    {
+     "month": "2025-02",
+     "equity": 3009.54
+    },
+    {
+     "month": "2025-03",
+     "equity": 2993.01
+    },
+    {
+     "month": "2025-04",
+     "equity": 3046.83
+    },
+    {
+     "month": "2025-05",
+     "equity": 3086.28
+    },
+    {
+     "month": "2025-06",
+     "equity": 3203.72
+    },
+    {
+     "month": "2025-07",
+     "equity": 3197.75
+    },
+    {
+     "month": "2025-08",
+     "equity": 3219.91
+    },
+    {
+     "month": "2025-09",
+     "equity": 3397.33
+    },
+    {
+     "month": "2025-10",
+     "equity": 3584.46
+    },
+    {
+     "month": "2025-11",
+     "equity": 3588.67
+    },
+    {
+     "month": "2025-12",
+     "equity": 3718.62
+    },
+    {
+     "month": "2026-01",
+     "equity": 3806.08
+    },
+    {
+     "month": "2026-02",
+     "equity": 3754.12
+    },
+    {
+     "month": "2026-03",
+     "equity": 3753.64
+    },
+    {
+     "month": "2026-04",
+     "equity": 3897.06
+    },
+    {
+     "month": "2026-05",
+     "equity": 3942.7
+    },
+    {
+     "month": "2026-06",
+     "equity": 4027.21
+    },
+    {
+     "month": "2026-07",
+     "equity": 3743.02
+    },
+    {
+     "month": "2026-08",
+     "equity": 3740.71
+    },
+    {
+     "month": "2026-09",
+     "equity": 3704.05
+    },
+    {
+     "month": "2026-10",
+     "equity": 3676.36
+    }
+   ]
+  },
+  {
+   "id": "port_rs",
+   "label": "基準ルール・最大5・$300–450・順位 rs",
+   "universe": "core",
+   "rank": "rs",
+   "n": 397,
+   "winRate": 0.7128,
+   "avgUsd": 2.39,
+   "profitFactor": 1.24,
+   "maxConsecLosses": 6,
+   "totalUsd": 947.41,
+   "maxDrawdownUsd": 485.82,
+   "endEquity": 4147.41,
+   "worstMonth": "2025-11",
+   "worstMonthUsd": -229.96,
+   "daysRealized10": 146,
+   "exitDays": 279,
+   "daysMtm10": 190,
+   "sessions": 500,
+   "rawSignals": 5521,
+   "signalsPerWeek": 55.21,
+   "takenPerWeek": 3.97,
+   "skippedPrice": 880,
+   "skippedSlot": 4004,
+   "skippedCash": 0,
+   "year1": {
+    "n": 197,
+    "winRate": 0.731,
+    "avgUsd": 3.18,
+    "profitFactor": 1.35,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 486.08,
+    "totalUsd": 627.23,
+    "avgHold": 5.2,
+    "targets": 141,
+    "stops": 41,
+    "timeouts": 15,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 200,
+    "winRate": 0.695,
+    "avgUsd": 1.6,
+    "profitFactor": 1.15,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 426.26,
+    "totalUsd": 320.18,
+    "avgHold": 5.2,
+    "targets": 137,
+    "stops": 41,
+    "timeouts": 17,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 197,
+    "totalUsd": 647.97,
+    "maxDrawdownUsd": 485.82,
+    "daysRealized10": 73
+   },
+   "restartYear2": {
+    "n": 205,
+    "totalUsd": 325.44,
+    "maxDrawdownUsd": 435.31,
+    "daysRealized10": 71
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3249.25
+    },
+    {
+     "month": "2024-11",
+     "equity": 3376
+    },
+    {
+     "month": "2024-12",
+     "equity": 3263.61
+    },
+    {
+     "month": "2025-01",
+     "equity": 3434.15
+    },
+    {
+     "month": "2025-02",
+     "equity": 3478.52
+    },
+    {
+     "month": "2025-03",
+     "equity": 3348.7
+    },
+    {
+     "month": "2025-04",
+     "equity": 3394.81
+    },
+    {
+     "month": "2025-05",
+     "equity": 3505.37
+    },
+    {
+     "month": "2025-06",
+     "equity": 3584.53
+    },
+    {
+     "month": "2025-07",
+     "equity": 3710.29
+    },
+    {
+     "month": "2025-08",
+     "equity": 3585.56
+    },
+    {
+     "month": "2025-09",
+     "equity": 3783.09
+    },
+    {
+     "month": "2025-10",
+     "equity": 3824.07
+    },
+    {
+     "month": "2025-11",
+     "equity": 3594.11
+    },
+    {
+     "month": "2025-12",
+     "equity": 3628.64
+    },
+    {
+     "month": "2026-01",
+     "equity": 3777.22
+    },
+    {
+     "month": "2026-02",
+     "equity": 3999.4
+    },
+    {
+     "month": "2026-03",
+     "equity": 3852.35
+    },
+    {
+     "month": "2026-04",
+     "equity": 4293.88
+    },
+    {
+     "month": "2026-05",
+     "equity": 4311.46
+    },
+    {
+     "month": "2026-06",
+     "equity": 4154.63
+    },
+    {
+     "month": "2026-07",
+     "equity": 4068.29
+    },
+    {
+     "month": "2026-08",
+     "equity": 4244.31
+    },
+    {
+     "month": "2026-09",
+     "equity": 4132.8
+    },
+    {
+     "month": "2026-10",
+     "equity": 4147.41
+    }
+   ]
+  }
+ ],
+ "universes": [
+  {
+   "id": "core_screen_ticker",
+   "label": "186銘柄・ATR≥3%・終値≤$550・順位 ticker",
+   "universe": "core_screen",
+   "rank": "ticker",
+   "n": 417,
+   "winRate": 0.6763,
+   "avgUsd": 2.2,
+   "profitFactor": 1.17,
+   "maxConsecLosses": 7,
+   "totalUsd": 917.37,
+   "maxDrawdownUsd": 890.56,
+   "endEquity": 4117.37,
+   "worstMonth": "2026-07",
+   "worstMonthUsd": -577.04,
+   "daysRealized10": 168,
+   "exitDays": 271,
+   "daysMtm10": 209,
+   "sessions": 500,
+   "rawSignals": 3153,
+   "signalsPerWeek": 31.53,
+   "takenPerWeek": 4.17,
+   "skippedPrice": 314,
+   "skippedSlot": 2213,
+   "skippedCash": 0,
+   "year1": {
+    "n": 205,
+    "winRate": 0.722,
+    "avgUsd": 5,
+    "profitFactor": 1.46,
+    "maxConsecLosses": 7,
+    "maxDrawdownUsd": 748.01,
+    "totalUsd": 1024.75,
+    "avgHold": 4.2,
+    "targets": 144,
+    "stops": 53,
+    "timeouts": 8,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 212,
+    "winRate": 0.6321,
+    "avgUsd": -0.51,
+    "profitFactor": 0.97,
+    "maxConsecLosses": 5,
+    "maxDrawdownUsd": 835.36,
+    "totalUsd": -107.39,
+    "avgHold": 4.7,
+    "targets": 133,
+    "stops": 61,
+    "timeouts": 13,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 205,
+    "totalUsd": 1036.74,
+    "maxDrawdownUsd": 890.56,
+    "daysRealized10": 95
+   },
+   "restartYear2": {
+    "n": 213,
+    "totalUsd": -79.11,
+    "maxDrawdownUsd": 800.48,
+    "daysRealized10": 73
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3264.03
+    },
+    {
+     "month": "2024-11",
+     "equity": 3554.47
+    },
+    {
+     "month": "2024-12",
+     "equity": 3377.91
+    },
+    {
+     "month": "2025-01",
+     "equity": 3608.38
+    },
+    {
+     "month": "2025-02",
+     "equity": 3473.58
+    },
+    {
+     "month": "2025-03",
+     "equity": 3230.56
+    },
+    {
+     "month": "2025-04",
+     "equity": 3341.39
+    },
+    {
+     "month": "2025-05",
+     "equity": 3419.34
+    },
+    {
+     "month": "2025-06",
+     "equity": 3701.3
+    },
+    {
+     "month": "2025-07",
+     "equity": 3840.84
+    },
+    {
+     "month": "2025-08",
+     "equity": 3916.04
+    },
+    {
+     "month": "2025-09",
+     "equity": 4143.54
+    },
+    {
+     "month": "2025-10",
+     "equity": 4372.66
+    },
+    {
+     "month": "2025-11",
+     "equity": 4234.98
+    },
+    {
+     "month": "2025-12",
+     "equity": 4345.27
+    },
+    {
+     "month": "2026-01",
+     "equity": 4727.72
+    },
+    {
+     "month": "2026-02",
+     "equity": 4555.98
+    },
+    {
+     "month": "2026-03",
+     "equity": 4499.38
+    },
+    {
+     "month": "2026-04",
+     "equity": 4682.58
+    },
+    {
+     "month": "2026-05",
+     "equity": 4798.48
+    },
+    {
+     "month": "2026-06",
+     "equity": 4908.12
+    },
+    {
+     "month": "2026-07",
+     "equity": 4331.08
+    },
+    {
+     "month": "2026-08",
+     "equity": 4315.46
+    },
+    {
+     "month": "2026-09",
+     "equity": 4107.64
+    },
+    {
+     "month": "2026-10",
+     "equity": 4117.37
+    }
+   ]
+  },
+  {
+   "id": "core_screen_atr",
+   "label": "186銘柄・ATR≥3%・終値≤$550・順位 atr",
+   "universe": "core_screen",
+   "rank": "atr",
+   "n": 396,
+   "winRate": 0.6717,
+   "avgUsd": 1.7,
+   "profitFactor": 1.1,
+   "maxConsecLosses": 12,
+   "totalUsd": 673.27,
+   "maxDrawdownUsd": 1068.84,
+   "endEquity": 3873.27,
+   "worstMonth": "2026-07",
+   "worstMonthUsd": -477.97,
+   "daysRealized10": 160,
+   "exitDays": 252,
+   "daysMtm10": 222,
+   "sessions": 500,
+   "rawSignals": 3153,
+   "signalsPerWeek": 31.53,
+   "takenPerWeek": 3.96,
+   "skippedPrice": 312,
+   "skippedSlot": 2207,
+   "skippedCash": 0,
+   "year1": {
+    "n": 194,
+    "winRate": 0.7113,
+    "avgUsd": 5.35,
+    "profitFactor": 1.38,
+    "maxConsecLosses": 12,
+    "maxDrawdownUsd": 999.49,
+    "totalUsd": 1038.52,
+    "avgHold": 4.5,
+    "targets": 136,
+    "stops": 50,
+    "timeouts": 8,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 202,
+    "winRate": 0.6337,
+    "avgUsd": -1.81,
+    "profitFactor": 0.91,
+    "maxConsecLosses": 4,
+    "maxDrawdownUsd": 870.6,
+    "totalUsd": -365.25,
+    "avgHold": 5,
+    "targets": 127,
+    "stops": 59,
+    "timeouts": 11,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 194,
+    "totalUsd": 1040.59,
+    "maxDrawdownUsd": 1068.84,
+    "daysRealized10": 86
+   },
+   "restartYear2": {
+    "n": 204,
+    "totalUsd": -321.71,
+    "maxDrawdownUsd": 923.42,
+    "daysRealized10": 74
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3253.89
+    },
+    {
+     "month": "2024-11",
+     "equity": 3448.62
+    },
+    {
+     "month": "2024-12",
+     "equity": 3171.59
+    },
+    {
+     "month": "2025-01",
+     "equity": 3718.64
+    },
+    {
+     "month": "2025-02",
+     "equity": 3594.36
+    },
+    {
+     "month": "2025-03",
+     "equity": 3254.66
+    },
+    {
+     "month": "2025-04",
+     "equity": 3193.33
+    },
+    {
+     "month": "2025-05",
+     "equity": 3256.1
+    },
+    {
+     "month": "2025-06",
+     "equity": 3592.96
+    },
+    {
+     "month": "2025-07",
+     "equity": 3765.21
+    },
+    {
+     "month": "2025-08",
+     "equity": 3865.42
+    },
+    {
+     "month": "2025-09",
+     "equity": 4159.72
+    },
+    {
+     "month": "2025-10",
+     "equity": 4422.68
+    },
+    {
+     "month": "2025-11",
+     "equity": 4248.33
+    },
+    {
+     "month": "2025-12",
+     "equity": 4099.18
+    },
+    {
+     "month": "2026-01",
+     "equity": 4405.41
+    },
+    {
+     "month": "2026-02",
+     "equity": 4216.05
+    },
+    {
+     "month": "2026-03",
+     "equity": 4059.47
+    },
+    {
+     "month": "2026-04",
+     "equity": 4407.69
+    },
+    {
+     "month": "2026-05",
+     "equity": 4532.52
+    },
+    {
+     "month": "2026-06",
+     "equity": 4485.17
+    },
+    {
+     "month": "2026-07",
+     "equity": 4007.2
+    },
+    {
+     "month": "2026-08",
+     "equity": 3945.41
+    },
+    {
+     "month": "2026-09",
+     "equity": 3846.8
+    },
+    {
+     "month": "2026-10",
+     "equity": 3873.27
+    }
+   ]
+  },
+  {
+   "id": "core_screen_box",
+   "label": "186銘柄・ATR≥3%・終値≤$550・順位 box",
+   "universe": "core_screen",
+   "rank": "box",
+   "n": 439,
+   "winRate": 0.6583,
+   "avgUsd": 2.82,
+   "profitFactor": 1.25,
+   "maxConsecLosses": 10,
+   "totalUsd": 1236.85,
+   "maxDrawdownUsd": 846.37,
+   "endEquity": 4436.85,
+   "worstMonth": "2025-02",
+   "worstMonthUsd": -289.46,
+   "daysRealized10": 167,
+   "exitDays": 276,
+   "daysMtm10": 203,
+   "sessions": 500,
+   "rawSignals": 3153,
+   "signalsPerWeek": 31.53,
+   "takenPerWeek": 4.39,
+   "skippedPrice": 312,
+   "skippedSlot": 2138,
+   "skippedCash": 14,
+   "year1": {
+    "n": 206,
+    "winRate": 0.6699,
+    "avgUsd": 3.42,
+    "profitFactor": 1.31,
+    "maxConsecLosses": 10,
+    "maxDrawdownUsd": 688.02,
+    "totalUsd": 705.43,
+    "avgHold": 4.1,
+    "targets": 135,
+    "stops": 65,
+    "timeouts": 6,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 233,
+    "winRate": 0.6481,
+    "avgUsd": 2.28,
+    "profitFactor": 1.2,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 374.99,
+    "totalUsd": 531.42,
+    "avgHold": 4.1,
+    "targets": 148,
+    "stops": 77,
+    "timeouts": 3,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 206,
+    "totalUsd": 717.41,
+    "maxDrawdownUsd": 846.37,
+    "daysRealized10": 80
+   },
+   "restartYear2": {
+    "n": 234,
+    "totalUsd": 559.7,
+    "maxDrawdownUsd": 435.79,
+    "daysRealized10": 87
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3232.5
+    },
+    {
+     "month": "2024-11",
+     "equity": 3023
+    },
+    {
+     "month": "2024-12",
+     "equity": 2841.6
+    },
+    {
+     "month": "2025-01",
+     "equity": 3229.57
+    },
+    {
+     "month": "2025-02",
+     "equity": 2940.11
+    },
+    {
+     "month": "2025-03",
+     "equity": 2742.2
+    },
+    {
+     "month": "2025-04",
+     "equity": 2879.82
+    },
+    {
+     "month": "2025-05",
+     "equity": 2948.21
+    },
+    {
+     "month": "2025-06",
+     "equity": 3211.81
+    },
+    {
+     "month": "2025-07",
+     "equity": 3313.1
+    },
+    {
+     "month": "2025-08",
+     "equity": 3505.81
+    },
+    {
+     "month": "2025-09",
+     "equity": 3824.21
+    },
+    {
+     "month": "2025-10",
+     "equity": 4080.63
+    },
+    {
+     "month": "2025-11",
+     "equity": 3898.47
+    },
+    {
+     "month": "2025-12",
+     "equity": 4074.25
+    },
+    {
+     "month": "2026-01",
+     "equity": 4461.49
+    },
+    {
+     "month": "2026-02",
+     "equity": 4441.3
+    },
+    {
+     "month": "2026-03",
+     "equity": 4357.54
+    },
+    {
+     "month": "2026-04",
+     "equity": 4513.37
+    },
+    {
+     "month": "2026-05",
+     "equity": 4559.07
+    },
+    {
+     "month": "2026-06",
+     "equity": 4616.59
+    },
+    {
+     "month": "2026-07",
+     "equity": 4412.33
+    },
+    {
+     "month": "2026-08",
+     "equity": 4412.88
+    },
+    {
+     "month": "2026-09",
+     "equity": 4418.68
+    },
+    {
+     "month": "2026-10",
+     "equity": 4436.85
+    }
+   ]
+  },
+  {
+   "id": "core_screen_rs",
+   "label": "186銘柄・ATR≥3%・終値≤$550・順位 rs",
+   "universe": "core_screen",
+   "rank": "rs",
+   "n": 373,
+   "winRate": 0.7319,
+   "avgUsd": 5.5,
+   "profitFactor": 1.53,
+   "maxConsecLosses": 5,
+   "totalUsd": 2052.87,
+   "maxDrawdownUsd": 563.22,
+   "endEquity": 5252.87,
+   "worstMonth": "2026-06",
+   "worstMonthUsd": -241.93,
+   "daysRealized10": 174,
+   "exitDays": 249,
+   "daysMtm10": 207,
+   "sessions": 500,
+   "rawSignals": 3153,
+   "signalsPerWeek": 31.53,
+   "takenPerWeek": 3.73,
+   "skippedPrice": 308,
+   "skippedSlot": 2260,
+   "skippedCash": 0,
+   "year1": {
+    "n": 182,
+    "winRate": 0.7802,
+    "avgUsd": 8.03,
+    "profitFactor": 1.87,
+    "maxConsecLosses": 5,
+    "maxDrawdownUsd": 382.17,
+    "totalUsd": 1462.25,
+    "avgHold": 5,
+    "targets": 139,
+    "stops": 31,
+    "timeouts": 12,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 191,
+    "winRate": 0.6859,
+    "avgUsd": 3.09,
+    "profitFactor": 1.26,
+    "maxConsecLosses": 5,
+    "maxDrawdownUsd": 493.13,
+    "totalUsd": 590.62,
+    "avgHold": 5.4,
+    "targets": 131,
+    "stops": 45,
+    "timeouts": 10,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 182,
+    "totalUsd": 1493.19,
+    "maxDrawdownUsd": 360.9,
+    "daysRealized10": 88
+   },
+   "restartYear2": {
+    "n": 191,
+    "totalUsd": 595.71,
+    "maxDrawdownUsd": 563.22,
+    "daysRealized10": 86
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3207.34
+    },
+    {
+     "month": "2024-11",
+     "equity": 3417.52
+    },
+    {
+     "month": "2024-12",
+     "equity": 3362.39
+    },
+    {
+     "month": "2025-01",
+     "equity": 3786.82
+    },
+    {
+     "month": "2025-02",
+     "equity": 3877.03
+    },
+    {
+     "month": "2025-03",
+     "equity": 3818.19
+    },
+    {
+     "month": "2025-04",
+     "equity": 3810.3
+    },
+    {
+     "month": "2025-05",
+     "equity": 3900.92
+    },
+    {
+     "month": "2025-06",
+     "equity": 4162.45
+    },
+    {
+     "month": "2025-07",
+     "equity": 4253.52
+    },
+    {
+     "month": "2025-08",
+     "equity": 4235.09
+    },
+    {
+     "month": "2025-09",
+     "equity": 4621.25
+    },
+    {
+     "month": "2025-10",
+     "equity": 4760.5
+    },
+    {
+     "month": "2025-11",
+     "equity": 4558.17
+    },
+    {
+     "month": "2025-12",
+     "equity": 4455.16
+    },
+    {
+     "month": "2026-01",
+     "equity": 4710.56
+    },
+    {
+     "month": "2026-02",
+     "equity": 5006.26
+    },
+    {
+     "month": "2026-03",
+     "equity": 5105.21
+    },
+    {
+     "month": "2026-04",
+     "equity": 5397.83
+    },
+    {
+     "month": "2026-05",
+     "equity": 5454.8
+    },
+    {
+     "month": "2026-06",
+     "equity": 5212.87
+    },
+    {
+     "month": "2026-07",
+     "equity": 4989.28
+    },
+    {
+     "month": "2026-08",
+     "equity": 5239.33
+    },
+    {
+     "month": "2026-09",
+     "equity": 5263.03
+    },
+    {
+     "month": "2026-10",
+     "equity": 5252.87
+    }
+   ]
+  },
+  {
+   "id": "liquid50_ticker",
+   "label": "流動性上位50・ATR≥3%・終値≤$550・順位 ticker",
+   "universe": "liquid50",
+   "rank": "ticker",
+   "n": 272,
+   "winRate": 0.6324,
+   "avgUsd": -0.39,
+   "profitFactor": 0.96,
+   "maxConsecLosses": 6,
+   "totalUsd": -106.9,
+   "maxDrawdownUsd": 519.4,
+   "endEquity": 3093.1,
+   "worstMonth": "2026-03",
+   "worstMonthUsd": -208.02,
+   "daysRealized10": 111,
+   "exitDays": 191,
+   "daysMtm10": 150,
+   "sessions": 500,
+   "rawSignals": 749,
+   "signalsPerWeek": 7.49,
+   "takenPerWeek": 2.72,
+   "skippedPrice": 86,
+   "skippedSlot": 225,
+   "skippedCash": 3,
+   "year1": {
+    "n": 112,
+    "winRate": 0.6607,
+    "avgUsd": 0.06,
+    "profitFactor": 1.01,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 436.59,
+    "totalUsd": 6.59,
+    "avgHold": 4.9,
+    "targets": 70,
+    "stops": 38,
+    "timeouts": 4,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 160,
+    "winRate": 0.6125,
+    "avgUsd": -0.71,
+    "profitFactor": 0.93,
+    "maxConsecLosses": 5,
+    "maxDrawdownUsd": 434.66,
+    "totalUsd": -113.49,
+    "avgHold": 4.8,
+    "targets": 96,
+    "stops": 50,
+    "timeouts": 10,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 112,
+    "totalUsd": 6.59,
+    "maxDrawdownUsd": 519.4,
+    "daysRealized10": 50
+   },
+   "restartYear2": {
+    "n": 160,
+    "totalUsd": -113.49,
+    "maxDrawdownUsd": 443.94,
+    "daysRealized10": 61
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3175.35
+    },
+    {
+     "month": "2024-11",
+     "equity": 3069.04
+    },
+    {
+     "month": "2024-12",
+     "equity": 2961.42
+    },
+    {
+     "month": "2025-01",
+     "equity": 3071.13
+    },
+    {
+     "month": "2025-02",
+     "equity": 3072.48
+    },
+    {
+     "month": "2025-03",
+     "equity": 2887.27
+    },
+    {
+     "month": "2025-04",
+     "equity": 2862.4
+    },
+    {
+     "month": "2025-05",
+     "equity": 2954.59
+    },
+    {
+     "month": "2025-06",
+     "equity": 3003.6
+    },
+    {
+     "month": "2025-07",
+     "equity": 3030.26
+    },
+    {
+     "month": "2025-08",
+     "equity": 3128.42
+    },
+    {
+     "month": "2025-09",
+     "equity": 3192.35
+    },
+    {
+     "month": "2025-10",
+     "equity": 3364.43
+    },
+    {
+     "month": "2025-11",
+     "equity": 3266.88
+    },
+    {
+     "month": "2025-12",
+     "equity": 3175.34
+    },
+    {
+     "month": "2026-01",
+     "equity": 3107.35
+    },
+    {
+     "month": "2026-02",
+     "equity": 3180.83
+    },
+    {
+     "month": "2026-03",
+     "equity": 2972.81
+    },
+    {
+     "month": "2026-04",
+     "equity": 3148.58
+    },
+    {
+     "month": "2026-05",
+     "equity": 3138.39
+    },
+    {
+     "month": "2026-06",
+     "equity": 3020.47
+    },
+    {
+     "month": "2026-07",
+     "equity": 3081.85
+    },
+    {
+     "month": "2026-08",
+     "equity": 3194.22
+    },
+    {
+     "month": "2026-09",
+     "equity": 3102.16
+    },
+    {
+     "month": "2026-10",
+     "equity": 3093.1
+    }
+   ]
+  },
+  {
+   "id": "liquid50_atr",
+   "label": "流動性上位50・ATR≥3%・終値≤$550・順位 atr",
+   "universe": "liquid50",
+   "rank": "atr",
+   "n": 267,
+   "winRate": 0.6442,
+   "avgUsd": 0,
+   "profitFactor": 1,
+   "maxConsecLosses": 7,
+   "totalUsd": 0.92,
+   "maxDrawdownUsd": 677.02,
+   "endEquity": 3200.92,
+   "worstMonth": "2025-03",
+   "worstMonthUsd": -180.08,
+   "daysRealized10": 115,
+   "exitDays": 190,
+   "daysMtm10": 159,
+   "sessions": 500,
+   "rawSignals": 749,
+   "signalsPerWeek": 7.49,
+   "takenPerWeek": 2.67,
+   "skippedPrice": 86,
+   "skippedSlot": 236,
+   "skippedCash": 0,
+   "year1": {
+    "n": 112,
+    "winRate": 0.6607,
+    "avgUsd": -0.89,
+    "profitFactor": 0.93,
+    "maxConsecLosses": 7,
+    "maxDrawdownUsd": 609.8,
+    "totalUsd": -99.77,
+    "avgHold": 4.9,
+    "targets": 70,
+    "stops": 38,
+    "timeouts": 4,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 155,
+    "winRate": 0.6323,
+    "avgUsd": 0.65,
+    "profitFactor": 1.06,
+    "maxConsecLosses": 4,
+    "maxDrawdownUsd": 246.48,
+    "totalUsd": 100.7,
+    "avgHold": 4.9,
+    "targets": 96,
+    "stops": 45,
+    "timeouts": 10,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 112,
+    "totalUsd": -99.77,
+    "maxDrawdownUsd": 677.02,
+    "daysRealized10": 50
+   },
+   "restartYear2": {
+    "n": 155,
+    "totalUsd": 100.7,
+    "maxDrawdownUsd": 243.35,
+    "daysRealized10": 65
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3175.35
+    },
+    {
+     "month": "2024-11",
+     "equity": 3069.04
+    },
+    {
+     "month": "2024-12",
+     "equity": 2962.63
+    },
+    {
+     "month": "2025-01",
+     "equity": 3067.88
+    },
+    {
+     "month": "2025-02",
+     "equity": 3092.31
+    },
+    {
+     "month": "2025-03",
+     "equity": 2912.22
+    },
+    {
+     "month": "2025-04",
+     "equity": 2756.03
+    },
+    {
+     "month": "2025-05",
+     "equity": 2848.22
+    },
+    {
+     "month": "2025-06",
+     "equity": 2897.24
+    },
+    {
+     "month": "2025-07",
+     "equity": 2923.9
+    },
+    {
+     "month": "2025-08",
+     "equity": 3022.06
+    },
+    {
+     "month": "2025-09",
+     "equity": 3085.99
+    },
+    {
+     "month": "2025-10",
+     "equity": 3264.67
+    },
+    {
+     "month": "2025-11",
+     "equity": 3169.41
+    },
+    {
+     "month": "2025-12",
+     "equity": 3108.32
+    },
+    {
+     "month": "2026-01",
+     "equity": 3040.34
+    },
+    {
+     "month": "2026-02",
+     "equity": 3116.88
+    },
+    {
+     "month": "2026-03",
+     "equity": 3089.83
+    },
+    {
+     "month": "2026-04",
+     "equity": 3371.43
+    },
+    {
+     "month": "2026-05",
+     "equity": 3364.11
+    },
+    {
+     "month": "2026-06",
+     "equity": 3267.75
+    },
+    {
+     "month": "2026-07",
+     "equity": 3208.36
+    },
+    {
+     "month": "2026-08",
+     "equity": 3305.73
+    },
+    {
+     "month": "2026-09",
+     "equity": 3204.92
+    },
+    {
+     "month": "2026-10",
+     "equity": 3200.92
+    }
+   ]
+  },
+  {
+   "id": "liquid50_box",
+   "label": "流動性上位50・ATR≥3%・終値≤$550・順位 box",
+   "universe": "liquid50",
+   "rank": "box",
+   "n": 279,
+   "winRate": 0.6308,
+   "avgUsd": -0.1,
+   "profitFactor": 0.99,
+   "maxConsecLosses": 6,
+   "totalUsd": -26.88,
+   "maxDrawdownUsd": 566.06,
+   "endEquity": 3173.12,
+   "worstMonth": "2024-11",
+   "worstMonthUsd": -183.4,
+   "daysRealized10": 114,
+   "exitDays": 192,
+   "daysMtm10": 147,
+   "sessions": 500,
+   "rawSignals": 749,
+   "signalsPerWeek": 7.49,
+   "takenPerWeek": 2.79,
+   "skippedPrice": 86,
+   "skippedSlot": 230,
+   "skippedCash": 0,
+   "year1": {
+    "n": 115,
+    "winRate": 0.6435,
+    "avgUsd": -0.41,
+    "profitFactor": 0.96,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 502.79,
+    "totalUsd": -46.8,
+    "avgHold": 4.6,
+    "targets": 71,
+    "stops": 41,
+    "timeouts": 3,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 164,
+    "winRate": 0.622,
+    "avgUsd": 0.12,
+    "profitFactor": 1.01,
+    "maxConsecLosses": 4,
+    "maxDrawdownUsd": 354.76,
+    "totalUsd": 19.92,
+    "avgHold": 4.6,
+    "targets": 100,
+    "stops": 52,
+    "timeouts": 8,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 115,
+    "totalUsd": -46.8,
+    "maxDrawdownUsd": 566.06,
+    "daysRealized10": 53
+   },
+   "restartYear2": {
+    "n": 164,
+    "totalUsd": 19.92,
+    "maxDrawdownUsd": 358.59,
+    "daysRealized10": 61
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3175.35
+    },
+    {
+     "month": "2024-11",
+     "equity": 2991.95
+    },
+    {
+     "month": "2024-12",
+     "equity": 2885.54
+    },
+    {
+     "month": "2025-01",
+     "equity": 2990.79
+    },
+    {
+     "month": "2025-02",
+     "equity": 2940.42
+    },
+    {
+     "month": "2025-03",
+     "equity": 2849.25
+    },
+    {
+     "month": "2025-04",
+     "equity": 2809.17
+    },
+    {
+     "month": "2025-05",
+     "equity": 2901.2
+    },
+    {
+     "month": "2025-06",
+     "equity": 2950.21
+    },
+    {
+     "month": "2025-07",
+     "equity": 2976.87
+    },
+    {
+     "month": "2025-08",
+     "equity": 3075.03
+    },
+    {
+     "month": "2025-09",
+     "equity": 3138.97
+    },
+    {
+     "month": "2025-10",
+     "equity": 3297.53
+    },
+    {
+     "month": "2025-11",
+     "equity": 3143.73
+    },
+    {
+     "month": "2025-12",
+     "equity": 3077.35
+    },
+    {
+     "month": "2026-01",
+     "equity": 3009.36
+    },
+    {
+     "month": "2026-02",
+     "equity": 3086.07
+    },
+    {
+     "month": "2026-03",
+     "equity": 2983.84
+    },
+    {
+     "month": "2026-04",
+     "equity": 3210.88
+    },
+    {
+     "month": "2026-05",
+     "equity": 3220.6
+    },
+    {
+     "month": "2026-06",
+     "equity": 3116
+    },
+    {
+     "month": "2026-07",
+     "equity": 3176.86
+    },
+    {
+     "month": "2026-08",
+     "equity": 3274.24
+    },
+    {
+     "month": "2026-09",
+     "equity": 3182.18
+    },
+    {
+     "month": "2026-10",
+     "equity": 3173.12
+    }
+   ]
+  },
+  {
+   "id": "liquid50_rs",
+   "label": "流動性上位50・ATR≥3%・終値≤$550・順位 rs",
+   "universe": "liquid50",
+   "rank": "rs",
+   "n": 272,
+   "winRate": 0.6287,
+   "avgUsd": -0.75,
+   "profitFactor": 0.93,
+   "maxConsecLosses": 6,
+   "totalUsd": -202.76,
+   "maxDrawdownUsd": 703,
+   "endEquity": 2997.24,
+   "worstMonth": "2025-03",
+   "worstMonthUsd": -221.91,
+   "daysRealized10": 112,
+   "exitDays": 194,
+   "daysMtm10": 154,
+   "sessions": 500,
+   "rawSignals": 749,
+   "signalsPerWeek": 7.49,
+   "takenPerWeek": 2.72,
+   "skippedPrice": 86,
+   "skippedSlot": 235,
+   "skippedCash": 4,
+   "year1": {
+    "n": 112,
+    "winRate": 0.6339,
+    "avgUsd": -1.58,
+    "profitFactor": 0.87,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 617.97,
+    "totalUsd": -177.01,
+    "avgHold": 4.9,
+    "targets": 67,
+    "stops": 41,
+    "timeouts": 4,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 160,
+    "winRate": 0.625,
+    "avgUsd": -0.16,
+    "profitFactor": 0.98,
+    "maxConsecLosses": 5,
+    "maxDrawdownUsd": 304.95,
+    "totalUsd": -25.76,
+    "avgHold": 4.8,
+    "targets": 98,
+    "stops": 49,
+    "timeouts": 9,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 112,
+    "totalUsd": -177.01,
+    "maxDrawdownUsd": 703,
+    "daysRealized10": 49
+   },
+   "restartYear2": {
+    "n": 160,
+    "totalUsd": -29.43,
+    "maxDrawdownUsd": 308.79,
+    "daysRealized10": 62
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3175.35
+    },
+    {
+     "month": "2024-11",
+     "equity": 2991.95
+    },
+    {
+     "month": "2024-12",
+     "equity": 2887.86
+    },
+    {
+     "month": "2025-01",
+     "equity": 2965.56
+    },
+    {
+     "month": "2025-02",
+     "equity": 2933.86
+    },
+    {
+     "month": "2025-03",
+     "equity": 2711.95
+    },
+    {
+     "month": "2025-04",
+     "equity": 2678.8
+    },
+    {
+     "month": "2025-05",
+     "equity": 2770.99
+    },
+    {
+     "month": "2025-06",
+     "equity": 2820.01
+    },
+    {
+     "month": "2025-07",
+     "equity": 2846.66
+    },
+    {
+     "month": "2025-08",
+     "equity": 2944.82
+    },
+    {
+     "month": "2025-09",
+     "equity": 3008.76
+    },
+    {
+     "month": "2025-10",
+     "equity": 3165.83
+    },
+    {
+     "month": "2025-11",
+     "equity": 3008.84
+    },
+    {
+     "month": "2025-12",
+     "equity": 2963.83
+    },
+    {
+     "month": "2026-01",
+     "equity": 2920.87
+    },
+    {
+     "month": "2026-02",
+     "equity": 2978.34
+    },
+    {
+     "month": "2026-03",
+     "equity": 2901.93
+    },
+    {
+     "month": "2026-04",
+     "equity": 3146.73
+    },
+    {
+     "month": "2026-05",
+     "equity": 3136.53
+    },
+    {
+     "month": "2026-06",
+     "equity": 3018.62
+    },
+    {
+     "month": "2026-07",
+     "equity": 2989.68
+    },
+    {
+     "month": "2026-08",
+     "equity": 3102.05
+    },
+    {
+     "month": "2026-09",
+     "equity": 3001.24
+    },
+    {
+     "month": "2026-10",
+     "equity": 2997.24
+    }
+   ]
+  },
+  {
+   "id": "broad_ticker",
+   "label": "S&P500+Nasdaq-100・ATR≥3%・終値≤$550・売買代金・順位 ticker",
+   "universe": "broad",
+   "rank": "ticker",
+   "n": 399,
+   "winRate": 0.6441,
+   "avgUsd": 0.68,
+   "profitFactor": 1.07,
+   "maxConsecLosses": 8,
+   "totalUsd": 270.53,
+   "maxDrawdownUsd": 545.57,
+   "endEquity": 3470.53,
+   "worstMonth": "2024-12",
+   "worstMonthUsd": -206.17,
+   "daysRealized10": 158,
+   "exitDays": 270,
+   "daysMtm10": 168,
+   "sessions": 500,
+   "rawSignals": 5399,
+   "signalsPerWeek": 53.99,
+   "takenPerWeek": 3.99,
+   "skippedPrice": 625,
+   "skippedSlot": 4150,
+   "skippedCash": 0,
+   "year1": {
+    "n": 196,
+    "winRate": 0.6684,
+    "avgUsd": 2.16,
+    "profitFactor": 1.22,
+    "maxConsecLosses": 7,
+    "maxDrawdownUsd": 459.24,
+    "totalUsd": 423.44,
+    "avgHold": 5,
+    "targets": 130,
+    "stops": 56,
+    "timeouts": 10,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 203,
+    "winRate": 0.6207,
+    "avgUsd": -0.75,
+    "profitFactor": 0.93,
+    "maxConsecLosses": 8,
+    "maxDrawdownUsd": 473.42,
+    "totalUsd": -152.91,
+    "avgHold": 5,
+    "targets": 126,
+    "stops": 64,
+    "timeouts": 8,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 196,
+    "totalUsd": 369.74,
+    "maxDrawdownUsd": 545.57,
+    "daysRealized10": 81
+   },
+   "restartYear2": {
+    "n": 205,
+    "totalUsd": -275.01,
+    "maxDrawdownUsd": 460.76,
+    "daysRealized10": 74
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3167.76
+    },
+    {
+     "month": "2024-11",
+     "equity": 3293.75
+    },
+    {
+     "month": "2024-12",
+     "equity": 3087.57
+    },
+    {
+     "month": "2025-01",
+     "equity": 3194.34
+    },
+    {
+     "month": "2025-02",
+     "equity": 3137.32
+    },
+    {
+     "month": "2025-03",
+     "equity": 3004.63
+    },
+    {
+     "month": "2025-04",
+     "equity": 2984.69
+    },
+    {
+     "month": "2025-05",
+     "equity": 3132.1
+    },
+    {
+     "month": "2025-06",
+     "equity": 3186.8
+    },
+    {
+     "month": "2025-07",
+     "equity": 3389.36
+    },
+    {
+     "month": "2025-08",
+     "equity": 3479.47
+    },
+    {
+     "month": "2025-09",
+     "equity": 3578.71
+    },
+    {
+     "month": "2025-10",
+     "equity": 3694
+    },
+    {
+     "month": "2025-11",
+     "equity": 3803.36
+    },
+    {
+     "month": "2025-12",
+     "equity": 3751.56
+    },
+    {
+     "month": "2026-01",
+     "equity": 3784.11
+    },
+    {
+     "month": "2026-02",
+     "equity": 3745.97
+    },
+    {
+     "month": "2026-03",
+     "equity": 3823.72
+    },
+    {
+     "month": "2026-04",
+     "equity": 3797.83
+    },
+    {
+     "month": "2026-05",
+     "equity": 3875.12
+    },
+    {
+     "month": "2026-06",
+     "equity": 3748.36
+    },
+    {
+     "month": "2026-07",
+     "equity": 3673.42
+    },
+    {
+     "month": "2026-08",
+     "equity": 3640.57
+    },
+    {
+     "month": "2026-09",
+     "equity": 3470.6
+    },
+    {
+     "month": "2026-10",
+     "equity": 3470.53
+    }
+   ]
+  },
+  {
+   "id": "broad_atr",
+   "label": "S&P500+Nasdaq-100・ATR≥3%・終値≤$550・売買代金・順位 atr",
+   "universe": "broad",
+   "rank": "atr",
+   "n": 374,
+   "winRate": 0.6898,
+   "avgUsd": 3.67,
+   "profitFactor": 1.3,
+   "maxConsecLosses": 7,
+   "totalUsd": 1373.75,
+   "maxDrawdownUsd": 709.66,
+   "endEquity": 4573.75,
+   "worstMonth": "2026-06",
+   "worstMonthUsd": -370.62,
+   "daysRealized10": 161,
+   "exitDays": 247,
+   "daysMtm10": 213,
+   "sessions": 500,
+   "rawSignals": 5399,
+   "signalsPerWeek": 53.99,
+   "takenPerWeek": 3.74,
+   "skippedPrice": 620,
+   "skippedSlot": 4165,
+   "skippedCash": 0,
+   "year1": {
+    "n": 190,
+    "winRate": 0.7474,
+    "avgUsd": 7.2,
+    "profitFactor": 1.71,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 505.42,
+    "totalUsd": 1368.11,
+    "avgHold": 5.2,
+    "targets": 139,
+    "stops": 42,
+    "timeouts": 9,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 184,
+    "winRate": 0.6304,
+    "avgUsd": 0.03,
+    "profitFactor": 1,
+    "maxConsecLosses": 7,
+    "maxDrawdownUsd": 626.05,
+    "totalUsd": 5.64,
+    "avgHold": 5.8,
+    "targets": 114,
+    "stops": 56,
+    "timeouts": 10,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 190,
+    "totalUsd": 1317.14,
+    "maxDrawdownUsd": 709.66,
+    "daysRealized10": 85
+   },
+   "restartYear2": {
+    "n": 182,
+    "totalUsd": -73.42,
+    "maxDrawdownUsd": 623.76,
+    "daysRealized10": 76
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3224.02
+    },
+    {
+     "month": "2024-11",
+     "equity": 3609.4
+    },
+    {
+     "month": "2024-12",
+     "equity": 3381.57
+    },
+    {
+     "month": "2025-01",
+     "equity": 3577.76
+    },
+    {
+     "month": "2025-02",
+     "equity": 3610.38
+    },
+    {
+     "month": "2025-03",
+     "equity": 3550.44
+    },
+    {
+     "month": "2025-04",
+     "equity": 3563
+    },
+    {
+     "month": "2025-05",
+     "equity": 3739.71
+    },
+    {
+     "month": "2025-06",
+     "equity": 3743.61
+    },
+    {
+     "month": "2025-07",
+     "equity": 4081.54
+    },
+    {
+     "month": "2025-08",
+     "equity": 4196.17
+    },
+    {
+     "month": "2025-09",
+     "equity": 4496.92
+    },
+    {
+     "month": "2025-10",
+     "equity": 4664.37
+    },
+    {
+     "month": "2025-11",
+     "equity": 4307.03
+    },
+    {
+     "month": "2025-12",
+     "equity": 4251.18
+    },
+    {
+     "month": "2026-01",
+     "equity": 4429.16
+    },
+    {
+     "month": "2026-02",
+     "equity": 4458.49
+    },
+    {
+     "month": "2026-03",
+     "equity": 4536.3
+    },
+    {
+     "month": "2026-04",
+     "equity": 4984.98
+    },
+    {
+     "month": "2026-05",
+     "equity": 5142.58
+    },
+    {
+     "month": "2026-06",
+     "equity": 4771.96
+    },
+    {
+     "month": "2026-07",
+     "equity": 4525.64
+    },
+    {
+     "month": "2026-08",
+     "equity": 4715.44
+    },
+    {
+     "month": "2026-09",
+     "equity": 4613.61
+    },
+    {
+     "month": "2026-10",
+     "equity": 4573.75
+    }
+   ]
+  },
+  {
+   "id": "broad_box",
+   "label": "S&P500+Nasdaq-100・ATR≥3%・終値≤$550・売買代金・順位 box",
+   "universe": "broad",
+   "rank": "box",
+   "n": 429,
+   "winRate": 0.5967,
+   "avgUsd": -0.11,
+   "profitFactor": 0.99,
+   "maxConsecLosses": 9,
+   "totalUsd": -47.37,
+   "maxDrawdownUsd": 878.12,
+   "endEquity": 3152.63,
+   "worstMonth": "2026-02",
+   "worstMonthUsd": -307.85,
+   "daysRealized10": 150,
+   "exitDays": 279,
+   "daysMtm10": 173,
+   "sessions": 500,
+   "rawSignals": 5399,
+   "signalsPerWeek": 53.99,
+   "takenPerWeek": 4.29,
+   "skippedPrice": 621,
+   "skippedSlot": 4116,
+   "skippedCash": 0,
+   "year1": {
+    "n": 208,
+    "winRate": 0.6731,
+    "avgUsd": 3.8,
+    "profitFactor": 1.47,
+    "maxConsecLosses": 7,
+    "maxDrawdownUsd": 271.71,
+    "totalUsd": 790.77,
+    "avgHold": 4.5,
+    "targets": 138,
+    "stops": 63,
+    "timeouts": 7,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 221,
+    "winRate": 0.5249,
+    "avgUsd": -3.79,
+    "profitFactor": 0.71,
+    "maxConsecLosses": 9,
+    "maxDrawdownUsd": 866.34,
+    "totalUsd": -838.14,
+    "avgHold": 4.6,
+    "targets": 114,
+    "stops": 99,
+    "timeouts": 3,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 208,
+    "totalUsd": 782.56,
+    "maxDrawdownUsd": 346.14,
+    "daysRealized10": 78
+   },
+   "restartYear2": {
+    "n": 230,
+    "totalUsd": -974.59,
+    "maxDrawdownUsd": 1050.96,
+    "daysRealized10": 73
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3195.35
+    },
+    {
+     "month": "2024-11",
+     "equity": 3227.63
+    },
+    {
+     "month": "2024-12",
+     "equity": 3182.32
+    },
+    {
+     "month": "2025-01",
+     "equity": 3325.8
+    },
+    {
+     "month": "2025-02",
+     "equity": 3285.26
+    },
+    {
+     "month": "2025-03",
+     "equity": 3279.17
+    },
+    {
+     "month": "2025-04",
+     "equity": 3303.92
+    },
+    {
+     "month": "2025-05",
+     "equity": 3417.91
+    },
+    {
+     "month": "2025-06",
+     "equity": 3461.11
+    },
+    {
+     "month": "2025-07",
+     "equity": 3780.06
+    },
+    {
+     "month": "2025-08",
+     "equity": 3843.45
+    },
+    {
+     "month": "2025-09",
+     "equity": 3965.52
+    },
+    {
+     "month": "2025-10",
+     "equity": 3886.8
+    },
+    {
+     "month": "2025-11",
+     "equity": 3615.04
+    },
+    {
+     "month": "2025-12",
+     "equity": 3716.24
+    },
+    {
+     "month": "2026-01",
+     "equity": 3728.14
+    },
+    {
+     "month": "2026-02",
+     "equity": 3420.29
+    },
+    {
+     "month": "2026-03",
+     "equity": 3462.4
+    },
+    {
+     "month": "2026-04",
+     "equity": 3438.53
+    },
+    {
+     "month": "2026-05",
+     "equity": 3406.13
+    },
+    {
+     "month": "2026-06",
+     "equity": 3376.05
+    },
+    {
+     "month": "2026-07",
+     "equity": 3240.97
+    },
+    {
+     "month": "2026-08",
+     "equity": 3205.17
+    },
+    {
+     "month": "2026-09",
+     "equity": 3166.3
+    },
+    {
+     "month": "2026-10",
+     "equity": 3152.63
+    }
+   ]
+  },
+  {
+   "id": "broad_rs",
+   "label": "S&P500+Nasdaq-100・ATR≥3%・終値≤$550・売買代金・順位 rs",
+   "universe": "broad",
+   "rank": "rs",
+   "n": 371,
+   "winRate": 0.717,
+   "avgUsd": 2.15,
+   "profitFactor": 1.21,
+   "maxConsecLosses": 6,
+   "totalUsd": 798.53,
+   "maxDrawdownUsd": 429.28,
+   "endEquity": 3998.53,
+   "worstMonth": "2025-11",
+   "worstMonthUsd": -241.22,
+   "daysRealized10": 168,
+   "exitDays": 257,
+   "daysMtm10": 187,
+   "sessions": 500,
+   "rawSignals": 5399,
+   "signalsPerWeek": 53.99,
+   "takenPerWeek": 3.71,
+   "skippedPrice": 623,
+   "skippedSlot": 4204,
+   "skippedCash": 0,
+   "year1": {
+    "n": 188,
+    "winRate": 0.7234,
+    "avgUsd": 3.19,
+    "profitFactor": 1.34,
+    "maxConsecLosses": 4,
+    "maxDrawdownUsd": 279.75,
+    "totalUsd": 600.59,
+    "avgHold": 5.2,
+    "targets": 135,
+    "stops": 44,
+    "timeouts": 9,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 183,
+    "winRate": 0.7104,
+    "avgUsd": 1.08,
+    "profitFactor": 1.1,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 402.89,
+    "totalUsd": 197.94,
+    "avgHold": 5.8,
+    "targets": 130,
+    "stops": 39,
+    "timeouts": 11,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 188,
+    "totalUsd": 620.54,
+    "maxDrawdownUsd": 331.12,
+    "daysRealized10": 81
+   },
+   "restartYear2": {
+    "n": 181,
+    "totalUsd": 169.71,
+    "maxDrawdownUsd": 371.02,
+    "daysRealized10": 81
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3184.29
+    },
+    {
+     "month": "2024-11",
+     "equity": 3419.09
+    },
+    {
+     "month": "2024-12",
+     "equity": 3283.79
+    },
+    {
+     "month": "2025-01",
+     "equity": 3438.23
+    },
+    {
+     "month": "2025-02",
+     "equity": 3300.82
+    },
+    {
+     "month": "2025-03",
+     "equity": 3384.3
+    },
+    {
+     "month": "2025-04",
+     "equity": 3275.61
+    },
+    {
+     "month": "2025-05",
+     "equity": 3315.59
+    },
+    {
+     "month": "2025-06",
+     "equity": 3410.59
+    },
+    {
+     "month": "2025-07",
+     "equity": 3741.6
+    },
+    {
+     "month": "2025-08",
+     "equity": 3780.51
+    },
+    {
+     "month": "2025-09",
+     "equity": 3815.6
+    },
+    {
+     "month": "2025-10",
+     "equity": 3853.1
+    },
+    {
+     "month": "2025-11",
+     "equity": 3611.88
+    },
+    {
+     "month": "2025-12",
+     "equity": 3585.92
+    },
+    {
+     "month": "2026-01",
+     "equity": 3840.41
+    },
+    {
+     "month": "2026-02",
+     "equity": 3890.58
+    },
+    {
+     "month": "2026-03",
+     "equity": 3924.73
+    },
+    {
+     "month": "2026-04",
+     "equity": 4142.6
+    },
+    {
+     "month": "2026-05",
+     "equity": 4096.02
+    },
+    {
+     "month": "2026-06",
+     "equity": 4065.75
+    },
+    {
+     "month": "2026-07",
+     "equity": 3901.05
+    },
+    {
+     "month": "2026-08",
+     "equity": 4159.54
+    },
+    {
+     "month": "2026-09",
+     "equity": 3955.94
+    },
+    {
+     "month": "2026-10",
+     "equity": 3998.53
+    }
+   ]
+  }
+ ],
+ "methods": [
+  {
+   "id": "breakout",
+   "label": "20日高値ブレイク + ATRトレーリング",
+   "universe": "core",
+   "rank": "ticker",
+   "n": 550,
+   "winRate": 0.3109,
+   "avgUsd": -0.54,
+   "profitFactor": 0.94,
+   "maxConsecLosses": 28,
+   "totalUsd": -296.73,
+   "maxDrawdownUsd": 985.37,
+   "endEquity": 2903.27,
+   "worstMonth": "2025-01",
+   "worstMonthUsd": -279.39,
+   "daysRealized10": 72,
+   "exitDays": 310,
+   "daysMtm10": 160,
+   "sessions": 500,
+   "rawSignals": 7347,
+   "signalsPerWeek": 73.47,
+   "takenPerWeek": 5.5,
+   "skippedPrice": 1302,
+   "skippedSlot": 4792,
+   "skippedCash": 86,
+   "year1": {
+    "n": 268,
+    "winRate": 0.2836,
+    "avgUsd": -1.21,
+    "profitFactor": 0.86,
+    "maxConsecLosses": 28,
+    "maxDrawdownUsd": 985.99,
+    "totalUsd": -324.89,
+    "avgHold": 3.4,
+    "targets": 0,
+    "stops": 268,
+    "timeouts": 0,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 282,
+    "winRate": 0.3369,
+    "avgUsd": 0.1,
+    "profitFactor": 1.01,
+    "maxConsecLosses": 18,
+    "maxDrawdownUsd": 374.68,
+    "totalUsd": 28.16,
+    "avgHold": 3.4,
+    "targets": 0,
+    "stops": 278,
+    "timeouts": 0,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 268,
+    "totalUsd": -315.32,
+    "maxDrawdownUsd": 985.37,
+    "daysRealized10": 29
+   },
+   "restartYear2": {
+    "n": 280,
+    "totalUsd": 234.07,
+    "maxDrawdownUsd": 434.45,
+    "daysRealized10": 43
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3085.8
+    },
+    {
+     "month": "2024-11",
+     "equity": 3198.6
+    },
+    {
+     "month": "2024-12",
+     "equity": 3047.1
+    },
+    {
+     "month": "2025-01",
+     "equity": 2767.71
+    },
+    {
+     "month": "2025-02",
+     "equity": 2654.66
+    },
+    {
+     "month": "2025-03",
+     "equity": 2416.19
+    },
+    {
+     "month": "2025-04",
+     "equity": 2377.09
+    },
+    {
+     "month": "2025-05",
+     "equity": 2529.7
+    },
+    {
+     "month": "2025-06",
+     "equity": 2676.67
+    },
+    {
+     "month": "2025-07",
+     "equity": 2756.59
+    },
+    {
+     "month": "2025-08",
+     "equity": 2700.67
+    },
+    {
+     "month": "2025-09",
+     "equity": 2798.48
+    },
+    {
+     "month": "2025-10",
+     "equity": 2677.02
+    },
+    {
+     "month": "2025-11",
+     "equity": 2749.32
+    },
+    {
+     "month": "2025-12",
+     "equity": 2766.63
+    },
+    {
+     "month": "2026-01",
+     "equity": 2885.95
+    },
+    {
+     "month": "2026-02",
+     "equity": 2846.95
+    },
+    {
+     "month": "2026-03",
+     "equity": 2671.5
+    },
+    {
+     "month": "2026-04",
+     "equity": 3094.66
+    },
+    {
+     "month": "2026-05",
+     "equity": 3189.39
+    },
+    {
+     "month": "2026-06",
+     "equity": 3111.1
+    },
+    {
+     "month": "2026-07",
+     "equity": 2886.13
+    },
+    {
+     "month": "2026-08",
+     "equity": 2929.22
+    },
+    {
+     "month": "2026-09",
+     "equity": 2902.87
+    },
+    {
+     "month": "2026-10",
+     "equity": 2903.27
+    }
+   ]
+  },
+  {
+   "id": "pullback",
+   "label": "上昇トレンドの押し目（終値>50日線、RSI2<10 または3日続落、終値>5日線で売る）",
+   "universe": "core",
+   "rank": "ticker",
+   "n": 581,
+   "winRate": 0.6179,
+   "avgUsd": 0.71,
+   "profitFactor": 1.1,
+   "maxConsecLosses": 8,
+   "totalUsd": 414.96,
+   "maxDrawdownUsd": 650.46,
+   "endEquity": 3614.96,
+   "worstMonth": "2025-11",
+   "worstMonthUsd": -336.7,
+   "daysRealized10": 98,
+   "exitDays": 321,
+   "daysMtm10": 157,
+   "sessions": 500,
+   "rawSignals": 4416,
+   "signalsPerWeek": 44.16,
+   "takenPerWeek": 5.81,
+   "skippedPrice": 695,
+   "skippedSlot": 2663,
+   "skippedCash": 0,
+   "year1": {
+    "n": 288,
+    "winRate": 0.6806,
+    "avgUsd": 2.18,
+    "profitFactor": 1.35,
+    "maxConsecLosses": 8,
+    "maxDrawdownUsd": 524.99,
+    "totalUsd": 629,
+    "avgHold": 2.8,
+    "targets": 0,
+    "stops": 0,
+    "timeouts": 0,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 293,
+    "winRate": 0.5563,
+    "avgUsd": -0.73,
+    "profitFactor": 0.9,
+    "maxConsecLosses": 7,
+    "maxDrawdownUsd": 494.64,
+    "totalUsd": -214.04,
+    "avgHold": 2.9,
+    "targets": 0,
+    "stops": 0,
+    "timeouts": 1,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 288,
+    "totalUsd": 623.57,
+    "maxDrawdownUsd": 650.46,
+    "daysRealized10": 56
+   },
+   "restartYear2": {
+    "n": 295,
+    "totalUsd": -213.36,
+    "maxDrawdownUsd": 534.34,
+    "daysRealized10": 42
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3288.49
+    },
+    {
+     "month": "2024-11",
+     "equity": 3424.32
+    },
+    {
+     "month": "2024-12",
+     "equity": 3320.77
+    },
+    {
+     "month": "2025-01",
+     "equity": 3276.4
+    },
+    {
+     "month": "2025-02",
+     "equity": 3086.67
+    },
+    {
+     "month": "2025-03",
+     "equity": 3078.06
+    },
+    {
+     "month": "2025-04",
+     "equity": 3022.13
+    },
+    {
+     "month": "2025-05",
+     "equity": 3052.69
+    },
+    {
+     "month": "2025-06",
+     "equity": 3261.87
+    },
+    {
+     "month": "2025-07",
+     "equity": 3541.51
+    },
+    {
+     "month": "2025-08",
+     "equity": 3775.73
+    },
+    {
+     "month": "2025-09",
+     "equity": 3746.36
+    },
+    {
+     "month": "2025-10",
+     "equity": 3852.4
+    },
+    {
+     "month": "2025-11",
+     "equity": 3515.7
+    },
+    {
+     "month": "2025-12",
+     "equity": 3469.38
+    },
+    {
+     "month": "2026-01",
+     "equity": 3852.03
+    },
+    {
+     "month": "2026-02",
+     "equity": 3929.33
+    },
+    {
+     "month": "2026-03",
+     "equity": 3779.94
+    },
+    {
+     "month": "2026-04",
+     "equity": 3783.33
+    },
+    {
+     "month": "2026-05",
+     "equity": 3839.11
+    },
+    {
+     "month": "2026-06",
+     "equity": 3888.89
+    },
+    {
+     "month": "2026-07",
+     "equity": 3788.21
+    },
+    {
+     "month": "2026-08",
+     "equity": 3661.1
+    },
+    {
+     "month": "2026-09",
+     "equity": 3613.98
+    },
+    {
+     "month": "2026-10",
+     "equity": 3614.96
+    }
+   ]
+  },
+  {
+   "id": "midpoint",
+   "label": "箱の下（≤15%）で反発後に買い、箱の50%で売る",
+   "universe": "core",
+   "rank": "ticker",
+   "n": 314,
+   "winRate": 0.4045,
+   "avgUsd": 0.65,
+   "profitFactor": 1.05,
+   "maxConsecLosses": 11,
+   "totalUsd": 204.08,
+   "maxDrawdownUsd": 738.4,
+   "endEquity": 3404.08,
+   "worstMonth": "2026-07",
+   "worstMonthUsd": -458.59,
+   "daysRealized10": 78,
+   "exitDays": 212,
+   "daysMtm10": 161,
+   "sessions": 500,
+   "rawSignals": 997,
+   "signalsPerWeek": 9.97,
+   "takenPerWeek": 3.14,
+   "skippedPrice": 118,
+   "skippedSlot": 500,
+   "skippedCash": 2,
+   "year1": {
+    "n": 151,
+    "winRate": 0.4106,
+    "avgUsd": 1.34,
+    "profitFactor": 1.11,
+    "maxConsecLosses": 11,
+    "maxDrawdownUsd": 658.06,
+    "totalUsd": 201.81,
+    "avgHold": 5,
+    "targets": 57,
+    "stops": 89,
+    "timeouts": 5,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 163,
+    "winRate": 0.3988,
+    "avgUsd": 0.01,
+    "profitFactor": 1,
+    "maxConsecLosses": 10,
+    "maxDrawdownUsd": 569.7,
+    "totalUsd": 2.27,
+    "avgHold": 5.3,
+    "targets": 53,
+    "stops": 99,
+    "timeouts": 7,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 151,
+    "totalUsd": 236.49,
+    "maxDrawdownUsd": 738.4,
+    "daysRealized10": 44
+   },
+   "restartYear2": {
+    "n": 166,
+    "totalUsd": -37.6,
+    "maxDrawdownUsd": 618.24,
+    "daysRealized10": 34
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3192.91
+    },
+    {
+     "month": "2024-11",
+     "equity": 3544.36
+    },
+    {
+     "month": "2024-12",
+     "equity": 3421.8
+    },
+    {
+     "month": "2025-01",
+     "equity": 3533.07
+    },
+    {
+     "month": "2025-02",
+     "equity": 3395.85
+    },
+    {
+     "month": "2025-03",
+     "equity": 3192.95
+    },
+    {
+     "month": "2025-04",
+     "equity": 3026.14
+    },
+    {
+     "month": "2025-05",
+     "equity": 3185.27
+    },
+    {
+     "month": "2025-06",
+     "equity": 3294.83
+    },
+    {
+     "month": "2025-07",
+     "equity": 3239.53
+    },
+    {
+     "month": "2025-08",
+     "equity": 3283.62
+    },
+    {
+     "month": "2025-09",
+     "equity": 3421.86
+    },
+    {
+     "month": "2025-10",
+     "equity": 3405.02
+    },
+    {
+     "month": "2025-11",
+     "equity": 3581.39
+    },
+    {
+     "month": "2025-12",
+     "equity": 3631.81
+    },
+    {
+     "month": "2026-01",
+     "equity": 3517.38
+    },
+    {
+     "month": "2026-02",
+     "equity": 3561.24
+    },
+    {
+     "month": "2026-03",
+     "equity": 3445.33
+    },
+    {
+     "month": "2026-04",
+     "equity": 3591.76
+    },
+    {
+     "month": "2026-05",
+     "equity": 3525.31
+    },
+    {
+     "month": "2026-06",
+     "equity": 3587.26
+    },
+    {
+     "month": "2026-07",
+     "equity": 3128.67
+    },
+    {
+     "month": "2026-08",
+     "equity": 3361.11
+    },
+    {
+     "month": "2026-09",
+     "equity": 3378.81
+    },
+    {
+     "month": "2026-10",
+     "equity": 3404.08
+    }
+   ]
+  },
+  {
+   "id": "gap",
+   "label": "2%以上のギャップダウン陽線の翌日、ギャップ埋めか5日",
+   "universe": "core",
+   "rank": "ticker",
+   "n": 756,
+   "winRate": 0.6429,
+   "avgUsd": 0.41,
+   "profitFactor": 1.07,
+   "maxConsecLosses": 10,
+   "totalUsd": 311.26,
+   "maxDrawdownUsd": 801.43,
+   "endEquity": 3511.26,
+   "worstMonth": "2024-12",
+   "worstMonthUsd": -229.37,
+   "daysRealized10": 131,
+   "exitDays": 348,
+   "daysMtm10": 164,
+   "sessions": 500,
+   "rawSignals": 2241,
+   "signalsPerWeek": 22.41,
+   "takenPerWeek": 7.56,
+   "skippedPrice": 333,
+   "skippedSlot": 1118,
+   "skippedCash": 7,
+   "year1": {
+    "n": 330,
+    "winRate": 0.6606,
+    "avgUsd": 0.4,
+    "profitFactor": 1.06,
+    "maxConsecLosses": 10,
+    "maxDrawdownUsd": 787.19,
+    "totalUsd": 131.43,
+    "avgHold": 1.1,
+    "targets": 203,
+    "stops": 95,
+    "timeouts": 32,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 426,
+    "winRate": 0.6291,
+    "avgUsd": 0.42,
+    "profitFactor": 1.07,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 394.93,
+    "totalUsd": 179.82,
+    "avgHold": 0.8,
+    "targets": 266,
+    "stops": 139,
+    "timeouts": 19,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 330,
+    "totalUsd": 121.83,
+    "maxDrawdownUsd": 801.43,
+    "daysRealized10": 56
+   },
+   "restartYear2": {
+    "n": 426,
+    "totalUsd": 179.82,
+    "maxDrawdownUsd": 415.46,
+    "daysRealized10": 75
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3202.07
+    },
+    {
+     "month": "2024-11",
+     "equity": 3356.31
+    },
+    {
+     "month": "2024-12",
+     "equity": 3126.94
+    },
+    {
+     "month": "2025-01",
+     "equity": 3001.35
+    },
+    {
+     "month": "2025-02",
+     "equity": 2929.12
+    },
+    {
+     "month": "2025-03",
+     "equity": 2706.66
+    },
+    {
+     "month": "2025-04",
+     "equity": 2853.21
+    },
+    {
+     "month": "2025-05",
+     "equity": 3041.87
+    },
+    {
+     "month": "2025-06",
+     "equity": 3171.94
+    },
+    {
+     "month": "2025-07",
+     "equity": 3158.96
+    },
+    {
+     "month": "2025-08",
+     "equity": 3307.82
+    },
+    {
+     "month": "2025-09",
+     "equity": 3309.2
+    },
+    {
+     "month": "2025-10",
+     "equity": 3463.96
+    },
+    {
+     "month": "2025-11",
+     "equity": 3352.69
+    },
+    {
+     "month": "2025-12",
+     "equity": 3197.98
+    },
+    {
+     "month": "2026-01",
+     "equity": 3225.04
+    },
+    {
+     "month": "2026-02",
+     "equity": 3310.4
+    },
+    {
+     "month": "2026-03",
+     "equity": 3274.17
+    },
+    {
+     "month": "2026-04",
+     "equity": 3340.67
+    },
+    {
+     "month": "2026-05",
+     "equity": 3390.48
+    },
+    {
+     "month": "2026-06",
+     "equity": 3202.07
+    },
+    {
+     "month": "2026-07",
+     "equity": 3438.42
+    },
+    {
+     "month": "2026-08",
+     "equity": 3502.16
+    },
+    {
+     "month": "2026-09",
+     "equity": 3499.55
+    },
+    {
+     "month": "2026-10",
+     "equity": 3511.26
+    }
+   ]
+  },
+  {
+   "id": "oversold",
+   "label": "RSI(2)<10 の売られすぎ、終値>5日線か5日",
+   "universe": "core",
+   "rank": "ticker",
+   "n": 693,
+   "winRate": 0.6277,
+   "avgUsd": 1.66,
+   "profitFactor": 1.28,
+   "maxConsecLosses": 8,
+   "totalUsd": 1149.04,
+   "maxDrawdownUsd": 436.53,
+   "endEquity": 4349.04,
+   "worstMonth": "2025-11",
+   "worstMonthUsd": -243.35,
+   "daysRealized10": 127,
+   "exitDays": 363,
+   "daysMtm10": 186,
+   "sessions": 500,
+   "rawSignals": 10615,
+   "signalsPerWeek": 106.15,
+   "takenPerWeek": 6.93,
+   "skippedPrice": 1562,
+   "skippedSlot": 7579,
+   "skippedCash": 0,
+   "year1": {
+    "n": 344,
+    "winRate": 0.6366,
+    "avgUsd": 2.09,
+    "profitFactor": 1.4,
+    "maxConsecLosses": 8,
+    "maxDrawdownUsd": 200.3,
+    "totalUsd": 719.32,
+    "avgHold": 2.4,
+    "targets": 0,
+    "stops": 0,
+    "timeouts": 50,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 349,
+    "winRate": 0.6189,
+    "avgUsd": 1.23,
+    "profitFactor": 1.18,
+    "maxConsecLosses": 6,
+    "maxDrawdownUsd": 399.18,
+    "totalUsd": 429.72,
+    "avgHold": 2.5,
+    "targets": 0,
+    "stops": 0,
+    "timeouts": 49,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 344,
+    "totalUsd": 711.33,
+    "maxDrawdownUsd": 353.82,
+    "daysRealized10": 65
+   },
+   "restartYear2": {
+    "n": 350,
+    "totalUsd": 432.6,
+    "maxDrawdownUsd": 436.53,
+    "daysRealized10": 62
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3205.94
+    },
+    {
+     "month": "2024-11",
+     "equity": 3275.68
+    },
+    {
+     "month": "2024-12",
+     "equity": 3200.45
+    },
+    {
+     "month": "2025-01",
+     "equity": 3294.18
+    },
+    {
+     "month": "2025-02",
+     "equity": 3240.55
+    },
+    {
+     "month": "2025-03",
+     "equity": 3361.41
+    },
+    {
+     "month": "2025-04",
+     "equity": 3416.28
+    },
+    {
+     "month": "2025-05",
+     "equity": 3455.35
+    },
+    {
+     "month": "2025-06",
+     "equity": 3620.53
+    },
+    {
+     "month": "2025-07",
+     "equity": 3701.14
+    },
+    {
+     "month": "2025-08",
+     "equity": 3908.7
+    },
+    {
+     "month": "2025-09",
+     "equity": 3820.07
+    },
+    {
+     "month": "2025-10",
+     "equity": 4048.36
+    },
+    {
+     "month": "2025-11",
+     "equity": 3805.01
+    },
+    {
+     "month": "2025-12",
+     "equity": 3720.25
+    },
+    {
+     "month": "2026-01",
+     "equity": 3900.2
+    },
+    {
+     "month": "2026-02",
+     "equity": 4058.83
+    },
+    {
+     "month": "2026-03",
+     "equity": 4115.48
+    },
+    {
+     "month": "2026-04",
+     "equity": 4148.55
+    },
+    {
+     "month": "2026-05",
+     "equity": 4332.06
+    },
+    {
+     "month": "2026-06",
+     "equity": 4348.22
+    },
+    {
+     "month": "2026-07",
+     "equity": 4414.9
+    },
+    {
+     "month": "2026-08",
+     "equity": 4386.03
+    },
+    {
+     "month": "2026-09",
+     "equity": 4362.03
+    },
+    {
+     "month": "2026-10",
+     "equity": 4349.04
+    }
+   ]
+  },
+  {
+   "id": "momentum",
+   "label": "週次モメンタム（63営業日リターン上位5）",
+   "universe": "core",
+   "rank": "rs",
+   "n": 159,
+   "winRate": 0.5346,
+   "avgUsd": 29.65,
+   "profitFactor": 2.23,
+   "maxConsecLosses": 9,
+   "totalUsd": 4714.58,
+   "maxDrawdownUsd": 1933.38,
+   "endEquity": 7914.58,
+   "worstMonth": "2025-02",
+   "worstMonthUsd": -823.21,
+   "daysRealized10": 44,
+   "exitDays": 93,
+   "daysMtm10": 245,
+   "sessions": 500,
+   "rawSignals": 19279,
+   "signalsPerWeek": 192.79,
+   "takenPerWeek": 1.59,
+   "skippedPrice": 102,
+   "skippedSlot": 0,
+   "skippedCash": 0,
+   "year1": {
+    "n": 77,
+    "winRate": 0.5065,
+    "avgUsd": 32.64,
+    "profitFactor": 2.11,
+    "maxConsecLosses": 9,
+    "maxDrawdownUsd": 1321.47,
+    "totalUsd": 2513.45,
+    "avgHold": 17.3,
+    "targets": 0,
+    "stops": 0,
+    "timeouts": 77,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 82,
+    "winRate": 0.561,
+    "avgUsd": 26.84,
+    "profitFactor": 2.4,
+    "maxConsecLosses": 9,
+    "maxDrawdownUsd": 538.32,
+    "totalUsd": 2201.13,
+    "avgHold": 14.2,
+    "targets": 0,
+    "stops": 0,
+    "timeouts": 77,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 77,
+    "totalUsd": 2463.62,
+    "maxDrawdownUsd": 1933.38,
+    "daysRealized10": 22
+   },
+   "restartYear2": {
+    "n": 84,
+    "totalUsd": 2229.7,
+    "maxDrawdownUsd": 1501.35,
+    "daysRealized10": 21
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3488.23
+    },
+    {
+     "month": "2024-11",
+     "equity": 5420.32
+    },
+    {
+     "month": "2024-12",
+     "equity": 4823.46
+    },
+    {
+     "month": "2025-01",
+     "equity": 5089.75
+    },
+    {
+     "month": "2025-02",
+     "equity": 4266.54
+    },
+    {
+     "month": "2025-03",
+     "equity": 3714.12
+    },
+    {
+     "month": "2025-04",
+     "equity": 3746.94
+    },
+    {
+     "month": "2025-05",
+     "equity": 3901.31
+    },
+    {
+     "month": "2025-06",
+     "equity": 4127.36
+    },
+    {
+     "month": "2025-07",
+     "equity": 4315.93
+    },
+    {
+     "month": "2025-08",
+     "equity": 4555.05
+    },
+    {
+     "month": "2025-09",
+     "equity": 5544.66
+    },
+    {
+     "month": "2025-10",
+     "equity": 6850.32
+    },
+    {
+     "month": "2025-11",
+     "equity": 6184.93
+    },
+    {
+     "month": "2025-12",
+     "equity": 6014.27
+    },
+    {
+     "month": "2026-01",
+     "equity": 6304.68
+    },
+    {
+     "month": "2026-02",
+     "equity": 6877.22
+    },
+    {
+     "month": "2026-03",
+     "equity": 6797.39
+    },
+    {
+     "month": "2026-04",
+     "equity": 8305.62
+    },
+    {
+     "month": "2026-05",
+     "equity": 8359.52
+    },
+    {
+     "month": "2026-06",
+     "equity": 8199.26
+    },
+    {
+     "month": "2026-07",
+     "equity": 7749.55
+    },
+    {
+     "month": "2026-08",
+     "equity": 7840.64
+    },
+    {
+     "month": "2026-09",
+     "equity": 7853.19
+    },
+    {
+     "month": "2026-10",
+     "equity": 7914.58
+    }
+   ]
+  },
+  {
+   "id": "spy",
+   "label": "SPYを口座いっぱい保有",
+   "universe": "benchmark",
+   "rank": "none",
+   "n": 1,
+   "winRate": 1,
+   "avgUsd": 982.45,
+   "profitFactor": null,
+   "maxConsecLosses": 0,
+   "totalUsd": 982.45,
+   "maxDrawdownUsd": 582.25,
+   "endEquity": 4182.45,
+   "worstMonth": "2026-03",
+   "worstMonthUsd": -178.25,
+   "daysRealized10": 1,
+   "exitDays": 1,
+   "daysMtm10": 195,
+   "sessions": 500,
+   "rawSignals": 1,
+   "signalsPerWeek": 0.01,
+   "takenPerWeek": 0.01,
+   "skippedPrice": 0,
+   "skippedSlot": 0,
+   "skippedCash": 0,
+   "year1": {
+    "n": 1,
+    "winRate": 1,
+    "avgUsd": 982.45,
+    "profitFactor": null,
+    "maxConsecLosses": 0,
+    "maxDrawdownUsd": 0,
+    "totalUsd": 982.45,
+    "avgHold": 499,
+    "targets": 0,
+    "stops": 0,
+    "timeouts": 0,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 0,
+    "winRate": null,
+    "avgUsd": null,
+    "profitFactor": null,
+    "maxConsecLosses": 0,
+    "maxDrawdownUsd": 0,
+    "totalUsd": 0,
+    "avgHold": null,
+    "targets": 0,
+    "stops": 0,
+    "timeouts": 0,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 1,
+    "totalUsd": 508.6,
+    "maxDrawdownUsd": 582.25,
+    "daysRealized10": 1
+   },
+   "restartYear2": {
+    "n": 1,
+    "totalUsd": 375.3,
+    "maxDrawdownUsd": 254.08,
+    "daysRealized10": 1
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3206.4
+    },
+    {
+     "month": "2024-11",
+     "equity": 3375.95
+    },
+    {
+     "month": "2024-12",
+     "equity": 3293.6
+    },
+    {
+     "month": "2025-01",
+     "equity": 3372.3
+    },
+    {
+     "month": "2025-02",
+     "equity": 3334.1
+    },
+    {
+     "month": "2025-03",
+     "equity": 3160.15
+    },
+    {
+     "month": "2025-04",
+     "equity": 3135.9
+    },
+    {
+     "month": "2025-05",
+     "equity": 3310.15
+    },
+    {
+     "month": "2025-06",
+     "equity": 3452.45
+    },
+    {
+     "month": "2025-07",
+     "equity": 3523.6
+    },
+    {
+     "month": "2025-08",
+     "equity": 3588.45
+    },
+    {
+     "month": "2025-09",
+     "equity": 3694.1
+    },
+    {
+     "month": "2025-10",
+     "equity": 3773.5
+    },
+    {
+     "month": "2025-11",
+     "equity": 3780.15
+    },
+    {
+     "month": "2025-12",
+     "equity": 3772.8
+    },
+    {
+     "month": "2026-01",
+     "equity": 3823.05
+    },
+    {
+     "month": "2026-02",
+     "equity": 3793.15
+    },
+    {
+     "month": "2026-03",
+     "equity": 3614.9
+    },
+    {
+     "month": "2026-04",
+     "equity": 3956.5
+    },
+    {
+     "month": "2026-05",
+     "equity": 4145.6
+    },
+    {
+     "month": "2026-06",
+     "equity": 4097.05
+    },
+    {
+     "month": "2026-07",
+     "equity": 4098.35
+    },
+    {
+     "month": "2026-08",
+     "equity": 4198.45
+    },
+    {
+     "month": "2026-09",
+     "equity": 4176.35
+    },
+    {
+     "month": "2026-10",
+     "equity": 4182.45
+    }
+   ]
+  },
+  {
+   "id": "qqq",
+   "label": "QQQを口座いっぱい保有",
+   "universe": "benchmark",
+   "rank": "none",
+   "n": 1,
+   "winRate": 1,
+   "avgUsd": 1573.04,
+   "profitFactor": null,
+   "maxConsecLosses": 0,
+   "totalUsd": 1573.04,
+   "maxDrawdownUsd": 740.76,
+   "endEquity": 4773.04,
+   "worstMonth": "2026-07",
+   "worstMonthUsd": -290.46,
+   "daysRealized10": 1,
+   "exitDays": 1,
+   "daysMtm10": 221,
+   "sessions": 500,
+   "rawSignals": 1,
+   "signalsPerWeek": 0.01,
+   "takenPerWeek": 0.01,
+   "skippedPrice": 0,
+   "skippedSlot": 0,
+   "skippedCash": 0,
+   "year1": {
+    "n": 1,
+    "winRate": 1,
+    "avgUsd": 1573.04,
+    "profitFactor": null,
+    "maxConsecLosses": 0,
+    "maxDrawdownUsd": 0,
+    "totalUsd": 1573.04,
+    "avgHold": 499,
+    "targets": 0,
+    "stops": 0,
+    "timeouts": 0,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 0,
+    "winRate": null,
+    "avgUsd": null,
+    "profitFactor": null,
+    "maxConsecLosses": 0,
+    "maxDrawdownUsd": 0,
+    "totalUsd": 0,
+    "avgHold": null,
+    "targets": 0,
+    "stops": 0,
+    "timeouts": 0,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 1,
+    "totalUsd": 755.24,
+    "maxDrawdownUsd": 740.76,
+    "daysRealized10": 1
+   },
+   "restartYear2": {
+    "n": 1,
+    "totalUsd": 676.9,
+    "maxDrawdownUsd": 422.15,
+    "daysRealized10": 1
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3224.66
+    },
+    {
+     "month": "2024-11",
+     "equity": 3380
+    },
+    {
+     "month": "2024-12",
+     "equity": 3388.94
+    },
+    {
+     "month": "2025-01",
+     "equity": 3455.3
+    },
+    {
+     "month": "2025-02",
+     "equity": 3370.58
+    },
+    {
+     "month": "2025-03",
+     "equity": 3135.08
+    },
+    {
+     "month": "2025-04",
+     "equity": 3174.38
+    },
+    {
+     "month": "2025-05",
+     "equity": 3436.22
+    },
+    {
+     "month": "2025-06",
+     "equity": 3631.4
+    },
+    {
+     "month": "2025-07",
+     "equity": 3711.62
+    },
+    {
+     "month": "2025-08",
+     "equity": 3743.96
+    },
+    {
+     "month": "2025-09",
+     "equity": 3923.78
+    },
+    {
+     "month": "2025-10",
+     "equity": 4095.98
+    },
+    {
+     "month": "2025-11",
+     "equity": 4037.06
+    },
+    {
+     "month": "2025-12",
+     "equity": 4007.42
+    },
+    {
+     "month": "2026-01",
+     "equity": 4052.78
+    },
+    {
+     "month": "2026-02",
+     "equity": 3965.3
+    },
+    {
+     "month": "2026-03",
+     "equity": 3784.64
+    },
+    {
+     "month": "2026-04",
+     "equity": 4328
+    },
+    {
+     "month": "2026-05",
+     "equity": 4751.42
+    },
+    {
+     "month": "2026-06",
+     "equity": 4739.96
+    },
+    {
+     "month": "2026-07",
+     "equity": 4449.5
+    },
+    {
+     "month": "2026-08",
+     "equity": 4622.12
+    },
+    {
+     "month": "2026-09",
+     "equity": 4760.18
+    },
+    {
+     "month": "2026-10",
+     "equity": 4773.04
+    }
+   ]
+  },
+  {
+   "id": "soxx",
+   "label": "SOXXを口座いっぱい保有",
+   "universe": "benchmark",
+   "rank": "none",
+   "n": 1,
+   "winRate": 1,
+   "avgUsd": 4912.88,
+   "profitFactor": null,
+   "maxConsecLosses": 0,
+   "totalUsd": 4912.88,
+   "maxDrawdownUsd": 2660.14,
+   "endEquity": 8112.88,
+   "worstMonth": "2026-07",
+   "worstMonthUsd": -1902.18,
+   "daysRealized10": 1,
+   "exitDays": 1,
+   "daysMtm10": 259,
+   "sessions": 500,
+   "rawSignals": 1,
+   "signalsPerWeek": 0.01,
+   "takenPerWeek": 0.01,
+   "skippedPrice": 0,
+   "skippedSlot": 0,
+   "skippedCash": 0,
+   "year1": {
+    "n": 1,
+    "winRate": 1,
+    "avgUsd": 4912.88,
+    "profitFactor": null,
+    "maxConsecLosses": 0,
+    "maxDrawdownUsd": 0,
+    "totalUsd": 4912.88,
+    "avgHold": 499,
+    "targets": 0,
+    "stops": 0,
+    "timeouts": 0,
+    "sharps": 0
+   },
+   "year2": {
+    "n": 0,
+    "winRate": null,
+    "avgUsd": null,
+    "profitFactor": null,
+    "maxConsecLosses": 0,
+    "maxDrawdownUsd": 0,
+    "totalUsd": 0,
+    "avgHold": null,
+    "targets": 0,
+    "stops": 0,
+    "timeouts": 0,
+    "sharps": 0
+   },
+   "restartYear1": {
+    "n": 1,
+    "totalUsd": 787.92,
+    "maxDrawdownUsd": 1189.16,
+    "daysRealized10": 1
+   },
+   "restartYear2": {
+    "n": 1,
+    "totalUsd": 3226.48,
+    "maxDrawdownUsd": 2090.11,
+    "daysRealized10": 1
+   },
+   "equity": [
+    {
+     "month": "2024-10",
+     "equity": 3100.6
+    },
+    {
+     "month": "2024-11",
+     "equity": 3060.56
+    },
+    {
+     "month": "2024-12",
+     "equity": 3061.82
+    },
+    {
+     "month": "2025-01",
+     "equity": 3098.78
+    },
+    {
+     "month": "2025-02",
+     "equity": 2964.24
+    },
+    {
+     "month": "2025-03",
+     "equity": 2679.34
+    },
+    {
+     "month": "2025-04",
+     "equity": 2618.72
+    },
+    {
+     "month": "2025-05",
+     "equity": 2914.12
+    },
+    {
+     "month": "2025-06",
+     "equity": 3386.76
+    },
+    {
+     "month": "2025-07",
+     "equity": 3405.38
+    },
+    {
+     "month": "2025-08",
+     "equity": 3479.44
+    },
+    {
+     "month": "2025-09",
+     "equity": 3840.64
+    },
+    {
+     "month": "2025-10",
+     "equity": 4336.66
+    },
+    {
+     "month": "2025-11",
+     "equity": 4199.32
+    },
+    {
+     "month": "2025-12",
+     "equity": 4261.06
+    },
+    {
+     "month": "2026-01",
+     "equity": 4893.16
+    },
+    {
+     "month": "2026-02",
+     "equity": 4977.02
+    },
+    {
+     "month": "2026-03",
+     "equity": 4646.2
+    },
+    {
+     "month": "2026-04",
+     "equity": 6505.12
+    },
+    {
+     "month": "2026-05",
+     "equity": 8012.08
+    },
+    {
+     "month": "2026-06",
+     "equity": 9015.6
+    },
+    {
+     "month": "2026-07",
+     "equity": 7113.42
+    },
+    {
+     "month": "2026-08",
+     "equity": 7199.52
+    },
+    {
+     "month": "2026-09",
+     "equity": 8005.92
+    },
+    {
+     "month": "2026-10",
+     "equity": 8112.88
+    }
+   ]
+  }
+ ],
+ "headline": {
+  "chase": "mixed",
+  "chaseNote": "箱25%超が悪い年と悪くない年がある。追いかけ禁止は年によって過学習になる。",
+  "adopted": [
+   "入口は反発1日・15%線以上のまま。IN OKだけに絞らない（平均$0.28）。25%超の禁止は年で割れるので付けない。",
+   "選ぶならATR≥3%。4–6%は平均$2.39・PF 1.28だが1年目は-$0.32。上限は必須にしない。",
+   "利確は1ATR。急騰日の全売りを足す改善は1年目+$0.03だけで、エッジとは扱わない。",
+   "損切りは20日安値を残す。数字上は損切りなしが唯一両年を超える（平均$3.05、PF 1.39）が、20日まで損を持ち越すのでライブでは外さない。",
+   "反発2–3日、SPY/SOXX、決算前後5日は付けない。決算除外は平均を$0.61から$0.48へ下げた。",
+   "銘柄は186のまま。S&P+NDXは候補が週32から週54になるが、ティッカー順の合計は$917から$271へ落ちる。流動性上位50は-$107。",
+   "枠が足りないときは、このサンプルでは20日の対SPY相対強度が高い順（ATR≥3%で合計$2053、両年プラス）。4順位から選んだ仮説。",
+   "箱はブレイク・押し目・中央逆張りに置き換えない。RSI(2)<10は合計$1149・DD$437で両年プラスだが6手法から選んだ。週次モメンタムは$4715だがDD$1933でSOXX買いに近い。"
+  ],
+  "notStacked": "良かった行は別々に測ったもの。損切りなしと相対強度順位とRSI(2)を重ねた成績は見ていない。重ねるほどこの2年に寄り、次の2年で崩れやすい。",
+  "methodsNote": "同じ $3200 をSPYで持ち切ると $982.45、最大DD $582.25。基準ポートフォリオは $357.53、最大DD $680.66。 20日高値ブレイク + ATRトレーリング はどちらかの年がマイナス（$-315.32 / $234.07）。採用しない。 上昇トレンドの押し目（終値>50日線、RSI2<10 または3日続落、終値>5日線で売る） はどちらかの年がマイナス（$623.57 / $-213.36）。採用しない。 箱の下（≤15%）で反発後に買い、箱の50%で売る はどちらかの年がマイナス（$236.49 / $-37.6）。採用しない。 RSI(2)<10 の売られすぎ、終値>5日線か5日 は資金制約つきで基準ポートフォリオを上回り、両年プラス。それでもこの2年だけの結果。 週次モメンタムは年ごとに資金を戻してやり直しても両年プラス（$2463.62 / $2229.7）。箱のジャブとは別物。",
+  "overfitting": "今のウォッチリストで過去を見ている（生存・選択バイアス）。S&P500 と Nasdaq-100 は2026-10-02時点の構成。流動性上位50はテスト開始前の63営業日だけで選んだ。年を半分にしても、ルールを結果のあとから選んだ時点でサンプル内。手数料と終値の約定だけで、スリッページは無い。"
+ },
+ "biases": [
+  "生存・選択バイアス: 186銘柄は今のウォッチリスト。広いユニバースは2026-10-02時点のS&P500とNasdaq-100",
+  "指標はシグナル日の終値まで。買いは翌営業日の始値。SPY/SOXXの移動平均もシグナル日まで",
+  "配当は未調整。分割はYahooの調整済み",
+  "利確指値は、同じ日に損切り終値より先に約定したとみなす",
+  "急騰日のATRはシグナル日のATR14（単純平均）",
+  "売却代金は翌セッションまで使えない（T+1の近似）",
+  "1株が$300未満または$450超の銘柄はポートフォリオでは買わない",
+  "決算カレンダーが取れなかった日は、その日の決算を知らないものとして残している",
+  "スリッページは見ていない。手数料は往復$0.70",
+  "今のウォッチリストで過去を見ている（生存・選択バイアス）。S&P500 と Nasdaq-100 は2026-10-02時点の構成。流動性上位50はテスト開始前の63営業日だけで選んだ。年を半分にしても、ルールを結果のあとから選んだ時点でサンプル内。手数料と終値の約定だけで、スリッページは無い。"
+ ]
+}
