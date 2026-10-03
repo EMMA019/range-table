@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import report from "../../data/backtest/bias.json";
-import type { BiasReport, SlimBook } from "@/lib/bias";
+import type { BiasReport, EarningsBridgeRow, EarningsRowId, EarningsUniverseId, SlimBook } from "@/lib/bias";
+import type { Verdict } from "@/lib/round2";
 import { formatPnl } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,27 @@ function money(value: number | null | undefined): string {
 function pf(value: number | null | undefined): string {
   return value == null ? "未計算" : value.toFixed(2);
 }
+
+const EARN_ROW: Record<EarningsRowId, string> = {
+  none: "見送りなし",
+  filing: "届出日の前後5日",
+  pre: "反応日の前5日",
+  post: "反応日と後5日",
+  span: "反応日の前日に手仕舞い",
+};
+
+const EARN_UNIVERSE: Record<EarningsUniverseId, string> = {
+  core: "今の187",
+  pit: "当時の500+400",
+  adv: "売買代金上位200",
+};
+
+const VERDICT_JA: Record<Verdict, string> = {
+  pass: "合格",
+  fail: "不合格",
+  hold: "保留",
+  "not-judged": "未判定",
+};
 
 function flag(value: boolean | null | undefined): string {
   if (value == null) return "PFは判定できない";
@@ -72,6 +94,46 @@ function Rows({ window, ids }: { window: "oos" | "in"; ids: string[] }) {
   );
 }
 
+function EarningsSplit({ bridge }: { bridge: NonNullable<BiasReport["earningsBridge"]> }) {
+  const tone = (verdict: Verdict) => (verdict === "pass" ? "text-sage" : verdict === "fail" ? "text-rust" : "");
+  const line = (row: EarningsBridgeRow) => {
+    const judged = row.verdict === "not-judged" ? "" : ` 比率 ${row.ratio == null ? "—" : row.ratio.toFixed(2)} CI下限 ${row.ciLow == null ? "—" : row.ciLow.toFixed(4)} N ${row.nRequired == null ? "—" : row.nRequired.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${VERDICT_JA[row.verdict]}`;
+    return `${EARN_ROW[row.id]} ${row.n}回 ${money(row.totalUsd)} PF ${pf(row.profitFactor)}${judged}`;
+  };
+  return (
+    <div className="mt-2 border-t border-line pt-2">
+      <p>
+        決算は反応日で見る。8-K Item 2.02の受付が16:00 ET以降なら翌営業日、09:30より前と場中はその日。前は反応日の5営業日前。後は反応日とその後5営業日。受付時刻の無い届出は{bridge.undated}件で、反応日にしていない。
+      </p>
+      <p className="mt-1">
+        E1は反応日の前5日だけ見送る本。橋の4段目を見てから選んだ別候補で、第2ラウンドと同じ基準（両方の期間がプラス、合計÷最大DDが同じ手数料のSPYより大きい、下側98%がプラス、件数nが必要件数N以上）。全体は
+        <span className={tone(bridge.candidate.verdict)}> {VERDICT_JA[bridge.candidate.verdict]}</span>。
+        {bridge.candidate.universes.map((row) => `${EARN_UNIVERSE[row.universe]}は${VERDICT_JA[row.verdict]}`).join("。")}。
+      </p>
+      {bridge.spy.map((row) => (
+        <p key={row.window} className="mt-1">
+          SPY買い持ち {row.window === "oos" ? "2022-10〜2024-10" : "2024-10〜2026-10"} {money(row.totalUsd)}、最大DD {money(row.mtmDdUsd)}、比率 {row.ratio == null ? "—" : row.ratio.toFixed(2)}。
+        </p>
+      ))}
+      {(["core", "pit", "adv"] as const).map((universe) => (
+        <div key={universe} className="mt-2">
+          <p className="text-xs">{EARN_UNIVERSE[universe]}</p>
+          {(["oos", "in"] as const).map((window) => (
+            <p key={window} className="mt-1">
+              {window === "oos" ? "2022-10〜2024-10" : "2024-10〜2026-10"}{" "}
+              {bridge.rows
+                .filter((row) => row.universe === universe && row.window === window)
+                .map((row) => line(row))
+                .join("。 ")}
+              。
+            </p>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** Survivorship, sector, liquidity, and bellwether checks. Analysis only. */
 export function BiasSection() {
   const made = data.generatedAt.slice(0, 10);
@@ -114,6 +176,7 @@ export function BiasSection() {
             <p className="mt-1">
               $550の上限を外しても公開の本は{money(data.bridge.unchanged.dropCapUsd)}のまま。上限を外したこの欄のルールも{money(data.bridge.unchanged.dropCapOnStackedUsd)}。ATRは両方3%以上。手数料は往復$0.70、1枠$300–$450、資金$3,200、枠は5つ。最終足は{data.bridge.lastBar}で、2026-10-02はセッションがない。ウォッチリストは{data.bridge.namesInFile}行で、{data.bridge.ignored}は両方から外した{data.bridge.namesTraded}銘柄。Item 2.02が無い{data.bridge.withoutItem202}銘柄のシグナルは残している。
             </p>
+            {data.earningsBridge ? <EarningsSplit bridge={data.earningsBridge} /> : null}
           </div>
         ) : null}
         {(["oos", "in"] as const).map((window) => {

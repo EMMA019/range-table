@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { describe, it } from "node:test";
-import type { CoreBridge } from "./bias";
+import type { CoreBridge, EarningsBridge } from "./bias";
 import {
   aboveMovingAverage,
   advLeaders,
@@ -283,5 +283,19 @@ describe("published book bridge", () => {
       cursor = Math.round((cursor + step.deltaUsd) * 100) / 100;
       assert.equal(step.totalUsd, cursor);
     }
+  });
+
+  it("splits the earnings window on the reaction day and keeps E1 separate", () => {
+    const report = JSON.parse(fs.readFileSync(path.join(process.cwd(), "data/backtest/bias.json"), "utf8")) as { earningsBridge: EarningsBridge };
+    const bridge = report.earningsBridge;
+    const row = (id: string, universe: string, window: string) => bridge.rows.find((item) => item.id === id && item.universe === universe && item.window === window);
+    assert.equal(row("none", "core", "in")?.totalUsd, 1304.86);
+    assert.equal(row("filing", "core", "in")?.totalUsd, 490.12);
+    assert.equal(row("filing", "adv", "oos")?.totalUsd, 1056.66);
+    assert.equal(row("filing", "adv", "in")?.totalUsd, 975.4);
+    assert.equal(row("pre", "core", "in")?.verdict, "pass");
+    assert.equal(bridge.candidate.id, "E1");
+    assert.equal(bridge.candidate.verdict, "fail");
+    assert.equal(bridge.undated, 0);
   });
 });

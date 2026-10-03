@@ -248,6 +248,8 @@ type ExitSpec = {
   trail: boolean;
   exitMa5: boolean;
   maxHold: number | null;
+  /** When set, a trade still open on this bar sells at that close. Earlier target and stop fills stand. */
+  forceExitIndex?: number | null;
 };
 
 function gapInside(feats: Feat[], from: number, to: number): boolean {
@@ -308,7 +310,8 @@ function simulate(feats: Feat[], signalIndex: number, spec: ExitSpec, qty10: num
     return finish(last, feats[last].c, "window", "close");
   }
 
-  const lastIndex = spec.maxHold == null ? feats.length - 1 : Math.min(feats.length - 1, entryIndex + spec.maxHold);
+  const holdEnd = spec.maxHold == null ? feats.length - 1 : Math.min(feats.length - 1, entryIndex + spec.maxHold);
+  const lastIndex = spec.forceExitIndex != null && spec.forceExitIndex >= entryIndex ? Math.min(holdEnd, spec.forceExitIndex) : holdEnd;
   for (let j = entryIndex; j <= lastIndex; j += 1) {
     const bar = feats[j];
     if (spec.target != null && j > entryIndex && bar.o >= spec.target) return finish(j, bar.o, "target", "open");
@@ -317,6 +320,7 @@ function simulate(feats: Feat[], signalIndex: number, spec: ExitSpec, qty10: num
     if (spec.exitMa5 && bar.ma5 != null && bar.c > bar.ma5) return finish(j, bar.c, "ma", "close");
     if (spec.sharp && bar.c >= feats[j - 1].c + atr) return finish(j, bar.c, "sharp", "close");
     if (spec.stopClose != null && bar.c < spec.stopClose) return finish(j, bar.c, "stop", "close");
+    if (spec.forceExitIndex != null && j === spec.forceExitIndex) return finish(j, bar.c, "window", "close");
     if (spec.maxHold != null && j === entryIndex + spec.maxHold) return finish(j, bar.c, "timeout", "close");
   }
   if (spec.maxHold != null && lastIndex < entryIndex + spec.maxHold) {
@@ -431,11 +435,13 @@ export function rangeCandidates(
   market: Map<string, MarketDay>,
   sessions: string[],
   bounds?: { from: string; to: string },
+  forceExitOn?: (entryDate: string) => string | null,
 ): Candidate[] {
   const from = bounds?.from ?? STUDY_FROM;
   const to = bounds?.to ?? STUDY_TO;
   const { feats } = name;
   const out: Candidate[] = [];
+  const indexOf = forceExitOn ? new Map(feats.map((bar, index) => [bar.date, index])) : null;
   for (let i = 0; i < feats.length - 1; i += 1) {
     const feat = feats[i];
     if (!isRangeBar(feat, rules, name.semi, market.get(feat.date), sessions, name.earnings, from, to)) continue;
@@ -456,6 +462,7 @@ export function rangeCandidates(
         trail: false,
         exitMa5: false,
         maxHold: rules.maxHold,
+        forceExitIndex: forceExitOn ? (indexOf?.get(forceExitOn(feats[i + 1].date) ?? "") ?? null) : null,
       },
       sized.shares10,
       { ticker: name.ticker, sector: name.sector, semi: name.semi },

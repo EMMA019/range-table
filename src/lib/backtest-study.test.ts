@@ -199,6 +199,23 @@ describe("range trades match the published engine", () => {
     assert.equal(trade.exit, 113.6);
     assert.ok(trade.exit < trade.entry + trade.atr);
   });
+
+  it("sells at the forced close unless the stop fills first", () => {
+    const bars = series(Array.from({ length: 22 }, () => [98, 99, 97, 97.6] as [number, number, number, number]));
+    const open = rangeCandidates(nameOf(bars), BASE_RULES, market, []);
+    const forced = rangeCandidates(nameOf(bars), BASE_RULES, market, [], undefined, (entry) => entry);
+    assert.equal(open.length, 1);
+    assert.equal(forced.length, 1);
+    assert.equal(forced[0].exitDate, forced[0].entryDate);
+    assert.equal(forced[0].exit, 97.6);
+    assert.notEqual(open[0].exitDate, forced[0].exitDate);
+
+    const stopped = series([[98, 100, 97, 97.8], [97, 98, 90, 91], [89, 90, 88, 89.5]]);
+    const cut = rangeCandidates(nameOf(stopped), BASE_RULES, market, [], undefined, () => day(40));
+    const plain = rangeCandidates(nameOf(stopped), BASE_RULES, market, []);
+    assert.equal(cut[0].exitDate, plain[0].exitDate);
+    assert.equal(cut[0].reason, plain[0].reason);
+  });
 });
 
 describe("portfolio constraints", () => {

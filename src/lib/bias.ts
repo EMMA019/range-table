@@ -76,7 +76,41 @@ export type FilingBlock = {
   form?: string[];
   filingDate?: string[];
   items?: string[];
+  acceptanceDateTime?: string[];
   primaryDocDescription?: string[];
+};
+
+export type EarningsWindowId = "oos" | "in";
+export type EarningsUniverseId = "core" | "pit" | "adv";
+export type EarningsRowId = "none" | "filing" | "pre" | "post" | "span";
+
+export type EarningsBridgeRow = {
+  id: EarningsRowId;
+  universe: EarningsUniverseId;
+  window: EarningsWindowId;
+  n: number;
+  totalUsd: number;
+  profitFactor: number | null;
+  mtmDdUsd: number;
+  /** Total divided by mark-to-market drawdown. Null when the drawdown is zero. */
+  ratio: number | null;
+  ciLow: number | null;
+  nRequired: number | null;
+  /** Only the pre-earnings row is judged. The others stay not-judged. */
+  verdict: "pass" | "fail" | "hold" | "not-judged";
+};
+
+export type EarningsBridge = {
+  rulesCommit: string;
+  undated: number;
+  edgarMissing: number;
+  spy: Array<{ window: EarningsWindowId; totalUsd: number; mtmDdUsd: number; ratio: number | null }>;
+  rows: EarningsBridgeRow[];
+  candidate: {
+    id: "E1";
+    verdict: "pass" | "fail" | "hold" | "not-judged";
+    universes: Array<{ universe: EarningsUniverseId; verdict: "pass" | "fail" | "hold" | "not-judged" }>;
+  };
 };
 
 export type SlimBook = {
@@ -632,6 +666,8 @@ export type BiasReport = {
   }>;
   /** Step-by-step dollars from the published RS book to this study's core book. */
   bridge?: CoreBridge;
+  /** Earnings-window split of that bridge. E1 is judged; the other rows are not. */
+  earningsBridge?: EarningsBridge;
 };
 
 export function earningsDatesFrom(blocks: readonly FilingBlock[]): { item202: string[]; foreign6k: string[] } {

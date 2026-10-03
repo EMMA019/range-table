@@ -1015,8 +1015,9 @@ async function main() {
   };
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   if (fs.existsSync(OUT)) {
-    const previous = JSON.parse(fs.readFileSync(OUT, "utf8")) as { bridge?: unknown };
+    const previous = JSON.parse(fs.readFileSync(OUT, "utf8")) as { bridge?: unknown; earningsBridge?: unknown };
     if (previous.bridge) (report as { bridge?: unknown }).bridge = previous.bridge;
+    if (previous.earningsBridge) (report as { earningsBridge?: unknown }).earningsBridge = previous.earningsBridge;
   }
   fs.writeFileSync(OUT, JSON.stringify(report));
   console.log(`wrote ${OUT}`);
