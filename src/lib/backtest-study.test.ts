@@ -330,6 +330,25 @@ describe("portfolio constraints", () => {
     assert.equal(capped.n, 3);
     assert.equal(capped.skippedSemi, 3);
   });
+
+  it("charges a per-order fee on the entry and the exit only when one is supplied", () => {
+    const trade = cand("AAA", sessions[0], sessions[1], 50, 55);
+    const open = {
+      id: "fee",
+      label: "fee",
+      universe: "core",
+      rank: "ticker" as const,
+      sessions,
+      flatten: true,
+      maxPositions: 1,
+      closes: closes(["AAA"]),
+      withRestart: false,
+    };
+    const flat = runPortfolio(open, [trade]);
+    const ibkr = runPortfolio({ ...open, orderFee: () => 1 }, [trade]);
+    assert.equal(flat.totalUsd, 44.3);
+    assert.equal(ibkr.totalUsd, 43);
+  });
 });
 
 describe("rule selection guards", () => {

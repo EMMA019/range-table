@@ -712,6 +712,11 @@ export type PortfolioOpts = {
   throttleBelowStart?: boolean;
   /** Replaces the $300–$450 lot. Null skips the name. */
   size?: (cand: Candidate, morningEquity: number) => number | null;
+  /**
+   * Per-order commission. When omitted, the entry is free and the exit pays the flat round trip,
+   * which is the published book. Round 2 passes IBKR fixed on both orders.
+   */
+  orderFee?: (qty: number, price: number) => number;
   keepFills?: boolean;
   keepDaily?: boolean;
   closes: CloseMap;
@@ -792,15 +797,17 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
 
   const closePx = (ticker: string, date: string, fallback: number) => opts.closes.get(ticker)?.get(date) ?? fallback;
 
+  const exitFee = (qty: number, price: number) => (opts.orderFee ? opts.orderFee(qty, price) : ROUND_TRIP_FEE);
+  const entryFee = (qty: number, price: number) => (opts.orderFee ? opts.orderFee(qty, price) : 0);
   const sell = (pos: OpenPos, date: string, price: number, reason: ExitReason) => {
-    const proceeds = pos.qty * price - ROUND_TRIP_FEE;
+    const proceeds = pos.qty * price - exitFee(pos.qty, price);
     creditSale(date, proceeds);
     const entryI = sessionIndex.get(pos.cand.entryDate) ?? 0;
     const exitI = sessionIndex.get(date) ?? entryI;
     fills.push({
       exitDate: date,
       ticker: pos.cand.ticker,
-      pnlUsd: pos.qty * (price - pos.cand.entry) - ROUND_TRIP_FEE,
+      pnlUsd: pos.qty * (price - pos.cand.entry) - entryFee(pos.qty, pos.cand.entry) - exitFee(pos.qty, price),
       hold: exitI - entryI,
       reason,
       entryDate: pos.cand.entryDate,
@@ -850,7 +857,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         skippedSlot += 1;
         continue;
       }
-      const cost = qty * cand.entry;
+      const cost = qty * cand.entry + entryFee(qty, cand.entry);
       if (cost > settled + 1e-9) {
         skippedCash += 1;
         continue;

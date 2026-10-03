@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SiteNav } from "@/components/site-nav";
 import { BiasSection } from "@/components/bias-section";
+import { Round2Section } from "@/components/round2-section";
 import { FollowUpSection } from "@/components/followup-section";
 import { StudySection } from "@/components/study-section";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -146,6 +147,7 @@ export default function BacktestPage() {
         <StudySection />
         <FollowUpSection />
         <BiasSection />
+        <Round2Section />
 
         <section>
           <h2 className="mb-1 text-sm font-medium">分かっている偏り</h2>
