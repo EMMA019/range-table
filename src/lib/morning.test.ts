@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { PAPER_START } from "./paper";
-import { PAPER_SCREEN_START, excludeReasons, lineHit, lotFlags, sharesForRisk30, spyFilter } from "./morning";
+import { PAPER_SCREEN_START, atrBelowMin, excludeReasons, lineHit, lotFlags, sharesForRisk30, spyFilter } from "./morning";
 import { canOpen, closePosition, daySnapshot, emptyLedger, openPosition, parseLedger } from "./paper-ledger";
 import { themeOf } from "./themes";
 
@@ -26,11 +26,26 @@ describe("morning paper candidates", () => {
     assert.equal(sized.shares, 10);
     assert.equal(sized.cost, 130);
     assert.equal(sized.flags.overCost, false);
+    assert.equal(sized.flags.capBinding, false);
     const wide = lotFlags({ ...quote, close: 600, line15: 500, low20: 490 }, "15");
     assert.equal(wide.shares, 3);
     assert.equal(wide.flags.overCost, true);
     assert.equal(wide.flags.overPrice, true);
+    assert.equal(wide.flags.capBinding, false);
     assert.equal(lotFlags({ ...quote, line15: 40.1, low20: 10 }, "15").flags.oneShareTooWide, true);
+  });
+
+  it("caps shares at floor($450 / entry) and shows the stop loss for that count", () => {
+    const capped = lotFlags({ ...quote, close: 13, line15: 13, low20: 12.5 }, "15");
+    assert.equal(capped.shares, 34);
+    assert.equal(capped.cost, 442);
+    assert.equal(capped.maxLoss, 17);
+    assert.equal(capped.flags.capBinding, true);
+    assert.equal(capped.flags.overCost, false);
+    const tight = lotFlags({ ...quote, close: 460, line15: 460, low20: 450 }, "15");
+    assert.equal(tight.shares, 3);
+    assert.equal(tight.flags.capBinding, false);
+    assert.equal(tight.flags.overCost, true);
   });
 
   it("calls a close within two box points of 15% or 25% that line", () => {
@@ -40,15 +55,21 @@ describe("morning paper candidates", () => {
     assert.equal(lineHit({ ...quote, boxPct: 12.9 }), null);
   });
 
-  it("keeps SPCX, greys a loss, a theme, a box break, and the financials group", () => {
-    assert.deepEqual(excludeReasons({ ticker: "SPCX", sectorId: "space", trailingEps: -1, brokeHigh: false }), []);
-    assert.deepEqual(excludeReasons({ ticker: "AAA", sectorId: "semi", trailingEps: -0.2, brokeHigh: false }), ["loss"]);
-    assert.deepEqual(excludeReasons({ ticker: "AAA", sectorId: "semi", trailingEps: null, brokeHigh: false }), []);
-    assert.ok(excludeReasons({ ticker: "CEG", sectorId: "generation", trailingEps: 1, brokeHigh: true }).includes("aboveBox"));
+  it("keeps SPCX, greys a loss, a theme, a box break, the financials group, and ATR under 3%", () => {
+    const ok = { atr14: 4, close: 100 };
+    assert.deepEqual(excludeReasons({ ticker: "SPCX", sectorId: "space", trailingEps: -1, brokeHigh: false, ...ok }), []);
+    assert.deepEqual(excludeReasons({ ticker: "AAA", sectorId: "semi", trailingEps: -0.2, brokeHigh: false, ...ok }), ["loss"]);
+    assert.deepEqual(excludeReasons({ ticker: "AAA", sectorId: "semi", trailingEps: null, brokeHigh: false, ...ok }), []);
+    assert.ok(excludeReasons({ ticker: "CEG", sectorId: "generation", trailingEps: 1, brokeHigh: true, ...ok }).includes("aboveBox"));
     assert.equal(themeOf("IONQ"), "quantum");
     assert.equal(themeOf("QMCO"), null);
     assert.equal(themeOf("SPCX"), null);
-    assert.ok(excludeReasons({ ticker: "BAC", sectorId: "financials", trailingEps: 3, brokeHigh: false }).includes("financials"));
+    assert.ok(excludeReasons({ ticker: "BAC", sectorId: "financials", trailingEps: 3, brokeHigh: false, ...ok }).includes("financials"));
+    assert.equal(atrBelowMin(3, 100), false);
+    assert.equal(atrBelowMin(2.99, 100), true);
+    assert.ok(excludeReasons({ ticker: "AAA", sectorId: "semi", trailingEps: 1, brokeHigh: false, atr14: 2, close: 100 }).includes("atr"));
+    assert.equal(excludeReasons({ ticker: "AAA", sectorId: "semi", trailingEps: 1, brokeHigh: false, atr14: 3, close: 100 }).includes("atr"), false);
+    assert.ok(excludeReasons({ ticker: "AAA", sectorId: "semi", trailingEps: 1, brokeHigh: false, atr14: null, close: 100 }).includes("atr"));
   });
 
   it("turns the SPY filter on at or above the 20-day average", () => {

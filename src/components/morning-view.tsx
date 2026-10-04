@@ -43,6 +43,7 @@ function reasonText(reason: string): string {
   if (reason === "loss") return "赤字";
   if (reason === "aboveBox") return "箱の上";
   if (reason === "financials") return "金融";
+  if (reason === "atr") return "ATR<3%";
   if (reason.startsWith("theme:")) return THEME_LABEL[reason.slice(6)] ?? "テーマ";
   return reason;
 }
@@ -115,6 +116,8 @@ export function MorningView() {
       sectorId: row.sectorId,
       trailingEps: row.pe.trailingEps,
       brokeHigh: quote.brokeHigh,
+      atr14: quote.atr14,
+      close: quote.close,
     });
     const financials = reasons.includes("financials");
     const others = reasons.filter((reason) => reason !== "financials");
@@ -171,7 +174,9 @@ export function MorningView() {
         <section className="rounded-2xl border border-line bg-elev px-3 py-3 text-sm leading-relaxed">
           <p>1銘柄につき買いは2回まで。先に15%線、その次に25%線。</p>
           <p className="mt-1">利確は箱の高値で、持っている株を一度に全部。</p>
-          <p className="mt-1 text-[11px] text-muted">損切りは箱の安値。株数は ${PAPER_RISK_USD} ÷（入り − 安値）の整数。代金が ${USUAL_COST_CAP} を超えるときと、1株 ${550} 以上のときはカードに出す。</p>
+          <p className="mt-1 text-[11px] text-muted">
+            損切りは箱の安値。株数は ${PAPER_RISK_USD} ÷（入り − 安値）と ${USUAL_COST_CAP} ÷ 入り の小さい方。$450が株数を決めたときは「$450上限」と、その株数での損切り損を出す。1株が $450 を超えるときは、代金と $550 の印をこれまで通り出す。
+          </p>
         </section>
 
         <section className="rounded-2xl border border-line bg-elev px-3 py-3">
@@ -216,7 +221,7 @@ export function MorningView() {
             </button>
           </div>
           <p className="mt-2 text-[11px] leading-relaxed text-muted">
-            金融はウォッチリストの「金融」。初期状態では候補から外す。赤字は過去12か月EPSがマイナスの銘柄で、SPCXは残す。箱の上、原子力、暗号、太陽光、量子は除外。量子は Emma の指定（IONQ、RGTI、QBTS、QUBT、ARQQ）。
+            金融はウォッチリストの「金融」。初期状態では候補から外す。赤字は過去12か月EPSがマイナスの銘柄で、SPCXは残す。箱の上、原子力、暗号、太陽光、量子、ATRが終値の3%未満は除外。ATRは詳細のATR(14)を終値で割ったもの。量子は Emma の指定（IONQ、RGTI、QBTS、QUBT、ARQQ）。
           </p>
           <ul className="mt-3 space-y-2">
             {cards.map(({ row, line, reasons, lot }) => {
@@ -225,7 +230,12 @@ export function MorningView() {
               return (
                 <li key={`${row.ticker}-${line}`} className={cn("rounded-2xl border border-line bg-elev px-3 py-3", grey && "opacity-60")}>
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className="font-mono text-base font-medium">{row.ticker}</span>
+                    <span className="flex items-center gap-2">
+                      <span className="font-mono text-base font-medium">{row.ticker}</span>
+                      {lot.flags.capBinding && (
+                        <span className="rounded-full bg-chip px-2 py-0.5 text-[10px] text-ink">$450上限</span>
+                      )}
+                    </span>
                     <span className="font-mono text-sm tabular-nums">{row.quote ? formatPx(row.quote.close) : "—"}</span>
                   </div>
                   <p className="mt-1 text-[11px] text-muted">{row.sector} · 箱 {row.quote ? row.quote.boxPct.toFixed(1) : "—"}%</p>
@@ -238,6 +248,12 @@ export function MorningView() {
                     <dd className="text-right font-mono tabular-nums">{lot.shares ?? "—"}</dd>
                     <dt className="text-muted">代金</dt>
                     <dd className="text-right font-mono tabular-nums">{lot.cost == null ? "—" : formatDollar(lot.cost)}</dd>
+                    {lot.flags.capBinding && lot.maxLoss != null && (
+                      <>
+                        <dt className="text-muted">損切り損</dt>
+                        <dd className="text-right font-mono tabular-nums">{formatDollar(lot.maxLoss)}</dd>
+                      </>
+                    )}
                   </dl>
                   {(lot.flags.overCost || lot.flags.overPrice || lot.flags.oneShareTooWide) && (
                     <p className="mt-2 text-[11px] leading-relaxed text-rust">
