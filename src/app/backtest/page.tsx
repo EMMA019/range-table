@@ -14,6 +14,7 @@ import { Round10Section } from "@/components/round10-section";
 import { Round11Section } from "@/components/round11-section";
 import { Round12Section } from "@/components/round12-section";
 import { Round15Section } from "@/components/round15-section";
+import { Round16Section } from "@/components/round16-section";
 import { Round3Section } from "@/components/round3-section";
 import { StopsSection } from "@/components/stops-section";
 import { FollowUpSection } from "@/components/followup-section";
@@ -176,6 +177,7 @@ export default function BacktestPage() {
         <Round11Section />
         <Round12Section />
         <Round15Section />
+        <Round16Section />
 
         <section>
           <h2 className="mb-1 text-sm font-medium">分かっている偏り</h2>
