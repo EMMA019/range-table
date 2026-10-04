@@ -1,5 +1,6 @@
 import { themeOf } from "./themes";
 import { pearson } from "./corr";
+import { dedupeShareClassesByCik } from "./pit-share-class";
 import type { Bar } from "./types";
 
 export const SAKA_START = "2016-01-01";
@@ -223,6 +224,27 @@ export function correlationMatrix(inputs: CorrInputs): Map<string, Map<string, n
   return out;
 }
 
+/** Pre-fix audit comparison: Pearson on equal-length return arrays by index (misaligned calendar days). */
+export function correlationMatrixByIndex(inputs: CorrInputs): Map<string, Map<string, number>> {
+  const { tickers, returns } = inputs;
+  const out = new Map<string, Map<string, number>>();
+  for (const a of tickers) {
+    const row = new Map<string, number>();
+    const ra = returns.get(a)!;
+    for (const b of tickers) {
+      if (a === b) {
+        row.set(b, 1);
+        continue;
+      }
+      const rb = returns.get(b)!;
+      const n = Math.min(ra.length, rb.length);
+      row.set(b, pearson(ra.slice(0, n), rb.slice(0, n)) ?? 0);
+    }
+    out.set(a, row);
+  }
+  return out;
+}
+
 /** Median of upper-triangle pairwise correlations in a pool (diagnostics). */
 export function medianPairwiseCorr(tickers: string[], corr: Map<string, Map<string, number>>): number | null {
   const vals: number[] = [];
@@ -435,16 +457,21 @@ export type SakaCandidateContext = {
   sharesLookup: SharesLookup;
   profitable: (t: string, date: string) => boolean;
   hasPrice: (t: string, date: string) => boolean;
+  /** When set, eligible list keeps one ticker per CIK (share-class dedup). */
+  cikOf?: (t: string) => number | null;
 };
 
 export type EligibilityFunnelCounts = {
   pit: number;
   afterTheme: number;
   afterFinancial: number;
+  noPrice: number;
   afterPrice: number;
   profitable: number;
   loss: number;
   unknownProfit: number;
+  afterProfitCheck: number;
+  shareClassDeduped: number;
   eligible: number;
 };
 
@@ -456,35 +483,47 @@ export function eligibilityFunnelCounts(
 ): EligibilityFunnelCounts {
   let afterTheme = 0;
   let afterFinancial = 0;
+  let noPrice = 0;
   let afterPrice = 0;
   let profitable = 0;
   let loss = 0;
   let unknownProfit = 0;
-  const eligible: string[] = [];
+  const profitableList: string[] = [];
   for (const t of members) {
     if (isExcludedTheme(t)) continue;
     afterTheme += 1;
     const g = ctx.gicsOf(t);
     if (g && isFinancialSector(g.sector)) continue;
     afterFinancial += 1;
-    if (!ctx.hasPrice(t, date)) continue;
+    if (!ctx.hasPrice(t, date)) {
+      noPrice += 1;
+      continue;
+    }
     afterPrice += 1;
     const st = profitOf(t, date);
     if (st === "unknown") unknownProfit += 1;
     else if (st === "loss") loss += 1;
     else profitable += 1;
     if (st !== "profitable") continue;
-    eligible.push(t);
+    profitableList.push(t);
   }
+  const afterProfitCheck = profitableList.length;
+  const deduped =
+    ctx.cikOf != null
+      ? dedupeShareClassesByCik(profitableList, ctx.cikOf, (t) => ctx.mcap(t, date))
+      : profitableList;
   return {
     pit: members.length,
     afterTheme,
     afterFinancial,
+    noPrice,
     afterPrice,
     profitable,
     loss,
     unknownProfit,
-    eligible: eligible.length,
+    afterProfitCheck,
+    shareClassDeduped: afterProfitCheck - deduped.length,
+    eligible: deduped.length,
   };
 }
 
@@ -498,7 +537,9 @@ export function filterEligibleCandidates(members: string[], date: string, ctx: S
     if (!ctx.profitable(t, date)) continue;
     out.push(t);
   }
-  return out.sort((a, b) => a.localeCompare(b));
+  const sorted = out.sort((a, b) => a.localeCompare(b));
+  if (!ctx.cikOf) return sorted;
+  return dedupeShareClassesByCik(sorted, ctx.cikOf, (t) => ctx.mcap(t, date));
 }
 
 export function pickHoldings(config: SakaConfig, eligible: string[], date: string, ctx: SakaCandidateContext): string[] {
@@ -828,7 +869,7 @@ export function simulateSaka(
   return { curve, ordersPerYear, turnoverPerRebal: rebalCount > 0 ? turnoverSum / rebalCount : 0 };
 }
 
-type FactPoint = { end: string; val: number; fp?: string; form?: string };
+type FactPoint = { end: string; val: number; fp?: string; form?: string; filed?: string };
 
 /** TTM net income using quarters with `end` <= asOf only (PIT). */
 type ShareFact = { end: string; val: number };
@@ -860,8 +901,26 @@ export function sharesOutstandingAsOf(json: unknown, asOf: string): number | nul
   return points[0]?.val ?? null;
 }
 
+function factFiledOnOrBefore(p: FactPoint, asOf: string): boolean {
+  const filed = p.filed?.trim();
+  if (filed && /^\d{4}-\d{2}-\d{2}$/.test(filed)) return filed <= asOf;
+  return p.end <= asOf;
+}
+
+export type TtmPitAudit = {
+  asOf: string;
+  ttmNetIncome: number | null;
+  quarters: Array<{ end: string; filed: string | null; val: number; form?: string; fp?: string }>;
+};
+
+/** TTM net income using only facts **filed** on or before `asOf` (PIT). */
 export function ttmNetIncomeAsOf(json: unknown, asOf: string): number | null {
-  if (!json || typeof json !== "object" || !("facts" in json)) return null;
+  return ttmNetIncomePitAudit(json, asOf).ttmNetIncome;
+}
+
+export function ttmNetIncomePitAudit(json: unknown, asOf: string): TtmPitAudit {
+  const empty: TtmPitAudit = { asOf, ttmNetIncome: null, quarters: [] };
+  if (!json || typeof json !== "object" || !("facts" in json)) return empty;
   const facts = (json as { facts: Record<string, Record<string, { units?: Record<string, FactPoint[]> }>> }).facts;
   const tags = ["NetIncomeLoss", "NetIncomeLossAvailableToCommonStockholdersBasic", "ProfitLoss"];
   const namespaces = ["us-gaap", "us-gaap", "ifrs-full"];
@@ -871,6 +930,7 @@ export function ttmNetIncomeAsOf(json: unknown, asOf: string): number | null {
     const quarterly = block
       .filter(
         (p) =>
+          factFiledOnOrBefore(p, asOf) &&
           p.end <= asOf &&
           p.fp &&
           /^Q[1-4]$/i.test(p.fp) &&
@@ -890,10 +950,20 @@ export function ttmNetIncomeAsOf(json: unknown, asOf: string): number | null {
     }
     if (uniq.length >= 4) {
       const sum = uniq.reduce((t, p) => t + p.val, 0);
-      return Number.isFinite(sum) ? sum : null;
+      return {
+        asOf,
+        ttmNetIncome: Number.isFinite(sum) ? sum : null,
+        quarters: uniq.map((p) => ({
+          end: p.end,
+          filed: p.filed ?? null,
+          val: p.val,
+          form: p.form,
+          fp: p.fp,
+        })),
+      };
     }
   }
-  return null;
+  return empty;
 }
 
 export function feeDragSummary(

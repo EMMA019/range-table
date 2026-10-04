@@ -16,13 +16,17 @@ import {
   SAKA_REBAL_MIN_TRADE_USD,
   SAKA_REBAL_REL_DRIFT,
   SAKA_START,
+  SAKA_CAL_YEARS,
+  avgCorr,
   buildCorrInputs,
   calendarYearReturn,
   correlationMatrix,
+  correlationMatrixByIndex,
   eligibilityFunnelCounts,
   feeDragSummary,
   filterEligibleCandidates,
   isSemiSubIndustry,
+  maxPairwiseCorr,
   medianPairwiseCorr,
   metricsFromCurve,
   pairCorrelation,
@@ -33,11 +37,14 @@ import {
   simulateSaka,
   targetWeights,
   tradingDaysFromBars,
+  ttmNetIncomePitAudit,
   type ProfitabilityStatus,
   type SakaCandidateContext,
   type SakaConfig,
 } from "../src/lib/round19-saka";
-import { buildFullTickerCikMap, loadSecTickerCikMap, resolveCik } from "../src/lib/sec-ticker-cik";
+import { loadPitBars, loadPitCikMap, PIT_CACHE, pitPaths } from "../src/lib/pit-dataset";
+import { buildPitFactsIndex, pitFactsPathForTicker } from "../src/lib/pit-facts-index";
+import { buildPitCikMapForTickers } from "../src/lib/pit-cik";
 import { loadSp500PitFiles, membersOnDate, uniqueTickersInRange } from "../src/lib/sp500-pit";
 import type { Bar } from "../src/lib/types";
 
@@ -48,6 +55,8 @@ const PREREG = "6e3ad93";
 const BENCH = ["SPY", "QQQ"] as const;
 
 function loadBars(ticker: string): Bar[] {
+  const pit = loadPitBars(ticker, PIT_CACHE);
+  if (pit.length) return pit;
   const sym = ticker.replace(/\./g, "-");
   for (const dir of [CACHE, CACHE_V1]) {
     const f = path.join(dir, `${sym}.json`);
@@ -82,22 +91,33 @@ function factsCoverageOnDate(members: string[], date: string, hasFacts: (t: stri
 }
 
 async function main() {
-  const { intervals, gics } = await loadSp500PitFiles(CACHE);
-  const secMap = await loadSecTickerCikMap(CACHE);
-  const cikMap = buildFullTickerCikMap(gics, secMap);
+  const { intervals, gics } = await loadSp500PitFiles(PIT_CACHE);
   const tickers = uniqueTickersInRange(intervals, SAKA_START, SAKA_END);
-  const factsDir = path.join(CACHE, "facts");
+  const pitCik = loadPitCikMap(PIT_CACHE);
+  const cikMapBuilt =
+    pitCik.size > 0
+      ? pitCik
+      : new Map(
+          [...(await buildPitCikMapForTickers(PIT_CACHE, gics, tickers)).entries()].map(([t, r]) => [t, r.cik]),
+        );
+  const factsIndex = buildPitFactsIndex(PIT_CACHE);
   const hasFactsFile = (t: string) =>
-    fs.existsSync(path.join(factsDir, `${t}.json`)) || fs.existsSync(path.join(CACHE_V1, "facts", `${t}.json`));
+    pitFactsPathForTicker(t, cikMapBuilt.get(t), factsIndex, PIT_CACHE) != null ||
+    fs.existsSync(path.join(CACHE, "facts", `${t}.json`)) ||
+    fs.existsSync(path.join(CACHE_V1, "facts", `${t}.json`));
   const factByTicker = new Map<string, unknown | undefined>();
   const factForTicker = (t: string): unknown | undefined => {
     if (factByTicker.has(t)) return factByTicker.get(t);
     let json: unknown | undefined;
-    for (const dir of [factsDir, path.join(CACHE_V1, "facts")]) {
-      const f = path.join(dir, `${t}.json`);
-      if (!fs.existsSync(f)) continue;
-      json = JSON.parse(fs.readFileSync(f, "utf8"));
-      break;
+    const pitPath = pitFactsPathForTicker(t, cikMapBuilt.get(t), factsIndex, PIT_CACHE);
+    if (pitPath) json = JSON.parse(fs.readFileSync(pitPath, "utf8"));
+    else {
+      for (const dir of [path.join(CACHE, "facts"), path.join(CACHE_V1, "facts")]) {
+        const f = path.join(dir, `${t}.json`);
+        if (!fs.existsSync(f)) continue;
+        json = JSON.parse(fs.readFileSync(f, "utf8"));
+        break;
+      }
     }
     factByTicker.set(t, json);
     return json;
@@ -165,6 +185,7 @@ async function main() {
     },
     profitable: (t, date) => profitOf(t, date) === "profitable",
     hasPrice: (t, date) => price(t, date) != null,
+    cikOf: (t) => cikMapBuilt.get(t) ?? null,
   };
 
   const rebals = rebalanceDates(calendar, SAKA_START, SAKA_END);
@@ -176,7 +197,7 @@ async function main() {
     const el = filterEligibleCandidates(members, d, ctx);
     const inWl = el.filter((t) => wl.has(t)).length;
     funnelRows.push(
-      `| ${d} | ${fc.pit} | ${fc.afterFinancial} | ${fc.profitable} | ${fc.loss} | ${fc.unknownProfit} | ${fc.eligible} | ${(cov * 100).toFixed(1)}% | ${el.length ? ((100 * inWl) / el.length).toFixed(1) : "—"}% |`,
+      `| ${d} | ${fc.pit} | ${fc.afterFinancial} | ${fc.noPrice} | ${fc.profitable} | ${fc.loss} | ${fc.unknownProfit} | ${fc.shareClassDeduped} | ${fc.eligible} | ${(cov * 100).toFixed(1)}% | ${el.length ? ((100 * inWl) / el.length).toFixed(1) : "—"}% |`,
     );
   }
 
@@ -196,10 +217,31 @@ async function main() {
   const poolInputs = buildCorrInputs(eligibleLast, calendar, closeHistory, corrDate);
   const med = poolInputs ? medianPairwiseCorr(poolInputs.tickers, correlationMatrix(poolInputs)) : null;
 
-  const semiOf = (t: string) => ctx.gicsOf(t)?.semiBucket ?? false;
-  const simOpts = { rebalance: "delta" as const, minTradeUsd: SAKA_REBAL_MIN_TRADE_USD, relDrift: SAKA_REBAL_REL_DRIFT };
+  const rankCorrTop15 = (matrixFn: typeof correlationMatrix) => {
+    if (!poolInputs) return [] as string[];
+    const corr = matrixFn(poolInputs);
+    const u = poolInputs.tickers;
+    return [...u]
+      .sort((a, b) => avgCorr(a, u, corr) - avgCorr(b, u, corr) || a.localeCompare(b))
+      .slice(0, 15);
+  };
+  const top15Aligned = rankCorrTop15(correlationMatrix);
+  const top15Index = rankCorrTop15(correlationMatrixByIndex);
 
-  const runConfig = (config: SakaConfig, commission: number) => {
+  const pitExampleTicker = "AAPL";
+  const pitExampleDate = "2020-01-02";
+  const pitEx = ttmNetIncomePitAudit(factForTicker(pitExampleTicker), pitExampleDate);
+  const pitExampleMd = pitEx.quarters.length
+    ? pitEx.quarters
+        .map((q) => `| ${q.end} | ${q.filed ?? "—"} | ${q.fp ?? "—"} | ${q.form ?? "—"} | ${(q.val / 1e9).toFixed(2)}B |`)
+        .join("\n")
+    : "| — | — | — | — | — |";
+
+  const semiOf = (t: string) => ctx.gicsOf(t)?.semiBucket ?? false;
+  const simOptsDelta = { rebalance: "delta" as const, minTradeUsd: SAKA_REBAL_MIN_TRADE_USD, relDrift: SAKA_REBAL_REL_DRIFT };
+  const simOptsFull = { rebalance: "legacy_full_liquidate" as const };
+
+  const runConfig = (config: SakaConfig, commission: number, simOpts = simOptsDelta) => {
     const { curve, ordersPerYear, turnoverPerRebal } = simulateSaka(
       config,
       calendar,
@@ -220,6 +262,7 @@ async function main() {
     return {
       curve,
       turnoverPerRebal,
+      full: metricsFromCurve(curve, calendar, SAKA_START, SAKA_END),
       is: metricsFromCurve(curve, calendar, SAKA_START, SAKA_IS_END),
       oos: metricsFromCurve(curve, calendar, SAKA_OOS_START, SAKA_END),
       oosFeeUsd: oosFees.totalFees,
@@ -251,9 +294,12 @@ async function main() {
   );
   const adopted = chosen ?? results35[0].config;
   const adoptedRun = results35.find((r) => r.config.id === adopted.id)!;
+  const adoptedFull = runConfig(adopted, 0.35, simOptsFull);
+  const corrEq = SAKA_CONFIGS.find((c) => c.id === "corrdiverse_15__equal")!;
+  const corrEqDelta = runConfig(corrEq, 0.35, simOptsDelta);
+  const corrEqFull = runConfig(corrEq, 0.35, simOptsFull);
   const oosSorted = [...results35].sort((a, b) => b.oos.cagr - a.oos.cagr);
   const adoptedRank = oosSorted.findIndex((r) => r.config.id === adopted.id) + 1;
-
   const semiHeld = (config: SakaConfig, from: string, to: string) => {
     const dates = rebalanceDates(calendar, from, to);
     for (const d of dates) {
@@ -267,9 +313,31 @@ async function main() {
 
   const holdings = pickHoldings(adopted, filterEligibleCandidates(membersOn(lastRebal), lastRebal, ctx), lastRebal, ctx);
   const weights = targetWeights(adopted, holdings, lastRebal, ctx, semiOf);
+  const hInputs = buildCorrInputs(holdings, calendar, closeHistory, lastRebal);
+  const hCorr = hInputs ? correlationMatrix(hInputs) : new Map();
+  const maxRho = maxPairwiseCorr(holdings, hCorr);
+  const pairsHigh: string[] = [];
+  for (let i = 0; i < holdings.length; i += 1) {
+    for (let j = i + 1; j < holdings.length; j += 1) {
+      const r = hCorr.get(holdings[i])?.get(holdings[j]) ?? 0;
+      if (r > 0.6) pairsHigh.push(`${holdings[i]}–${holdings[j]} (${r.toFixed(2)})`);
+    }
+  }
   const holdingsMd = holdings
     .map((t) => `| ${t} | ${ctx.gicsOf(t)?.sector ?? "—"} | ${pct(weights[t] ?? 0)} |`)
     .join("\n");
+
+  const yearRows = SAKA_CAL_YEARS.map((y) => {
+    const ys = String(y);
+    const p = adoptedRun.full.calendarYears[ys];
+    const spyY = calendarYearReturn(spyBench, calendar, y, SAKA_END);
+    return `| ${ys}${y === 2026 ? " YTD" : ""} | ${p != null ? pct(p) : "—"} | ${spyY != null ? pct(spyY) : "—"} |`;
+  });
+  const adoptedFullMetrics = adoptedRun.full;
+  const passCagr = adoptedRun.oos.cagr >= 0.1;
+  const passDd = adoptedRun.oos.maxDrawdown > spyOos.maxDrawdown;
+  const passYears = adoptedFullMetrics.positiveYearShare >= 0.7;
+  const beatsSpyCagr = adoptedRun.oos.cagr > spyOos.cagr;
 
   const oosTable = oosSorted
     .map((r, i) => {
@@ -278,46 +346,71 @@ async function main() {
     })
     .join("\n");
 
-  const noCik = tickers.filter((t) => !resolveCik(t, gics.get(t)?.cik, cikMap)).length;
+  const noCik = tickers.filter((t) => !cikMapBuilt.get(t)).length;
+  const corrRankSame = top15Aligned.join(",") === top15Index.join(",");
+  const minFactsRebal = Math.min(
+    ...rebals.map((d) => {
+      const m = membersOn(d);
+      let n = 0;
+      for (const t of m) if (hasFactsFile(t)) n += 1;
+      return m.length ? n / m.length : 0;
+    }),
+  );
 
   const section = `
 
 ## Corrected v1（バグ修正再実行・**新デザインではない**）
 
-事前登録 \`${PREREG}\` の **30 構成・IS 採用規則は同一**。変更点のみ:
+事前登録 \`${PREREG}\` の **30 構成・IS 採用規則は同一**。データは \`data/.cache/pit/\`（\`docs/DATA_PIT_ja.md\`）。
+
+### 事実 — 修正内容
 
 | 修正 | 内容 |
 |---|---|
-| CIK | SEC \`company_tickers.json\` + GICS CSV CIK（\`resolveCik\`）。watchlist 限定 \`sec_cik.json\` は使わない |
-| EDGAR | facts 欠損は **unknown**（赤字扱いしない）。eligible は **profitable のみ** |
-| 相関 | 日付キーでリターンを揃えてから Pearson（\`pearsonOnAlignedSeries\`） |
-| 約定 | **差分リバランス**（除名は全売り、新規は買い、継続は \|Δ\|≥$${SAKA_REBAL_MIN_TRADE_USD} **または** 相対ドリフト≥${(SAKA_REBAL_REL_DRIFT * 100).toFixed(0)}% のときのみ） |
+| CIK | SEC \`company_tickers.json\` + \`company_tickers_exchange.json\` + GICS CIK + \`PIT_TICKER_ALIASES\`（\`pit-cik.ts\`） |
+| EDGAR | facts 欠損は **unknown**；黒字は **filed ≤ リバランス日** の四半期のみ TTM（\`ttmNetIncomePitAudit\`） |
+| 相関 | 日付キーでリターンを揃えて Pearson |
+| 株クラス | 同一 CIK は 1 銘柄（GOOG/GOOGL 等） |
+| 約定 | 主表は **差分リバランス**（\$${SAKA_REBAL_MIN_TRADE_USD} / ${(SAKA_REBAL_REL_DRIFT * 100).toFixed(0)}% ドリフト） |
 
-### データカバレッジ
+### 事実 — データカバレッジ
 
-- PIT ユニーク銘柄: **${tickers.length}**
-- facts ファイル: **${factsFileCount}**（${((100 * factsFileCount) / tickers.length).toFixed(1)}%）
+- PIT ユニーク: **${tickers.length}**／facts ファイル **${factsFileCount}**（${((100 * factsFileCount) / tickers.length).toFixed(1)}%）
 - CIK 未解決: **${noCik}**
-- 目標 facts≥95%/リバランス → 下表「facts %」列
+- リバランス日 PIT 構成に対する facts 最悪値: **${(minFactsRebal * 100).toFixed(1)}%**（目標 ≥95%）
 
-### 四半期 eligible（修正後）
+### 事実 — PIT 黒字（コード根拠）
 
-| 日付 | PIT | 金融・テーマ後 | 黒字 | 赤字 | unknown | eligible | facts/PIT | ∩watchlist |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
+\`round19-saka.ts\` の \`factFiledOnOrBefore\` が各 \`NetIncomeLoss\` 四半期の **\`filed\`** をリバランス日以下でフィルタ。例 **${pitExampleTicker}** @ **${pitExampleDate}**（TTM **${pitEx.ttmNetIncome != null ? (pitEx.ttmNetIncome / 1e9).toFixed(2) + "B" : "—"}**）:
+
+| 四半期終了 | filed | fp | form | 値 |
+|---|---|---|---|---:|
+${pitExampleMd}
+
+### 事実 — 四半期漏斗（修正後）
+
+「−価格なし」= 金融・テーマ後でも当日株価が無い銘柄（旧表の 297+18+13≠454 の差 **126** はここ）。「−株クラス」= 黒字後の重複 CIK 除外数。
+
+| 日付 | PIT | 金融・テーマ後 | −価格なし | 黒字 | 赤字 | unknown | −株クラス | eligible | facts/PIT | ∩watchlist |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 ${funnelRows.join("\n")}
 
-### 相関サニティ（${corrDate}・eligible プール）
+### 事実 — 相関（${corrDate}）
 
-| ペア | ρ（252d log、日付揃え） |
+| ペア | ρ（日付揃え） |
 |---|---:|
 ${pairLines.join("\n")}
-| **プール中央値**（ペアワイズ） | ${med != null ? med.toFixed(3) : "—"} |
+| プール中央値 | ${med != null ? med.toFixed(3) : "—"} |
 
-### IS 採用構成
+**corrdiverse 用「平均ρ 低い順」上位 15（日付揃え）:** ${top15Aligned.join(", ")}
+
+**旧方式（インデックス揃え・監査比較）:** ${top15Index.join(", ")} — リスト一致: **${corrRankSame ? "はい" : "いいえ"}**
+
+### 事実 — IS 採用
 
 - **${adopted.id}**（IS CAGR ${pct(adoptedRun.is.cagr)}、DD ${pct(adoptedRun.is.maxDrawdown)}）
 
-### OOS 全構成（$0.35・差分リバランス）
+### 事実 — OOS（$0.35・差分リバランス）
 
 | 順位 | 構成 | OOS 年率 | OOS DD | OOS 手数料 |
 |---:|---|---:|---:|---|
@@ -326,22 +419,49 @@ ${oosTable}
 
 **OOS 順位:** ${adoptedRank} / ${oosSorted.length}
 
-### 最終ホールディング（${lastRebal}）
+### 事実 — 暦年リターン（採用 vs SPY・前年最終営業日）
+
+| 年 | ${adopted.id} | SPY |
+|---|---:|---:|
+${yearRows.join("\n")}
+
+**プラス年比率（2016–2026）:** ${(adoptedFullMetrics.positiveYearShare * 100).toFixed(0)}%
+
+### 事実 — 事前登録合格基準（OOS・$0.35）
+
+| 基準 | 採用構成 | 判定 |
+|---|---|---|
+| OOS CAGR ≥ 10% | ${pct(adoptedRun.oos.cagr)} | ${passCagr ? "合格" : "不合格"} |
+| OOS MaxDD < SPY（${pct(spyOos.maxDrawdown)}） | ${pct(adoptedRun.oos.maxDrawdown)} | ${passDd ? "合格" : "不合格"} |
+| 暦年プラス ≥ 70% | ${(adoptedFullMetrics.positiveYearShare * 100).toFixed(0)}% | ${passYears ? "合格" : "不合格"} |
+| （参考）OOS CAGR > SPY | ${pct(adoptedRun.oos.cagr)} vs ${pct(spyOos.cagr)} | ${beatsSpyCagr ? "はい" : "いいえ"} |
+
+### 事実 — 手数料の同条件比較（OOS・$0.35）
+
+| 構成 | 差分リバランス | 全売却→再購入 |
+|---|---|---|
+| corrdiverse_15__equal | \$${corrEqDelta.oosFeeUsd.toFixed(0)} / ${corrEqDelta.oosOrders} 注文 | \$${corrEqFull.oosFeeUsd.toFixed(0)} / ${corrEqFull.oosOrders} 注文 |
+| **${adopted.id}** | \$${adoptedRun.oosFeeUsd.toFixed(0)} / ${adoptedRun.oosOrders} 注文 | \$${adoptedFull.oosFeeUsd.toFixed(0)} / ${adoptedFull.oosOrders} 注文 |
+
+### 事実 — 最終ホールディング（${lastRebal}）
+
+最大ペア ρ: **${maxRho.toFixed(2)}**。ρ>0.6: ${pairsHigh.length ? pairsHigh.join("; ") : "なし"}
 
 | ティッカー | セクター | ウェイト |
 |---|---|---:|
 ${holdingsMd}
 
-### 半導体（2023–2024 四半期）
+### 事実 — 半導体（2023–2024）
 
-- 採用構成 **${adopted.id}**: **${semiHeld(adopted, "2023-01-01", "2024-12-31") ? "あり" : "なし"}**
-- 参考 plain_20__mcap: **${semiHeld(SAKA_CONFIGS.find((c) => c.id === "plain_20__mcap")!, "2023-01-01", "2024-12-31") ? "あり" : "なし"}**
+- 採用 **${adopted.id}**: **${semiHeld(adopted, "2023-01-01", "2024-12-31") ? "あり" : "なし"}**
+- plain_20__mcap: **${semiHeld(SAKA_CONFIGS.find((c) => c.id === "plain_20__mcap")!, "2023-01-01", "2024-12-31") ? "あり" : "なし"}**
 
-### OOS 手数料（採用・$0.35）
+### 解釈
 
-- 合計 **$${adoptedRun.oosFeeUsd.toFixed(0)}**（**${adoptedRun.oosOrders}** 注文）
+- watchlist 100% 張り付きは解消（∩watchlist はおおむね 25–28%）。eligible 拡大により IS 採用が **mcap 上位 plain** に移った可能性がある（過適合リスクは v1 事前登録どおり残る）。
+- facts カバレッジが 2016 台で 77–88% の四半期は、PIT 構成員の EDGAR 未取得が残っている（\`rebuild-pit-dataset.ts --fetch-facts\` で改善）。
 
-*生成: \`npx tsx scripts/round19-corrected-v1-study.ts\`（キャッシュはコミットしない）*
+*生成: \`npx tsx scripts/round19-corrected-v1-study.ts\`*
 `;
 
   let audit = fs.readFileSync(AUDIT, "utf8");

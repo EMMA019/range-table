@@ -9,8 +9,12 @@ export async function loadSecTickerCikMap(cacheDir: string): Promise<Map<string,
   fs.mkdirSync(cacheDir, { recursive: true });
   const file = path.join(cacheDir, "company_tickers.json");
   if (!fs.existsSync(file)) {
-    const json = await edgarJson(SEC_TICKERS_URL);
-    fs.writeFileSync(file, JSON.stringify(json));
+    const sib = path.join(cacheDir, "..", "round19v2", "company_tickers.json");
+    if (fs.existsSync(sib)) fs.copyFileSync(sib, file);
+    else {
+      const json = await edgarJson(SEC_TICKERS_URL);
+      fs.writeFileSync(file, JSON.stringify(json));
+    }
   }
   const raw = JSON.parse(fs.readFileSync(file, "utf8")) as Record<string, { cik_str?: number; ticker?: string }>;
   const out = new Map<string, number>();

@@ -8,13 +8,14 @@ import { edgarJson, EdgarDisabledError } from "../src/lib/edgar-client";
 import {
   SAKA_END,
   SAKA_START,
+  eligibilityFunnelCounts,
   filterEligibleCandidates,
   isExcludedTheme,
   isFinancialSector,
+  profitabilityStatus,
   rebalanceDates,
   sharesOutstandingAsOf,
   tradingDaysFromBars,
-  ttmNetIncomeAsOf,
   type SakaCandidateContext,
 } from "../src/lib/round19-saka";
 import { loadWatchlist } from "../src/lib/watchlist";
@@ -145,12 +146,7 @@ async function main() {
         if (prev != null) return { shares: prev, stale: true };
         return { shares: 0, stale: true };
       },
-      profitable: (t, date) => {
-        const f = factsBy.get(t);
-        if (!f) return false;
-        const ni = ttmNetIncomeAsOf(f, date);
-        return ni != null && ni > 0;
-      },
+      profitable: (t, date) => profitabilityStatus(factsBy.get(t), date) === "profitable",
       hasPrice: (t, date) => closeOnOrBefore(barsBy.get(t) ?? [], date) != null,
     };
   };
