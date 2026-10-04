@@ -253,6 +253,10 @@ export type Candidate = {
     price: number;
     reason: "target" | "stop" | "breakeven" | "priorLow" | "timeout" | "window";
   }>;
+  /** Portfolio dedup key when one ticker may have two buy lines. */
+  positionKey?: string;
+  /** Count toward `maxBucket` when true. */
+  bucketHeavy?: boolean;
 };
 
 export type ScalePlan = {
@@ -831,6 +835,8 @@ export type PortfolioOpts = {
   order?: (list: Candidate[]) => void;
   /** At most this many semiconductor or equipment names among the open slots. */
   maxSemi?: number;
+  /** At most this many open names with `bucketHeavy` among the open slots. */
+  maxBucket?: number;
   /**
    * At most this many non-semiconductor slots. Omitted means no jab cap, so existing
    * books keep the same fills. A skip increments skippedSemi, the same counter as maxSemi.
@@ -1157,10 +1163,12 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     let opened = 0;
     let semisHeld = positions.reduce((sum, pos) => sum + (pos.cand.semi ? 1 : 0), 0);
     let nonSemiHeld = opts.maxNonSemi == null ? 0 : positions.reduce((sum, pos) => sum + (pos.cand.semi ? 0 : 1), 0);
+    let bucketHeld = positions.reduce((sum, pos) => sum + (pos.cand.bucketHeavy ? 1 : 0), 0);
     const todays = byEntry.get(date) ?? [];
-    const held = new Set(positions.map((pos) => pos.cand.ticker));
+    const held = new Set(positions.map((pos) => pos.cand.positionKey ?? pos.cand.ticker));
     for (const cand of todays) {
-      if (held.has(cand.ticker)) continue;
+      const slotKey = cand.positionKey ?? cand.ticker;
+      if (held.has(slotKey)) continue;
       const qty = opts.size ? opts.size(cand, morning) : sharesForBudget(cand.entry);
       if (qty == null) {
         skippedPrice += 1;
@@ -1171,6 +1179,10 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
         continue;
       }
       if (opts.maxNonSemi != null && !cand.semi && nonSemiHeld >= opts.maxNonSemi) {
+        skippedSemi += 1;
+        continue;
+      }
+      if (opts.maxBucket != null && cand.bucketHeavy && bucketHeld >= opts.maxBucket) {
         skippedSemi += 1;
         continue;
       }
@@ -1190,10 +1202,11 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
       }
       settled -= cost;
       stockCash(-cost, date, "buy");
-      held.add(cand.ticker);
+      held.add(slotKey);
       opened += 1;
       if (cand.semi) semisHeld += 1;
       else if (opts.maxNonSemi != null) nonSemiHeld += 1;
+      if (cand.bucketHeavy) bucketHeld += 1;
       if (cand.round7Legs) {
         const planned = cand.round7Legs.reduce((sum, leg) => sum + leg.qty, 0);
         if (planned !== qty) throw new Error(`round7の株数が違う ${cand.ticker} ${cand.entryDate} ${planned} ${qty}`);

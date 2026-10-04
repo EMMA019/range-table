@@ -238,7 +238,7 @@ export function generateSignals(args: {
     if (sig.c > PRICE_MAX) continue;
     if (atrPct(sig.atr, sig.c) < ATR_MIN_PCT) continue;
     if (!spyMa20Allows(spyByDate, sig.date)) continue;
-    if (args.earningsBlock && nearEarnings(sessions, sig.date, name.earnings)) continue;
+    if (args.earningsBlock && nearEarnings([...sessions], sig.date, name.earnings)) continue;
     if (name.ticker !== EXCEPTION_KEEP && ttmAt(concepts, sig.date).status === "negative") continue;
     const line = boxLinePrice(sig.low20, sig.high20, pct);
     if (!flavorQualifies(sig, line, flavor)) continue;
