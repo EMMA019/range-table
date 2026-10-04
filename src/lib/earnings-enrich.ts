@@ -6,7 +6,7 @@ import type { EarningsInput, EarningsStatus } from "./types";
 
 const CACHE_PATH = path.join(process.cwd(), "data", ".cache", "earnings-enrich.json");
 
-export type EarningsEnrichSource = "watchlist" | "yahoo" | "nasdaq" | "estimate";
+export type EarningsEnrichSource = "watchlist" | "yahoo" | "nasdaq" | "nasdaq-calendar" | "estimate";
 
 export type EarningsEnrichEntry = {
   date: string | null;
@@ -62,8 +62,19 @@ export function earningsDateUnknown(
 }
 
 import { EARNINGS_UNKNOWN_PROMINENT } from "./constants";
+import { fetchEdgarLastEarningsFilingDate } from "./edgar-earnings-date";
+import { lookupNasdaqCalendar, refreshNasdaqCalendarIfNeeded } from "./nasdaq-earnings-calendar";
+import { todayEt } from "./calendar";
 
 export { EARNINGS_UNKNOWN_PROMINENT };
+
+export async function warmNasdaqEarningsCalendar(anchorDate = todayEt()): Promise<void> {
+  try {
+    await refreshNasdaqCalendarIfNeeded(anchorDate);
+  } catch {
+    /* calendar is optional */
+  }
+}
 
 /** Nasdaq earnings-assets next report date (YYYY-MM-DD). */
 export async function fetchNasdaqNextEarnings(ticker: string): Promise<string | null> {
@@ -125,9 +136,42 @@ export async function enrichEarningsDate(
     return entry;
   }
 
+  const today = todayEt();
+  await warmNasdaqEarningsCalendar(today);
+  const cal = lookupNasdaqCalendar(key, today);
+  if (cal) {
+    const entry: EarningsEnrichEntry = {
+      date: cal,
+      status: "confirmed",
+      source: "nasdaq-calendar",
+      error: null,
+      fetchedAt: now,
+    };
+    const cache = readCache();
+    cache.quotes[key] = entry;
+    writeCache(cache);
+    return entry;
+  }
+
   const nasdaq = await fetchNasdaqNextEarnings(key);
   if (nasdaq) {
     const entry: EarningsEnrichEntry = { date: nasdaq, status: "estimated", source: "nasdaq", error: null, fetchedAt: now };
+    const cache = readCache();
+    cache.quotes[key] = entry;
+    writeCache(cache);
+    return entry;
+  }
+
+  const lastFiling = await fetchEdgarLastEarningsFilingDate(key);
+  if (lastFiling) {
+    const estimated = estimateNextEarningsFromLast(lastFiling);
+    const entry: EarningsEnrichEntry = {
+      date: estimated.date,
+      status: "estimated",
+      source: "estimate",
+      error: null,
+      fetchedAt: now,
+    };
     const cache = readCache();
     cache.quotes[key] = entry;
     writeCache(cache);

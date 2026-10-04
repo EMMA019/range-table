@@ -1,4 +1,4 @@
-import { EARNINGS_WARN_DAYS } from "./constants";
+import { EARNINGS_ESTIMATED_WARN_DAYS, EARNINGS_WARN_DAYS } from "./constants";
 import { tradingDaysUntil } from "./calendar";
 import type { EarningsInput, EarningsView } from "./types";
 
@@ -26,11 +26,12 @@ export function classifyEarnings(
     };
   }
   const tradingDays = tradingDaysUntil(today, earnings.date);
+  const warnDays = earnings.status === "estimated" ? EARNINGS_ESTIMATED_WARN_DAYS : EARNINGS_WARN_DAYS;
   return {
     date: earnings.date,
     status: earnings.status,
     state: "upcoming",
     tradingDays,
-    warn: tradingDays <= EARNINGS_WARN_DAYS,
+    warn: tradingDays <= warnDays,
   };
 }

@@ -262,6 +262,9 @@ export function MorningView() {
                       {row.earningsUnknown && (
                         <span className="rounded-full border border-rust px-2 py-0.5 text-[10px] text-rust">{EARNINGS_UNKNOWN_PROMINENT}</span>
                       )}
+                      {row.earnings?.status === "estimated" && !row.earningsUnknown && (
+                        <span className="rounded-full border border-amber-600/60 px-2 py-0.5 text-[10px] text-amber-800">決算日・推定</span>
+                      )}
                       {lot.flags.capBinding && (
                         <span className="rounded-full bg-chip px-2 py-0.5 text-[10px] text-ink">$450上限</span>
                       )}

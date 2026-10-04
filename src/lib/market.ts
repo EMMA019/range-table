@@ -14,7 +14,13 @@ import { fetchEpsBatch } from "./eps";
 import { epsIsFresh, epsTtlMs, hasEpsValue, peView, pickEpsBatch } from "./pe";
 import { buildCorrelations, loadCorrBasket, type CorrPair } from "./corr";
 import { chartPoints, computeQuote } from "./compute";
-import { cachedEarningsEnrich, enrichEarningsDate, resolveEarningsInput, earningsDateUnknown } from "./earnings-enrich";
+import {
+  cachedEarningsEnrich,
+  enrichEarningsDate,
+  resolveEarningsInput,
+  earningsDateUnknown,
+  warmNasdaqEarningsCalendar,
+} from "./earnings-enrich";
 import { classifyEarnings } from "./earnings";
 import { fetchTtmIncomeForTicker } from "./edgar-companyfacts";
 import { profitabilityFromCache } from "./profit-cache";
@@ -310,6 +316,7 @@ async function warmProfitability(symbols: string[], quotes: Record<string, Store
 async function warmEarningsDates(symbols: string[]): Promise<void> {
   const list = epsWatchlist;
   if (!list) return;
+  await warmNasdaqEarningsCalendar(todayEt());
   const byTicker = new Map<string, { earnings: EarningsInput | null }>();
   for (const group of list.groups) {
     for (const row of group.tickers) byTicker.set(row.ticker, { earnings: row.earnings });
