@@ -70,7 +70,7 @@ async function loadBars(ticker: string, fresh: boolean): Promise<Bar[]> {
     return JSON.parse(fs.readFileSync(file, "utf8")) as Bar[];
   }
   try {
-    const { bars } = await fetchDailyBars(sym, { range: "20y", keep: 3200 });
+    const { bars } = await fetchDailyBars(sym, { range: "20y", keep: 3200, totalReturn: true });
     fs.mkdirSync(CACHE, { recursive: true });
     fs.writeFileSync(file, JSON.stringify(bars));
     return bars;
@@ -341,6 +341,7 @@ ${lines}
 
 - 構成: [fja05680/sp500](https://github.com/fja05680/sp500) \`sp500_ticker_start_end.csv\`
 - GICS: 同 \`sp500.csv\`（現行・ルックアヘッド）
+- 価格: Yahoo **adjclose**（分割・配当込み調整後終値、fetchDailyBars totalReturn）
 - 時価総額: EDGAR companyfacts 株式数（リバランス日以前の最新）× 当日終値
 - 繰り越し株数: 最終リバランスで mcap 算出可能銘柄 **${staleNameChecks}** 件中 **${staleNameChecks ? pct(staleWeightChecks / staleNameChecks) : "—"}** が過去株数繰り越し
 - SPY 暦年チェック: 2017 **${spy2017 != null ? pct(spy2017) : "—"}**, 2018 **${spy2018 != null ? pct(spy2018) : "—"}**（前年最終営業日基準）
@@ -371,6 +372,14 @@ ${oosTableRows}
 | OOS 手数料合計 | $${adoptedRun.oosFeeUsd.toFixed(0)} (${pct(adoptedRun.oosFeePct)}) | $${adoptedStress.oosFeeUsd.toFixed(0)} (${pct(adoptedStress.oosFeePct)}) |
 
 **IS→OOS CAGR:** ${pct(adoptedRun.is.cagr)} → ${pct(adoptedRun.oos.cagr)}
+
+### 事前登録合格基準（OOS・$0.35）
+
+| 基準 | 採用構成 | 判定 |
+|---|---|---|
+| CAGR ≥ 10% | ${pct(adoptedRun.oos.cagr)} | ${adoptedRun.oos.cagr >= 0.1 ? "合格" : "不合格"} |
+| 最大DD < SPY（${pct(spyOos.maxDrawdown)}） | ${pct(adoptedRun.oos.maxDrawdown)} | ${adoptedRun.oos.maxDrawdown > spyOos.maxDrawdown ? "合格" : "不合格"} |
+| 暦年プラス ≥ 70%（2016–2026） | ${(adoptedRun.full.positiveYearShare * 100).toFixed(0)}% | ${adoptedRun.full.positiveYearShare >= 0.7 ? "合格" : "不合格"} |
 
 ### 暦年（採用・前年最終営業日基準）
 
