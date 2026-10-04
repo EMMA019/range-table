@@ -53,7 +53,7 @@ describe("trading days", () => {
     const near = classifyEarnings("2026-10-01", { date: "2026-10-08", status: "estimated" });
     const far = classifyEarnings("2026-10-01", { date: "2026-10-09", status: "confirmed" });
     const past = classifyEarnings("2026-10-01", { date: "2026-09-30", status: "confirmed" });
-    assert.equal(formatEarnings(near), "決算まであと5営業日");
+    assert.equal(formatEarnings(near), "決算まであと5営業日・推定");
     assert.equal(earningsBadge(near), EARNINGS_AVOID_BADGE);
     assert.equal(formatEarnings(far), "決算まであと6営業日");
     assert.equal(earningsBadge(far), null);

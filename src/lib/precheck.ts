@@ -127,6 +127,7 @@ export function precheck(input: {
   const profit = input.profitability ?? profitabilityFromCache(input.ticker, null);
   if (lossUnknown(profit, input.ticker)) flags.push("lossUnknown");
   if (input.earningsUnknown) flags.push("earningsUnknown");
+  if (input.earnings?.status === "estimated" && !input.earningsUnknown) flags.push("earningsEstimated");
   if (fundsSettleBy) flags.push("usesUnsettled");
 
   const screenFlags = exclusionPrecheckFlags(

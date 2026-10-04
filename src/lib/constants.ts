@@ -67,6 +67,9 @@ export const VOLUME_CONFIRM_RATIO = 1;
 
 export const EARNINGS_WARN_DAYS = 5;
 
+/** Estimated next earnings dates warn earlier than confirmed calendar dates. */
+export const EARNINGS_ESTIMATED_WARN_DAYS = 10;
+
 /** Holdings alert when the next earnings date is this many trading days away, or today. */
 export const EARNINGS_HOLD_DAYS = 3;
 

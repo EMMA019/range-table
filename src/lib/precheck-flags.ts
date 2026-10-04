@@ -13,6 +13,7 @@ export type PrecheckFlag =
   | "notInOk"
   | "lossUnknown"
   | "earningsUnknown"
+  | "earningsEstimated"
   | "usesUnsettled"
   | "lossExcluded"
   | "aboveBox"
@@ -36,6 +37,7 @@ export const FLAG_TEXT: Record<PrecheckFlag, string> = {
   notInOk: "25–35%帯（±2pt）の買い候補ではない",
   lossUnknown: LOSS_UNKNOWN_TAG,
   earningsUnknown: EARNINGS_UNKNOWN_PROMINENT,
+  earningsEstimated: "決算日は推定（カレンダー・EDGARから補完）",
   usesUnsettled: "未決済の資金を使う",
   lossExcluded: "赤字（過去12か月EPS）",
   aboveBox: "箱の上（20日高値ブレイク）",

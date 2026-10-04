@@ -86,7 +86,8 @@ describe("entry alerts", () => {
   it("skips earnings within five trading days but not past earnings", () => {
     assert.equal(entryAlerts([candidate({ earnings: { date: "2026-09-16", status: "estimated" } })], TODAY, AFTER_CLOSE).length, 0);
     assert.equal(entryAlerts([candidate({ earnings: { date: "2026-09-09", status: "confirmed" } })], TODAY, AFTER_CLOSE).length, 0);
-    assert.equal(entryAlerts([candidate({ earnings: { date: "2026-09-17", status: "estimated" } })], TODAY, AFTER_CLOSE).length, 1);
+    assert.equal(entryAlerts([candidate({ earnings: { date: "2026-09-17", status: "estimated" } })], TODAY, AFTER_CLOSE).length, 0);
+    assert.equal(entryAlerts([candidate({ earnings: { date: "2026-09-25", status: "estimated" } })], TODAY, AFTER_CLOSE).length, 1);
     assert.equal(entryAlerts([candidate({ earnings: { date: "2026-08-01", status: "confirmed" } })], TODAY, AFTER_CLOSE).length, 1);
   });
 
