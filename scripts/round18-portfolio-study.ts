@@ -27,13 +27,22 @@ import {
   buildRound18Universe,
   firstBarDate,
   metricsFromCurve,
+  rebalanceDates,
   round18Configs,
   selectRound18Config,
   simulateRound18,
+  targetWeights,
   tradingDaysFromBars,
   type Round18Config,
 } from "../src/lib/round18-portfolio";
-import { buildSdiMeta, SDI_SPLIT_5050, SDI_SPLIT_6535, simulateSdi, type SdiSplit } from "../src/lib/round18-sdi";
+import {
+  buildSdiMeta,
+  SDI_SPLIT_5050,
+  SDI_SPLIT_6535,
+  simulateSdi,
+  type SdiDailyState,
+  type SdiSplit,
+} from "../src/lib/round18-sdi";
 import type { Bar } from "../src/lib/types";
 
 const CACHE = path.join(process.cwd(), "data", ".cache", "round18");
@@ -64,7 +73,8 @@ async function loadBars(ticker: string, fresh: boolean): Promise<Bar[]> {
   if (!fresh && fs.existsSync(file)) {
     return JSON.parse(fs.readFileSync(file, "utf8")) as Bar[];
   }
-  const { bars } = await fetchDailyBars(sym, { range: "max", keep: 3200 });
+  // Yahoo `range=max` returns ~400 monthly points (not daily); 20y + keep 3200 → daily from ~2014.
+  const { bars } = await fetchDailyBars(sym, { range: "20y", keep: 3200 });
   fs.mkdirSync(CACHE, { recursive: true });
   fs.writeFileSync(file, JSON.stringify(bars));
   return bars;
@@ -154,6 +164,32 @@ function countPositiveYears(cal: Record<string, number>): number {
 
 function pct(x: number): string {
   return `${(x * 100).toFixed(1)}%`;
+}
+
+function stateOnOrBefore(daily: SdiDailyState[], date: string): SdiDailyState | null {
+  let best: SdiDailyState | null = null;
+  for (const row of daily) {
+    if (row.date <= date) best = row;
+    else break;
+  }
+  return best;
+}
+
+function fmtUsd(x: number): string {
+  return `$${x.toFixed(0)}`;
+}
+
+function yearParts(
+  daily: SdiDailyState[],
+  year: number,
+): { base0: number; sleeve0: number; base1: number; sleeve1: number; cashPct: number } | null {
+  const yEnd = year === ROUND18_CAL_YEAR_END ? ROUND18_END : `${year}-12-31`;
+  const s0 = stateOnOrBefore(daily, `${year}-01-04`);
+  const s1 = stateOnOrBefore(daily, yEnd);
+  if (!s0 || !s1 || s0.equity <= 0) return null;
+  const cashPct = daily.filter((d) => d.date.startsWith(String(year))).reduce((a, r) => a + r.cash / r.equity, 0) /
+    Math.max(1, daily.filter((d) => d.date.startsWith(String(year))).length);
+  return { base0: s0.baseValue, sleeve0: s0.sleeveValue, base1: s1.baseValue, sleeve1: s1.sleeveValue, cashPct };
 }
 
 async function main() {
@@ -281,6 +317,159 @@ async function main() {
   const p6535 = sdiPassMark(sdi6535_35);
   const p5050 = sdiPassMark(sdi5050_35);
 
+  const sdiAuditSim = simulateSdi(
+    calendar,
+    sdiMeta,
+    barsBy,
+    isProfitable,
+    0.35,
+    sptmFirst,
+    SDI_SPLIT_6535,
+    ROUND18_START,
+    ROUND18_END,
+    { captureDaily: true },
+  );
+  const daily = sdiAuditSim.daily ?? [];
+  const sanityDates = [
+    "2020-02-19",
+    "2020-02-27",
+    "2020-03-16",
+    "2020-03-23",
+    "2022-01-03",
+    "2022-06-16",
+    "2022-10-12",
+  ];
+  const sanityRows = sanityDates.map((d) => {
+    const s = stateOnOrBefore(daily, d);
+    if (!s) return `| ${d} | — | — | — | — | — |`;
+    return `| ${d} | ${fmtUsd(s.equity)} | ${fmtUsd(s.baseValue)} | ${fmtUsd(s.sleeveValue)} | ${fmtUsd(s.cash)} | ${s.nHoldings} | ${pct(s.investedPct)} |`;
+  });
+
+  const reconYears = [2017, 2019, 2020, 2021, 2022];
+  const reconRows = reconYears.map((y) => {
+    const parts = yearParts(daily, y);
+    const spyY = yearReturnPct(barsBy.get("SPY")!, y);
+    const pfY = sdi6535_35.full.calendarYears[String(y)];
+    if (!parts || spyY == null || pfY == null) return `| ${y} | — |`;
+    const baseR = parts.base0 > 0 ? parts.base1 / parts.base0 - 1 : 0;
+    const sleeveR = parts.sleeve0 > 0 ? parts.sleeve1 / parts.sleeve0 - 1 : 0;
+    const blend = SDI_SPLIT_6535.base * baseR + SDI_SPLIT_6535.stock * sleeveR;
+    return `| ${y} | ${pct(spyY)} | ${pct(baseR)} | ${pct(sleeveR)} | ${pct(blend)} | ${pct(pfY)} | ${pct(parts.cashPct)} 現金比 |`;
+  });
+
+  const stockClosesAudit = new Map<string, Map<string, number>>();
+  for (const [ticker, bars] of barsBy) {
+    const m = new Map<string, number>();
+    for (const b of bars) m.set(b.date, b.c);
+    stockClosesAudit.set(ticker, m);
+  }
+  const priceAt = (ticker: string, date: string) => {
+    const bars = barsBy.get(ticker);
+    if (!bars) return null;
+    let best: number | null = null;
+    for (const b of bars) {
+      if (b.date <= date) best = b.c;
+      else break;
+    }
+    return best;
+  };
+  const gridRebals = rebalanceDates(calendar, "quarterly", "2019-01-01", "2022-12-31");
+  const gridHoldingsLines: string[] = [];
+  for (const d of gridRebals) {
+    const eligible = universe.filter((m) => m.firstDate <= d);
+    const w = targetWeights(
+      chosen,
+      d,
+      eligible,
+      calendar,
+      (t) => priceAt(t, d),
+      stockClosesAudit,
+    );
+    const top = Object.entries(w)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([t, wt]) => `${t} ${(wt * 100).toFixed(1)}%`)
+      .join(", ");
+    gridHoldingsLines.push(`- **${d}:** ${top}`);
+  }
+
+  const invvolCfg = configs.find((c) => c.method === "invvol" && c.n === 10 && c.rebal === "quarterly");
+  let invvolDriverBlock = "";
+  if (invvolCfg) {
+    const invCal = metricsFromCurve(
+      simulateRound18(invvolCfg, calendar, universe, barsBy, 0.35, ROUND18_START, ROUND18_END),
+      ROUND18_START,
+      ROUND18_END,
+    ).calendarYears;
+    const topTickerLines: string[] = [];
+    for (const year of [2020, 2022]) {
+      const rd =
+        rebalanceDates(calendar, "quarterly", `${year}-01-01`, `${year}-12-31`)[0] ?? `${year}-01-02`;
+      const eligible = universe.filter((m) => m.firstDate <= rd);
+      const w = targetWeights(
+        invvolCfg,
+        rd,
+        eligible,
+        calendar,
+        (t) => priceAt(t, rd),
+        stockClosesAudit,
+      );
+      const rows = Object.entries(w)
+        .map(([t]) => {
+          const bars = barsBy.get(t);
+          const ret = bars ? yearReturnPct(bars, year) : null;
+          return { t, ret: ret ?? 0 };
+        })
+        .sort((a, b) => b.ret - a.ret)
+        .slice(0, 6)
+        .map((r) => `${r.t} ${pct(r.ret)}`)
+        .join(", ");
+      topTickerLines.push(
+        `- **${year}** PF ${pct(invCal[String(year)] ?? 0)}（構成銘柄の暦年リターン上位）: ${rows}`,
+      );
+    }
+    invvolDriverBlock = `### invvol N=10 quarterly（監査用・in-sample 2 位ではない）
+
+旧レポートの **+114% / −38.5%** は **月次相当の誤データ**に起因。日足修正後の暦年:
+
+${topTickerLines.join("\n")}
+
+`;
+  }
+
+  const auditSection = `## 監査・修正（2026-10-04）
+
+**不具合（修正済）**
+
+1. **SDI リバランス:** 旧コードは「増し玉のみ」で配分が崩れていた。四半期ごとに **全売却→目標配分で再購入**に変更。
+2. **SDI 手数料と配分:** 広い ETF を先に満額購入したあと、個別 15 本それぞれに **$0.35 を上乗せ**していたため、**個別スリーブが 1 株も買えず約 35% が常時現金**（ベースのみ投資→ DD が浅く見える）。**購入本数分の手数料を先に控除**してから 65/35（または 50/50）で配分するよう修正。
+3. **DD 回復日数:** 旧コードは回復目標に「全期間の最高 NAV」を使い、深い DD の回復が **過小（例: −47% で 27 日）** と表示されていた。**その DD の直前ピーク**へ戻る営業日数に修正（グリッド・SDI 共通の \`metricsFromCurve\`）。
+4. **価格データ:** \`fetchDailyBars(..., range: "max")\` が **日足ではなく約 400 本の月次相当**しか返さず、12–1 か月モメンタムがほぼ常に null → **個別スリーブが 2016–2024 ほぼ未投資**。Round 18 キャッシュは \`range: "20y", keep: 3200\` で再取得（\`--fresh\`）。
+
+**50/50 最大DD −19.4% / ドキュメント −12.9% について:** いずれも **未投資スリーブ＋月次データ**の誤シミュレーション。修正後 OOS 50/50 最大DD は **下表（例: 約 −31%）**、in-sample 約 **−37%**（SPY クラッシュと同オーダー）。
+
+### SDI 65/35 — NAV 分解（修正後・$0.35）
+
+| 日付 | NAV | ベース(SPTM) | スリーブ | 現金 | 銘柄数 | 投資比率 |
+|---|---:|---:|---:|---:|---:|---:|
+${sanityRows.join("\n")}
+
+### 暦年リコンシル（65/35・ベース/スリーブの年初→年末）
+
+| 年 | SPY | ベースR | スリーブR | 0.65×base+0.35×sleeve | 実際PF | 平均現金比 |
+|---|---:|---:|---:|---:|---:|---|
+${reconRows.join("\n")}
+
+### 選択構成 ${chosenLabel} — 四半期リバランス時の上位ウェイト（2019–2022）
+
+${gridHoldingsLines.join("\n")}
+
+${invvolDriverBlock}
+
+---
+
+`;
+
   const sdiSection = `## Small Direct Index（SPTM/SPY + 15 銘柄）
 
 事前登録追補: \`${PREREG_SDI}\`（\`docs/ROUND18_PREREG_SDI_ja.md\`）— **本レポート最初の比較**
@@ -298,7 +487,7 @@ async function main() {
 |---|---:|---:|---:|---:|
 | CAGR | ${pct(sdi6535_35.oos.cagr)} | **${pct(sdi5050_35.oos.cagr)}** | ${pct(spyOos.cagr)} | ${pct(qqqOos.cagr)} |
 | 最大DD | ${pct(sdi6535_35.oos.maxDrawdown)} | ${pct(sdi5050_35.oos.maxDrawdown)} | ${pct(spyOos.maxDrawdown)} | ${pct(qqqOos.maxDrawdown)} |
-| DD回復(日) | ${sdi6535_35.oos.recoveryDays ?? "—"} | ${sdi5050_35.oos.recoveryDays ?? "—"} | — | — |
+| DD回復(営業日) | ${sdi6535_35.oos.recoveryDays ?? "—"} | ${sdi5050_35.oos.recoveryDays ?? "—"} | — | — |
 | 暦年プラス | ${p6535.pos}/10 | ${p5050.pos}/10 | — | — |
 
 ### 65/35 vs 50/50 — In-sample（2016–2020・$0.35）
@@ -345,6 +534,7 @@ ${Array.from({ length: ROUND18_CAL_YEAR_END - ROUND18_CAL_YEAR_START + 1 }, (_, 
 
   const md = `# Round 18 — ロングオンリー・ポートフォリオ研究
 
+${auditSection}
 ${sdiSection}
 ## グリッド構成（36通り）— 事前登録
 

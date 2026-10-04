@@ -374,6 +374,7 @@ export function metricsFromCurve(curve: Round18EquityPoint[], from: string, to: 
   let peak = slice[0].equity;
   let maxDd = 0;
   let troughDate = slice[0].date;
+  let peakAtMaxDd = peak;
   for (const p of slice) {
     if (p.equity > peak) {
       peak = p.equity;
@@ -382,13 +383,14 @@ export function metricsFromCurve(curve: Round18EquityPoint[], from: string, to: 
     if (dd < maxDd) {
       maxDd = dd;
       troughDate = p.date;
+      peakAtMaxDd = peak;
     }
   }
 
   let recoveryDays: number | null = null;
   const troughIdx = slice.findIndex((p) => p.date === troughDate);
   if (troughIdx >= 0) {
-    const target = peak;
+    const target = peakAtMaxDd;
     for (let i = troughIdx + 1; i < slice.length; i += 1) {
       if (slice[i].equity >= target) {
         recoveryDays = i - troughIdx;

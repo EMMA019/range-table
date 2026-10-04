@@ -34,6 +34,16 @@ export type SdiMeta = {
   firstDate: string;
 };
 
+export type SdiDailyState = {
+  date: string;
+  equity: number;
+  cash: number;
+  baseValue: number;
+  sleeveValue: number;
+  nHoldings: number;
+  investedPct: number;
+};
+
 export function buildSdiMeta(watch: Watchlist, firstDates: Map<string, string>): SdiMeta[] {
   const out: SdiMeta[] = [];
   for (const group of watch.groups) {
@@ -159,6 +169,7 @@ export function pickSdiStocks(
 
 export type SdiSimResult = {
   curve: Round18EquityPoint[];
+  daily?: SdiDailyState[];
   broadProxyDays: number;
   broadSptmDays: number;
 };
@@ -173,6 +184,7 @@ export function simulateSdi(
   split: SdiSplit = SDI_SPLIT_6535,
   from = ROUND18_START,
   to = ROUND18_END,
+  options?: { captureDaily?: boolean },
 ): SdiSimResult {
   const metaBy = new Map(metaList.map((m) => [m.ticker, m]));
   const rebal = new Set(rebalanceDates(calendar, "quarterly", from, to));
@@ -190,59 +202,32 @@ export function simulateSdi(
   const stockShares: Record<string, number> = {};
   let holdings: string[] = [];
   const curve: Round18EquityPoint[] = [];
+  const daily: SdiDailyState[] = [];
   let broadProxyDays = 0;
   let broadSptmDays = 0;
 
   const price = (sym: string, date: string) => closeOnOrBefore(barsBy.get(sym) ?? [], date);
-  const equityOn = (date: string) => {
-    let eq = cash;
-    if (broadShares > 0) eq += broadShares * (price(broadSymbol, date) ?? 0);
-    for (const [t, sh] of Object.entries(stockShares)) {
-      eq += sh * (price(t, date) ?? 0);
-    }
-    return eq;
-  };
 
-  const tradeStock = (sym: string, targetShares: number, date: string) => {
-    const p = price(sym, date);
-    if (p == null) return;
-    const current = stockShares[sym] ?? 0;
-    const delta = targetShares - current;
-    if (Math.abs(delta) < 1e-8) return;
-    if (delta > 0) {
-      const cost = delta * p + commission;
-      if (cost > cash) return;
-      cash -= cost;
-    } else {
-      cash += -delta * p - commission;
-    }
-    if (targetShares < 1e-8) delete stockShares[sym];
-    else stockShares[sym] = targetShares;
-  };
+  const baseValue = (date: string) => (broadShares > 0 ? broadShares * (price(broadSymbol, date) ?? 0) : 0);
+  const sleeveValue = (date: string) =>
+    Object.entries(stockShares).reduce((sum, [t, sh]) => sum + sh * (price(t, date) ?? 0), 0);
 
-  const tradeBroad = (sym: string, targetShares: number, date: string) => {
-    const p = price(sym, date);
-    if (p == null) return;
-    if (sym !== broadSymbol && broadShares > 0) {
-      const oldP = price(broadSymbol, date);
-      if (oldP) {
-        cash += broadShares * oldP - commission;
-        broadShares = 0;
+  const equityOn = (date: string) => cash + baseValue(date) + sleeveValue(date);
+
+  const liquidateAll = (date: string) => {
+    for (const t of Object.keys(stockShares)) {
+      const sh = stockShares[t];
+      const p = price(t, date);
+      if (sh > 0 && p) {
+        cash += sh * p - commission;
       }
-      broadSymbol = sym;
+      delete stockShares[t];
     }
-    const current = broadShares;
-    const delta = targetShares - current;
-    if (Math.abs(delta) < 1e-8) return;
-    if (delta > 0) {
-      const cost = delta * p + commission;
-      if (cost > cash) return;
-      cash -= cost;
-    } else {
-      cash += -delta * p - commission;
+    if (broadShares > 0) {
+      const p = price(broadSymbol, date);
+      if (p) cash += broadShares * p - commission;
+      broadShares = 0;
     }
-    broadShares = targetShares;
-    broadSymbol = sym;
   };
 
   for (const date of calendar) {
@@ -251,7 +236,6 @@ export function simulateSdi(
 
     if (rebal.has(date)) {
       const broad = broadIndexForDate(date, sptmFirstDate);
-      broadSymbol = broad;
       if (broad === SDI_BROAD_TICKER) broadSptmDays += 1;
       else broadProxyDays += 1;
 
@@ -268,7 +252,9 @@ export function simulateSdi(
       for (const meta of metaList) {
         const bars = barsBy.get(meta.ticker);
         if (!bars || !isSdiEligible(meta, date, bars, isProfitable)) continue;
-        const ex = excessReturnVsSpy(meta.ticker, date, calendar, stockCloses.get(meta.ticker)!, spyCloses);
+        const closes = stockCloses.get(meta.ticker);
+        if (!closes) continue;
+        const ex = excessReturnVsSpy(meta.ticker, date, calendar, closes, spyCloses);
         if (ex == null) continue;
         scores.set(meta.ticker, ex);
         eligible.push(meta.ticker);
@@ -277,22 +263,53 @@ export function simulateSdi(
       holdings = pickSdiStocks(survivors, eligible, metaBy, scores);
 
       const eq = equityOn(date);
-      const targetBroad = eq * split.base;
-      const perStock = holdings.length ? (eq * split.stock) / holdings.length : 0;
-      const bp = price(broad, date);
-      if (bp && bp > 0) tradeBroad(broad, targetBroad / bp, date);
+      liquidateAll(date);
 
-      for (const t of Object.keys(stockShares)) {
-        if (!holdings.includes(t)) tradeStock(t, 0, date);
+      broadSymbol = broad;
+      const nBuyLegs = 1 + holdings.length;
+      const buyCommReserve = commission * nBuyLegs;
+      const investable = cash - buyCommReserve;
+      const targetBroad = investable > 0 ? investable * split.base : 0;
+      const perStock =
+        holdings.length > 0 && investable > 0 ? (investable * split.stock) / holdings.length : 0;
+
+      const bp = price(broad, date);
+      if (bp && bp > 0 && targetBroad > 0) {
+        const sh = targetBroad / bp;
+        const cost = targetBroad + commission;
+        if (cost <= cash) {
+          cash -= cost;
+          broadShares = sh;
+        }
       }
+
       for (const t of holdings) {
         const p = price(t, date);
-        if (p && p > 0) tradeStock(t, perStock / p, date);
+        if (!p || p <= 0 || perStock <= 0) continue;
+        const sh = perStock / p;
+        const cost = perStock + commission;
+        if (cost <= cash) {
+          cash -= cost;
+          stockShares[t] = sh;
+        }
       }
     }
 
-    curve.push({ date, equity: equityOn(date) });
+    const equity = equityOn(date);
+    curve.push({ date, equity });
+    if (options?.captureDaily) {
+      const inv = equity > 0 ? (equity - cash) / equity : 0;
+      daily.push({
+        date,
+        equity,
+        cash,
+        baseValue: baseValue(date),
+        sleeveValue: sleeveValue(date),
+        nHoldings: Object.keys(stockShares).length,
+        investedPct: inv,
+      });
+    }
   }
 
-  return { curve, broadProxyDays, broadSptmDays };
+  return { curve, daily: options?.captureDaily ? daily : undefined, broadProxyDays, broadSptmDays };
 }
