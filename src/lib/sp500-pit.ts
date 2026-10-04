@@ -30,11 +30,33 @@ export function parseTickerStartEndCsv(text: string): Sp500Interval[] {
   return out;
 }
 
+/** Parse one CSV record line with quoted fields (RFC-style). */
+export function parseCsvLine(line: string): string[] {
+  const out: string[] = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i += 1) {
+    const c = line[i];
+    if (c === '"') {
+      inQuotes = !inQuotes;
+      continue;
+    }
+    if (c === "," && !inQuotes) {
+      out.push(cur);
+      cur = "";
+      continue;
+    }
+    cur += c;
+  }
+  out.push(cur);
+  return out;
+}
+
 export function parseSp500GicsCsv(text: string): Map<string, Sp500Gics> {
   const lines = text.trim().split(/\r?\n/);
   const out = new Map<string, Sp500Gics>();
   for (let i = 1; i < lines.length; i += 1) {
-    const parts = lines[i].split(",");
+    const parts = parseCsvLine(lines[i]);
     if (parts.length < 4) continue;
     const ticker = parts[0].trim().toUpperCase();
     const sector = parts[2]?.trim() ?? "";
