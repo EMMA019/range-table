@@ -1,5 +1,7 @@
 import { closeIsProvisional, todayEt } from "./calendar";
 import { formatJst } from "./format";
+import { cachedEarningsEnrich, earningsDateUnknown, resolveEarningsInput } from "./earnings-enrich";
+import { profitabilityFromCache } from "./profit-cache";
 import { cachedEpsSnapshots, ensureSeries } from "./market";
 import { isStale, oldestOkAt } from "./price-cache";
 import { loadWatchlist } from "./watchlist";
@@ -47,15 +49,18 @@ export async function getAlertsPayload(query: AlertsQuery, now = new Date()): Pr
   for (const group of list.groups) {
     for (const ticker of group.tickers) {
       const entry = cache.series[ticker.ticker];
+      const epsSnap = eps[ticker.ticker] ?? null;
+      const enrich = cachedEarningsEnrich(ticker.ticker);
       candidates.push({
         ticker: ticker.ticker,
         watchOnly: ticker.watchOnly,
-        earnings: ticker.earnings,
+        earnings: resolveEarningsInput(ticker.earnings, epsSnap, enrich),
+        earningsUnknown: earningsDateUnknown(ticker.earnings, epsSnap, enrich),
         bars: entry?.bars,
         stale: isStale(entry),
         semi: semis.has(ticker.ticker),
         sectorId: group.id,
-        trailingEps: eps[ticker.ticker]?.trailingEps ?? null,
+        profitability: profitabilityFromCache(ticker.ticker, epsSnap),
       });
     }
   }

@@ -27,6 +27,9 @@ describe("parseQuoteSummary", () => {
     assert.deepEqual(parseQuoteSummary(aapl), {
       trailingEps: 8.83,
       forwardEps: 9.58285,
+      ttmNetIncome: null,
+      profitSource: null,
+      nextEarningsDate: null,
       error: null,
     });
   });
@@ -43,7 +46,7 @@ describe("parseQuoteSummary", () => {
           ],
         },
       }),
-      { trailingEps: 1.5, forwardEps: 2, error: null },
+      { trailingEps: 1.5, forwardEps: 2, ttmNetIncome: null, profitSource: null, nextEarningsDate: null, error: null },
     );
   });
 
@@ -51,6 +54,9 @@ describe("parseQuoteSummary", () => {
     assert.deepEqual(parseQuoteSummary({ quoteSummary: { result: [{}] } }), {
       trailingEps: null,
       forwardEps: null,
+      ttmNetIncome: null,
+      profitSource: null,
+      nextEarningsDate: null,
       error: null,
     });
   });

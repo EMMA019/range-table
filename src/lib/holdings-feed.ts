@@ -2,7 +2,9 @@ import { todayEt } from "./calendar";
 import { classifyEarnings } from "./earnings";
 import { holdingsSource, isIgnoredTicker } from "./holdings";
 import { buildHoldingsView, type HoldingsView, type QuoteInput } from "./holdings-view";
-import { ensureSeries, quoteFromEntry, usdJpyOf } from "./market";
+import { cachedEarningsEnrich, earningsDateUnknown } from "./earnings-enrich";
+import { profitabilityFromCache } from "./profit-cache";
+import { cachedEpsSnapshots, ensureSeries, quoteFromEntry, usdJpyOf } from "./market";
 import { rs20 } from "./rs";
 import { nextTradeDate, precheck, type PrecheckResult } from "./precheck";
 import type { Bar, EarningsView, Watchlist } from "./types";
@@ -63,6 +65,18 @@ export async function runPrecheck(request: PrecheckRequest, now = new Date()): P
   }
   const earnings = earningsMap(list, today);
   const view = buildHoldingsView({ config, quotes, earnings, usdJpy: usdJpyOf(cache), today });
+  const eps = cachedEpsSnapshots()[ticker] ?? null;
+  const enrich = cachedEarningsEnrich(ticker);
+  let watchEarnings: import("./types").EarningsInput | null = null;
+  let sectorId = "unknown";
+  for (const group of list.groups) {
+    const row = group.tickers.find((item) => item.ticker === ticker);
+    if (row) {
+      watchEarnings = row.earnings;
+      sectorId = group.id;
+      break;
+    }
+  }
   return precheck({
     ticker,
     shares,
@@ -73,6 +87,9 @@ export async function runPrecheck(request: PrecheckRequest, now = new Date()): P
     view,
     config,
     earnings: earnings[ticker] ?? null,
+    earningsUnknown: earningsDateUnknown(watchEarnings, eps, enrich),
+    profitability: profitabilityFromCache(ticker, eps),
+    sectorId,
     tradeDate: nextTradeDate(now),
     today,
   });

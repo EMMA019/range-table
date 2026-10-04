@@ -1,4 +1,5 @@
 import { ATR_COST_WARN, MA_SLOPE_FLAT_PCT } from "./constants";
+import { EARNINGS_UNKNOWN_PROMINENT } from "./constants";
 import type { EarningsView, EntrySignal } from "./types";
 
 const px = new Intl.NumberFormat("en-US", {
@@ -196,6 +197,13 @@ export function formatAge(fetchedAt: number, now = Date.now()): string {
 }
 
 export const EARNINGS_UNKNOWN = "決算日不明";
+
+export function formatEarningsForAlert(e: EarningsView | null, unknown: boolean): string {
+  if (unknown || !e) return EARNINGS_UNKNOWN_PROMINENT;
+  const text = formatEarnings(e);
+  if (text === EARNINGS_UNKNOWN) return EARNINGS_UNKNOWN_PROMINENT;
+  return text;
+}
 export const EARNINGS_AVOID_BADGE = "決算前・新規は避けて";
 export const SEMI_CAP_BADGE = "半導体2枠埋まり";
 

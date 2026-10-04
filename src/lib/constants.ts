@@ -4,6 +4,11 @@ export const BENCHMARKS = ["SPY", "QQQ", "SOXX"] as const;
 /** Never counted as a holding, in correlation, alerts, KPIs, or the pre-buy check. */
 export const IGNORED_TICKERS = ["ONDS"] as const;
 
+/** Shown when TTM profit/loss cannot be verified after Yahoo and SEC fallbacks. */
+export const LOSS_UNKNOWN_TAG = "赤字不明・要確認";
+
+export const EARNINGS_UNKNOWN_PROMINENT = "【要確認】決算日不明";
+
 export const CACHE_TTL_MS = 15 * 60 * 1000;
 
 /** A failed price fetch is retried after this instead of waiting out the full TTL. */

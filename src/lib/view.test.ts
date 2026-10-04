@@ -53,6 +53,8 @@ function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow
     rs20: null,
     semi: false,
     semiFull: false,
+    profitability: { status: "unknown", source: null, ttmNetIncome: null, trailingEps: null },
+    earningsUnknown: false,
     stale: false,
     ...partial,
   };

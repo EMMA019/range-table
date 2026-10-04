@@ -39,7 +39,8 @@ function candidate(partial: Partial<EntryCandidate> = {}): EntryCandidate {
     bars: bandBars(),
     stale: false,
     sectorId: "semi",
-    trailingEps: 1,
+    earningsUnknown: false,
+    profitability: { status: "profit", source: "test", ttmNetIncome: null, trailingEps: 1 },
     ...partial,
   };
 }
@@ -73,11 +74,11 @@ describe("entry alerts", () => {
   });
 
   it("puts names with no earnings date at low priority with a flag", () => {
-    const [item] = entryAlerts([candidate({ earnings: null })], TODAY, AFTER_CLOSE);
+    const [item] = entryAlerts([candidate({ earnings: null, earningsUnknown: true })], TODAY, AFTER_CLOSE);
     assert.equal(item.priority, "low");
     assert.deepEqual(item.flags, ["no_earnings_date"]);
-    assert.match(item.title, /決算日不明/);
-    assert.match(item.body, /決算日不明/);
+    assert.match(item.title, /要確認.*決算日不明/);
+    assert.match(item.body, /要確認.*決算日不明/);
     assert.equal(item.facts.rs20, null);
     assert.equal(item.facts.earningsDate, null);
   });
@@ -100,7 +101,10 @@ describe("entry alerts", () => {
     assert.equal(entryAlerts([candidate({ watchOnly: true })], TODAY, AFTER_CLOSE).length, 0);
     assert.equal(entryAlerts([candidate({ ticker: "ONDS" })], TODAY, AFTER_CLOSE).length, 0);
     assert.equal(entryAlerts([candidate({ bars: undefined })], TODAY, AFTER_CLOSE).length, 0);
-    assert.equal(entryAlerts([candidate({ trailingEps: -1 })], TODAY, AFTER_CLOSE).length, 0);
+    assert.equal(
+      entryAlerts([candidate({ profitability: { status: "loss", source: "test", ttmNetIncome: -1, trailingEps: -1 } })], TODAY, AFTER_CLOSE).length,
+      0,
+    );
   });
 
   it("flags stale data and prices at or above $550", () => {

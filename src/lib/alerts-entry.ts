@@ -1,9 +1,13 @@
 import { closeIsProvisional, etWallTimeMs } from "./calendar";
+import { passesDefaultBuyScreen, screenExclusionReasons } from "./candidate-screen";
 import { computeQuote } from "./compute";
 import { EARNINGS_HOLD_DAYS } from "./constants";
+import { EARNINGS_UNKNOWN_PROMINENT } from "./constants";
 import { classifyEarnings } from "./earnings";
-import { EARNINGS_UNKNOWN, SEMI_CAP_BADGE, formatDollar, formatEarnings, formatRs } from "./format";
+import { SEMI_CAP_BADGE, formatDollar, formatEarnings, formatRs, formatEarningsForAlert } from "./format";
 import { isIgnoredTicker } from "./holdings";
+import { LOSS_UNKNOWN_TAG } from "./constants";
+import { lossUnknown, type Profitability } from "./loss-filter";
 import {
   BAND_HIGH_PCT,
   BAND_LOW_PCT,
@@ -11,7 +15,6 @@ import {
   atrPctOf,
   buySlot,
   entryPrice,
-  excludeReasons,
   inMorningBand,
   lotFlags,
   morningBuyLines,
@@ -26,13 +29,14 @@ export type EntryCandidate = {
   ticker: string;
   watchOnly: boolean;
   earnings: EarningsInput | null;
+  earningsUnknown: boolean;
   bars: Bar[] | undefined;
   /** Bars come from an earlier fetch because the latest failed. */
   stale: boolean;
   /** Semiconductor or equipment group. */
   semi?: boolean;
   sectorId: string;
-  trailingEps: number | null;
+  profitability: Profitability;
 };
 
 export type EntryAlertOptions = {
@@ -87,7 +91,6 @@ function entryAlertForLine(
   quote: Quote,
   line: LineHit,
   bars: Bar[],
-  today: string,
   earnings: ReturnType<typeof classifyEarnings>,
   pct: number,
   rs: number | null,
@@ -99,16 +102,18 @@ function entryAlertForLine(
   const entry = entryPrice(mq, line);
   const reboundTag = reboundConfirmed(mq) ? "・反発あり" : "";
   const streakStart = bandStreakStart(bars) ?? quote.closeDate;
+  const lossTag = lossUnknown(candidate.profitability, candidate.ticker) ? `・${LOSS_UNKNOWN_TAG}` : "";
 
   const flags: string[] = [];
-  if (!candidate.earnings) flags.push("no_earnings_date");
+  if (candidate.earningsUnknown) flags.push("no_earnings_date");
+  if (lossUnknown(candidate.profitability, candidate.ticker)) flags.push("loss_unknown");
   if (lot.flags.overPrice) flags.push("price_over_450");
   if (lot.flags.capBinding) flags.push("cap_450");
   if (candidate.stale) flags.push("stale_data");
   if (semiCap) flags.push("semi_cap");
 
   const box = Math.round(quote.boxPct);
-  const earningsText = formatEarnings(earnings);
+  const earningsText = formatEarningsForAlert(earnings, candidate.earningsUnknown);
   const sizeText =
     lot.shares != null && lot.cost != null
       ? `${lot.shares}株 ${formatDollar(lot.cost)}（入り ${formatDollar(entry)}）`
@@ -117,17 +122,20 @@ function entryAlertForLine(
   const capNote = lot.flags.capBinding && lot.maxLoss != null ? `損切り損 ${formatDollar(lot.maxLoss)}（$${USUAL_COST_CAP}上限）` : null;
 
   const eventAt = new Date(etWallTimeMs(quote.closeDate, 16 * 60)).toISOString();
+  const earningsTitle =
+    candidate.earningsUnknown ? `・${EARNINGS_UNKNOWN_PROMINENT}` : earnings ? "" : `・${EARNINGS_UNKNOWN_PROMINENT}`;
 
   return {
     id: `entry:${candidate.ticker}:${line}:${streakStart}`,
     kind: "entry_in_ok",
-    priority: candidate.earnings ? "high" : "low",
+    priority: candidate.earningsUnknown || !candidate.earnings ? "low" : "high",
     ticker: candidate.ticker,
-    title: `${candidate.ticker} ${slot}回目（${line}%線・箱${box}%${reboundTag}・ATR ${pct.toFixed(1)}%）${candidate.earnings ? "" : `・${EARNINGS_UNKNOWN}`}${semiCap ? `・${SEMI_CAP_BADGE}` : ""}`,
+    title: `${candidate.ticker} ${slot}回目（${line}%線・箱${box}%${reboundTag}${lossTag}・ATR ${pct.toFixed(1)}%）${earningsTitle}${semiCap ? `・${SEMI_CAP_BADGE}` : ""}`,
     body: [
       `終値 ${formatDollar(quote.close)}（${quote.closeDate}）/ 25%線 ${formatDollar(quote.line25)}・35%線 ${formatDollar(quote.line35)}`,
       `入り ${line}%線 ${formatDollar(entry)} / ${sizeText} / 損切り 箱の安値 ${formatDollar(quote.low20)}`,
       capNote,
+      lossUnknown(candidate.profitability, candidate.ticker) ? LOSS_UNKNOWN_TAG : null,
       earningsText,
       `対SPY ${formatRs(rs)}`,
       `帯 ${BAND_LOW_PCT}〜${BAND_HIGH_PCT}%（25〜35%±2pt）`,
@@ -157,6 +165,9 @@ function entryAlertForLine(
       cost: lot.cost,
       maxLoss: lot.maxLoss,
       capBinding: lot.flags.capBinding,
+      profitStatus: candidate.profitability.status,
+      profitSource: candidate.profitability.source,
+      ttmNetIncome: candidate.profitability.ttmNetIncome,
       earningsDate: candidate.earnings?.date ?? null,
       earningsStatus: candidate.earnings?.status ?? null,
       earningsTradingDays: earnings?.tradingDays ?? null,
@@ -187,15 +198,15 @@ export function entryAlerts(
     const lines = morningBuyLines(mq);
     if (lines.length === 0) continue;
 
-    const reasons = excludeReasons({
+    const reasons = screenExclusionReasons({
       ticker: candidate.ticker,
       sectorId: candidate.sectorId,
-      trailingEps: candidate.trailingEps,
+      profitability: candidate.profitability,
       brokeHigh: quote.brokeHigh,
       atr14: quote.atr14,
       close: quote.close,
     });
-    if (reasons.length > 0) continue;
+    if (!passesDefaultBuyScreen(reasons)) continue;
 
     const pct = atrPctOf(quote.atr14, quote.close);
     const earnings = classifyEarnings(today, candidate.earnings);
@@ -205,7 +216,7 @@ export function entryAlerts(
     const rs = roundRs(rs20(bars, spyBars));
 
     for (const line of lines) {
-      out.push(entryAlertForLine(candidate, quote, line, bars, today, earnings, pct, rs, semiCap));
+      out.push(entryAlertForLine(candidate, quote, line, bars, earnings, pct, rs, semiCap));
     }
   }
   out.sort(compareEntryRs);

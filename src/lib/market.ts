@@ -14,7 +14,10 @@ import { fetchEpsBatch } from "./eps";
 import { epsIsFresh, epsTtlMs, hasEpsValue, peView, pickEpsBatch } from "./pe";
 import { buildCorrelations, loadCorrBasket, type CorrPair } from "./corr";
 import { chartPoints, computeQuote } from "./compute";
+import { cachedEarningsEnrich, enrichEarningsDate, resolveEarningsInput, earningsDateUnknown } from "./earnings-enrich";
 import { classifyEarnings } from "./earnings";
+import { fetchTtmIncomeForTicker } from "./edgar-companyfacts";
+import { profitabilityFromCache } from "./profit-cache";
 import { holdingsSource } from "./holdings";
 import { formatJst, friendlyFetchError } from "./format";
 import { buildPickCard, loadTeamPicks } from "./picks";
@@ -30,6 +33,7 @@ import type {
   Quote,
   TickerRow,
   Watchlist,
+  EarningsInput,
 } from "./types";
 import { loadWatchlist } from "./watchlist";
 import { fetchDailyBars } from "./yahoo";
@@ -60,6 +64,7 @@ type EpsCacheBody = {
 
 let epsMemory: EpsCacheBody | null = null;
 let epsWarming = false;
+let epsWatchlist: Watchlist | null = null;
 
 const SOURCE = "Yahoo Finance の日足をサーバで計算（分割がある場合は分割調整、配当は未調整）";
 
@@ -69,8 +74,9 @@ export function warmMarket(): Promise<void> {
 
 /** Starts the EPS queue without waiting for it. Safe to call on every request and at process boot. */
 export function startEpsWarm(): void {
-  const symbols = loadWatchlist().groups.flatMap((group) => group.tickers.map((ticker) => ticker.ticker));
-  kickEpsWarm(symbols);
+  const list = loadWatchlist();
+  const symbols = list.groups.flatMap((group) => group.tickers.map((ticker) => ticker.ticker));
+  kickEpsWarm(list, symbols);
 }
 
 export async function getMarketPayload(): Promise<MarketPayload> {
@@ -78,7 +84,7 @@ export async function getMarketPayload(): Promise<MarketPayload> {
   const symbols = list.groups.flatMap((group) => group.tickers.map((ticker) => ticker.ticker));
   const cache = await ensureSeries(list);
   const payload = memoPayload(cache, list);
-  kickEpsWarm(symbols);
+  kickEpsWarm(list, symbols);
   return payload;
 }
 
@@ -276,7 +282,8 @@ function epsStamp(): string {
   return `${count}:${latest}`;
 }
 
-function kickEpsWarm(symbols: string[]): void {
+function kickEpsWarm(list: Watchlist, symbols: string[]): void {
+  epsWatchlist = list;
   if (epsWarming) return;
   epsWarming = true;
   void warmEps(symbols)
@@ -284,6 +291,41 @@ function kickEpsWarm(symbols: string[]): void {
     .finally(() => {
       epsWarming = false;
     });
+}
+
+async function warmProfitability(symbols: string[], quotes: Record<string, StoredEps>): Promise<void> {
+  for (const symbol of symbols) {
+    const snap = quotes[symbol] ?? readCachedEps()[symbol] ?? null;
+    const profit = profitabilityFromCache(symbol, snap);
+    if (profit.status !== "unknown") continue;
+    try {
+      await fetchTtmIncomeForTicker(symbol);
+    } catch (error) {
+      console.error(`[range] companyfacts ${symbol}`, error instanceof Error ? error.message : error);
+    }
+    await sleep(120);
+  }
+}
+
+async function warmEarningsDates(symbols: string[]): Promise<void> {
+  const list = epsWatchlist;
+  if (!list) return;
+  const byTicker = new Map<string, { earnings: EarningsInput | null }>();
+  for (const group of list.groups) {
+    for (const row of group.tickers) byTicker.set(row.ticker, { earnings: row.earnings });
+  }
+  for (const symbol of symbols) {
+    const watch = byTicker.get(symbol)?.earnings ?? null;
+    if (watch?.date) continue;
+    const cached = cachedEarningsEnrich(symbol);
+    if (cached?.date) continue;
+    try {
+      await enrichEarningsDate(symbol, watch, readCachedEps()[symbol] ?? null);
+    } catch (error) {
+      console.error(`[range] earnings enrich ${symbol}`, error instanceof Error ? error.message : error);
+    }
+    await sleep(80);
+  }
 }
 
 async function warmEps(symbols: string[]): Promise<void> {
@@ -298,6 +340,8 @@ async function warmEps(symbols: string[]): Promise<void> {
     if (batch.length === 0) {
       const ok = unique.filter((symbol) => quotes[symbol] && hasEpsValue(quotes[symbol])).length;
       console.log(`[range] eps warm caught up ok=${ok} total=${unique.length}`);
+      await warmProfitability(unique, quotes);
+      void warmEarningsDates(unique);
       if (extraPasses >= 2) return;
       const wait = msUntilEpsRetry(unique, quotes, now);
       if (wait == null || wait > 90_000) return;
@@ -399,6 +443,10 @@ function buildPayload(
       const entry = cache.series[ticker.ticker];
       const built = quoteFromEntry(entry);
       const pair = corr.get(ticker.ticker);
+      const epsSnap = eps[ticker.ticker] ?? null;
+      const enrich = cachedEarningsEnrich(ticker.ticker);
+      const earningsInput = resolveEarningsInput(ticker.earnings, epsSnap, enrich);
+      const profitability = profitabilityFromCache(ticker.ticker, epsSnap);
       rows.push({
         ticker: ticker.ticker,
         sectorId: group.id,
@@ -408,7 +456,9 @@ function buildPayload(
         notes: ticker.notes,
         tags: ticker.tags,
         watchOnly: ticker.watchOnly,
-        earnings: classifyEarnings(today, ticker.earnings),
+        earnings: classifyEarnings(today, earningsInput),
+        earningsUnknown: earningsDateUnknown(ticker.earnings, epsSnap, enrich),
+        profitability,
         corrBasket: pair?.basket ?? null,
         corrSoxx: pair?.soxx ?? null,
         rs20: built.quote && entry?.bars ? rs20(entry.bars, spyBars) : null,
