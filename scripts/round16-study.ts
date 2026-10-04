@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { earningsDatesFrom, type FilingBlock } from "../src/lib/bias";
-import { buildFeatures, marketByDate, runPortfolio, type Book, type Candidate, type NameSeries } from "../src/lib/backtest-study";
+import { buildFeatures, marketByDate, runPortfolio, type Book, type Candidate, type Feat, type NameSeries } from "../src/lib/backtest-study";
 import { isIgnoredTicker } from "../src/lib/holdings";
 import { ttmAt, type ConceptFacts } from "../src/lib/round4";
 import { CRYPTO, NUCLEAR_LIST, QUANTUM, SOLAR } from "../src/lib/round12";
@@ -101,7 +101,7 @@ function price(value: number): string {
 function exportTrades(
   book: Book,
   cands: readonly Candidate[],
-  high20Of: Map<string, number | null>,
+  featsOf: Map<string, Feat[]>,
   variant: string,
   window: string,
 ): string[] {
@@ -121,11 +121,16 @@ function exportTrades(
     const plannedLegs = cand.round7Legs ?? [];
     const shares = plannedLegs.reduce((sum, leg) => sum + leg.qty, 0);
     const stop = cand.stop ?? 0;
-    const planned = [...plannedLegs].reverse().find((leg) => leg.date === fill.exitDate && leg.reason === last.reason);
-    const exitPrice = planned?.price ?? last.price;
-    if (exitPrice == null) throw new Error(`出口価格がない ${fill.ticker}`);
+    const planned =
+      [...plannedLegs].reverse().find((leg) => leg.date === fill.exitDate && leg.reason === last.reason) ??
+      [...plannedLegs].reverse().find((leg) => leg.date === fill.exitDate);
+    let exitPrice = planned?.price;
+    if (exitPrice == null && last.reason === "window") {
+      exitPrice = featsOf.get(cand.ticker)?.find((bar) => bar.date === fill.exitDate)?.c;
+    }
+    if (exitPrice == null) throw new Error(`出口価格がない ${fill.ticker} ${fill.exitDate} ${last.reason}`);
     const targetLeg = plannedLegs.find((leg) => leg.reason === "target");
-    const targetLevel = targetLeg?.price ?? high20Of.get(`${fill.ticker}|${fill.entryDate}`) ?? stop;
+    const targetLevel = targetLeg?.price ?? featsOf.get(cand.ticker)?.[cand.signalIndex]?.high20 ?? stop;
     lines.push(
       [
         variant,
@@ -260,6 +265,9 @@ function main() {
             sessions,
             flatten: true,
             withRestart: false,
+            keepDaily: true,
+            keepFills: true,
+            keepRound7: true,
             closes,
             order: orderByRs20,
             maxSemi: 2,
@@ -270,13 +278,8 @@ function main() {
         rows.push(scoreBook(book, pct, flavor, window.id));
         const label = window.id === "in" ? "2024-26" : "2022-24";
         const taken = cands.filter((c) => !c.voided && c.entryDate >= sessions[0]! && c.entryDate <= sessions[sessions.length - 1]!);
-        const high20Of = new Map<string, number | null>();
-        for (const cand of taken) {
-          const name = names.find((item) => item.ticker === cand.ticker);
-          const high = name?.feats[cand.signalIndex]?.high20 ?? null;
-          high20Of.set(`${cand.ticker}|${cand.entryDate}`, high);
-        }
-        const tradeLines = exportTrades(book, taken, high20Of, variantId(pct, flavor), label);
+        const featsOf = new Map(names.map((name) => [name.ticker, name.feats]));
+        const tradeLines = exportTrades(book, taken, featsOf, variantId(pct, flavor), label);
         allCsv.push(...tradeLines);
         fs.writeFileSync(path.join(ART, `${variantId(pct, flavor)}_${window.id}.csv`), `${CSV_HEAD}\n${tradeLines.join("\n")}\n`);
       }
