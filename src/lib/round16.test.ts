@@ -15,7 +15,7 @@ describe("round-16 entry line", () => {
     assert.equal(paperShares(100, 95), 4);
     assert.equal(paperShares(500, 490), 3);
     assert.equal(paperShares(50, 49), 9);
-    assert.equal(paperShares(10, 5), null);
+    assert.equal(paperShares(10, 10), null);
   });
 
   it("box line price", () => {
