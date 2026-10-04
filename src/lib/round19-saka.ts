@@ -1,6 +1,7 @@
 import { themeOf } from "./themes";
 import { pearson } from "./corr";
 import { dedupeShareClassesByCik } from "./pit-share-class";
+import { sharesOutstandingAsOf as pitSharesOutstandingAsOf } from "./pit-shares";
 import type { Bar } from "./types";
 
 export const SAKA_START = "2016-01-01";
@@ -726,6 +727,10 @@ export type SakaSimOptions = {
   rebalance?: "legacy_full_liquidate" | "delta";
   minTradeUsd?: number;
   relDrift?: number;
+  /** @default SAKA_INITIAL_CASH */
+  initialCash?: number;
+  /** First session in range: invest using holdings/weights as of this rebalance date (PIT). */
+  bootstrapHoldingsDate?: string;
 };
 
 export function simulateSaka(
@@ -744,7 +749,9 @@ export function simulateSaka(
   const minTradeUsd = simOpts.minTradeUsd ?? SAKA_REBAL_MIN_TRADE_USD;
   const relDrift = simOpts.relDrift ?? SAKA_REBAL_REL_DRIFT;
   const rebal = new Set(rebalanceDates(calendar, from, to));
-  let cash = SAKA_INITIAL_CASH;
+  let cash = simOpts.initialCash ?? SAKA_INITIAL_CASH;
+  const bootstrapHoldingsDate = simOpts.bootstrapHoldingsDate;
+  let bootstrapped = !bootstrapHoldingsDate;
   const shares: Record<string, number> = {};
   const lastPrice: Record<string, number> = {};
   const curve: SakaEquityPoint[] = [];
@@ -776,10 +783,14 @@ export function simulateSaka(
       if (p != null) lastPrice[t] = p;
     }
 
-    if (rebal.has(date)) {
-      const eligible = filterEligibleCandidates(membersOn(date), date, ctx);
-      const holdings = pickHoldings(config, eligible, date, ctx);
-      const weights = targetWeights(config, holdings, date, ctx, semiOf);
+    const scheduledRebal = rebal.has(date);
+    const bootstrapToday = !bootstrapped && bootstrapHoldingsDate != null;
+    if (scheduledRebal || bootstrapToday) {
+      const pitDate = scheduledRebal ? date : bootstrapHoldingsDate!;
+      if (bootstrapToday) bootstrapped = true;
+      const eligible = filterEligibleCandidates(membersOn(pitDate), pitDate, ctx);
+      const holdings = pickHoldings(config, eligible, pitDate, ctx);
+      const weights = targetWeights(config, holdings, pitDate, ctx, semiOf);
       const tickersUnion = new Set([...Object.keys(prevWeights), ...Object.keys(weights)]);
       let to = 0;
       for (const t of tickersUnion) to += Math.abs((weights[t] ?? 0) - (prevWeights[t] ?? 0));
@@ -872,33 +883,9 @@ export function simulateSaka(
 type FactPoint = { end: string; val: number; fp?: string; form?: string; filed?: string };
 
 /** TTM net income using quarters with `end` <= asOf only (PIT). */
-type ShareFact = { end: string; val: number };
-
-function collectSharePoints(json: unknown): ShareFact[] {
-  if (!json || typeof json !== "object" || !("facts" in json)) return [];
-  const facts = (json as { facts: Record<string, Record<string, { units?: Record<string, ShareFact[]> }>> }).facts;
-  const tags = [
-    ["dei", "EntityCommonStockSharesOutstanding"],
-    ["us-gaap", "CommonStockSharesOutstanding"],
-    ["us-gaap", "CommonStockSharesIssued"],
-  ];
-  const out: ShareFact[] = [];
-  for (const [ns, tag] of tags) {
-    const block = facts[ns]?.[tag]?.units?.shares;
-    if (!block) continue;
-    for (const p of block) {
-      if (p.end && Number.isFinite(p.val) && p.val > 0) out.push({ end: p.end, val: p.val });
-    }
-  }
-  return out;
-}
-
 /** Latest shares outstanding with period end <= asOf (PIT). */
 export function sharesOutstandingAsOf(json: unknown, asOf: string): number | null {
-  const points = collectSharePoints(json)
-    .filter((p) => p.end <= asOf)
-    .sort((a, b) => b.end.localeCompare(a.end));
-  return points[0]?.val ?? null;
+  return pitSharesOutstandingAsOf(json, asOf);
 }
 
 function factFiledOnOrBefore(p: FactPoint, asOf: string): boolean {

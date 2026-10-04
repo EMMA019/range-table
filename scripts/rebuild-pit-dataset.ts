@@ -20,6 +20,9 @@ import {
 import { buildPitFactsIndex, pitFactsPathForTicker } from "../src/lib/pit-facts-index";
 import { buildPitCikMapForTickers, searchCikEfts, type CikResolution } from "../src/lib/pit-cik";
 import { fetchStooqDailyBars, mergePriceBars } from "../src/lib/pit-prices";
+import { checkCikSanity, loadSecTickerTitleMap } from "../src/lib/pit-cik-sanity";
+import { loadSecTickerCikMap } from "../src/lib/sec-ticker-cik";
+import { sharesOutstandingAsOf } from "../src/lib/pit-shares";
 import { SAKA_END, SAKA_START, rebalanceDates, tradingDaysFromBars } from "../src/lib/round19-saka";
 import { loadSp500PitFiles, membersOnDate, uniqueTickersInRange } from "../src/lib/sp500-pit";
 import type { Bar } from "../src/lib/types";
@@ -132,14 +135,26 @@ async function main() {
     let n = 0;
     for (const t of pitTickers) {
       const dest = path.join(paths.facts, `${t}.json`);
-      if (fs.existsSync(dest)) continue;
       const r = cikRes.get(t);
       if (!r) continue;
+      let needsFetch = !fs.existsSync(dest);
+      if (!needsFetch && fs.existsSync(dest)) {
+        try {
+          const cur = JSON.parse(fs.readFileSync(dest, "utf8")) as { cik?: number | string };
+          const curCik =
+            typeof cur.cik === "number" ? cur.cik : Number(String(cur.cik ?? "").replace(/\D/g, ""));
+          if (curCik !== r.cik) needsFetch = true;
+        } catch {
+          needsFetch = true;
+        }
+      }
+      if (!needsFetch) continue;
       try {
         const json = await edgarJson(companyFactsUrl(r.cik));
         fs.writeFileSync(dest, JSON.stringify(json));
         n += 1;
         if (n % 20 === 0) console.error(`[pit] facts ${n}`);
+        await sleep(120);
       } catch (e) {
         if (e instanceof EdgarDisabledError) break;
       }
@@ -245,6 +260,59 @@ async function main() {
   const miss = pitTickers.filter((t) => !cikOut[t]);
   const minFactsPct = Math.min(...rebalanceCoverage.map((r) => r.factsPct));
 
+  const secByCik = await loadSecTickerTitleMap(PIT_CACHE);
+  const secTickerToCik = await loadSecTickerCikMap(PIT_CACHE);
+  const cikMismatch: string[] = [];
+  for (const t of pitTickers) {
+    const r = cikRes.get(t);
+    if (!r) continue;
+    const fp = pitFactsPathForTicker(t, r.cik, factsIndex, PIT_CACHE);
+    const parsed = fp && fs.existsSync(fp) ? JSON.parse(fs.readFileSync(fp, "utf8")) as { entityName?: string; cik?: number | string } : null;
+    const entity = parsed ? String(parsed.entityName ?? "") : null;
+    const factsCik =
+      parsed && typeof parsed.cik === "number"
+        ? parsed.cik
+        : parsed?.cik != null
+          ? Number(String(parsed.cik).replace(/\D/g, ""))
+          : null;
+    const row = checkCikSanity(t, r.cik, entity, secByCik, factsCik, secTickerToCik);
+    if (!row.ok) cikMismatch.push(`${t}:${row.reason}`);
+  }
+
+  const zeroMcapAtRebal: Array<{ date: string; tickers: string[] }> = [];
+  const priceOn = (ticker: string, d: string) => {
+    const bars = loadPitBars(ticker, PIT_CACHE);
+    if (!bars.length) return null;
+    let lo = 0;
+    let hi = bars.length - 1;
+    let best: number | null = null;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (bars[mid].date <= d) {
+        best = bars[mid].c;
+        lo = mid + 1;
+      } else hi = mid - 1;
+    }
+    return best;
+  };
+  const lastSh = new Map<string, number>();
+  for (const date of rebals) {
+    const members = membersOnDate(intervals, date);
+    const bad: string[] = [];
+    for (const t of members) {
+      if (priceOn(t, date) == null) continue;
+      const cik = cikRes.get(t)?.cik;
+      const fp = pitFactsPathForTicker(t, cik, factsIndex, PIT_CACHE);
+      const f = fp ? JSON.parse(fs.readFileSync(fp, "utf8")) : null;
+      let sh = f ? sharesOutstandingAsOf(f, date) : null;
+      if (sh != null && sh > 0) lastSh.set(t, sh);
+      else sh = lastSh.get(t) ?? null;
+      const p = priceOn(t, date);
+      if (p != null && (!sh || sh <= 0)) bad.push(t);
+    }
+    if (bad.length) zeroMcapAtRebal.push({ date, tickers: bad.sort() });
+  }
+
   const md = `# PIT データセット（S&P 500・2016–2026）
 
 **キャッシュ:** \`data/.cache/pit/\`（git 非コミット）  
@@ -286,6 +354,15 @@ ${rebalanceCoverage.map((r) => `| ${r.date} | ${r.pitMembers} | ${r.withFacts} |
 ## 未解決 CIK（先頭 30）
 
 ${miss.length ? miss.slice(0, 30).join(", ") : "（なし）"}
+
+## データ品質チェック（自動）
+
+| チェック | 結果 |
+|---|---|
+| CIK↔SEC ティッカー/社名不一致 | **${cikMismatch.length}** 銘柄（先頭: ${cikMismatch.slice(0, 8).join("; ") || "—"}） |
+| リバランス日・価格あり・時価総額0/null | **${zeroMcapAtRebal.length}** 日（直近: ${zeroMcapAtRebal.slice(-3).map((z) => `${z.date}→${z.tickers.join(",")}`).join(" / ") || "—"}） |
+
+\`scripts/pit-rebalance-data-check.ts\` で採用構成のバスケット差分も確認可能。
 
 ---
 

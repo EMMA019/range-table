@@ -44,6 +44,7 @@ import {
   uniqueTickersInRange,
   type Sp500Interval,
 } from "../src/lib/sp500-pit";
+import { fetchDailyBars } from "../src/lib/yahoo";
 import type { Bar } from "../src/lib/types";
 
 const CACHE_V1 = path.join(process.cwd(), "data", ".cache", "round19");
@@ -53,6 +54,10 @@ const OUT_PNG = path.join(process.cwd(), "docs", "round19_v1_contribution.png");
 const ATTR_FROM = "2025-07-01";
 const ATTR_TO = SAKA_END;
 const COMMISSION = 0.35;
+const LIVE_ENTRY = "2026-07-30";
+const LIVE_END = "2026-10-02";
+const LIVE_BOOT_REBAL = "2026-07-01";
+const LIVE_JPY_START = 463_000;
 
 function loadBars(ticker: string): Bar[] {
   const pit = loadPitBars(ticker, PIT_CACHE);
@@ -536,6 +541,44 @@ function equityFromShares(
   return eq;
 }
 
+async function loadUsdjpyBars(): Promise<Bar[]> {
+  const cache = path.join(PIT_CACHE, "prices", "JPY-X.json");
+  if (fs.existsSync(cache)) return JSON.parse(fs.readFileSync(cache, "utf8")) as Bar[];
+  try {
+    const { bars } = await fetchDailyBars("JPY=X", { range: "2y", keep: 600, totalReturn: false });
+    if (bars.length) {
+      fs.mkdirSync(path.dirname(cache), { recursive: true });
+      fs.writeFileSync(cache, JSON.stringify(bars));
+    }
+    return bars;
+  } catch {
+    return [];
+  }
+}
+
+function jpyCurve(usdCurve: SakaEquityPoint[], fxBars: Bar[]): SakaEquityPoint[] {
+  return usdCurve.map((p) => {
+    const fx = closeOnOrBefore(fxBars, p.date);
+    return { date: p.date, equity: fx != null ? p.equity * fx : p.equity };
+  });
+}
+
+function periodReturn(curve: SakaEquityPoint[], from: string, to: string): number | null {
+  const slice = curve.filter((p) => p.date >= from && p.date <= to);
+  if (slice.length < 2) return null;
+  const a = slice[0].equity;
+  const b = slice[slice.length - 1].equity;
+  if (a <= 0) return null;
+  return b / a - 1;
+}
+
+function benchCurve(bars: Bar[], from: string, to: string, initialUsd: number): SakaEquityPoint[] {
+  const slice = bars.filter((b) => b.date >= from && b.date <= to);
+  if (slice.length < 2) return [];
+  const p0 = slice[0].c;
+  return slice.map((b) => ({ date: b.date, equity: initialUsd * (b.c / p0) }));
+}
+
 async function main() {
   const env = await buildCtx();
   const { calendar, ctx, semiOf, price, membersOn, eligibleRanked, exclusionCategory, mcapRankEligible } = env;
@@ -565,6 +608,101 @@ async function main() {
   const attr = attributionFromSnapshots(env, attrSnaps);
   const ddPort = drawdownDetail(sim.curve, SAKA_START, SAKA_END);
   const ddSpy = drawdownDetail(spyBench, SAKA_START, SAKA_END);
+
+  const fxBars = await loadUsdjpyBars();
+  const entryFx = closeOnOrBefore(fxBars, LIVE_ENTRY);
+  const endFx = closeOnOrBefore(fxBars, LIVE_END);
+  const initialUsdLive = entryFx != null && entryFx > 0 ? LIVE_JPY_START / entryFx : null;
+  let liveSection = "（USD/JPY または価格データ不足のため未計算）";
+  if (initialUsdLive != null) {
+    const liveSim = simulateSaka(adopted, calendar, membersOn, ctx, semiOf, price, COMMISSION, LIVE_ENTRY, LIVE_END, {
+      rebalance: "delta",
+      minTradeUsd: SAKA_REBAL_MIN_TRADE_USD,
+      relDrift: SAKA_REBAL_REL_DRIFT,
+      initialCash: initialUsdLive,
+      bootstrapHoldingsDate: LIVE_BOOT_REBAL,
+    });
+    const liveJpy = jpyCurve(liveSim.curve, fxBars);
+    const retUsd = periodReturn(liveSim.curve, LIVE_ENTRY, LIVE_END);
+    const retJpy = periodReturn(liveJpy, LIVE_ENTRY, LIVE_END);
+    const ddUsd = drawdownDetail(liveSim.curve, LIVE_ENTRY, LIVE_END);
+    const ddJpy = drawdownDetail(liveJpy, LIVE_ENTRY, LIVE_END);
+    const benchTickers = ["SPY", "QQQ", "SOXX"] as const;
+    const benchRows: string[] = [];
+    for (const sym of benchTickers) {
+      const bars = loadBars(sym);
+      const c = benchCurve(bars, LIVE_ENTRY, LIVE_END, initialUsdLive);
+      const rUsd = periodReturn(c, LIVE_ENTRY, LIVE_END);
+      const cJpy = jpyCurve(c, fxBars);
+      const rJpy = periodReturn(cJpy, LIVE_ENTRY, LIVE_END);
+      benchRows.push(
+        `| ${sym} | ${rUsd != null ? `${(rUsd * 100).toFixed(2)}%` : "—"} | ${rJpy != null ? `${(rJpy * 100).toFixed(2)}%` : "—"} |`,
+      );
+    }
+    liveSection = `
+**窓:** ${LIVE_ENTRY} 終値時点で **¥${LIVE_JPY_START.toLocaleString("ja-JP")}** を USD へ換算し投資（USD/JPY **${entryFx!.toFixed(2)}** → ${LIVE_END} 時点 **${endFx?.toFixed(2) ?? "—"}**）。  
+**保有の起点:** ${LIVE_BOOT_REBAL} リバランスの採用15（${adopted.id}）。**${LIVE_END}** までに **2026-10-01** リバランスを適用。手数料 **$${COMMISSION}/注文**（差分リバランス）。
+
+| | USD建て | 円建て（日次 USD/JPY で換算） |
+|---|---:|---:|
+| 期間リターン | ${retUsd != null ? `${(retUsd * 100).toFixed(2)}%` : "—"} | ${retJpy != null ? `${(retJpy * 100).toFixed(2)}%` : "—"} |
+| 最大DD | ${(ddUsd.maxDd * 100).toFixed(2)}%（ピーク ${ddUsd.peakDate} → ボトム ${ddUsd.troughDate}） | ${(ddJpy.maxDd * 100).toFixed(2)}%（ピーク ${ddJpy.peakDate} → ボトム ${ddJpy.troughDate}） |
+
+**ベンチマーク（同じ USD 初期額）**
+
+| 指数 | USD | 円建て |
+|---|---:|---:|
+${benchRows.join("\n")}
+
+**Emma 実績（参考・計算基準未確認）:** 約 **+10.9%**、最大 DD 約 **-6%**。
+
+**修正前データでの暫定値（独立チェック時点・参考）:** Saka **+6.32%** USD / **+2.82%** 円、DD **-2.80%** USD / **-5.88%** 円；SPY +4.01/+0.59；QQQ +9.76/+6.15；SOXX +16.78/+12.94（USD/JPY 163.30→157.93）。
+`;
+  }
+
+  const dataCheckPath = path.join(PIT_CACHE, "rebalance-data-check.json");
+  spawnSync("npx", ["tsx", "scripts/pit-rebalance-data-check.ts", "--write-cache", "--quiet"], {
+    cwd: process.cwd(),
+    env: process.env,
+    stdio: "inherit",
+  });
+  let dataFixSection = "（`pit-rebalance-data-check.ts` 未実行）";
+  try {
+    const parsed = JSON.parse(fs.readFileSync(dataCheckPath, "utf8")) as {
+      zeroMcapSample: Array<{ date: string; tickers: string[] }>;
+      cikMismatchCountAllPitTickers: number;
+      cikMismatchSpMembers2026_10_01: number;
+      cikMismatchSpSample: Array<{ ticker: string; reason: string }>;
+      gicsCsvCikOverrides2026_10_01: Array<{ ticker: string; gicsCik: number; canonicalCik: number }>;
+      baskets: Record<string, { before: string[]; after: string[] }>;
+      meta: { shares2026_10_01: number | null; xomProfit2026_10_01: string };
+    };
+    const basketLines = Object.entries(parsed.baskets).map(([d, b]) => {
+      const before = new Set(b.before);
+      const after = new Set(b.after);
+      const added = b.after.filter((t) => !before.has(t));
+      const removed = b.before.filter((t) => !after.has(t));
+      const changed = added.length || removed.length ? `入替: +${added.join(",") || "—"} / -${removed.join(",") || "—"}` : "変更なし";
+      return `- **${d}:** ${changed}`;
+    });
+    dataFixSection = `
+**(a) META 株数:** \`dei:EntityCommonStockSharesOutstanding\` 欠損時は \`us-gaap\` の加重平均株数へフォールバック（\`pit-shares.ts\`）。2026-10-01 時点株数: **${parsed.meta.shares2026_10_01?.toLocaleString() ?? "null"}**。
+
+**(b) XOM CIK:** \`data/pit_cik_overrides.json\` で **34088**（Exxon Mobil）。黒字判定 2026-10-01: **${parsed.meta.xomProfit2026_10_01}**。
+
+| チェック | 結果 |
+|---|---|
+| CIK↔SEC 不一致（全 PIT 履歴銘柄） | **${parsed.cikMismatchCountAllPitTickers}** |
+| GICS CSV CIK≠解決後 CIK（2026-10-01 構成員） | **${parsed.gicsCsvCikOverrides2026_10_01.length}**（${parsed.gicsCsvCikOverrides2026_10_01.map((r) => `${r.ticker}:${r.gicsCik}→${r.canonicalCik}`).join(", ") || "—"}） |
+| リバランス日・mcap=0（価格あり） | 直近サンプル: ${JSON.stringify(parsed.zeroMcapSample)} |
+
+**2026-07-01 / 2026-10-01 バスケット（株数フォールバック＋XOM 修正前後）**
+
+${basketLines.join("\n")}
+`;
+  } catch {
+    dataFixSection = "（データチェック JSON の読込に失敗）";
+  }
 
   const lastRebal = sim.rebalRows[sim.rebalRows.length - 1]!;
   const held = new Set(lastRebal.holdings);
@@ -672,7 +810,7 @@ ${lines.join("\n")}
 **解釈（ギャップの単純分解）:** 本構成は金融セクターとテーマ株を持たないため SPY より大型金融・一部超大型のウェイトが薄い。期間中は半導体・大型テックの寄与がポート側のドライバーとなり、除外セクターが SPY にあって本ポートに無い分がギャップの主因となり得る（厳密な要因分析ではない）。
 `;
     const chartJson = {
-      title: `${adopted.id}: 寄与 ${ATTR_FROM}–${ATTR_TO}`,
+      title: `${adopted.id} contribution ${ATTR_FROM} to ${ATTR_TO} (pp)`,
       labels: attr.entries.slice(0, 12).map(([t]) => t),
       values: attr.entries.slice(0, 12).map(([, v]) => +(v * 100).toFixed(2)),
     };
@@ -695,6 +833,12 @@ ${lines.join("\n")}
 
 - **事実:** シミュレーション・EDGAR・価格キャッシュから機械的に数えた値。
 - **解釈:** 因果や「なぜそうなったか」の平易な説明（検証可能な単純分解を含む）。
+
+---
+
+## データ修正（META 株数・XOM CIK）
+
+${dataFixSection}
 
 ---
 
@@ -779,6 +923,12 @@ ${yearRows.join("\n")}
 | 深さ | ${(ddPort.maxDd * 100).toFixed(1)}% | ${(ddSpy.maxDd * 100).toFixed(1)}% |
 | 回復 | ${ddPort.recoveryDate ?? "未回復"} | ${ddSpy.recoveryDate ?? "未回復"} |
 | 回復営業日数 | ${ddPort.recoveryDays ?? "—"} | ${ddSpy.recoveryDays ?? "—"} |
+
+---
+
+## (7) ライブ窓シミュレーション（${LIVE_ENTRY} ～ ${LIVE_END}）
+
+${liveSection}
 
 ---
 

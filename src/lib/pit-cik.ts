@@ -109,6 +109,8 @@ export async function buildPitCikMapForTickers(
 
   const resolveOne = (ticker: string): CikResolution | null => {
     const key = ticker.trim().toUpperCase();
+    const ov = overrides?.[key];
+    if (ov && ov > 0) return { cik: ov, source: "override" };
     const alias = PIT_TICKER_ALIASES[key];
     const gicsCik = gics.get(key)?.cik ?? gics.get(alias ?? "")?.cik;
     const fromGics = gicsCik != null && gicsCik > 0 ? gicsCik : null;
@@ -118,8 +120,6 @@ export async function buildPitCikMapForTickers(
       const c2 = resolveCik(alias, gics.get(alias)?.cik, merged);
       if (c2) return { cik: c2, source: `alias:${alias}` };
     }
-    const ov = overrides?.[key];
-    if (ov && ov > 0) return { cik: ov, source: "override" };
     return null;
   };
 

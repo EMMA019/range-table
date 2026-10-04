@@ -29,7 +29,7 @@
 4. `scripts/import-pickdani-prices.ts`（[pickdani/sp500-historical](https://github.com/pickdani/sp500-historical) CSV）
 5. ソースは `data/.cache/pit/price_meta.json`（ティッカーごと）
 
-**2016-01-04 リバランスで価格系列なし（${'PLACEHOLDER'}）:** Yahoo が 2026 時点で履歴を削除した旧ティッカー、または pickdani CSV 未収録。ローカルで Stooq / 有料 EOD を取得し `data/.cache/pit/prices/<TICKER>.json` に配置後 `rebuild-pit-dataset.ts` を再実行。
+**2016-01-04 リバランスで価格系列なし（62 銘柄）:** AABA, AET, AGN, ALXN, ARG, BCR, BRCM, BXLT, CA, CCE, CELG, CHK, COL, CPGX, CTXS, CVC, DNB, DO, ENDP, ESRX, ESV, ETFC, FLIR, FTR, GAS, GGP, GMCR, GPS, HAR, HBI, HCP, HOT, JEC, JWN, KSU, LLL, LM, LVLT, MJN, MNK, MON, NBL, NLSN, PBCT, PCP, PDCO, RAI, RHT, SCG, SEE, SRCL, STJ, SWN, TGNA, TIF, TSS, TWC, TWX, WFM, WYND, XEC, XL — 理由: Yahoo 履歴削除 / pickdani 未収録 / Stooq CI タイムアウト。ローカル取得後 `prices/<TICKER>.json` に配置。
 
 ## 黒字（PIT）
 
