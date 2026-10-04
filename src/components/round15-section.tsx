@@ -8,7 +8,7 @@ const UNIVERSE: Record<Exclude<Round3Universe, "core">, string> = { pit: "当時
 const WINDOW: Record<Round3Window, string> = { oos: "2022-10〜2024-10", in: "2024-10〜2026-10" };
 
 function rate(value: number | null): string {
-  return value == null ? "—" : `${(value * 100).toFixed(1)}%`;
+  return value == null ? "—" : `${(Math.round(value * 10000) / 100).toFixed(2)}%`;
 }
 
 function cell(universe: Exclude<Round3Universe, "core">, window: Round3Window): Round15Cell {
