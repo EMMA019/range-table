@@ -181,7 +181,7 @@ export function correlationMatrix(inputs: CorrInputs): Map<string, Map<string, n
   return out;
 }
 
-function avgCorr(ticker: string, universe: string[], corr: Map<string, Map<string, number>>): number {
+export function avgCorr(ticker: string, universe: string[], corr: Map<string, Map<string, number>>): number {
   let sum = 0;
   let n = 0;
   for (const o of universe) {
@@ -239,6 +239,59 @@ function pickCorrGreedy(pool: string[], corr: Map<string, Map<string, number>>, 
     if (ok) chosen.push(c);
   }
   return chosen;
+}
+
+export type CorrPickTrace = {
+  pickOrder: number;
+  ticker: string;
+  avgCorrToPool: number;
+  avgCorrToChosen: number;
+  maxRhoToChosen: number;
+  skippedDueToRho: boolean;
+};
+
+/** Same logic as pickCorrGreedy with per-step diagnostics (for audits). */
+export function pickCorrGreedyTraced(
+  pool: string[],
+  corr: Map<string, Map<string, number>>,
+  slots: number,
+): { holdings: string[]; trace: CorrPickTrace[]; attemptLog: CorrPickTrace[] } {
+  const universe = [...pool].sort((a, b) => a.localeCompare(b));
+  const order = [...universe].sort((a, b) => {
+    const aa = avgCorr(a, universe, corr);
+    const bb = avgCorr(b, universe, corr);
+    if (aa !== bb) return aa - bb;
+    return a.localeCompare(b);
+  });
+  const chosen: string[] = [];
+  const trace: CorrPickTrace[] = [];
+  const attemptLog: CorrPickTrace[] = [];
+  for (const c of order) {
+    if (chosen.length >= slots) break;
+    const avgPool = avgCorr(c, universe, corr);
+    const avgChosen = chosen.length ? avgCorr(c, chosen, corr) : 0;
+    let maxRho = 0;
+    let ok = true;
+    for (const s of chosen) {
+      const r = corr.get(c)?.get(s) ?? 0;
+      if (r > maxRho) maxRho = r;
+      if (r > SAKA_CORR_PAIR_MAX) ok = false;
+    }
+    const row: CorrPickTrace = {
+      pickOrder: ok ? chosen.length + 1 : 0,
+      ticker: c,
+      avgCorrToPool: avgPool,
+      avgCorrToChosen: avgChosen,
+      maxRhoToChosen: maxRho,
+      skippedDueToRho: !ok,
+    };
+    attemptLog.push(row);
+    if (ok) {
+      chosen.push(c);
+      trace.push({ ...row, pickOrder: chosen.length });
+    }
+  }
+  return { holdings: chosen, trace, attemptLog };
 }
 
 function invVolWeight(calendar: string[], closes: Map<string, number>, date: string): number | null {
