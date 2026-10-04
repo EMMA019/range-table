@@ -13,7 +13,15 @@ export type PrecheckFlag =
   | "notInOk"
   | "lossUnknown"
   | "earningsUnknown"
-  | "usesUnsettled";
+  | "usesUnsettled"
+  | "lossExcluded"
+  | "aboveBox"
+  | "financialsSector"
+  | "themeSolar"
+  | "themeCrypto"
+  | "themeNuclear"
+  | "themeQuantum"
+  | "themeSpace";
 
 export const RED_FLAGS = new Set<PrecheckFlag>(["earnings5d", "belowDefense", "cashShort"]);
 
@@ -29,4 +37,12 @@ export const FLAG_TEXT: Record<PrecheckFlag, string> = {
   lossUnknown: LOSS_UNKNOWN_TAG,
   earningsUnknown: EARNINGS_UNKNOWN_PROMINENT,
   usesUnsettled: "未決済の資金を使う",
+  lossExcluded: "赤字（過去12か月EPS）",
+  aboveBox: "箱の上（20日高値ブレイク）",
+  financialsSector: "金融セクター",
+  themeSolar: "太陽光テーマ",
+  themeCrypto: "暗号・マイニングテーマ",
+  themeNuclear: "原子力テーマ",
+  themeQuantum: "量子テーマ",
+  themeSpace: "宇宙テーマ",
 };

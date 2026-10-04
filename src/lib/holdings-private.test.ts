@@ -156,6 +156,7 @@ describe("pre-buy check", () => {
     holdingBars: { AAA: trendBars(70, wave), BBB: trendBars(70, (i) => -wave(i)) },
     config: CONFIG,
     earnings: null,
+    sectorId: "semi",
     tradeDate: "2026-10-09",
     today: "2026-10-02",
   };

@@ -43,6 +43,7 @@ const THEME_LABEL: Record<string, string> = {
   crypto: "暗号",
   nuclear: "原子力",
   quantum: "量子",
+  space: "宇宙",
 };
 
 function reasonText(reason: string): string {
@@ -242,7 +243,7 @@ export function MorningView() {
             </button>
           </div>
           <p className="mt-2 text-[11px] leading-relaxed text-muted">
-            金融はウォッチリストの「金融」。初期状態では候補から外す。赤字は過去12か月EPSがマイナスの銘柄で、SPCXは残す。箱の上、原子力、暗号、太陽光、量子、ATRが終値の3%未満は除外。ATRは詳細のATR(14)を終値で割ったもの。量子は Emma の指定（IONQ、RGTI、QBTS、QUBT、ARQQ）。
+            金融はウォッチリストの「金融」。初期状態では候補から外す。赤字は過去12か月EPSがマイナスの銘柄で、SPCXは残す。箱の上、原子力、暗号（マイニング・ホスティング含む）、太陽光、量子、宇宙（SPCX以外）、ATRが終値の3%未満は除外。ATRは詳細のATR(14)を終値で割ったもの。
           </p>
           <ul className="mt-3 space-y-2">
             {cards.map(({ row, line, slot, rebound, reasons, lot }) => {

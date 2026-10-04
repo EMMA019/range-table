@@ -68,10 +68,12 @@ export async function runPrecheck(request: PrecheckRequest, now = new Date()): P
   const eps = cachedEpsSnapshots()[ticker] ?? null;
   const enrich = cachedEarningsEnrich(ticker);
   let watchEarnings: import("./types").EarningsInput | null = null;
+  let sectorId = "unknown";
   for (const group of list.groups) {
     const row = group.tickers.find((item) => item.ticker === ticker);
     if (row) {
       watchEarnings = row.earnings;
+      sectorId = group.id;
       break;
     }
   }
@@ -87,6 +89,7 @@ export async function runPrecheck(request: PrecheckRequest, now = new Date()): P
     earnings: earnings[ticker] ?? null,
     earningsUnknown: earningsDateUnknown(watchEarnings, eps, enrich),
     profitability: profitabilityFromCache(ticker, eps),
+    sectorId,
     tradeDate: nextTradeDate(now),
     today,
   });

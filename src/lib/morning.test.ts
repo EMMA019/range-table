@@ -88,6 +88,9 @@ describe("morning paper candidates", () => {
     assert.equal(themeOf("IONQ"), "quantum");
     assert.equal(themeOf("QMCO"), null);
     assert.equal(themeOf("SPCX"), null);
+    assert.equal(themeOf("ASTS"), "space");
+    assert.equal(themeOf("CORZ"), "crypto");
+    assert.ok(excludeReasons({ ticker: "RKLB", sectorId: "space", profitability: profit("profit"), brokeHigh: false, ...ok }).includes("theme:space"));
     assert.ok(excludeReasons({ ticker: "BAC", sectorId: "financials", profitability: profit("profit"), brokeHigh: false, ...ok }).includes("financials"));
     assert.equal(atrBelowMin(3, 100), false);
     assert.equal(atrBelowMin(2.99, 100), true);

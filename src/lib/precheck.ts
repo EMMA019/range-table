@@ -6,7 +6,9 @@ import type { HoldingsView } from "./holdings-view";
 import { settleDate } from "./settlement";
 import { lossUnknown } from "./loss-filter";
 import { profitabilityFromCache } from "./profit-cache";
+import { exclusionPrecheckFlags, screenExclusionReasons } from "./candidate-screen";
 import { morningBuyLines } from "./morning";
+import type { Profitability } from "./loss-filter";
 import type { PrecheckFlag } from "./precheck-flags";
 import type { Bar, EarningsView, Quote } from "./types";
 
@@ -51,7 +53,8 @@ export function precheck(input: {
   config: HoldingsConfig;
   earnings: EarningsView | null;
   earningsUnknown?: boolean;
-  profitability?: import("./loss-filter").Profitability;
+  profitability?: Profitability;
+  sectorId: string;
   tradeDate: string;
   today: string;
 }): PrecheckResult {
@@ -125,6 +128,20 @@ export function precheck(input: {
   if (lossUnknown(profit, input.ticker)) flags.push("lossUnknown");
   if (input.earningsUnknown) flags.push("earningsUnknown");
   if (fundsSettleBy) flags.push("usesUnsettled");
+
+  const screenFlags = exclusionPrecheckFlags(
+    screenExclusionReasons({
+      ticker,
+      sectorId: input.sectorId,
+      profitability: profit,
+      brokeHigh: quote.brokeHigh,
+      atr14: quote.atr14,
+      close: quote.close,
+    }),
+  );
+  for (const flag of screenFlags) {
+    if (!flags.includes(flag)) flags.push(flag);
+  }
 
   const buySettles = settleDate(tradeDate);
   return {
