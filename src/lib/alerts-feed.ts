@@ -1,6 +1,6 @@
 import { closeIsProvisional, todayEt } from "./calendar";
 import { formatJst } from "./format";
-import { ensureSeries } from "./market";
+import { cachedEpsSnapshots, ensureSeries } from "./market";
 import { isStale, oldestOkAt } from "./price-cache";
 import { loadWatchlist } from "./watchlist";
 import {
@@ -42,17 +42,23 @@ export async function getAlertsPayload(query: AlertsQuery, now = new Date()): Pr
   const spy = cache.series.SPY?.bars;
   const spyFinal = spy ? finalBars(spy, now) : [];
 
-  const candidates: EntryCandidate[] = tickers.map((ticker) => {
-    const entry = cache.series[ticker.ticker];
-    return {
-      ticker: ticker.ticker,
-      watchOnly: ticker.watchOnly,
-      earnings: ticker.earnings,
-      bars: entry?.bars,
-      stale: isStale(entry),
-      semi: semis.has(ticker.ticker),
-    };
-  });
+  const eps = cachedEpsSnapshots();
+  const candidates: EntryCandidate[] = [];
+  for (const group of list.groups) {
+    for (const ticker of group.tickers) {
+      const entry = cache.series[ticker.ticker];
+      candidates.push({
+        ticker: ticker.ticker,
+        watchOnly: ticker.watchOnly,
+        earnings: ticker.earnings,
+        bars: entry?.bars,
+        stale: isStale(entry),
+        semi: semis.has(ticker.ticker),
+        sectorId: group.id,
+        trailingEps: eps[ticker.ticker]?.trailingEps ?? null,
+      });
+    }
+  }
 
   const items: AlertItem[] = [
     ...entryAlerts(candidates, today, now, { spyBars: spyFinal, semiFull }),

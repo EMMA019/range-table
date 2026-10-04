@@ -4,6 +4,7 @@ import { basketReturnSeries, corrOnWindow, dailyReturns } from "./corr";
 import type { HoldingsConfig } from "./holdings";
 import type { HoldingsView } from "./holdings-view";
 import { settleDate } from "./settlement";
+import { morningBuyLines } from "./morning";
 import type { PrecheckFlag } from "./precheck-flags";
 import type { Bar, EarningsView, Quote } from "./types";
 
@@ -102,7 +103,20 @@ export function precheck(input: {
   if (cost > ATR_COST_WARN) flags.push("costOver450");
   if (atrPct < ALERT_MIN_ATR_PCT) flags.push("atrUnder3");
   if (corr.some((row) => row.high)) flags.push("corrHigh");
-  if (quote.entrySignal !== "in_ok") flags.push("notInOk");
+  if (
+    morningBuyLines({
+      close: quote.close,
+      low20: quote.low20,
+      high20: quote.high20,
+      line25: quote.line25,
+      line35: quote.line35,
+      boxPct: quote.boxPct,
+      brokeHigh: quote.brokeHigh,
+      reboundDays: quote.reboundDays,
+    }).length === 0
+  ) {
+    flags.push("notInOk");
+  }
   if (fundsSettleBy) flags.push("usesUnsettled");
 
   const buySettles = settleDate(tradeDate);

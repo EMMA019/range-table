@@ -1,9 +1,23 @@
 import { closeIsProvisional, etWallTimeMs } from "./calendar";
 import { computeQuote } from "./compute";
-import { ALERT_MIN_ATR_PCT, EARNINGS_HOLD_DAYS, PICK_WATCH_PRICE } from "./constants";
+import { EARNINGS_HOLD_DAYS } from "./constants";
 import { classifyEarnings } from "./earnings";
-import { EARNINGS_UNKNOWN, SEMI_CAP_BADGE, formatEarnings, formatRs } from "./format";
+import { EARNINGS_UNKNOWN, SEMI_CAP_BADGE, formatDollar, formatEarnings, formatRs } from "./format";
 import { isIgnoredTicker } from "./holdings";
+import {
+  BAND_HIGH_PCT,
+  BAND_LOW_PCT,
+  USUAL_COST_CAP,
+  atrPctOf,
+  buySlot,
+  entryPrice,
+  excludeReasons,
+  inMorningBand,
+  lotFlags,
+  morningBuyLines,
+  reboundConfirmed,
+  type LineHit,
+} from "./morning";
 import { roundRs, rs20 } from "./rs";
 import { compareEntryRs, jst, siteUrl, type AlertItem } from "./alerts";
 import type { Bar, EarningsInput, Quote } from "./types";
@@ -17,6 +31,8 @@ export type EntryCandidate = {
   stale: boolean;
   /** Semiconductor or equipment group. */
   semi?: boolean;
+  sectorId: string;
+  trailingEps: number | null;
 };
 
 export type EntryAlertOptions = {
@@ -33,29 +49,125 @@ export function finalBars(bars: Bar[], now: Date): Bar[] {
 }
 
 /**
- * First session of the run of consecutive in_ok closes that ends on the latest bar.
- * Null when the latest bar is not in_ok. Stable while the setup lasts, so it anchors the id.
+ * First session of the run of consecutive closes in the morning band that ends on the latest bar.
+ * Null when the latest bar is outside the band. Stable while the setup lasts, so it anchors the id.
  */
-export function inOkStreakStart(bars: Bar[], maxLookback = 15): string | null {
+export function bandStreakStart(bars: Bar[], maxLookback = 15): string | null {
   let start: string | null = null;
   for (let back = 0; back < maxLookback; back++) {
     const end = bars.length - back;
     if (end <= 0) break;
     const computed = computeQuote(bars.slice(0, end));
-    if (!computed.ok || computed.quote.entrySignal !== "in_ok") break;
+    if (!computed.ok || !inMorningBand(computed.quote.boxPct)) break;
     start = computed.quote.closeDate;
   }
   return start;
 }
 
-export function atrPct(quote: Pick<Quote, "atr14" | "close">): number {
-  return quote.close > 0 ? (quote.atr14 / quote.close) * 100 : 0;
+/** @deprecated Use bandStreakStart. */
+export function inOkStreakStart(bars: Bar[], maxLookback = 15): string | null {
+  return bandStreakStart(bars, maxLookback);
+}
+
+function morningQuoteFrom(quote: Quote) {
+  return {
+    close: quote.close,
+    low20: quote.low20,
+    high20: quote.high20,
+    line25: quote.line25,
+    line35: quote.line35,
+    boxPct: quote.boxPct,
+    brokeHigh: quote.brokeHigh,
+    reboundDays: quote.reboundDays,
+  };
+}
+
+function entryAlertForLine(
+  candidate: EntryCandidate,
+  quote: Quote,
+  line: LineHit,
+  bars: Bar[],
+  today: string,
+  earnings: ReturnType<typeof classifyEarnings>,
+  pct: number,
+  rs: number | null,
+  semiCap: boolean,
+): AlertItem {
+  const mq = morningQuoteFrom(quote);
+  const lot = lotFlags(mq, line);
+  const slot = buySlot(line);
+  const entry = entryPrice(mq, line);
+  const reboundTag = reboundConfirmed(mq) ? "・反発あり" : "";
+  const streakStart = bandStreakStart(bars) ?? quote.closeDate;
+
+  const flags: string[] = [];
+  if (!candidate.earnings) flags.push("no_earnings_date");
+  if (lot.flags.overPrice) flags.push("price_over_450");
+  if (lot.flags.capBinding) flags.push("cap_450");
+  if (candidate.stale) flags.push("stale_data");
+  if (semiCap) flags.push("semi_cap");
+
+  const box = Math.round(quote.boxPct);
+  const earningsText = formatEarnings(earnings);
+  const sizeText =
+    lot.shares != null && lot.cost != null
+      ? `${lot.shares}株 ${formatDollar(lot.cost)}（入り ${formatDollar(entry)}）`
+      : "株数 —";
+
+  const capNote = lot.flags.capBinding && lot.maxLoss != null ? `損切り損 ${formatDollar(lot.maxLoss)}（$${USUAL_COST_CAP}上限）` : null;
+
+  const eventAt = new Date(etWallTimeMs(quote.closeDate, 16 * 60)).toISOString();
+
+  return {
+    id: `entry:${candidate.ticker}:${line}:${streakStart}`,
+    kind: "entry_in_ok",
+    priority: candidate.earnings ? "high" : "low",
+    ticker: candidate.ticker,
+    title: `${candidate.ticker} ${slot}回目（${line}%線・箱${box}%${reboundTag}・ATR ${pct.toFixed(1)}%）${candidate.earnings ? "" : `・${EARNINGS_UNKNOWN}`}${semiCap ? `・${SEMI_CAP_BADGE}` : ""}`,
+    body: [
+      `終値 ${formatDollar(quote.close)}（${quote.closeDate}）/ 25%線 ${formatDollar(quote.line25)}・35%線 ${formatDollar(quote.line35)}`,
+      `入り ${line}%線 ${formatDollar(entry)} / ${sizeText} / 損切り 箱の安値 ${formatDollar(quote.low20)}`,
+      capNote,
+      earningsText,
+      `対SPY ${formatRs(rs)}`,
+      `帯 ${BAND_LOW_PCT}〜${BAND_HIGH_PCT}%（25〜35%±2pt）`,
+      semiCap ? SEMI_CAP_BADGE : null,
+    ]
+      .filter((line): line is string => Boolean(line))
+      .join("\n"),
+    eventAt,
+    eventAtJst: jst(eventAt),
+    url: siteUrl(`/?t=${encodeURIComponent(candidate.ticker)}`),
+    flags,
+    facts: {
+      barDate: quote.closeDate,
+      streakStart,
+      buyLine: line,
+      buySlot: slot,
+      close: quote.close,
+      boxPct: Math.round(quote.boxPct * 10) / 10,
+      line25: quote.line25,
+      line35: quote.line35,
+      entry,
+      low20: quote.low20,
+      atr14: quote.atr14,
+      atrPct: Math.round(pct * 100) / 100,
+      reboundDays: quote.reboundDays,
+      shares: lot.shares,
+      cost: lot.cost,
+      maxLoss: lot.maxLoss,
+      capBinding: lot.flags.capBinding,
+      earningsDate: candidate.earnings?.date ?? null,
+      earningsStatus: candidate.earnings?.status ?? null,
+      earningsTradingDays: earnings?.tradingDays ?? null,
+      rs20: rs,
+    },
+  };
 }
 
 /**
- * IN OK, ATR at least 3% of the close, and no earnings within five trading days.
- * A name with no earnings date on file is kept at low priority with the no_earnings_date flag.
- * Watch-only names and ignored tickers are skipped.
+ * Morning-band entry (23–37% of the 20-day box), ATR at least 3%, exclusions aligned with the morning screen,
+ * and no earnings within five trading days. Up to two alerts per ticker (25% and 35% lines).
  */
 export function entryAlerts(
   candidates: EntryCandidate[],
@@ -71,65 +183,30 @@ export function entryAlerts(
     const computed = computeQuote(bars);
     if (!computed.ok) continue;
     const quote = computed.quote;
-    if (quote.entrySignal !== "in_ok") continue;
-    const pct = atrPct(quote);
-    if (pct < ALERT_MIN_ATR_PCT) continue;
+    const mq = morningQuoteFrom(quote);
+    const lines = morningBuyLines(mq);
+    if (lines.length === 0) continue;
+
+    const reasons = excludeReasons({
+      ticker: candidate.ticker,
+      sectorId: candidate.sectorId,
+      trailingEps: candidate.trailingEps,
+      brokeHigh: quote.brokeHigh,
+      atr14: quote.atr14,
+      close: quote.close,
+    });
+    if (reasons.length > 0) continue;
+
+    const pct = atrPctOf(quote.atr14, quote.close);
     const earnings = classifyEarnings(today, candidate.earnings);
     if (earnings?.warn) continue;
-    const streakStart = inOkStreakStart(bars) ?? quote.closeDate;
 
     const semiCap = Boolean(candidate.semi && options.semiFull);
-    const flags: string[] = [];
-    if (!candidate.earnings) flags.push("no_earnings_date");
-    if (quote.close > PICK_WATCH_PRICE) flags.push("price_over_450");
-    if (candidate.stale) flags.push("stale_data");
-    if (semiCap) flags.push("semi_cap");
-
-    const eventAt = new Date(etWallTimeMs(quote.closeDate, 16 * 60)).toISOString();
-    const box = Math.round(quote.boxPct);
-    const earningsText = formatEarnings(earnings);
     const rs = roundRs(rs20(bars, spyBars));
-    const sizeText =
-      quote.shares10 != null && quote.cost10 != null ? `$10株数 ${quote.shares10}株 $${quote.cost10.toFixed(0)}` : "$10株数 —";
 
-    out.push({
-      id: `entry:${candidate.ticker}:${streakStart}`,
-      kind: "entry_in_ok",
-      priority: candidate.earnings ? "high" : "low",
-      ticker: candidate.ticker,
-      title: `${candidate.ticker} IN OK（箱${box}%・反発${quote.reboundDays ?? 0}日・ATR ${pct.toFixed(1)}%）${candidate.earnings ? "" : `・${EARNINGS_UNKNOWN}`}${semiCap ? `・${SEMI_CAP_BADGE}` : ""}`,
-      body: [
-        `終値 $${quote.close.toFixed(2)}（${quote.closeDate}）/ 15%線 $${quote.line15.toFixed(2)}・25%線 $${quote.line25.toFixed(2)}`,
-        `20日安値 $${quote.low20.toFixed(2)} / ATR $${quote.atr14.toFixed(2)} / ${sizeText}`,
-        earningsText,
-        `対SPY ${formatRs(rs)}`,
-        semiCap ? SEMI_CAP_BADGE : null,
-      ]
-        .filter((line): line is string => Boolean(line))
-        .join("\n"),
-      eventAt,
-      eventAtJst: jst(eventAt),
-      url: siteUrl(`/?t=${encodeURIComponent(candidate.ticker)}`),
-      flags,
-      facts: {
-        barDate: quote.closeDate,
-        streakStart,
-        close: quote.close,
-        boxPct: Math.round(quote.boxPct * 10) / 10,
-        line15: quote.line15,
-        line25: quote.line25,
-        low20: quote.low20,
-        atr14: quote.atr14,
-        atrPct: Math.round(pct * 100) / 100,
-        reboundDays: quote.reboundDays,
-        shares10: quote.shares10,
-        cost10: quote.cost10,
-        earningsDate: candidate.earnings?.date ?? null,
-        earningsStatus: candidate.earnings?.status ?? null,
-        earningsTradingDays: earnings?.tradingDays ?? null,
-        rs20: rs,
-      },
-    });
+    for (const line of lines) {
+      out.push(entryAlertForLine(candidate, quote, line, bars, today, earnings, pct, rs, semiCap));
+    }
   }
   out.sort(compareEntryRs);
   return out;
