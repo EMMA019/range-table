@@ -113,4 +113,32 @@ describe("yahoo adjustments", () => {
     assert.equal(parsed.bars[0].c, 14);
     assert.equal(parsed.bars[65].c, 79);
   });
+
+  it("uses adjclose for total-return mode", () => {
+    const day = 86_400;
+    const start = 1_790_000_000;
+    const timestamp = [start, start + day];
+    const open = [10, 10];
+    const high = [12, 12];
+    const low = [9, 9];
+    const close = [100, 110];
+    const volume = [1000, 1000];
+    const adjclose = [100, 121];
+    const parsed = parseChart(
+      {
+        timestamp,
+        indicators: {
+          quote: [{ open, high, low, close, volume }],
+          adjclose: [{ adjclose }],
+        },
+        meta: {},
+      },
+      start + 5 * day,
+      10,
+      { useTotalReturn: true },
+    );
+    assert.equal(parsed.bars.length, 2);
+    assert.equal(parsed.bars[0].c, 100);
+    assert.equal(parsed.bars[1].c, 121);
+  });
 });
