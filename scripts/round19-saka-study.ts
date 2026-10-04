@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { edgarJson, EdgarDisabledError } from "../src/lib/edgar-client";
-import { cikForTicker } from "../src/lib/edgar-companyfacts";
+import { buildFullTickerCikMap, loadSecTickerCikMap, resolveCik } from "../src/lib/sec-ticker-cik";
 
 function companyFactsUrl(cik: number): string {
   return `https://data.sec.gov/api/xbrl/companyfacts/CIK${String(cik).padStart(10, "0")}.json`;
@@ -29,13 +29,13 @@ import {
   maxPairwiseCorr,
   metricsFromCurve,
   pickHoldings,
+  profitabilityStatus,
   rebalanceDates,
   selectSakaConfig,
   sharesOutstandingAsOf,
   simulateSaka,
   targetWeights,
   tradingDaysFromBars,
-  ttmNetIncomeAsOf,
   type SakaCandidateContext,
   type SakaConfig,
 } from "../src/lib/round19-saka";
@@ -79,10 +79,14 @@ async function loadBars(ticker: string, fresh: boolean): Promise<Bar[]> {
   }
 }
 
-async function loadFacts(ticker: string, cik: number | null): Promise<unknown | null> {
+async function loadFacts(
+  ticker: string,
+  cik: number | null,
+  cikMap: Map<string, number>,
+): Promise<unknown | null> {
   const file = path.join(CACHE, "facts", `${ticker}.json`);
   if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, "utf8"));
-  const resolvedCik = cik ?? cikForTicker(ticker);
+  const resolvedCik = cik ?? resolveCik(ticker, null, cikMap);
   if (!resolvedCik) return null;
   try {
     const json = await edgarJson(companyFactsUrl(resolvedCik));
@@ -133,6 +137,8 @@ async function main() {
   }
   const fresh = process.argv.includes("--fresh");
   const { intervals, gics } = await loadSp500PitFiles(CACHE);
+  const secMap = await loadSecTickerCikMap(CACHE);
+  const cikMap = buildFullTickerCikMap(gics, secMap);
   const tickers = uniqueTickersInRange(intervals, SAKA_START, SAKA_END);
   const barsBy = new Map<string, Bar[]>();
 
@@ -146,7 +152,7 @@ async function main() {
   const factsBy = new Map<string, unknown>();
   await pool(tickers, 3, async (ticker) => {
     const g = gics.get(ticker);
-    const f = await loadFacts(ticker, g?.cik ?? null);
+    const f = await loadFacts(ticker, g?.cik ?? null, cikMap);
     if (f) factsBy.set(ticker, f);
   });
 
@@ -203,12 +209,7 @@ async function main() {
       return p * shares;
     },
     sharesLookup,
-    profitable: (t, date) => {
-      const f = factsBy.get(t);
-      if (!f) return false;
-      const ni = ttmNetIncomeAsOf(f, date);
-      return ni != null && ni > 0;
-    },
+    profitable: (t, date) => profitabilityStatus(factsBy.get(t), date) === "profitable",
     hasPrice: (t, date) => price(t, date) != null,
   };
 

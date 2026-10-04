@@ -12,7 +12,19 @@ export const SAKA_CORR_MIN_OBS = 126;
 export const SAKA_CORR_PAIR_MAX = 0.7;
 export const SAKA_INV_VOL_WINDOW = 60;
 export const SAKA_SEMI_CAP = 0.3;
+/** Delta rebalance: skip trimming/extending a continuing name unless |Δ$| ≥ this or relative drift ≥ SAKA_REBAL_REL_DRIFT. */
+export const SAKA_REBAL_MIN_TRADE_USD = 25;
+export const SAKA_REBAL_REL_DRIFT = 0.2;
 export const SAKA_CAL_YEARS = [2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026] as const;
+
+export type ProfitabilityStatus = "profitable" | "loss" | "unknown";
+
+export function profitabilityStatus(facts: unknown | undefined, date: string): ProfitabilityStatus {
+  if (!facts) return "unknown";
+  const ni = ttmNetIncomeAsOf(facts, date);
+  if (ni == null) return "unknown";
+  return ni > 0 ? "profitable" : "loss";
+}
 
 export type SakaPickMethod = "corrdiverse" | "volprune" | "plain";
 
@@ -98,22 +110,51 @@ function closeOnOrBefore(bars: Bar[], date: string): number | null {
   return best;
 }
 
+export type LogReturnSeries = { dates: string[]; rets: number[] };
+
+export function trailingLogReturnSeries(
+  calendar: string[],
+  closes: Map<string, number>,
+  date: string,
+  lookback = SAKA_CORR_LOOKBACK,
+): LogReturnSeries | null {
+  const endIdx = tradingDayIndex(calendar, date);
+  if (endIdx < lookback - 1) return null;
+  const dates: string[] = [];
+  const rets: number[] = [];
+  for (let i = endIdx - lookback + 1; i <= endIdx; i += 1) {
+    const p0 = closes.get(calendar[i - 1]);
+    const p1 = closes.get(calendar[i]);
+    if (p0 == null || p1 == null || p0 <= 0 || p1 <= 0) return null;
+    dates.push(calendar[i]);
+    rets.push(Math.log(p1 / p0));
+  }
+  return dates.length === lookback ? { dates, rets } : null;
+}
+
 export function trailingLogReturns(
   calendar: string[],
   closes: Map<string, number>,
   date: string,
   lookback = SAKA_CORR_LOOKBACK,
 ): number[] | null {
-  const endIdx = tradingDayIndex(calendar, date);
-  if (endIdx < lookback - 1) return null;
-  const rets: number[] = [];
-  for (let i = endIdx - lookback + 1; i <= endIdx; i += 1) {
-    const p0 = closes.get(calendar[i - 1]);
-    const p1 = closes.get(calendar[i]);
-    if (p0 == null || p1 == null || p0 <= 0 || p1 <= 0) return null;
-    rets.push(Math.log(p1 / p0));
+  const s = trailingLogReturnSeries(calendar, closes, date, lookback);
+  return s ? s.rets : null;
+}
+
+function pearsonOnAlignedSeries(a: LogReturnSeries, b: LogReturnSeries): number | null {
+  const byDate = new Map<string, number>();
+  for (let i = 0; i < b.dates.length; i += 1) byDate.set(b.dates[i], b.rets[i]);
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (let i = 0; i < a.dates.length; i += 1) {
+    const y = byDate.get(a.dates[i]);
+    if (y === undefined) continue;
+    xs.push(a.rets[i]);
+    ys.push(y);
   }
-  return rets.length === lookback ? rets : null;
+  if (xs.length < SAKA_CORR_MIN_OBS) return null;
+  return pearson(xs, ys);
 }
 
 export function hasCorrHistoryAtDate(
@@ -131,7 +172,12 @@ function annualizedVol(rets: number[]): number {
   return Math.sqrt(var_) * Math.sqrt(252);
 }
 
-type CorrInputs = { tickers: string[]; returns: Map<string, number[]>; vol: Map<string, number> };
+type CorrInputs = {
+  tickers: string[];
+  returns: Map<string, number[]>;
+  series: Map<string, LogReturnSeries>;
+  vol: Map<string, number>;
+};
 
 export function buildCorrInputs(
   tickers: string[],
@@ -140,45 +186,72 @@ export function buildCorrInputs(
   date: string,
 ): CorrInputs | null {
   const returns = new Map<string, number[]>();
+  const series = new Map<string, LogReturnSeries>();
   const vol = new Map<string, number>();
   const ok: string[] = [];
   for (const t of tickers) {
     const hist = closeHistory.get(t);
     if (!hist) continue;
-    const rets = trailingLogReturns(calendar, hist, date);
-    if (!rets || rets.length < SAKA_CORR_MIN_OBS) continue;
-    returns.set(t, rets);
-    vol.set(t, annualizedVol(rets));
+    const s = trailingLogReturnSeries(calendar, hist, date);
+    if (!s || s.rets.length < SAKA_CORR_MIN_OBS) continue;
+    returns.set(t, s.rets);
+    series.set(t, s);
+    vol.set(t, annualizedVol(s.rets));
     ok.push(t);
   }
   if (ok.length < 2) return null;
   ok.sort((a, b) => a.localeCompare(b));
-  return { tickers: ok, returns, vol };
+  return { tickers: ok, returns, series, vol };
 }
 
 export function correlationMatrix(inputs: CorrInputs): Map<string, Map<string, number>> {
-  const { tickers, returns } = inputs;
+  const { tickers, series } = inputs;
   const out = new Map<string, Map<string, number>>();
   for (const a of tickers) {
     const row = new Map<string, number>();
-    const ra = returns.get(a)!;
+    const sa = series.get(a)!;
     for (const b of tickers) {
       if (a === b) {
         row.set(b, 1);
         continue;
       }
-      const rb = returns.get(b)!;
-      const xs: number[] = [];
-      const ys: number[] = [];
-      for (let i = 0; i < ra.length; i += 1) {
-        xs.push(ra[i]);
-        ys.push(rb[i]);
-      }
-      row.set(b, pearson(xs, ys) ?? 0);
+      const sb = series.get(b)!;
+      row.set(b, pearsonOnAlignedSeries(sa, sb) ?? 0);
     }
     out.set(a, row);
   }
   return out;
+}
+
+/** Median of upper-triangle pairwise correlations in a pool (diagnostics). */
+export function medianPairwiseCorr(tickers: string[], corr: Map<string, Map<string, number>>): number | null {
+  const vals: number[] = [];
+  for (let i = 0; i < tickers.length; i += 1) {
+    for (let j = i + 1; j < tickers.length; j += 1) {
+      const r = corr.get(tickers[i])?.get(tickers[j]);
+      if (r != null && Number.isFinite(r)) vals.push(r);
+    }
+  }
+  if (!vals.length) return null;
+  vals.sort((a, b) => a - b);
+  const mid = Math.floor(vals.length / 2);
+  return vals.length % 2 ? vals[mid] : (vals[mid - 1] + vals[mid]) / 2;
+}
+
+export function pairCorrelation(
+  a: string,
+  b: string,
+  calendar: string[],
+  closeHistory: Map<string, Map<string, number>>,
+  date: string,
+): number | null {
+  const ha = closeHistory.get(a);
+  const hb = closeHistory.get(b);
+  if (!ha || !hb) return null;
+  const sa = trailingLogReturnSeries(calendar, ha, date);
+  const sb = trailingLogReturnSeries(calendar, hb, date);
+  if (!sa || !sb) return null;
+  return pearsonOnAlignedSeries(sa, sb);
 }
 
 export function avgCorr(ticker: string, universe: string[], corr: Map<string, Map<string, number>>): number {
@@ -363,6 +436,57 @@ export type SakaCandidateContext = {
   profitable: (t: string, date: string) => boolean;
   hasPrice: (t: string, date: string) => boolean;
 };
+
+export type EligibilityFunnelCounts = {
+  pit: number;
+  afterTheme: number;
+  afterFinancial: number;
+  afterPrice: number;
+  profitable: number;
+  loss: number;
+  unknownProfit: number;
+  eligible: number;
+};
+
+export function eligibilityFunnelCounts(
+  members: string[],
+  date: string,
+  ctx: SakaCandidateContext,
+  profitOf: (t: string, date: string) => ProfitabilityStatus,
+): EligibilityFunnelCounts {
+  let afterTheme = 0;
+  let afterFinancial = 0;
+  let afterPrice = 0;
+  let profitable = 0;
+  let loss = 0;
+  let unknownProfit = 0;
+  const eligible: string[] = [];
+  for (const t of members) {
+    if (isExcludedTheme(t)) continue;
+    afterTheme += 1;
+    const g = ctx.gicsOf(t);
+    if (g && isFinancialSector(g.sector)) continue;
+    afterFinancial += 1;
+    if (!ctx.hasPrice(t, date)) continue;
+    afterPrice += 1;
+    const st = profitOf(t, date);
+    if (st === "unknown") unknownProfit += 1;
+    else if (st === "loss") loss += 1;
+    else profitable += 1;
+    if (st !== "profitable") continue;
+    eligible.push(t);
+  }
+  return {
+    pit: members.length,
+    afterTheme,
+    afterFinancial,
+    afterPrice,
+    profitable,
+    loss,
+    unknownProfit,
+    eligible: eligible.length,
+  };
+}
 
 export function filterEligibleCandidates(members: string[], date: string, ctx: SakaCandidateContext): string[] {
   const out: string[] = [];
@@ -556,6 +680,13 @@ export type SakaSimResult = {
   turnoverPerRebal: number;
 };
 
+export type SakaSimOptions = {
+  /** @default legacy_full_liquidate */
+  rebalance?: "legacy_full_liquidate" | "delta";
+  minTradeUsd?: number;
+  relDrift?: number;
+};
+
 export function simulateSaka(
   config: SakaConfig,
   calendar: string[],
@@ -566,7 +697,11 @@ export function simulateSaka(
   commission: number,
   from: string,
   to: string,
+  simOpts: SakaSimOptions = {},
 ): SakaSimResult {
+  const rebalanceMode = simOpts.rebalance ?? "legacy_full_liquidate";
+  const minTradeUsd = simOpts.minTradeUsd ?? SAKA_REBAL_MIN_TRADE_USD;
+  const relDrift = simOpts.relDrift ?? SAKA_REBAL_REL_DRIFT;
   const rebal = new Set(rebalanceDates(calendar, from, to));
   let cash = SAKA_INITIAL_CASH;
   const shares: Record<string, number> = {};
@@ -610,27 +745,81 @@ export function simulateSaka(
       turnoverSum += to / 2;
       rebalCount += 1;
       prevWeights = { ...weights };
-      markOrders(date, Object.keys(shares).length);
-      for (const t of Object.keys(shares)) {
-        const p = price(t, date) ?? lastPrice[t];
-        if (p && shares[t] > 0) cash += shares[t] * p - commission;
-        delete shares[t];
-      }
-      const tickers = Object.keys(weights);
-      const buyLegs = tickers.length;
-      const reserve = commission * buyLegs;
-      const investable = cash - reserve;
-      markOrders(date, buyLegs);
-      for (const t of tickers) {
-        const p = price(t, date);
-        if (!p || p <= 0) continue;
-        const targetUsd = investable * weights[t];
-        const sh = targetUsd / p;
-        const cost = targetUsd + commission;
-        if (cost > cash) continue;
-        cash -= cost;
-        shares[t] = sh;
-        lastPrice[t] = p;
+
+      if (rebalanceMode === "legacy_full_liquidate") {
+        markOrders(date, Object.keys(shares).length);
+        for (const t of Object.keys(shares)) {
+          const p = price(t, date) ?? lastPrice[t];
+          if (p && shares[t] > 0) cash += shares[t] * p - commission;
+          delete shares[t];
+        }
+        const tickers = Object.keys(weights);
+        const buyLegs = tickers.length;
+        const reserve = commission * buyLegs;
+        const investable = cash - reserve;
+        markOrders(date, buyLegs);
+        for (const t of tickers) {
+          const p = price(t, date);
+          if (!p || p <= 0) continue;
+          const targetUsd = investable * weights[t];
+          const sh = targetUsd / p;
+          const cost = targetUsd + commission;
+          if (cost > cash) continue;
+          cash -= cost;
+          shares[t] = sh;
+          lastPrice[t] = p;
+        }
+      } else {
+        const eq = equityOn(date);
+        const targetSet = new Set(Object.keys(weights));
+        for (const t of Object.keys(shares)) {
+          if (targetSet.has(t)) continue;
+          const p = price(t, date) ?? lastPrice[t];
+          if (p && shares[t] > 0) {
+            cash += shares[t] * p - commission;
+            markOrders(date, 1);
+          }
+          delete shares[t];
+        }
+        for (const t of Object.keys(weights)) {
+          const p = price(t, date);
+          if (!p || p <= 0) continue;
+          const targetUsd = eq * weights[t];
+          const curUsd = (shares[t] ?? 0) * p;
+          const delta = targetUsd - curUsd;
+          const had = (shares[t] ?? 0) > 0;
+          if (had) {
+            const rel = curUsd > 0 ? Math.abs(delta) / curUsd : 1;
+            if (Math.abs(delta) < minTradeUsd && rel < relDrift) continue;
+          }
+          if (delta < -minTradeUsd / 2) {
+            const sellUsd = Math.min(-delta, curUsd);
+            const sellSh = sellUsd / p;
+            if (sellSh > 0 && sellSh <= shares[t]) {
+              shares[t] -= sellSh;
+              cash += sellUsd - commission;
+              markOrders(date, 1);
+              if (shares[t] <= 1e-9) delete shares[t];
+            }
+          } else if (delta > minTradeUsd / 2) {
+            const buyUsd = delta;
+            const cost = buyUsd + commission;
+            if (cost <= cash) {
+              cash -= cost;
+              shares[t] = (shares[t] ?? 0) + buyUsd / p;
+              markOrders(date, 1);
+              lastPrice[t] = p;
+            }
+          } else if (!had && targetUsd >= minTradeUsd / 2) {
+            const cost = targetUsd + commission;
+            if (cost <= cash) {
+              cash -= cost;
+              shares[t] = targetUsd / p;
+              markOrders(date, 1);
+              lastPrice[t] = p;
+            }
+          }
+        }
       }
     }
 

@@ -28,6 +28,30 @@ export function resolveCik(
   secMap: Map<string, number>,
 ): number | null {
   if (gicsCik != null && gicsCik > 0) return gicsCik;
-  const c = secMap.get(ticker.trim().toUpperCase());
-  return c != null && c > 0 ? c : null;
+  const key = ticker.trim().toUpperCase();
+  const c = secMap.get(key);
+  if (c != null && c > 0) return c;
+  const dot = key.replace(/\./g, "-");
+  if (dot !== key) {
+    const c2 = secMap.get(dot);
+    if (c2 != null && c2 > 0) return c2;
+  }
+  const br = key.replace(/-/g, ".");
+  if (br !== key) {
+    const c3 = secMap.get(br);
+    if (c3 != null && c3 > 0) return c3;
+  }
+  return null;
+}
+
+/** SEC map overlaid with GICS CSV CIK (covers renamed / delisted rows still in PIT files). */
+export function buildFullTickerCikMap(
+  gics: Map<string, { cik: number | null }>,
+  secMap: Map<string, number>,
+): Map<string, number> {
+  const out = new Map<string, number>(secMap);
+  for (const [ticker, row] of gics) {
+    if (row.cik != null && row.cik > 0) out.set(ticker.trim().toUpperCase(), row.cik);
+  }
+  return out;
 }

@@ -153,6 +153,137 @@ eligible ユニバースに占める watchlist 比率（各リバランス）:
 
 
 
+## (5) ターンオーバー実態（採用構成 vs 比較）
+
+*半導体* = GICS Sub-Industry に `semiconductor` を含む（`isSemiSubIndustry`、`round19-saka.ts`）。2023–2024 の列は四半期ごとに明示。
+
+**リバランスは実行されている:** `simulateSaka` が `rebalanceDates` の各日で `filterEligibleCandidates` → `pickHoldings` → 全売買（`round19-saka.ts:517,541-552`）。本表はスタディと同じ `pickHoldings` / `targetWeights` をキャッシュ上で再計算（`scripts/round19-turnover-audit.ts`）。
+
+**ホールディングが四半期で一切変わらないか:** いいえ（corrdiverse **0** / 43 四半期、plain **2** / 43）。相関 lookback が固定でも eligible プールと greedy 選定で入替が発生。
+
+### corrdiverse_15__equal（IS 採用）
+
+四半期ごとにホールディングが完全同一だった回数（前四半期比 added=removed=0）: **0** / 43
+
+| リバランス日 | ホールディング（ティッカー） | 入替 +/− | GICS セクターウェイト（構成ウェイト） | 半導体* |
+|---|---|---|---|---|
+| 2016-01-04 | NEM,PWR,CMG,QCOM,WELL,NFLX,EIX,MU,DRI,NTAP,STX,VRSK,MOS,ISRG,KLAC | +15/−0 | Information Technology:33%; Materials:13%; Industrials:13%; Consumer Discretionary:13%; Real Estate:7%; Communication Services:7%; Utilities:7%; Health Care:7% | QCOM,MU,KLAC |
+| 2016-04-01 | NEM,CMG,PWR,EIX,NFLX,WMT,MOS,WELL,DRI,ISRG,AMZN,MU,KLAC,AKAM,QCOM | +3/−3 | Information Technology:27%; Consumer Discretionary:20%; Materials:13%; Industrials:7%; Utilities:7%; Communication Services:7%; Consumer Staples:7%; Real Estate:7%; Health Care:7% | MU,KLAC,QCOM |
+| 2016-07-01 | NEM,CMG,EIX,PWR,WMT,WELL,NFLX,DRI,MOS,STX,MO,KLAC,AMZN,EW,ISRG | +3/−3 | Consumer Discretionary:20%; Materials:13%; Consumer Staples:13%; Information Technology:13%; Health Care:13%; Utilities:7%; Industrials:7%; Real Estate:7%; Communication Services:7% | KLAC |
+| 2016-10-03 | NEM,CMG,DHR,EIX,WMT,PWR,NRG,DRI,MOS,WELL,KLAC,NFLX,MO,STX,AMZN | +2/−2 | Consumer Discretionary:20%; Materials:13%; Utilities:13%; Consumer Staples:13%; Information Technology:13%; Health Care:7%; Industrials:7%; Real Estate:7%; Communication Services:7% | KLAC |
+| 2017-01-03 | NEM,CMG,DHR,EIX,WMT,MO,MOS,NFLX,DRI,WELL,EW,T,NVDA,CHTR,AMZN | +4/−4 | Consumer Discretionary:20%; Communication Services:20%; Materials:13%; Health Care:13%; Consumer Staples:13%; Utilities:7%; Real Estate:7%; Information Technology:7% | NVDA |
+| 2017-04-03 | DHR,CMG,EIX,WELL,DRI,CHTR,WMT,MO,NVDA,EW,MOS,NFLX,VZ,NKE,UNH | +3/−3 | Health Care:20%; Consumer Discretionary:20%; Communication Services:20%; Consumer Staples:13%; Utilities:7%; Real Estate:7%; Information Technology:7%; Materials:7% | NVDA |
+| 2017-07-03 | DHR,CMG,NEM,AKAM,DRI,WMT,ADM,MOS,OXY,EW,NKE,MRK,AMGN,WELL,NVDA | +6/−6 | Health Care:27%; Consumer Discretionary:20%; Materials:13%; Information Technology:13%; Consumer Staples:13%; Energy:7%; Real Estate:7% | NVDA |
+| 2017-10-02 | NEM,CMG,DRI,ADM,WMT,OXY,AKAM,MOS,NKE,WELL,VZ,MRK,CVX,ETR,AMT | +4/−4 | Consumer Discretionary:20%; Materials:13%; Consumer Staples:13%; Energy:13%; Real Estate:13%; Information Technology:7%; Communication Services:7%; Health Care:7%; Utilities:7% | — |
+| 2018-01-02 | NEM,DRI,ETR,AMT,EIX,TJX,NKE,CHTR,WMT,CVX,WELL,VZ,CMG,OXY,T | +4/−4 | Consumer Discretionary:27%; Communication Services:20%; Utilities:13%; Real Estate:13%; Energy:13%; Materials:7%; Consumer Staples:7% | — |
+| 2018-04-02 | EIX,NEM,ETR,CMG,WELL,TJX,CHTR,AMT,GE,EQIX,PM,MRK,DVN,DRI,BKNG | +6/−6 | Consumer Discretionary:27%; Real Estate:20%; Utilities:13%; Materials:7%; Communication Services:7%; Industrials:7%; Consumer Staples:7%; Health Care:7%; Energy:7% | — |
+| 2018-07-02 | EIX,ETR,WELL,NEM,CHTR,DRI,CMG,GE,PM,EQIX,AMT,TJX,T,WMT,SBUX | +3/−3 | Consumer Discretionary:27%; Real Estate:20%; Utilities:13%; Communication Services:13%; Consumer Staples:13%; Materials:7%; Industrials:7% | — |
+| 2018-10-01 | EIX,ETR,CMG,WELL,PM,DRI,CHTR,T,EQIX,TJX,MO,AMT,NEM,WMT,MRK | +2/−2 | Consumer Discretionary:20%; Real Estate:20%; Consumer Staples:20%; Utilities:13%; Communication Services:13%; Materials:7%; Health Care:7% | — |
+| 2019-01-02 | NEM,ETR,EIX,PM,WELL,MO,CMG,VZ,AMT,EQIX,DRI,T,WMT,F,KHC | +3/−3 | Consumer Staples:27%; Real Estate:20%; Consumer Discretionary:20%; Utilities:13%; Communication Services:13%; Materials:7% | — |
+| 2019-04-01 | NEM,ETR,EIX,KHC,VZ,WELL,PM,MO,CMG,AMT,DRI,EQIX,T,WMT,NRG | +1/−1 | Consumer Staples:27%; Utilities:20%; Real Estate:20%; Communication Services:13%; Consumer Discretionary:13%; Materials:7% | — |
+| 2019-07-01 | NEM,ETR,VZ,KHC,WELL,EIX,MO,PM,AMT,CMG,QCOM,DGX,EQIX,F,DRI | +3/−3 | Consumer Staples:20%; Real Estate:20%; Consumer Discretionary:20%; Utilities:13%; Materials:7%; Communication Services:7%; Information Technology:7%; Health Care:7% | QCOM |
+| 2019-10-01 | NEM,ETR,KHC,WELL,EIX,VZ,PM,MO,IFF,EQIX,CMG,QCOM,CI,DGX,NRG | +3/−3 | Utilities:20%; Consumer Staples:20%; Materials:13%; Real Estate:13%; Health Care:13%; Communication Services:7%; Consumer Discretionary:7%; Information Technology:7% | QCOM |
+| 2020-01-02 | NEM,WELL,AMT,KHC,ETR,EIX,VZ,IFF,EQIX,CMG,PM,UNH,MO,WMT,DRI | +4/−4 | Consumer Staples:27%; Real Estate:20%; Materials:13%; Utilities:13%; Consumer Discretionary:13%; Communication Services:7%; Health Care:7% | — |
+| 2020-04-01 | NEM,FANG,NFLX,AKAM,WMT,TTWO,ANET,CMG,IFF,NTAP,RCL,VZ,KHC,MO,MRK | +8/−8 | Communication Services:20%; Information Technology:20%; Consumer Staples:20%; Materials:13%; Consumer Discretionary:13%; Energy:7%; Health Care:7% | — |
+| 2020-07-01 | NEM,NFLX,TTWO,AKAM,WMT,CMG,EOG,ANET,IFF,FTNT,NTAP,AMZN,KHC,TYL,MO | +4/−4 | Information Technology:33%; Consumer Staples:20%; Materials:13%; Communication Services:13%; Consumer Discretionary:13%; Energy:7% | — |
+| 2020-10-01 | NEM,NFLX,AKAM,TTWO,WMT,AMZN,CMG,EOG,ANET,TYL,FTNT,DGX,AMD,MO,F | +3/−3 | Information Technology:33%; Consumer Discretionary:20%; Communication Services:13%; Consumer Staples:13%; Materials:7%; Energy:7%; Health Care:7% | AMD |
+| 2021-01-04 | NEM,NFLX,TTWO,AKAM,WMT,AMZN,EOG,CMG,TYL,DGX,FTNT,AMD,WELL,GE,MO | +2/−2 | Information Technology:27%; Communication Services:13%; Consumer Staples:13%; Consumer Discretionary:13%; Materials:7%; Energy:7%; Health Care:7%; Real Estate:7%; Industrials:7% | AMD |
+| 2021-04-01 | NEM,NFLX,TTWO,WMT,AKAM,GE,DGX,TSLA,CHTR,STX,MO,AMGN,TYL,EQIX,FTNT | +5/−5 | Information Technology:27%; Communication Services:20%; Consumer Staples:13%; Health Care:13%; Materials:7%; Industrials:7%; Consumer Discretionary:7%; Real Estate:7% | — |
+| 2021-07-01 | DGX,T,GE,VZ,STX,F,MMM,EOG,MOS,EIX,CI,ORCL,DIS,NFLX,MRK | +11/−11 | Communication Services:27%; Health Care:20%; Industrials:13%; Information Technology:13%; Consumer Discretionary:7%; Energy:7%; Materials:7%; Utilities:7% | — |
+| 2021-10-01 | DGX,EQIX,T,MRK,VZ,TTWO,NFLX,MMM,ETR,CHTR,NEM,AKAM,ORCL,KHC,CI | +7/−7 | Communication Services:33%; Health Care:20%; Information Technology:13%; Real Estate:7%; Industrials:7%; Utilities:7%; Materials:7%; Consumer Staples:7% | — |
+| 2022-01-03 | DGX,MRK,EQIX,VZ,NEM,KHC,T,ORCL,EIX,ETR,TTWO,NRG,CHTR,MMM,AKAM | +2/−2 | Communication Services:27%; Utilities:20%; Health Care:13%; Information Technology:13%; Real Estate:7%; Materials:7%; Consumer Staples:7%; Industrials:7% | — |
+| 2022-04-01 | NEM,MRK,KHC,DGX,VZ,CVX,MO,ETR,TTWO,WMT,PM,EIX,ADM,EQIX,AMGN | +6/−6 | Consumer Staples:33%; Health Care:20%; Communication Services:13%; Utilities:13%; Materials:7%; Energy:7%; Real Estate:7% | — |
+| 2022-07-01 | NEM,MRK,WMT,MO,PM,KHC,VZ,ETR,AMGN,DGX,T,CHTR,TTWO,OXY,VLO | +4/−4 | Consumer Staples:27%; Communication Services:27%; Health Care:20%; Energy:13%; Materials:7%; Utilities:7% | — |
+| 2022-10-03 | NEM,MRK,KHC,MO,WMT,PM,VZ,OXY,VLO,MOS,T,AMGN,ETR,DGX,CHTR | +1/−1 | Consumer Staples:27%; Health Care:20%; Communication Services:20%; Materials:13%; Energy:13%; Utilities:7% | — |
+| 2023-01-03 | KHC,NEM,MRK,MO,WMT,AMGN,VZ,OXY,VLO,PM,MOS,T,ADM,ETR,CI | +2/−2 | Consumer Staples:33%; Health Care:20%; Materials:13%; Communication Services:13%; Energy:13%; Utilities:7% | **なし** |
+| 2023-04-03 | MRK,KHC,AMGN,MO,NEM,VZ,WMT,CI,VLO,T,PM,MOS,NFLX,OXY,ADM | +1/−1 | Consumer Staples:33%; Health Care:20%; Communication Services:20%; Materials:13%; Energy:13% | **なし** |
+| 2023-07-03 | MRK,KHC,CI,AMGN,NEM,UNH,VZ,T,EW,TMUS,VLO,MO,TSLA,OXY,WMT | +4/−4 | Health Care:33%; Consumer Staples:20%; Communication Services:20%; Energy:13%; Materials:7%; Consumer Discretionary:7% | **なし** |
+| 2023-10-02 | MRK,KHC,UNH,AMGN,CI,VZ,TMUS,T,EW,MO,NEM,RTX,DGX,VLO,TSLA | +2/−2 | Health Care:40%; Communication Services:20%; Consumer Staples:13%; Materials:7%; Industrials:7%; Energy:7%; Consumer Discretionary:7% | **なし** |
+| 2024-01-02 | UNH,MRK,T,TMUS,CI,KHC,NEM,DGX,WMT,AMGN,RTX,MO,FTNT,CMG,VLO | +3/−3 | Health Care:33%; Consumer Staples:20%; Communication Services:13%; Materials:7%; Industrials:7%; Information Technology:7%; Consumer Discretionary:7%; Energy:7% | **なし** |
+| 2024-04-01 | UNH,KHC,MRK,T,TMUS,DGX,RTX,WMT,CMG,VRSK,CI,ADM,AMGN,NEM,MDT | +3/−3 | Health Care:40%; Consumer Staples:20%; Communication Services:13%; Industrials:13%; Consumer Discretionary:7%; Materials:7% | **なし** |
+| 2024-07-01 | UNH,T,KHC,CI,RTX,WMT,MRK,ADM,DGX,NKE,VRSK,FTNT,VST,MPC,DIS | +5/−5 | Health Care:27%; Consumer Staples:20%; Communication Services:13%; Industrials:13%; Consumer Discretionary:7%; Information Technology:7%; Utilities:7%; Energy:7% | **なし** |
+| 2024-10-01 | UNH,T,MRK,VRSK,KHC,WMT,FTNT,CI,RTX,AMT,MO,DGX,ADM,TMUS,PM | +4/−4 | Consumer Staples:33%; Health Care:27%; Communication Services:13%; Industrials:13%; Information Technology:7%; Real Estate:7% | **なし** |
+| 2025-01-02 | T,AMT,PM,UNH,ETR,CI,MRK,MO,VRSK,KHC,ADM,TMUS,FTNT,WMT,RTX | +1/−1 | Consumer Staples:33%; Health Care:20%; Communication Services:13%; Industrials:13%; Real Estate:7%; Utilities:7%; Information Technology:7% | — |
+| 2025-04-01 | MRK,MO,AMT,VZ,PM,CI,KHC,ADM,VRSK,EIX,UNH,ETR,TMUS,MDT,DGX | +4/−4 | Health Care:33%; Consumer Staples:27%; Communication Services:13%; Utilities:13%; Real Estate:7%; Industrials:7% | — |
+| 2025-07-01 | AMT,MO,UNH,CI,PM,VZ,MRK,EW,TMUS,VRSK,DGX,ETR,NEM,WELL,EIX | +3/−3 | Health Care:33%; Real Estate:13%; Consumer Staples:13%; Communication Services:13%; Utilities:13%; Industrials:7%; Materials:7% | — |
+| 2025-10-01 | MO,AMT,UNH,PM,CI,VZ,TMUS,DGX,NEM,MRK,ADM,VRSK,WELL,ETR,AMGN | +2/−2 | Health Care:33%; Consumer Staples:20%; Real Estate:13%; Communication Services:13%; Materials:7%; Industrials:7%; Utilities:7% | — |
+| 2026-01-02 | MO,AMT,PM,UNH,CI,T,TMUS,VRSK,DGX,MRK,ADM,NEM,WELL,AMGN,EIX | +2/−2 | Health Care:33%; Consumer Staples:20%; Real Estate:13%; Communication Services:13%; Industrials:7%; Materials:7%; Utilities:7% | — |
+| 2026-04-01 | MO,AMT,T,PM,UNH,TMUS,VRSK,CI,DGX,TYL,NEM,WELL,NFLX,CHTR,TJX | +4/−4 | Communication Services:27%; Health Care:20%; Consumer Staples:13%; Real Estate:13%; Industrials:7%; Information Technology:7%; Materials:7%; Consumer Discretionary:7% | — |
+| 2026-07-01 | TMUS,VRSK,MO,T,CVX,TYL,PM,WMT,DGX,NOW,OXY,NFLX,AMT,VLO,WELL | +5/−5 | Communication Services:20%; Consumer Staples:20%; Energy:20%; Information Technology:13%; Real Estate:13%; Industrials:7%; Health Care:7% | — |
+| 2026-10-01 | MO,VRSK,CVX,TMUS,T,TYL,PM,FANG,NOW,VLO,DGX,WMT,NFLX,AMT,ADSK | +2/−2 | Consumer Staples:20%; Energy:20%; Communication Services:20%; Information Technology:20%; Industrials:7%; Health Care:7%; Real Estate:7% | — |
+
+### plain_20__mcap（OOS 年率上位の比較）
+
+四半期ごとにホールディングが完全同一だった回数（前四半期比 added=removed=0）: **2** / 43
+
+| リバランス日 | ホールディング（ティッカー） | 入替 +/− | GICS セクターウェイト（構成ウェイト） | 半導体* |
+|---|---|---|---|---|
+| 2016-01-04 | MSFT,CVX,AAPL,MRK,ORCL,BA,INTC,VZ,PM,CSCO,UNH,AMGN,MDT,T,TXN,SBUX,COP,HON,QCOM,MO | +20/−0 | Information Technology:45%; Health Care:18%; Energy:9%; Communication Services:9%; Industrials:9%; Consumer Staples:7%; Consumer Discretionary:3% | INTC,TXN,QCOM |
+| 2016-04-01 | MSFT,ORCL,AAPL,MRK,PM,VZ,INTC,BA,CVX,CSCO,UNH,T,MO,AMGN,MDT,TXN,SBUX,HON,MMM,WMT | +2/−2 | Information Technology:42%; Health Care:18%; Consumer Staples:12%; Industrials:11%; Communication Services:10%; Energy:5%; Consumer Discretionary:3% | INTC,TXN |
+| 2016-07-01 | MSFT,ORCL,MRK,VZ,PM,CVX,INTC,BA,AAPL,UNH,CSCO,T,MO,MDT,AMGN,TXN,HON,SBUX,KHC,MMM | +1/−1 | Information Technology:40%; Health Care:19%; Consumer Staples:13%; Industrials:11%; Communication Services:10%; Energy:5%; Consumer Discretionary:3% | INTC,TXN |
+| 2016-10-03 | MSFT,MRK,INTC,ORCL,AAPL,CVX,PM,VZ,BA,CSCO,UNH,T,AMGN,TXN,MDT,MO,QCOM,CHTR,HON,KHC | +2/−2 | Information Technology:45%; Health Care:18%; Communication Services:12%; Consumer Staples:12%; Industrials:8%; Energy:5% | INTC,TXN,QCOM |
+| 2017-01-03 | MSFT,CVX,MRK,BA,INTC,AAPL,ORCL,VZ,UNH,PM,CSCO,T,TXN,AMGN,CHTR,MDT,QCOM,HON,KHC,MO | +0/−0 | Information Technology:44%; Health Care:17%; Communication Services:13%; Consumer Staples:10%; Industrials:8%; Energy:7% | INTC,TXN,QCOM |
+| 2017-04-03 | GE,MSFT,AAPL,BA,MRK,ORCL,PM,INTC,UNH,CSCO,VZ,TXN,T,MO,AMGN,CHTR,MDT,HON,KHC,MMM | +2/−2 | Industrials:39%; Information Technology:31%; Health Care:13%; Consumer Staples:9%; Communication Services:8% | INTC,TXN |
+| 2017-07-03 | GE,MSFT,BA,ORCL,AAPL,MRK,PM,UNH,CVX,INTC,CSCO,VZ,MO,TXN,T,AMGN,MDT,CHTR,HON,MMM | +1/−1 | Industrials:37%; Information Technology:31%; Health Care:13%; Communication Services:8%; Consumer Staples:7%; Energy:4% | INTC,TXN |
+| 2017-10-02 | GE,MSFT,BA,AAPL,ORCL,MRK,UNH,INTC,CVX,PM,CSCO,VZ,TXN,AMGN,T,CHTR,MO,HON,MDT,MMM | +0/−0 | Industrials:35%; Information Technology:33%; Health Care:13%; Communication Services:8%; Consumer Staples:6%; Energy:4% | INTC,TXN |
+| 2018-01-02 | GE,MSFT,BA,CVX,AAPL,UNH,INTC,ORCL,CSCO,MRK,TXN,PM,VZ,T,AMGN,CHTR,HON,MDT,MMM,WMT | +1/−1 | Information Technology:37%; Industrials:30%; Health Care:13%; Communication Services:9%; Consumer Staples:6%; Energy:5% | INTC,TXN |
+| 2018-04-02 | MSFT,GE,BA,AAPL,INTC,UNH,ORCL,CSCO,CVX,MRK,TXN,PM,VZ,T,MO,AMGN,HON,MDT,CHTR,MMM | +1/−1 | Information Technology:40%; Industrials:27%; Health Care:14%; Communication Services:8%; Consumer Staples:6%; Energy:4% | INTC,TXN |
+| 2018-07-02 | MSFT,GE,BA,AAPL,UNH,INTC,CVX,MRK,ORCL,TXN,VZ,PM,T,AMGN,MDT,HON,MO,CHTR,WMT,MMM | +1/−1 | Information Technology:38%; Industrials:27%; Health Care:15%; Communication Services:8%; Consumer Staples:7%; Energy:4% | INTC,TXN |
+| 2018-10-01 | MSFT,BA,AAPL,UNH,MRK,INTC,ORCL,CVX,TXN,VZ,PM,T,MDT,AMGN,HON,MO,CHTR,WMT,MMM,COP | +1/−1 | Information Technology:44%; Health Care:17%; Industrials:15%; Communication Services:9%; Consumer Staples:8%; Energy:7% | INTC,TXN |
+| 2019-01-02 | MSFT,BA,UNH,MRK,CVX,INTC,AAPL,VZ,ORCL,TXN,T,PM,AMGN,MDT,COP,HON,WMT,CHTR,MMM,SBUX | +1/−1 | Information Technology:41%; Health Care:18%; Industrials:14%; Communication Services:10%; Energy:9%; Consumer Staples:5%; Consumer Discretionary:2% | INTC,TXN |
+| 2019-04-01 | MSFT,BA,MRK,INTC,AAPL,UNH,DIS,CVX,ORCL,VZ,TXN,PM,T,HON,MDT,AMGN,CHTR,MO,WMT,DHR | +3/−3 | Information Technology:42%; Health Care:18%; Communication Services:15%; Industrials:13%; Consumer Staples:8%; Energy:5% | INTC,TXN |
+| 2019-07-01 | MSFT,BA,DIS,MRK,AAPL,UNH,CSCO,INTC,ORCL,CVX,TXN,VZ,T,PM,HON,CHTR,MDT,WMT,AMGN,DHR | +1/−1 | Information Technology:47%; Health Care:18%; Communication Services:15%; Industrials:11%; Consumer Staples:5%; Energy:4% | INTC,TXN |
+| 2019-10-01 | MSFT,BA,AAPL,MRK,DIS,INTC,TXN,UNH,VZ,CSCO,CVX,ORCL,T,MDT,PM,CHTR,WMT,HON,AMGN,SBUX | +1/−1 | Information Technology:47%; Communication Services:15%; Health Care:15%; Industrials:12%; Consumer Staples:5%; Energy:4%; Consumer Discretionary:2% | INTC,TXN |
+| 2020-01-02 | MSFT,BA,AAPL,DIS,MRK,UNH,INTC,CVX,TXN,VZ,CSCO,ORCL,T,CHTR,PM,MDT,AMGN,HON,WMT,DHR | +1/−1 | Information Technology:48%; Health Care:18%; Communication Services:15%; Industrials:10%; Consumer Staples:5%; Energy:5% | INTC,TXN |
+| 2020-04-01 | MSFT,GE,AAPL,MRK,UNH,INTC,DIS,VZ,TXN,ORCL,CSCO,BA,CHTR,PM,T,WMT,CVX,AMGN,MDT,HON | +1/−1 | Information Technology:50%; Health Care:15%; Communication Services:14%; Industrials:13%; Consumer Staples:5%; Energy:2% | INTC,TXN |
+| 2020-07-01 | MSFT,AAPL,GE,UNH,INTC,MRK,DIS,TXN,CSCO,VZ,ORCL,CHTR,CVX,TMUS,AMGN,T,PM,DHR,WMT,MDT | +2/−2 | Information Technology:54%; Health Care:17%; Communication Services:15%; Industrials:6%; Consumer Staples:5%; Energy:3% | INTC,TXN |
+| 2020-10-01 | AAPL,MSFT,UNH,GE,MRK,DIS,TXN,INTC,CHTR,VZ,ORCL,CSCO,TMUS,DHR,WMT,AMGN,QCOM,PM,MDT,T | +1/−1 | Information Technology:66%; Health Care:13%; Communication Services:12%; Industrials:4%; Consumer Staples:4% | TXN,INTC,QCOM |
+| 2021-01-04 | AAPL,MSFT,GE,DIS,UNH,TXN,MRK,INTC,VZ,CHTR,ORCL,CVX,CSCO,TMUS,QCOM,DHR,PM,MDT,WMT,HON | +2/−2 | Information Technology:64%; Communication Services:11%; Health Care:11%; Industrials:8%; Consumer Staples:4%; Energy:2% | TXN,INTC,QCOM |
+| 2021-04-01 | AAPL,MSFT,GE,DIS,UNH,TXN,INTC,MRK,TSLA,ORCL,CSCO,VZ,CHTR,TMUS,PM,DHR,QCOM,MDT,HON,T | +2/−2 | Information Technology:63%; Communication Services:12%; Health Care:11%; Industrials:9%; Consumer Discretionary:3%; Consumer Staples:2% | TXN,INTC,QCOM |
+| 2021-07-01 | AAPL,MSFT,GE,UNH,DIS,TXN,MRK,TSLA,INTC,ORCL,CHTR,CSCO,TMUS,VZ,DHR,PM,MDT,QCOM,HON,NKE | +1/−1 | Information Technology:64%; Health Care:11%; Communication Services:10%; Industrials:9%; Consumer Discretionary:4%; Consumer Staples:2% | TXN,INTC,QCOM |
+| 2021-10-01 | AAPL,MSFT,UNH,DIS,TXN,TSLA,MRK,ORCL,INTC,CSCO,CHTR,DHR,CVX,VZ,PM,TMUS,MDT,HON,QCOM,AMD | +2/−2 | Information Technology:69%; Health Care:11%; Communication Services:10%; Consumer Discretionary:3%; Energy:2%; Consumer Staples:2%; Industrials:2% | TXN,INTC,QCOM,AMD |
+| 2022-01-03 | AAPL,MSFT,UNH,TSLA,TXN,DIS,CVX,MRK,CSCO,ORCL,INTC,DHR,QCOM,AMD,CHTR,VZ,PM,TMUS,COP,ISRG | +2/−2 | Information Technology:71%; Health Care:11%; Communication Services:8%; Consumer Discretionary:4%; Energy:4%; Consumer Staples:2% | TXN,INTC,QCOM,AMD |
+| 2022-04-01 | AAPL,MSFT,UNH,TSLA,TXN,CVX,MRK,DIS,ORCL,CSCO,INTC,DHR,AMD,PM,VZ,TMUS,CHTR,QCOM,RTX,WMT | +2/−2 | Information Technology:70%; Health Care:10%; Communication Services:8%; Consumer Discretionary:4%; Consumer Staples:3%; Energy:3%; Industrials:2% | TXN,INTC,AMD,QCOM |
+| 2022-07-01 | AAPL,MSFT,GOOGL,AMZN,UNH,MRK,CVX,TSLA,TXN,ORCL,PM,DIS,VZ,TMUS,DHR,CSCO,INTC,RTX,CHTR,T | +3/−3 | Information Technology:49%; Communication Services:22%; Consumer Discretionary:14%; Health Care:9%; Energy:2%; Consumer Staples:2%; Industrials:1% | TXN,INTC |
+| 2022-10-03 | AAPL,MSFT,GOOGL,AMZN,TSLA,UNH,MRK,CVX,TXN,DHR,DIS,TMUS,ORCL,CSCO,PM,VZ,COP,QCOM,WMT,RTX | +3/−3 | Information Technology:47%; Consumer Discretionary:20%; Communication Services:17%; Health Care:9%; Energy:4%; Consumer Staples:3%; Industrials:1% | TXN,QCOM |
+| 2023-01-03 | AAPL,MSFT,GOOGL,AMZN,UNH,CVX,MRK,TSLA,TXN,ORCL,COP,PM,CSCO,DHR,TMUS,RTX,DIS,VZ,HON,AMGN | +2/−2 | Information Technology:47%; Communication Services:17%; Consumer Discretionary:13%; Health Care:12%; Energy:6%; Industrials:3%; Consumer Staples:2% | **あり** (TXN) |
+| 2023-04-03 | AAPL,MSFT,GOOGL,AMZN,TSLA,UNH,MRK,TXN,CVX,ORCL,CSCO,PM,DIS,TMUS,DHR,AMD,RTX,INTC,VZ,QCOM | +3/−3 | Information Technology:54%; Communication Services:17%; Consumer Discretionary:15%; Health Care:9%; Energy:3%; Consumer Staples:2%; Industrials:1% | **あり** (TXN,AMD,INTC,QCOM) |
+| 2023-07-03 | AAPL,MSFT,GOOGL,AMZN,TSLA,UNH,MRK,ORCL,TXN,CVX,CSCO,AMD,PM,DIS,TMUS,DHR,INTC,WMT,RTX,HON | +2/−2 | Information Technology:53%; Consumer Discretionary:18%; Communication Services:15%; Health Care:8%; Consumer Staples:3%; Industrials:2%; Energy:2% | **あり** (TXN,AMD,INTC) |
+| 2023-10-02 | AAPL,MSFT,GOOGL,AMZN,TSLA,UNH,MRK,ORCL,CVX,TXN,CSCO,PM,AMD,DHR,TMUS,INTC,DIS,MPC,WMT,AMGN | +2/−2 | Information Technology:51%; Consumer Discretionary:18%; Communication Services:16%; Health Care:9%; Energy:3%; Consumer Staples:3% | **あり** (TXN,AMD,INTC) |
+| 2024-01-02 | AAPL,MSFT,GOOGL,AMZN,TSLA,UNH,MRK,CVX,ORCL,TXN,COP,AMD,INTC,CSCO,TMUS,PM,DHR,DIS,QCOM,AMGN | +2/−2 | Information Technology:52%; Consumer Discretionary:18%; Communication Services:16%; Health Care:9%; Energy:4%; Consumer Staples:1% | **あり** (TXN,AMD,INTC,QCOM) |
+| 2024-04-01 | MSFT,AAPL,GOOGL,AMZN,TSLA,WMT,MRK,UNH,ORCL,AMD,TXN,CVX,NVDA,DIS,MPC,CSCO,TMUS,QCOM,DHR,PM | +3/−3 | Information Technology:51%; Consumer Discretionary:17%; Communication Services:16%; Health Care:7%; Consumer Staples:5%; Energy:3% | **あり** (AMD,TXN,NVDA,QCOM) |
+| 2024-07-01 | MSFT,AAPL,GOOGL,AMZN,TSLA,WMT,UNH,MRK,ORCL,TXN,NVDA,CVX,AMD,QCOM,TMUS,PM,DIS,CSCO,DHR,GE | +1/−1 | Information Technology:52%; Consumer Discretionary:17%; Communication Services:17%; Health Care:7%; Consumer Staples:5%; Energy:2%; Industrials:1% | **あり** (TXN,NVDA,AMD,QCOM) |
+| 2024-10-01 | AAPL,MSFT,NVDA,GOOGL,AMZN,TSLA,AVGO,WMT,UNH,ORCL,MRK,TXN,AMD,CVX,PM,TMUS,CSCO,GE,DHR,QCOM | +1/−1 | Information Technology:61%; Consumer Discretionary:15%; Communication Services:12%; Health Care:6%; Consumer Staples:5%; Energy:1%; Industrials:1% | **あり** (NVDA,AVGO,TXN,AMD,QCOM) |
+| 2025-01-02 | AAPL,NVDA,MSFT,AMZN,GOOGL,TSLA,AVGO,WMT,ORCL,UNH,MRK,CVX,TXN,TMUS,PM,CSCO,COP,DIS,AMD,ISRG | +3/−3 | Information Technology:58%; Consumer Discretionary:17%; Communication Services:13%; Health Care:5%; Consumer Staples:5%; Energy:3% | NVDA,AVGO,TXN,AMD |
+| 2025-04-01 | AAPL,MSFT,NVDA,AMZN,GOOGL,TSLA,AVGO,WMT,UNH,ORCL,PM,TXN,TMUS,MRK,CVX,CSCO,GE,T,PLTR,DIS | +3/−3 | Information Technology:58%; Consumer Discretionary:16%; Communication Services:14%; Consumer Staples:6%; Health Care:4%; Energy:1%; Industrials:1% | NVDA,AVGO,TXN |
+| 2025-07-01 | NVDA,MSFT,AAPL,AMZN,GOOGL,AVGO,TSLA,WMT,ORCL,PM,TXN,PLTR,UNH,MRK,TMUS,CSCO,GE,CVX,DIS,AMD | +1/−1 | Information Technology:62%; Consumer Discretionary:15%; Communication Services:12%; Consumer Staples:5%; Health Care:3%; Industrials:1%; Energy:1% | NVDA,AVGO,TXN,AMD |
+| 2025-10-01 | NVDA,MSFT,AAPL,GOOGL,AMZN,AVGO,TSLA,ORCL,WMT,PLTR,PM,GE,MRK,UNH,TXN,CVX,AMD,CSCO,TMUS,RTX | +1/−1 | Information Technology:62%; Consumer Discretionary:15%; Communication Services:13%; Consumer Staples:4%; Health Care:2%; Industrials:2%; Energy:1% | NVDA,AVGO,TXN,AMD |
+| 2026-01-02 | NVDA,AAPL,GOOGL,MSFT,AMZN,TSLA,AVGO,WMT,ORCL,PLTR,NFLX,MRK,CVX,AMD,MU,GE,PM,TXN,UNH,CSCO | +2/−2 | Information Technology:60%; Communication Services:16%; Consumer Discretionary:15%; Consumer Staples:5%; Health Care:3%; Energy:1%; Industrials:1% | NVDA,AVGO,AMD,MU,TXN |
+| 2026-04-01 | NVDA,AAPL,GOOGL,MSFT,AMZN,AVGO,TSLA,WMT,MRK,ORCL,MU,NFLX,CVX,PLTR,AMD,TXN,PM,GE,CSCO,LRCX | +1/−1 | Information Technology:59%; Communication Services:16%; Consumer Discretionary:15%; Consumer Staples:5%; Health Care:2%; Energy:2%; Industrials:1% | NVDA,AVGO,MU,AMD,TXN,LRCX |
+| 2026-07-01 | NVDA,GOOGL,AAPL,MSFT,AMZN,AVGO,TSLA,MU,AMD,WMT,TXN,LRCX,CSCO,MRK,GLW,ORCL,GE,UNH,PM,KLAC | +3/−3 | Information Technology:60%; Communication Services:16%; Consumer Discretionary:15%; Consumer Staples:4%; Health Care:3%; Industrials:1% | NVDA,AVGO,MU,AMD,TXN,LRCX,KLAC |
+| 2026-10-01 | NVDA,AAPL,GOOGL,MSFT,AMZN,AVGO,TSLA,MU,AMD,WMT,PLTR,CSCO,LRCX,ORCL,CVX,MRK,DELL,UNH,GE,PM | +3/−3 | Information Technology:64%; Communication Services:14%; Consumer Discretionary:14%; Consumer Staples:4%; Health Care:2%; Energy:1%; Industrials:1% | NVDA,AVGO,MU,AMD,LRCX |
+
+### 2023–2024 半導体サマリ
+
+| 構成 | 四半期 | 半導体保有 |
+|---|---|---|
+| corrdiverse_15__equal | 2023-01-03 | なし |
+| corrdiverse_15__equal | 2023-04-03 | なし |
+| corrdiverse_15__equal | 2023-07-03 | なし |
+| corrdiverse_15__equal | 2023-10-02 | なし |
+| corrdiverse_15__equal | 2024-01-02 | なし |
+| corrdiverse_15__equal | 2024-04-01 | なし |
+| corrdiverse_15__equal | 2024-07-01 | なし |
+| corrdiverse_15__equal | 2024-10-01 | なし |
+| plain_20__mcap | 2023-01-03 | あり TXN |
+| plain_20__mcap | 2023-04-03 | あり TXN,AMD,INTC,QCOM |
+| plain_20__mcap | 2023-07-03 | あり TXN,AMD,INTC |
+| plain_20__mcap | 2023-10-02 | あり TXN,AMD,INTC |
+| plain_20__mcap | 2024-01-02 | あり TXN,AMD,INTC,QCOM |
+| plain_20__mcap | 2024-04-01 | あり AMD,TXN,NVDA,QCOM |
+| plain_20__mcap | 2024-07-01 | あり TXN,NVDA,AMD,QCOM |
+| plain_20__mcap | 2024-10-01 | あり NVDA,AVGO,TXN,AMD,QCOM |
+
 ## (7) 最終リバランス（2026-10-01）— なぜこの 15 銘柄まで残ったか（漏斗）
 
 採用構成 **corrdiverse_15__equal** の、その日の選び方です。上から順に「足切り」されていきます。
@@ -227,3 +358,152 @@ eligible ユニバースに占める watchlist 比率（各リバランス）:
 
 **見積（ラベル付き）:** 取引額が **$50 未満**のリバランス片をスキップした場合、約 **0** 注文を省略でき、手数料はおおよそ **$0** 少なくなる可能性があります（実装は未変更・概算のみ）。
 
+## Corrected v1（バグ修正再実行・**新デザインではない**）
+
+事前登録 `6e3ad93` の **30 構成・IS 採用規則は同一**。変更点のみ:
+
+| 修正 | 内容 |
+|---|---|
+| CIK | SEC `company_tickers.json` + GICS CSV CIK（`resolveCik`）。watchlist 限定 `sec_cik.json` は使わない |
+| EDGAR | facts 欠損は **unknown**（赤字扱いしない）。eligible は **profitable のみ** |
+| 相関 | 日付キーでリターンを揃えてから Pearson（`pearsonOnAlignedSeries`） |
+| 約定 | **差分リバランス**（除名は全売り、新規は買い、継続は |Δ|≥$25 **または** 相対ドリフト≥20% のときのみ） |
+
+### データカバレッジ
+
+- PIT ユニーク銘柄: **745**
+- facts ファイル: **601**（80.7%）
+- CIK 未解決: **144**
+- 目標 facts≥95%/リバランス → 下表「facts %」列
+
+### 四半期 eligible（修正後）
+
+| 日付 | PIT | 金融・テーマ後 | 黒字 | 赤字 | unknown | eligible | facts/PIT | ∩watchlist |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 2016-01-04 | 504 | 454 | 297 | 18 | 13 | 297 | 77.4% | 22.9% |
+| 2016-04-01 | 505 | 454 | 299 | 20 | 12 | 299 | 77.8% | 22.7% |
+| 2016-07-01 | 507 | 454 | 306 | 20 | 11 | 306 | 78.7% | 22.2% |
+| 2016-10-03 | 507 | 454 | 307 | 23 | 12 | 307 | 79.5% | 22.8% |
+| 2017-01-03 | 506 | 453 | 306 | 24 | 12 | 306 | 79.6% | 22.9% |
+| 2017-04-03 | 506 | 452 | 302 | 34 | 10 | 302 | 80.4% | 22.5% |
+| 2017-07-03 | 506 | 452 | 310 | 30 | 9 | 310 | 80.8% | 22.9% |
+| 2017-10-02 | 506 | 452 | 321 | 24 | 8 | 321 | 81.4% | 22.4% |
+| 2018-01-02 | 505 | 451 | 323 | 23 | 8 | 323 | 81.8% | 22.3% |
+| 2018-04-02 | 506 | 452 | 326 | 23 | 8 | 326 | 82.2% | 23.0% |
+| 2018-07-02 | 507 | 452 | 328 | 22 | 7 | 328 | 82.2% | 23.5% |
+| 2018-10-01 | 506 | 451 | 330 | 21 | 7 | 330 | 82.6% | 23.9% |
+| 2019-01-02 | 506 | 450 | 335 | 20 | 8 | 335 | 83.8% | 24.2% |
+| 2019-04-01 | 505 | 449 | 339 | 21 | 6 | 339 | 84.2% | 24.2% |
+| 2019-07-01 | 506 | 450 | 347 | 16 | 6 | 347 | 84.6% | 24.2% |
+| 2019-10-01 | 505 | 448 | 354 | 15 | 4 | 354 | 85.5% | 24.0% |
+| 2020-01-02 | 505 | 446 | 358 | 14 | 4 | 358 | 86.3% | 24.3% |
+| 2020-04-01 | 505 | 446 | 345 | 29 | 4 | 345 | 86.7% | 24.9% |
+| 2020-07-01 | 505 | 446 | 334 | 46 | 4 | 334 | 87.9% | 24.3% |
+| 2020-10-01 | 505 | 446 | 329 | 51 | 4 | 329 | 87.9% | 24.3% |
+| 2021-01-04 | 505 | 446 | 328 | 54 | 5 | 328 | 88.5% | 24.1% |
+| 2021-04-01 | 505 | 445 | 321 | 64 | 3 | 321 | 88.9% | 24.3% |
+| 2021-07-01 | 505 | 445 | 330 | 58 | 3 | 330 | 89.5% | 24.5% |
+| 2021-10-01 | 505 | 444 | 353 | 36 | 3 | 353 | 89.7% | 24.9% |
+| 2022-01-03 | 505 | 442 | 354 | 35 | 3 | 354 | 90.1% | 24.9% |
+| 2022-04-01 | 505 | 440 | 369 | 23 | 3 | 369 | 91.1% | 24.4% |
+| 2022-07-01 | 503 | 438 | 377 | 20 | 3 | 377 | 92.4% | 24.9% |
+| 2022-10-03 | 505 | 440 | 372 | 27 | 3 | 372 | 92.5% | 25.5% |
+| 2023-01-03 | 503 | 436 | 374 | 28 | 3 | 374 | 93.8% | 25.4% |
+| 2023-04-03 | 503 | 436 | 373 | 30 | 4 | 373 | 94.2% | 25.2% |
+| 2023-07-03 | 503 | 437 | 378 | 28 | 4 | 378 | 94.6% | 25.4% |
+| 2023-10-02 | 504 | 436 | 382 | 24 | 4 | 382 | 95.0% | 24.9% |
+| 2024-01-02 | 503 | 436 | 384 | 25 | 4 | 384 | 95.4% | 25.0% |
+| 2024-04-01 | 504 | 436 | 390 | 23 | 2 | 390 | 95.8% | 24.9% |
+| 2024-07-01 | 503 | 434 | 392 | 21 | 2 | 392 | 96.2% | 25.5% |
+| 2024-10-01 | 504 | 434 | 396 | 17 | 3 | 396 | 96.4% | 26.0% |
+| 2025-01-02 | 503 | 432 | 400 | 14 | 2 | 400 | 96.8% | 26.3% |
+| 2025-04-01 | 503 | 432 | 392 | 22 | 2 | 392 | 96.8% | 27.0% |
+| 2025-07-01 | 503 | 431 | 395 | 19 | 2 | 395 | 97.0% | 26.6% |
+| 2025-10-01 | 503 | 429 | 394 | 22 | 2 | 394 | 97.8% | 26.9% |
+| 2026-01-02 | 503 | 427 | 392 | 24 | 3 | 392 | 98.4% | 26.8% |
+| 2026-04-01 | 503 | 426 | 393 | 23 | 3 | 393 | 98.6% | 28.0% |
+| 2026-07-01 | 503 | 425 | 397 | 21 | 4 | 397 | 99.4% | 28.0% |
+| 2026-10-01 | 503 | 425 | 400 | 21 | 4 | 400 | 100.0% | 28.3% |
+
+### 相関サニティ（2026-10-01・eligible プール）
+
+| ペア | ρ（252d log、日付揃え） |
+|---|---:|
+| KLAC–LRCX | 0.875 |
+| CVX–XOM | 0.843 |
+| MO–PM | 0.550 |
+| AMD–NVDA | 0.471 |
+| **プール中央値**（ペアワイズ） | 0.110 |
+
+### IS 採用構成
+
+- **plain_15__equal**（IS CAGR 14.6%、DD -31.9%）
+
+### OOS 全構成（$0.35・差分リバランス）
+
+| 順位 | 構成 | OOS 年率 | OOS DD | OOS 手数料 |
+|---:|---|---:|---:|---|
+| 1 | plain_15__mcap | 17.9% | -26.1% | $55 (158 ord) |
+| 2 | plain_20__mcap_cap10 | 17.6% | -23.8% | $98 (281 ord) |
+| 3 | **plain_15__equal** | 17.4% | -19.6% | $103 (295 ord) |
+| 4 | plain_20__mcap | 17.4% | -25.0% | $67 (190 ord) |
+| 5 | plain_15__mcap_cap10 | 16.9% | -25.0% | $86 (245 ord) |
+| 6 | plain_15__mcap_cap5 | 15.9% | -22.2% | $106 (303 ord) |
+| 7 | plain_20__mcap_cap5 | 15.4% | -18.4% | $125 (356 ord) |
+| 8 | plain_20__equal | 15.4% | -18.4% | $125 (356 ord) |
+| 9 | plain_15__invvol | 12.8% | -15.3% | $121 (347 ord) |
+| 10 | plain_20__invvol | 12.0% | -13.8% | $153 (438 ord) |
+| 11 | volprune_20__mcap | 9.2% | -17.8% | $166 (473 ord) |
+| 12 | corrdiverse_15__mcap_cap5 | 9.0% | -18.4% | $132 (376 ord) |
+| 13 | volprune_20__mcap_cap5 | 8.8% | -18.6% | $172 (491 ord) |
+| 14 | volprune_20__equal | 8.1% | -19.5% | $169 (482 ord) |
+| 15 | corrdiverse_20__mcap | 6.9% | -19.6% | $145 (414 ord) |
+| 16 | corrdiverse_20__mcap_cap5 | 6.7% | -18.1% | $160 (458 ord) |
+| 17 | volprune_20__mcap_cap10 | 6.6% | -18.7% | $180 (515 ord) |
+| 18 | volprune_15__mcap | 6.6% | -20.5% | $123 (350 ord) |
+| 19 | volprune_15__mcap_cap5 | 6.5% | -21.4% | $130 (371 ord) |
+| 20 | corrdiverse_20__mcap_cap10 | 6.4% | -17.3% | $160 (456 ord) |
+| 21 | corrdiverse_15__equal | 6.3% | -19.8% | $136 (389 ord) |
+| 22 | corrdiverse_15__invvol | 6.2% | -17.6% | $147 (421 ord) |
+| 23 | corrdiverse_20__equal | 6.1% | -18.3% | $159 (455 ord) |
+| 24 | volprune_15__equal | 5.6% | -20.4% | $134 (384 ord) |
+| 25 | corrdiverse_15__mcap_cap10 | 5.5% | -22.8% | $125 (358 ord) |
+| 26 | corrdiverse_20__invvol | 5.3% | -15.0% | $187 (535 ord) |
+| 27 | volprune_15__mcap_cap10 | 4.0% | -23.1% | $132 (376 ord) |
+| 28 | corrdiverse_15__mcap | 3.1% | -32.3% | $112 (321 ord) |
+| 29 | volprune_20__invvol | 0.8% | -38.1% | $191 (545 ord) |
+| 30 | volprune_15__invvol | -2.2% | -43.1% | $146 (418 ord) |
+| — | SPY | 15.2% | -24.5% | — |
+
+**OOS 順位:** 3 / 30
+
+### 最終ホールディング（2026-10-01）
+
+| ティッカー | セクター | ウェイト |
+|---|---|---:|
+| NVDA | Information Technology | 6.7% |
+| AAPL | Information Technology | 6.7% |
+| GOOGL | Communication Services | 6.7% |
+| GOOG | Communication Services | 6.7% |
+| MSFT | Information Technology | 6.7% |
+| AMZN | Consumer Discretionary | 6.7% |
+| AVGO | Information Technology | 6.7% |
+| TSLA | Consumer Discretionary | 6.7% |
+| MU | Information Technology | 6.7% |
+| LLY | Health Care | 6.7% |
+| AMD | Information Technology | 6.7% |
+| WMT | Consumer Staples | 6.7% |
+| JNJ | Health Care | 6.7% |
+| ABBV | Health Care | 6.7% |
+| PLTR | Information Technology | 6.7% |
+
+### 半導体（2023–2024 四半期）
+
+- 採用構成 **plain_15__equal**: **あり**
+- 参考 plain_20__mcap: **あり**
+
+### OOS 手数料（採用・$0.35）
+
+- 合計 **$103**（**295** 注文）
+
+*生成: `npx tsx scripts/round19-corrected-v1-study.ts`（キャッシュはコミットしない）*

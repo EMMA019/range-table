@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { isSp500MemberOnDate, membersOnDate, parseTickerStartEndCsv } from "./sp500-pit";
+import { isSp500MemberOnDate, membersOnDate, parseSp500GicsCsv, parseTickerStartEndCsv } from "./sp500-pit";
 
 describe("sp500-pit", () => {
   it("parses membership intervals", () => {
@@ -10,6 +10,13 @@ X,2010-01-01,2015-06-01`);
     assert.equal(rows.length, 2);
     assert.ok(isSp500MemberOnDate(rows.filter((r) => r.ticker === "X"), "2012-01-01"));
     assert.ok(!isSp500MemberOnDate(rows.filter((r) => r.ticker === "X"), "2016-01-01"));
+  });
+
+  it("parses GICS CSV CIK column with quoted fields", () => {
+    const csv = `Symbol,Security,GICS Sector,GICS Sub-Industry,Headquarters Location,Date added,CIK,Founded
+AAPL,Apple Inc.,Information Technology,"Technology Hardware, Storage & Peripherals",Cupertino,1982-11-30,320193,1976`;
+    const m = parseSp500GicsCsv(csv);
+    assert.equal(m.get("AAPL")?.cik, 320193);
   });
 
   it("lists members on a date", () => {
