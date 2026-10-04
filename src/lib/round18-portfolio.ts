@@ -1,4 +1,4 @@
-import { addDays, isTradingDay } from "./calendar";
+import { isTradingDay } from "./calendar";
 import { isSemiGroup } from "./semis";
 import { themeOf } from "./themes";
 import { isIgnoredTicker } from "./holdings";
@@ -102,7 +102,7 @@ function sectorBucket(meta: Round18Meta): string {
 }
 
 export function applySectorCaps(weights: Record<string, number>, metaByTicker: Map<string, Round18Meta>): Record<string, number> {
-  let w = { ...weights };
+  const w = { ...weights };
   const total = Object.values(w).reduce((a, b) => a + b, 0);
   if (total <= 0) return w;
   for (const k of Object.keys(w)) w[k] /= total;
@@ -133,7 +133,7 @@ export function applySectorCaps(weights: Record<string, number>, metaByTicker: M
       }
     }
     if (!over) break;
-    let slack = 1 - Object.values(w).reduce((a, b) => a + b, 0);
+    const slack = 1 - Object.values(w).reduce((a, b) => a + b, 0);
     if (slack <= 1e-9) continue;
     const sums2 = bucketSum();
     const room: Record<string, number> = {};
@@ -301,7 +301,6 @@ export function simulateRound18(
   from: string,
   to: string,
 ): Round18EquityPoint[] {
-  const metaBy = new Map(universe.map((m) => [m.ticker, { ...m }]));
   const closeHistory = new Map<string, Map<string, number>>();
   for (const [ticker, bars] of barsByTicker) {
     const m = new Map<string, number>();
@@ -374,12 +373,10 @@ export function metricsFromCurve(curve: Round18EquityPoint[], from: string, to: 
 
   let peak = slice[0].equity;
   let maxDd = 0;
-  let peakDate = slice[0].date;
   let troughDate = slice[0].date;
   for (const p of slice) {
     if (p.equity > peak) {
       peak = p.equity;
-      peakDate = p.date;
     }
     const dd = peak > 0 ? (p.equity - peak) / peak : 0;
     if (dd < maxDd) {

@@ -32,7 +32,6 @@ import {
   simulateRound18,
   tradingDaysFromBars,
   type Round18Config,
-  type Round18Meta,
 } from "../src/lib/round18-portfolio";
 import type { Bar } from "../src/lib/types";
 
@@ -131,7 +130,6 @@ function yearReturnPct(bars: Bar[], year: number): number | null {
 }
 
 function benchCurve(bars: Bar[], from: string, to: string, initial: number): { date: string; equity: number }[] {
-  const idx = new Map(bars.map((b, i) => [b.date, i]));
   const startIdx = bars.findIndex((b) => b.date >= from);
   if (startIdx < 0) return [];
   const startPrice = bars[startIdx].c;
@@ -154,10 +152,6 @@ function countPositiveYears(cal: Record<string, number>): number {
 
 function pct(x: number): string {
   return `${(x * 100).toFixed(1)}%`;
-}
-
-function usd(x: number): string {
-  return `$${x.toFixed(0)}`;
 }
 
 async function main() {
