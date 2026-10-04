@@ -17,7 +17,8 @@ const PRIORITY_CLASS: Record<AlertPriority, string> = {
 
 const FLAG_LABEL: Record<string, string> = {
   no_earnings_date: "決算日不明",
-  price_over_450: "1株$450超",
+  price_over_450: "1株$550超",
+  cap_450: "$450上限",
   stale_data: "前回の日足",
   amended: "訂正",
   semi_cap: "半導体2枠埋まり",

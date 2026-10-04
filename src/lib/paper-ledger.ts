@@ -1,4 +1,4 @@
-export type PaperLine = "15" | "25";
+export type PaperLine = "25" | "35";
 
 export type PaperPosition = {
   id: string;
@@ -117,7 +117,7 @@ function isPosition(value: unknown): value is PaperPosition {
   return (
     typeof row.id === "string" &&
     typeof row.ticker === "string" &&
-    (row.line === "15" || row.line === "25") &&
+    (row.line === "25" || row.line === "35") &&
     typeof row.entry === "number" &&
     typeof row.shares === "number" &&
     typeof row.stop === "number" &&

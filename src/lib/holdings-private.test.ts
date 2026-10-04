@@ -29,6 +29,7 @@ function quote(partial: Partial<Quote> = {}): Quote {
     avgDollarVolume20: 1,
     line15: 94.5,
     line25: 97.5,
+    line35: 100.5,
     reboundDays: 2,
     entrySignal: "in_ok",
     ...partial,

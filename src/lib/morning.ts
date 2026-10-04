@@ -13,10 +13,16 @@ export const USUAL_COST_CAP = 450;
 export const MIN_ATR_PCT = ALERT_MIN_ATR_PCT;
 /** Share price at or above this is flagged. */
 export const SHARE_PRICE_FLAG = 550;
-/** Box-position points. A close within this of 15 or 25 is on that recovery line. */
+/** Box-position points. A close within this of a recovery line counts as on that line. */
 export const LINE_BAND = 2;
 
-export type LineHit = "15" | "25";
+export const BAND_LOW_PCT = 25 - LINE_BAND;
+export const BAND_HIGH_PCT = 35 + LINE_BAND;
+
+/** First buy at the 25% line, second at the 35% line (Round 16 morning band). */
+export type LineHit = "25" | "35";
+export type BuySlot = 1 | 2;
+
 export type SpyFilter = "on" | "off" | "unknown";
 export type ExcludeReason = "loss" | "aboveBox" | "theme" | "financials" | "atr";
 
@@ -24,11 +30,12 @@ export type MorningQuote = {
   close: number;
   low20: number;
   high20: number;
-  line15: number;
   line25: number;
+  line35: number;
   boxPct: number;
   brokeHigh: boolean;
   ma20?: number;
+  reboundDays?: number | null;
 };
 
 /** Whole shares so a drop from the entry line to the box low loses at most $30. */
@@ -42,17 +49,35 @@ export function lotCost(shares: number, entry: number): number | null {
   return Math.round(shares * entry * 100) / 100;
 }
 
+export function inMorningBand(boxPct: number): boolean {
+  return Number.isFinite(boxPct) && boxPct >= BAND_LOW_PCT && boxPct <= BAND_HIGH_PCT;
+}
+
+export function buySlot(line: LineHit): BuySlot {
+  return line === "25" ? 1 : 2;
+}
+
+/**
+ * Buy lines to show today. In the 25–35% band (±2 pt outside). Near 25% and/or 35% lines when within LINE_BAND;
+ * otherwise the nearer of the two recovery lines.
+ */
+export function morningBuyLines(quote: MorningQuote): LineHit[] {
+  if (!inMorningBand(quote.boxPct)) return [];
+  const lines: LineHit[] = [];
+  if (Math.abs(quote.boxPct - 25) <= LINE_BAND) lines.push("25");
+  if (Math.abs(quote.boxPct - 35) <= LINE_BAND) lines.push("35");
+  if (lines.length > 0) return lines;
+  return [Math.abs(quote.boxPct - 25) <= Math.abs(quote.boxPct - 35) ? "25" : "35"];
+}
+
+/** @deprecated Use morningBuyLines. */
 export function lineHit(quote: MorningQuote): LineHit | null {
-  if (!Number.isFinite(quote.boxPct)) return null;
-  const from15 = Math.abs(quote.boxPct - 15);
-  const from25 = Math.abs(quote.boxPct - 25);
-  if (from15 <= LINE_BAND && from15 <= from25) return "15";
-  if (from25 <= LINE_BAND) return "25";
-  return null;
+  const lines = morningBuyLines(quote);
+  return lines[0] ?? null;
 }
 
 export function entryPrice(quote: MorningQuote, line: LineHit): number {
-  return line === "15" ? quote.line15 : quote.line25;
+  return line === "25" ? quote.line25 : quote.line35;
 }
 
 export type LotFlags = { overCost: boolean; overPrice: boolean; oneShareTooWide: boolean; capBinding: boolean };
@@ -126,5 +151,9 @@ export function excludeReasons(input: {
 
 export function isPaperCandidate(ticker: string, quote: MorningQuote | null): boolean {
   if (isIgnoredTicker(ticker) || !quote) return false;
-  return lineHit(quote) != null;
+  return morningBuyLines(quote).length > 0;
+}
+
+export function reboundConfirmed(quote: MorningQuote): boolean {
+  return (quote.reboundDays ?? 0) >= 1;
 }

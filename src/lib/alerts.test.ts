@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { alertSlot, countAlerts, dedupeAlerts, filterSince, orderEntryAlertsByRs, sortAlerts, type AlertItem } from "./alerts";
-import { entryAlerts, finalBars, holdingEarningsAlerts, inOkStreakStart, type EntryCandidate } from "./alerts-entry";
+import { bandStreakStart, entryAlerts, finalBars, holdingEarningsAlerts, type EntryCandidate } from "./alerts-entry";
 import type { Bar } from "./types";
 
 function day(i: number): string {
@@ -14,8 +14,8 @@ function day(i: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** 24 choppy sessions, a drop to a 20-day low, then bullish candles back into the 15–25% band. */
-function inOkBars(extra: Array<[number, number, number, number]> = []): Bar[] {
+/** Choppy range, drop to the 20-day low, rebound into the 25% morning band. */
+function bandBars(extra: Array<[number, number, number, number]> = []): Bar[] {
   const bars: Bar[] = [];
   for (let i = 0; i < 24; i++) {
     const c = i % 2 ? 118 : 104;
@@ -23,7 +23,7 @@ function inOkBars(extra: Array<[number, number, number, number]> = []): Bar[] {
   }
   bars.push({ date: day(24), o: 104, h: 104, l: 92, c: 93, v: 1e6 });
   bars.push({ date: day(25), o: 93, h: 97, l: 92.5, c: 96, v: 1e6 });
-  bars.push({ date: day(26), o: 96, h: 98, l: 95.5, c: 97.5, v: 1e6 });
+  bars.push({ date: day(26), o: 96, h: 100, l: 95, c: 99, v: 1e6 });
   extra.forEach(([o, h, l, c], k) => bars.push({ date: day(27 + k), o, h, l, c, v: 1e6 }));
   return bars;
 }
@@ -32,31 +32,43 @@ const AFTER_CLOSE = new Date("2026-09-09T12:00:00Z");
 const TODAY = "2026-09-09";
 
 function candidate(partial: Partial<EntryCandidate> = {}): EntryCandidate {
-  return { ticker: "AAA", watchOnly: false, earnings: { date: "2026-10-30", status: "confirmed" }, bars: inOkBars(), stale: false, ...partial };
+  return {
+    ticker: "AAA",
+    watchOnly: false,
+    earnings: { date: "2026-10-30", status: "confirmed" },
+    bars: bandBars(),
+    stale: false,
+    sectorId: "semi",
+    trailingEps: 1,
+    ...partial,
+  };
 }
 
 describe("entry alerts", () => {
-  it("fires on IN OK with ATR ≥ 3% and a far earnings date", () => {
+  it("fires on the 25% line with ATR ≥ 3% and a far earnings date", () => {
     const [item, ...rest] = entryAlerts([candidate()], TODAY, AFTER_CLOSE);
     assert.equal(rest.length, 0);
-    assert.equal(item.id, "entry:AAA:2026-09-08");
+    assert.equal(item.id, "entry:AAA:25:2026-09-08");
     assert.equal(item.kind, "entry_in_ok");
     assert.equal(item.priority, "high");
     assert.deepEqual(item.flags, []);
     assert.equal(item.eventAt, "2026-09-08T20:00:00.000Z");
     assert.equal(item.eventAtJst, "2026-09-09 05:00 JST");
     assert.equal(item.facts.reboundDays, 2);
-    assert.match(item.title, /^AAA IN OK/);
+    assert.match(item.title, /^AAA 1回目（25%線/);
+    assert.match(item.title, /反発あり/);
     assert.match(item.body, /決算まであと\d+営業日/);
     assert.match(item.body, /対SPY/);
+    assert.match(item.body, /25%線/);
     assert.equal(item.facts.rs20, null);
+    assert.equal(item.facts.buyLine, "25");
   });
 
-  it("keeps the same id while the setup continues", () => {
-    const longer = inOkBars([[97.5, 99, 97, 98.5]]);
-    assert.equal(inOkStreakStart(longer), "2026-09-08");
+  it("keeps the same id while the band setup continues", () => {
+    const longer = bandBars([[99, 100, 98, 99.5]]);
+    assert.equal(bandStreakStart(longer), "2026-09-08");
     const [item] = entryAlerts([candidate({ bars: longer })], "2026-09-10", new Date("2026-09-10T12:00:00Z"));
-    assert.equal(item.id, "entry:AAA:2026-09-08");
+    assert.equal(item.id, "entry:AAA:25:2026-09-08");
     assert.equal(item.facts.barDate, "2026-09-09");
   });
 
@@ -78,26 +90,28 @@ describe("entry alerts", () => {
   });
 
   it("needs ATR at least 3% of the close", () => {
-    const calm = inOkBars().map((bar) => ({ ...bar, o: bar.o + 1000, h: bar.h + 1000, l: bar.l + 1000, c: bar.c + 1000 }));
+    const calm = bandBars().map((bar) => ({ ...bar, o: bar.o + 1000, h: bar.h + 1000, l: bar.l + 1000, c: bar.c + 1000 }));
     assert.equal(entryAlerts([candidate({ bars: calm })], TODAY, AFTER_CLOSE).length, 0);
   });
 
-  it("skips non-IN OK, watch-only, ONDS, and missing bars", () => {
-    const early = inOkBars().slice(0, -1);
+  it("skips outside the band, watch-only, ONDS, exclusions, and missing bars", () => {
+    const early = bandBars().slice(0, -1);
     assert.equal(entryAlerts([candidate({ bars: early })], TODAY, AFTER_CLOSE).length, 0);
     assert.equal(entryAlerts([candidate({ watchOnly: true })], TODAY, AFTER_CLOSE).length, 0);
     assert.equal(entryAlerts([candidate({ ticker: "ONDS" })], TODAY, AFTER_CLOSE).length, 0);
     assert.equal(entryAlerts([candidate({ bars: undefined })], TODAY, AFTER_CLOSE).length, 0);
+    assert.equal(entryAlerts([candidate({ trailingEps: -1 })], TODAY, AFTER_CLOSE).length, 0);
   });
 
-  it("flags stale data and prices above $450", () => {
-    const pricey = inOkBars().map((bar) => ({ ...bar, o: bar.o * 5, h: bar.h * 5, l: bar.l * 5, c: bar.c * 5 }));
+  it("flags stale data and prices at or above $550", () => {
+    const pricey = bandBars().map((bar) => ({ ...bar, o: bar.o * 6, h: bar.h * 6, l: bar.l * 6, c: bar.c * 6 }));
     const [item] = entryAlerts([candidate({ bars: pricey, stale: true })], TODAY, AFTER_CLOSE);
-    assert.deepEqual(item.flags, ["price_over_450", "stale_data"]);
+    assert.ok(item.flags.includes("price_over_450"));
+    assert.ok(item.flags.includes("stale_data"));
   });
 
   it("ignores today's bar until the close is final", () => {
-    const bars = inOkBars();
+    const bars = bandBars();
     const during = new Date("2026-09-08T20:10:00Z");
     assert.equal(finalBars(bars, during).at(-1)?.date, "2026-09-07");
     assert.equal(entryAlerts([candidate()], "2026-09-08", during).length, 0);
@@ -105,14 +119,14 @@ describe("entry alerts", () => {
     assert.equal(entryAlerts([candidate()], "2026-09-08", after).length, 1);
   });
 
-  it("orders IN OK items by 20-day excess return versus SPY and marks a full semi book", () => {
-    const spy = inOkBars().map((bar) => ({ ...bar, o: 100, h: 101, l: 99, c: 100 }));
+  it("orders entry items by 20-day excess return versus SPY and marks a full semi book", () => {
+    const spy = bandBars().map((bar) => ({ ...bar, o: 100, h: 101, l: 99, c: 100 }));
     const lift = (factor: number): Bar[] => {
-      const bars = inOkBars();
+      const bars = bandBars();
       const cut = bars.length - 20;
       return bars.map((bar, i) => (i < cut ? bar : { ...bar, o: bar.o * factor, h: bar.h * factor, l: bar.l * factor, c: bar.c * factor }));
     };
-    const other = inOkBars().map((bar, i) => ({ ...bar, date: `2024-03-${String(i + 1).padStart(2, "0")}` }));
+    const other = bandBars().map((bar, i) => ({ ...bar, date: `2024-03-${String(i + 1).padStart(2, "0")}` }));
     const items = entryAlerts(
       [
         candidate({ ticker: "LOW", bars: lift(1.02) }),

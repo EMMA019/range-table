@@ -103,6 +103,7 @@ export function computeQuote(bars: Bar[]): QuoteResult {
       ...volumeStats(bars),
       line15: guides.line15,
       line25: guides.line25,
+      line35: guides.line35,
       reboundDays: days,
       entrySignal: classifyEntrySignal({
         close,
@@ -163,12 +164,13 @@ export function sharesForMove(
   return { shares10, cost10 };
 }
 
-/** 15% and 25% of the same 20-day high-low box used for box position. */
-export function entryGuides(low20: number, high20: number): { line15: number; line25: number } {
+/** 15%, 25%, and 35% of the same 20-day high-low box used for box position. */
+export function entryGuides(low20: number, high20: number): { line15: number; line25: number; line35: number } {
   const range = high20 - low20;
   return {
     line15: round4(low20 + 0.15 * range),
     line25: round4(low20 + 0.25 * range),
+    line35: round4(low20 + 0.35 * range),
   };
 }
 

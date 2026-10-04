@@ -362,6 +362,11 @@ function readCachedEps(): Record<string, EpsSnapshot> {
   return projectEps(cache.quotes);
 }
 
+/** Latest EPS snapshots from the on-disk cache (may be empty before warm). */
+export function cachedEpsSnapshots(): Record<string, EpsSnapshot> {
+  return readCachedEps();
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

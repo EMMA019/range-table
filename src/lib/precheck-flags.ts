@@ -22,6 +22,6 @@ export const FLAG_TEXT: Record<PrecheckFlag, string> = {
   costOver450: `買付額が$${ATR_COST_WARN}超`,
   atrUnder3: `ATRが終値の${ALERT_MIN_ATR_PCT}%未満`,
   corrHigh: `保有と相関${CORR_HIGH}超`,
-  notInOk: "IN OKではない",
+  notInOk: "25–35%帯（±2pt）の買い候補ではない",
   usesUnsettled: "未決済の資金を使う",
 };
