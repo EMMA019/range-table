@@ -23,6 +23,7 @@ import {
 } from "@/lib/format";
 import type { MarketPayload, TickerRow } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { isIgnoredTicker } from "@/lib/holdings";
 import { applyView, atTop, continuedBreakout, continuedBreakoutText, sectorsOf, volumeSurge, volumeThin, withDividers, zoneOf, type ViewFilters } from "@/lib/view";
 import { BoxBar } from "./box-bar";
 import { EntryBadge } from "./entry-badge";
@@ -115,7 +116,8 @@ export function Dashboard() {
     };
   }, [sp, query]);
 
-  const ticker = sp.get("t");
+  const tickerRaw = sp.get("t");
+  const ticker = tickerRaw && !isIgnoredTicker(tickerRaw) ? tickerRaw : null;
 
   const commit = useCallback(
     (patch: Record<string, string | null>, history: "push" | "replace") => {
@@ -161,7 +163,7 @@ export function Dashboard() {
     };
   }, [ticker]);
 
-  const rows = useMemo(() => data?.rows ?? [], [data]);
+  const rows = useMemo(() => (data?.rows ?? []).filter((row) => !isIgnoredTicker(row.ticker)), [data]);
   const visible = useMemo(() => applyView(rows, filters), [rows, filters]);
   const items = useMemo(() => withDividers(visible, filters.sort), [visible, filters.sort]);
   const sectors = useMemo(() => sectorsOf(rows), [rows]);
@@ -233,7 +235,7 @@ export function Dashboard() {
               {refreshing ? "取得中" : "更新"}
             </Button>
           </div>
-          <SiteNav current="/" />
+          <SiteNav current="/range" />
           <div className="flex flex-wrap gap-2 pb-3">
             {CHIPS.map((chip) => {
               const on = filters[chip.key];
@@ -427,7 +429,7 @@ export function DashboardFallback() {
     <div className="mx-auto min-h-dvh w-full max-w-lg px-4 pt-6">
       <h1 className="text-lg font-semibold">レンジ表</h1>
       <div className="mt-3">
-        <SiteNav current="/" />
+        <SiteNav current="/range" />
       </div>
       <p className="text-sm text-muted">日足を集めています。</p>
       <div className="mt-4 space-y-2">
