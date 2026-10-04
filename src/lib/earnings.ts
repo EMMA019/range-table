@@ -26,12 +26,21 @@ export function classifyEarnings(
     };
   }
   const tradingDays = tradingDaysUntil(today, earnings.date);
+  const warnAnchor = earnings.status === "estimated" ? (earnings.estimateEarliest ?? earnings.date) : earnings.date;
+  const daysToAnchor = tradingDaysUntil(today, warnAnchor);
   const warnDays = earnings.status === "estimated" ? EARNINGS_ESTIMATED_WARN_DAYS : EARNINGS_WARN_DAYS;
+  const warn =
+    earnings.status === "estimated"
+      ? daysToAnchor <= warnDays || tradingDays <= warnDays
+      : tradingDays <= warnDays;
   return {
     date: earnings.date,
     status: earnings.status,
     state: "upcoming",
     tradingDays,
-    warn: tradingDays <= warnDays,
+    warn,
+    estimateEarliest: earnings.estimateEarliest,
+    estimateLatest: earnings.estimateLatest,
+    estimateLabel: earnings.estimateLabel,
   };
 }

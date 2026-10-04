@@ -3,6 +3,11 @@ export type EarningsStatus = "confirmed" | "estimated";
 export type EarningsInput = {
   date: string;
   status: EarningsStatus;
+  /** Inclusive low end of an estimated window (conservative warn anchor). */
+  estimateEarliest?: string;
+  estimateLatest?: string;
+  /** UI copy, e.g. 推定 12/10前後 */
+  estimateLabel?: string;
 };
 
 export type WatchTicker = {
@@ -87,6 +92,9 @@ export type EarningsView = {
   state: "upcoming" | "today" | "past";
   tradingDays: number | null;
   warn: boolean;
+  estimateEarliest?: string;
+  estimateLatest?: string;
+  estimateLabel?: string;
 };
 
 export type EpsSnapshot = {

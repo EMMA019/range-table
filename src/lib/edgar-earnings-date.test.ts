@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { lastEarningsRelatedFilingDate } from "./edgar-earnings-date";
+import { item202FilingDates, lastEarningsRelatedFilingDate } from "./edgar-earnings-date";
 
 describe("edgar earnings date", () => {
   it("picks the latest 8-K 2.02 or 10-Q date", () => {
@@ -14,5 +14,18 @@ describe("edgar earnings date", () => {
       },
     };
     assert.equal(lastEarningsRelatedFilingDate(json), "2025-08-15");
+  });
+
+  it("lists only 8-K 2.02 dates for estimates", () => {
+    const json = {
+      filings: {
+        recent: {
+          form: ["8-K", "10-Q"],
+          filingDate: ["2025-09-01", "2025-09-20"],
+          items: ["2.02", ""],
+        },
+      },
+    };
+    assert.deepEqual(item202FilingDates(json), ["2025-09-01"]);
   });
 });

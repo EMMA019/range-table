@@ -210,6 +210,10 @@ export const SEMI_CAP_BADGE = "半導体2枠埋まり";
 /** Countdown for a known next earnings date. Null once that date is in the past. */
 export function earningsCountdown(e: EarningsView | null): string | null {
   if (!e || e.state === "past") return null;
+  if (e.status === "estimated" && e.estimateLabel) {
+    const tail = e.tradingDays != null ? `（目安あと${e.tradingDays}営業日）` : "";
+    return `${e.estimateLabel}${tail}`;
+  }
   const est = e.status === "estimated" ? "・推定" : "";
   return `決算まであと${e.tradingDays ?? 0}営業日${est}`;
 }
