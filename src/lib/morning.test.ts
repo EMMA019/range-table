@@ -75,19 +75,25 @@ describe("morning paper candidates", () => {
 
   it("keeps SPCX, greys a loss, a theme, a box break, the financials group, and ATR under 3%", () => {
     const ok = { atr14: 4, close: 100 };
-    assert.deepEqual(excludeReasons({ ticker: "SPCX", sectorId: "space", trailingEps: -1, brokeHigh: false, ...ok }), []);
-    assert.deepEqual(excludeReasons({ ticker: "AAA", sectorId: "semi", trailingEps: -0.2, brokeHigh: false, ...ok }), ["loss"]);
-    assert.deepEqual(excludeReasons({ ticker: "AAA", sectorId: "semi", trailingEps: null, brokeHigh: false, ...ok }), []);
-    assert.ok(excludeReasons({ ticker: "CEG", sectorId: "generation", trailingEps: 1, brokeHigh: true, ...ok }).includes("aboveBox"));
+    const profit = (status: "profit" | "loss" | "unknown", trailingEps: number | null = 1) => ({
+      status,
+      source: status === "unknown" ? null : "test",
+      ttmNetIncome: null,
+      trailingEps,
+    });
+    assert.deepEqual(excludeReasons({ ticker: "SPCX", sectorId: "space", profitability: profit("loss", -1), brokeHigh: false, ...ok }), []);
+    assert.deepEqual(excludeReasons({ ticker: "AAA", sectorId: "semi", profitability: profit("loss", -0.2), brokeHigh: false, ...ok }), ["loss"]);
+    assert.deepEqual(excludeReasons({ ticker: "AAA", sectorId: "semi", profitability: profit("unknown", null), brokeHigh: false, ...ok }), []);
+    assert.ok(excludeReasons({ ticker: "CEG", sectorId: "generation", profitability: profit("profit"), brokeHigh: true, ...ok }).includes("aboveBox"));
     assert.equal(themeOf("IONQ"), "quantum");
     assert.equal(themeOf("QMCO"), null);
     assert.equal(themeOf("SPCX"), null);
-    assert.ok(excludeReasons({ ticker: "BAC", sectorId: "financials", trailingEps: 3, brokeHigh: false, ...ok }).includes("financials"));
+    assert.ok(excludeReasons({ ticker: "BAC", sectorId: "financials", profitability: profit("profit"), brokeHigh: false, ...ok }).includes("financials"));
     assert.equal(atrBelowMin(3, 100), false);
     assert.equal(atrBelowMin(2.99, 100), true);
-    assert.ok(excludeReasons({ ticker: "AAA", sectorId: "semi", trailingEps: 1, brokeHigh: false, atr14: 2, close: 100 }).includes("atr"));
-    assert.equal(excludeReasons({ ticker: "AAA", sectorId: "semi", trailingEps: 1, brokeHigh: false, atr14: 3, close: 100 }).includes("atr"), false);
-    assert.ok(excludeReasons({ ticker: "AAA", sectorId: "semi", trailingEps: 1, brokeHigh: false, atr14: null, close: 100 }).includes("atr"));
+    assert.ok(excludeReasons({ ticker: "AAA", sectorId: "semi", profitability: profit("profit"), brokeHigh: false, atr14: 2, close: 100 }).includes("atr"));
+    assert.equal(excludeReasons({ ticker: "AAA", sectorId: "semi", profitability: profit("profit"), brokeHigh: false, atr14: 3, close: 100 }).includes("atr"), false);
+    assert.ok(excludeReasons({ ticker: "AAA", sectorId: "semi", profitability: profit("profit"), brokeHigh: false, atr14: null, close: 100 }).includes("atr"));
   });
 
   it("turns the SPY filter on at or above the 20-day average", () => {

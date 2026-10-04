@@ -1,5 +1,6 @@
 import { ALERT_MIN_ATR_PCT } from "./constants";
 import { isIgnoredTicker } from "./holdings";
+import { isLossExcluded, type Profitability } from "./loss-filter";
 import { themeOf, type ThemeName } from "./themes";
 
 /** Same first session as the frozen paper books. Display only. */
@@ -133,14 +134,14 @@ export function spyFilter(quote: { close: number; ma20: number } | null | undefi
 export function excludeReasons(input: {
   ticker: string;
   sectorId: string;
-  trailingEps: number | null;
+  profitability: Profitability;
   brokeHigh: boolean;
   atr14: number | null;
   close: number;
 }): Array<ExcludeReason | `theme:${ThemeName}`> {
   const reasons: Array<ExcludeReason | `theme:${ThemeName}`> = [];
   const ticker = input.ticker.trim().toUpperCase();
-  if (ticker !== "SPCX" && input.trailingEps != null && input.trailingEps < 0) reasons.push("loss");
+  if (isLossExcluded(ticker, input.profitability)) reasons.push("loss");
   if (input.brokeHigh) reasons.push("aboveBox");
   const theme = themeOf(ticker);
   if (theme) reasons.push(`theme:${theme}`);

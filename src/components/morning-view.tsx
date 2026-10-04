@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { formatDollar, formatPnl, formatPx } from "@/lib/format";
+import { screenExclusionReasons } from "@/lib/candidate-screen";
+import { EARNINGS_UNKNOWN_PROMINENT } from "@/lib/constants";
 import { isIgnoredTicker } from "@/lib/holdings";
+import { LOSS_UNKNOWN_TAG } from "@/lib/constants";
 import {
   BAND_HIGH_PCT,
   BAND_LOW_PCT,
@@ -12,7 +15,6 @@ import {
   USUAL_COST_CAP,
   buySlot,
   entryPrice,
-  excludeReasons,
   lotFlags,
   morningBuyLines,
   reboundConfirmed,
@@ -115,10 +117,10 @@ export function MorningView() {
     if (!quote) return [];
     const lines = morningBuyLines(quote);
     if (lines.length === 0) return [];
-    const reasons = excludeReasons({
+    const reasons = screenExclusionReasons({
       ticker: row.ticker,
       sectorId: row.sectorId,
-      trailingEps: row.pe.trailingEps,
+      profitability: row.profitability,
       brokeHigh: quote.brokeHigh,
       atr14: quote.atr14,
       close: quote.close,
@@ -253,6 +255,12 @@ export function MorningView() {
                       <span className="font-mono text-base font-medium">{row.ticker}</span>
                       <span className="rounded-full bg-chip px-2 py-0.5 text-[10px] text-ink">{slot === 1 ? "1回目" : "2回目"}</span>
                       {rebound && <span className="rounded-full border border-line px-2 py-0.5 text-[10px] text-muted">反発あり</span>}
+                      {row.profitability.status === "unknown" && row.ticker !== "SPCX" && (
+                        <span className="rounded-full border border-rust px-2 py-0.5 text-[10px] text-rust">{LOSS_UNKNOWN_TAG}</span>
+                      )}
+                      {row.earningsUnknown && (
+                        <span className="rounded-full border border-rust px-2 py-0.5 text-[10px] text-rust">{EARNINGS_UNKNOWN_PROMINENT}</span>
+                      )}
                       {lot.flags.capBinding && (
                         <span className="rounded-full bg-chip px-2 py-0.5 text-[10px] text-ink">$450上限</span>
                       )}

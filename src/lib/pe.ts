@@ -19,11 +19,60 @@ export function parseQuoteSummary(json: unknown): EpsSnapshot | null {
 
   const stats = "defaultKeyStatistics" in first ? first.defaultKeyStatistics : null;
   const financial = "financialData" in first ? first.financialData : null;
+  const ttmNetIncome = incomeFromModules(stats, financial, first as Record<string, unknown>);
+  const profitSource = ttmNetIncome != null ? "yahoo:quoteSummary" : null;
+  const nextEarningsDate = parseYahooNextEarningsFromSummary(first);
   return {
     trailingEps: firstEps(stats, financial, "trailingEps"),
     forwardEps: firstEps(stats, financial, "forwardEps"),
+    ttmNetIncome,
+    profitSource,
+    nextEarningsDate,
     error: null,
   };
+}
+
+/** Next earnings session from quoteSummary calendarEvents, if present. */
+export function parseYahooNextEarningsFromSummary(first: unknown): string | null {
+  if (!first || typeof first !== "object" || !("calendarEvents" in first)) return null;
+  const calendar = (first as { calendarEvents?: { earnings?: { earningsDate?: unknown[] } } }).calendarEvents;
+  const dates = calendar?.earnings?.earningsDate;
+  if (!Array.isArray(dates) || dates.length === 0) return null;
+  const raw = dates[0];
+  if (typeof raw === "number" && Number.isFinite(raw)) return new Date(raw * 1000).toISOString().slice(0, 10);
+  if (raw && typeof raw === "object" && "raw" in raw) {
+    const n = (raw as { raw?: number }).raw;
+    if (typeof n === "number" && Number.isFinite(n)) return new Date(n * 1000).toISOString().slice(0, 10);
+  }
+  if (typeof raw === "string" && /^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+  return null;
+}
+
+function incomeFromModules(stats: unknown, financial: unknown, root: Record<string, unknown>): number | null {
+  for (const mod of [financial, stats]) {
+    if (!mod || typeof mod !== "object") continue;
+    if ("netIncomeToCommon" in mod) {
+      const value = rawNumber((mod as Record<string, unknown>).netIncomeToCommon);
+      if (value != null) return value;
+    }
+  }
+  const history = "incomeStatementHistory" in root ? root.incomeStatementHistory : null;
+  if (history && typeof history === "object" && "history" in history) {
+    const rows = (history as { history?: unknown[] }).history;
+    if (Array.isArray(rows)) {
+      let sum = 0;
+      let count = 0;
+      for (const row of rows.slice(0, 4)) {
+        if (!row || typeof row !== "object" || !("netIncome" in row)) continue;
+        const value = rawNumber((row as Record<string, unknown>).netIncome);
+        if (value == null) continue;
+        sum += value;
+        count += 1;
+      }
+      if (count >= 4) return sum;
+    }
+  }
+  return null;
 }
 
 /** EPS embedded in the finance.yahoo.com quote page, escaped or plain JSON. */

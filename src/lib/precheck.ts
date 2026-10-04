@@ -4,6 +4,8 @@ import { basketReturnSeries, corrOnWindow, dailyReturns } from "./corr";
 import type { HoldingsConfig } from "./holdings";
 import type { HoldingsView } from "./holdings-view";
 import { settleDate } from "./settlement";
+import { lossUnknown } from "./loss-filter";
+import { profitabilityFromCache } from "./profit-cache";
 import { morningBuyLines } from "./morning";
 import type { PrecheckFlag } from "./precheck-flags";
 import type { Bar, EarningsView, Quote } from "./types";
@@ -48,6 +50,8 @@ export function precheck(input: {
   view: HoldingsView;
   config: HoldingsConfig;
   earnings: EarningsView | null;
+  earningsUnknown?: boolean;
+  profitability?: import("./loss-filter").Profitability;
   tradeDate: string;
   today: string;
 }): PrecheckResult {
@@ -117,6 +121,9 @@ export function precheck(input: {
   ) {
     flags.push("notInOk");
   }
+  const profit = input.profitability ?? profitabilityFromCache(input.ticker, null);
+  if (lossUnknown(profit, input.ticker)) flags.push("lossUnknown");
+  if (input.earningsUnknown) flags.push("earningsUnknown");
   if (fundsSettleBy) flags.push("usesUnsettled");
 
   const buySettles = settleDate(tradeDate);

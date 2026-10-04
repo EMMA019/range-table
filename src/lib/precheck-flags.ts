@@ -1,4 +1,5 @@
 import { ALERT_MIN_ATR_PCT, ATR_COST_WARN, CORR_HIGH, PICK_WATCH_PRICE } from "./constants";
+import { EARNINGS_UNKNOWN_PROMINENT, LOSS_UNKNOWN_TAG } from "./constants";
 
 /** Red flags are reasons to stop; the rest are cautions. Nothing here places an order. */
 export type PrecheckFlag =
@@ -10,6 +11,8 @@ export type PrecheckFlag =
   | "atrUnder3"
   | "corrHigh"
   | "notInOk"
+  | "lossUnknown"
+  | "earningsUnknown"
   | "usesUnsettled";
 
 export const RED_FLAGS = new Set<PrecheckFlag>(["earnings5d", "belowDefense", "cashShort"]);
@@ -23,5 +26,7 @@ export const FLAG_TEXT: Record<PrecheckFlag, string> = {
   atrUnder3: `ATRが終値の${ALERT_MIN_ATR_PCT}%未満`,
   corrHigh: `保有と相関${CORR_HIGH}超`,
   notInOk: "25–35%帯（±2pt）の買い候補ではない",
+  lossUnknown: LOSS_UNKNOWN_TAG,
+  earningsUnknown: EARNINGS_UNKNOWN_PROMINENT,
   usesUnsettled: "未決済の資金を使う",
 };

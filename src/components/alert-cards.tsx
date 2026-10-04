@@ -1,4 +1,5 @@
 import type { AlertItem, AlertPriority } from "@/lib/alerts";
+import { LOSS_UNKNOWN_TAG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 const PRIORITY_LABEL: Record<AlertPriority, string> = {
@@ -22,6 +23,7 @@ const FLAG_LABEL: Record<string, string> = {
   stale_data: "前回の日足",
   amended: "訂正",
   semi_cap: "半導体2枠埋まり",
+  loss_unknown: LOSS_UNKNOWN_TAG,
 };
 
 export function AlertCards({ items }: { items: AlertItem[] }) {

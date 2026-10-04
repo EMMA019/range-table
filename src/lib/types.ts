@@ -94,6 +94,20 @@ export type EpsSnapshot = {
   forwardEps: number | null;
   /** Upstream status or reason. Null when at least one EPS value was returned. */
   error: string | null;
+  /** Yahoo net income TTM or similar when EPS is empty. */
+  ttmNetIncome?: number | null;
+  profitSource?: string | null;
+  /** Yahoo calendarEvents next earnings date (YYYY-MM-DD). */
+  nextEarningsDate?: string | null;
+};
+
+export type ProfitabilityStatus = "profit" | "loss" | "unknown";
+
+export type Profitability = {
+  status: ProfitabilityStatus;
+  source: string | null;
+  ttmNetIncome: number | null;
+  trailingEps: number | null;
 };
 
 export type PeView = {
@@ -133,6 +147,9 @@ export type TickerRow = {
   errorDetail: string | null;
   /** The quote comes from an earlier fetch because the latest one failed. */
   stale: boolean;
+  profitability: Profitability;
+  /** True when no next earnings date could be resolved. */
+  earningsUnknown: boolean;
 };
 
 export type IndexRow = {

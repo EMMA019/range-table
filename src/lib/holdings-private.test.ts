@@ -148,8 +148,10 @@ function trendBars(n: number, step: (i: number) => number): Bar[] {
 
 describe("pre-buy check", () => {
   const wave = (i: number) => Math.sin(i * 1.7) * 0.02;
+  const profit = { status: "profit" as const, source: "test", ttmNetIncome: null, trailingEps: 1 };
   const base = {
     quote: quote({ close: 100, low20: 90, atr14: 4 }),
+    profitability: profit,
     bars: trendBars(70, wave),
     holdingBars: { AAA: trendBars(70, wave), BBB: trendBars(70, (i) => -wave(i)) },
     config: CONFIG,

@@ -197,7 +197,7 @@ type SummaryResult = { snap: EpsSnapshot | null; blocked: boolean; error: string
 async function fetchSummary(session: Session, symbol: string, signal: AbortSignal): Promise<SummaryResult> {
   let lastError = "quoteSummaryに失敗";
   for (const host of HOSTS) {
-    const url = `${host}/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=defaultKeyStatistics,financialData&crumb=${encodeURIComponent(session.crumb)}`;
+    const url = `${host}/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=defaultKeyStatistics,financialData,calendarEvents,incomeStatementHistory&crumb=${encodeURIComponent(session.crumb)}`;
     try {
       const res = await request(url, {
         headers: { Accept: "application/json", Cookie: session.cookie },
