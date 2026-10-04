@@ -33,14 +33,14 @@ import {
   tradingDaysFromBars,
   type Round18Config,
 } from "../src/lib/round18-portfolio";
-import { buildSdiMeta, simulateSdi } from "../src/lib/round18-sdi";
+import { buildSdiMeta, SDI_SPLIT_5050, SDI_SPLIT_6535, simulateSdi, type SdiSplit } from "../src/lib/round18-sdi";
 import type { Bar } from "../src/lib/types";
 
 const CACHE = path.join(process.cwd(), "data", ".cache", "round18");
 const DOC = path.join(process.cwd(), "docs", "ROUND18_ja.md");
 const BENCH = ["SPY", "QQQ", "SOXX"] as const;
 const PREREG = "b8ec490";
-const PREREG_SDI = "ea093c3";
+const PREREG_SDI = "bdc45c9";
 
 function yahooSymbol(ticker: string): string {
   return ticker.replace(/\./g, "-");
@@ -245,8 +245,16 @@ async function main() {
 
   const sdiMeta = buildSdiMeta(loadWatchlist(), firstDates);
   const sptmFirst = firstBarDate(barsBy.get("SPTM") ?? []) ?? null;
-  const runSdi = (commission: number) => {
-    const { curve, broadProxyDays, broadSptmDays } = simulateSdi(calendar, sdiMeta, barsBy, isProfitable, commission, sptmFirst);
+  const runSdi = (commission: number, split: SdiSplit) => {
+    const { curve, broadProxyDays, broadSptmDays } = simulateSdi(
+      calendar,
+      sdiMeta,
+      barsBy,
+      isProfitable,
+      commission,
+      sptmFirst,
+      split,
+    );
     return {
       curve,
       broadProxyDays,
@@ -256,70 +264,80 @@ async function main() {
       oos: metricsFromCurve(curve, ROUND18_OOS_START, ROUND18_END),
     };
   };
-  const sdi35 = runSdi(0.35);
-  const sdi1 = runSdi(1);
-  const sdiPosYears = countPositiveYears(sdi35.full.calendarYears);
-  const sdiPassCagr = sdi35.oos.cagr >= 0.1;
-  const sdiPassDd = sdi35.oos.maxDrawdown > spyOos.maxDrawdown;
-  const sdiPassYears = sdiPosYears >= 7;
+  const sdi6535_35 = runSdi(0.35, SDI_SPLIT_6535);
+  const sdi6535_1 = runSdi(1, SDI_SPLIT_6535);
+  const sdi5050_35 = runSdi(0.35, SDI_SPLIT_5050);
+  const sdi5050_1 = runSdi(1, SDI_SPLIT_5050);
   const qqqOos = benchMetrics.QQQ.oos;
 
-  const sdiSection = `## Small Direct Index（65% 広い米国 + 35%×15 銘柄）
+  const sdiPassMark = (r: ReturnType<typeof runSdi>) => {
+    const pos = countPositiveYears(r.full.calendarYears);
+    const passCagr = r.oos.cagr >= 0.1;
+    const passDd = r.oos.maxDrawdown > spyOos.maxDrawdown;
+    const passYears = pos >= 7;
+    const passAll = passCagr && passDd && passYears;
+    return { pos, passCagr, passDd, passYears, passAll };
+  };
+  const p6535 = sdiPassMark(sdi6535_35);
+  const p5050 = sdiPassMark(sdi5050_35);
+
+  const sdiSection = `## Small Direct Index（SPTM/SPY + 15 銘柄）
 
 事前登録追補: \`${PREREG_SDI}\`（\`docs/ROUND18_PREREG_SDI_ja.md\`）— **本レポート最初の比較**
 
-| 項目 | 内容 |
+| 共通 | |
 |---|---|
-| 広いスリーブ | **65%** — SPTM（調整後終値）。SPTM 開始日: ${sptmFirst ?? "—"}。四半期リバランスで SPTM 未上場日は **SPY 代理**（${sdi35.broadProxyDays} 回 / SPTM ${sdi35.broadSptmDays} 回） |
-| 個別スリーブ | **35%**、**15** 銘柄等ウェイト、**小数株** |
-| 入替 | 四半期ごと、**条件外のみ**差替え・サバイバー維持 → 65/35 へ再平衡 |
-| 条件 | 黒字（ルックアヘッド）・ATR14≥3%・Round 18 同除外・半導体+設備 **最大4/15** |
-| 15超の候補 | **12か月−1か月の SPY 超過リターン**降順、同点はティッカー昇順 |
+| 広いスリーブ | **SPTM**（開始 ${sptmFirst ?? "—"}）。未上場日は **SPY 代理**（各バリアント四半期 ${sdi6535_35.broadProxyDays} / ${sdi6535_35.broadSptmDays} 回＝65/35 基準） |
+| 個別 | **15** 銘柄・等ウェイト・**小数株**・四半期**サバイバー入替**→比率へ再平衡 |
+| 条件 | 黒字（LH）・ATR14≥3%・Round 18 除外・半導体+設備 **≤4/15** |
+| >15 候補 | **12–1 か月 SPY 超過**降順、同点はティッカー昇順 |
 
-### SDI — 期間別（$0.35）
+### 65/35 vs 50/50 — OOS（2021–2026-10-02・$0.35）
 
-|  | In-sample 2016–20 | OOS 2021–10/02 |
+| | **65/35** | **50/50**（希望） | SPY | QQQ |
+|---|---:|---:|---:|---:|
+| CAGR | ${pct(sdi6535_35.oos.cagr)} | **${pct(sdi5050_35.oos.cagr)}** | ${pct(spyOos.cagr)} | ${pct(qqqOos.cagr)} |
+| 最大DD | ${pct(sdi6535_35.oos.maxDrawdown)} | ${pct(sdi5050_35.oos.maxDrawdown)} | ${pct(spyOos.maxDrawdown)} | ${pct(qqqOos.maxDrawdown)} |
+| DD回復(日) | ${sdi6535_35.oos.recoveryDays ?? "—"} | ${sdi5050_35.oos.recoveryDays ?? "—"} | — | — |
+| 暦年プラス | ${p6535.pos}/10 | ${p5050.pos}/10 | — | — |
+
+### 65/35 vs 50/50 — In-sample（2016–2020・$0.35）
+
+| | 65/35 | 50/50 |
 |---|---:|---:|
-| CAGR | ${pct(sdi35.is.cagr)} | **${pct(sdi35.oos.cagr)}** |
-| 最大DD | ${pct(sdi35.is.maxDrawdown)} | **${pct(sdi35.oos.maxDrawdown)}** |
-| DD回復(日) | ${sdi35.is.recoveryDays ?? "—"} | ${sdi35.oos.recoveryDays ?? "—"} |
+| CAGR | ${pct(sdi6535_35.is.cagr)} | ${pct(sdi5050_35.is.cagr)} |
+| 最大DD | ${pct(sdi6535_35.is.maxDrawdown)} | ${pct(sdi5050_35.is.maxDrawdown)} |
 
-| 手数料/約定 | OOS CAGR | OOS 最大DD |
-|---|---:|---:|
-| $0.35 | ${pct(sdi35.oos.cagr)} | ${pct(sdi35.oos.maxDrawdown)} |
-| $1.00 | ${pct(sdi1.oos.cagr)} | ${pct(sdi1.oos.maxDrawdown)} |
+### 手数料（OOS CAGR / 最大DD）
 
-### SDI vs ベンチ（OOS）
+| 手数料 | 65/35 | 50/50 |
+|---|---|---|
+| $0.35 | ${pct(sdi6535_35.oos.cagr)} / ${pct(sdi6535_35.oos.maxDrawdown)} | ${pct(sdi5050_35.oos.cagr)} / ${pct(sdi5050_35.oos.maxDrawdown)} |
+| $1.00 | ${pct(sdi6535_1.oos.cagr)} / ${pct(sdi6535_1.oos.maxDrawdown)} | ${pct(sdi5050_1.oos.cagr)} / ${pct(sdi5050_1.oos.maxDrawdown)} |
 
-| | CAGR | 最大DD |
-|---|---:|---:|
-| **SDI** | ${pct(sdi35.oos.cagr)} | ${pct(sdi35.oos.maxDrawdown)} |
-| SPY 100% | ${pct(spyOos.cagr)} | ${pct(spyOos.maxDrawdown)} |
-| QQQ 100% | ${pct(qqqOos.cagr)} | ${pct(qqqOos.maxDrawdown)} |
+### 暦年リターン（$0.35）
 
-### SDI 暦年（$0.35）
-
-| 年 | SDI | SPY | QQQ |
-|---|---:|---:|---:|
+| 年 | 65/35 | 50/50 | SPY | QQQ |
+|---|---:|---:|---:|---:|
 ${Array.from({ length: ROUND18_CAL_YEAR_END - ROUND18_CAL_YEAR_START + 1 }, (_, i) => {
   const y = ROUND18_CAL_YEAR_START + i;
   const ys = String(y);
-  const p = sdi35.full.calendarYears[ys];
+  const a = sdi6535_35.full.calendarYears[ys];
+  const b = sdi5050_35.full.calendarYears[ys];
   const spyY = yearReturnPct(barsBy.get("SPY")!, y);
   const qqqY = yearReturnPct(barsBy.get("QQQ")!, y);
-  return `| ${ys}${y === ROUND18_CAL_YEAR_END ? " YTD" : ""} | ${p != null ? pct(p) : "—"} | ${spyY != null ? pct(spyY) : "—"} | ${qqqY != null ? pct(qqqY) : "—"} |`;
+  return `| ${ys}${y === ROUND18_CAL_YEAR_END ? " YTD" : ""} | ${a != null ? pct(a) : "—"} | ${b != null ? pct(b) : "—"} | ${spyY != null ? pct(spyY) : "—"} | ${qqqY != null ? pct(qqqY) : "—"} |`;
 }).join("\n")}
 
-プラス年数 2017–2026: **${sdiPosYears}/10**
+### 合格判定（OOS $0.35・Round 18 同一基準）
 
-### SDI 合格判定（OOS・$0.35、Round 18 同一基準）
-
-| 条件 | 結果 |
-|---|---|
-| CAGR ≥ 10% | ${sdiPassCagr ? "✓" : "✗"} (${pct(sdi35.oos.cagr)}) |
-| 最大DD < SPY | ${sdiPassDd ? "✓" : "✗"} (SDI ${pct(sdi35.oos.maxDrawdown)} vs SPY ${pct(spyOos.maxDrawdown)}) |
-| 7/10 年プラス | ${sdiPassYears ? "✓" : "✗"} |
-| 参考 ≥12% / ≥13% | ${sdi35.oos.cagr >= 0.12 ? "✓" : "✗"} / ${sdi35.oos.cagr >= 0.13 ? "✓" : "✗"} |
+| 条件 | 65/35 | 50/50 |
+|---|---|---|
+| CAGR ≥ 10% | ${p6535.passCagr ? "✓" : "✗"} (${pct(sdi6535_35.oos.cagr)}) | ${p5050.passCagr ? "✓" : "✗"} (${pct(sdi5050_35.oos.cagr)}) |
+| 最大DD < SPY | ${p6535.passDd ? "✓" : "✗"} | ${p5050.passDd ? "✓" : "✗"} |
+| 7/10 年プラス | ${p6535.passYears ? "✓" : "✗"} | ${p5050.passYears ? "✓" : "✗"} |
+| 参考 ≥12% / ≥13% | ${sdi6535_35.oos.cagr >= 0.12 ? "✓" : "✗"}/${sdi6535_35.oos.cagr >= 0.13 ? "✓" : "✗"} | ${sdi5050_35.oos.cagr >= 0.12 ? "✓" : "✗"}/${sdi5050_35.oos.cagr >= 0.13 ? "✓" : "✗"} |
+| **3条件すべて** | ${p6535.passAll ? "✓" : "✗"} | ${p5050.passAll ? "✓" : "✗"} |
 
 ---
 
@@ -418,8 +436,8 @@ ${Array.from({ length: ROUND18_CAL_YEAR_END - ROUND18_CAL_YEAR_START + 1 }, (_, 
         oosCagr35: at35.oos.cagr,
         configsTried: configs.length,
         sdi: {
-          oosCagr35: sdi35.oos.cagr,
-          pass: { sdiPassCagr, sdiPassDd, sdiPassYears },
+          s6535: { oosCagr35: sdi6535_35.oos.cagr, pass: p6535 },
+          s5050: { oosCagr35: sdi5050_35.oos.cagr, pass: p5050 },
           sptmFirst,
         },
       },

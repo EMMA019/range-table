@@ -17,8 +17,14 @@ import type { Watchlist } from "./types";
 
 export const SDI_STOCK_SLOTS = 15;
 export const SDI_MAX_SEMI_SLOTS = 4;
-export const SDI_BASE_WEIGHT = 0.65;
-export const SDI_STOCK_SLEEVE_WEIGHT = 0.35;
+export const SDI_SPLIT_6535 = { base: 0.65, stock: 0.35 };
+export const SDI_SPLIT_5050 = { base: 0.5, stock: 0.5 };
+/** @deprecated use SDI_SPLIT_6535 */
+export const SDI_BASE_WEIGHT = SDI_SPLIT_6535.base;
+/** @deprecated use SDI_SPLIT_6535 */
+export const SDI_STOCK_SLEEVE_WEIGHT = SDI_SPLIT_6535.stock;
+
+export type SdiSplit = { base: number; stock: number };
 export const SDI_BROAD_TICKER = "SPTM";
 export const SDI_BROAD_PROXY = "SPY";
 
@@ -164,6 +170,7 @@ export function simulateSdi(
   isProfitable: (ticker: string) => boolean,
   commission: number,
   sptmFirstDate: string | null,
+  split: SdiSplit = SDI_SPLIT_6535,
   from = ROUND18_START,
   to = ROUND18_END,
 ): SdiSimResult {
@@ -270,8 +277,8 @@ export function simulateSdi(
       holdings = pickSdiStocks(survivors, eligible, metaBy, scores);
 
       const eq = equityOn(date);
-      const targetBroad = eq * SDI_BASE_WEIGHT;
-      const perStock = holdings.length ? (eq * SDI_STOCK_SLEEVE_WEIGHT) / holdings.length : 0;
+      const targetBroad = eq * split.base;
+      const perStock = holdings.length ? (eq * split.stock) / holdings.length : 0;
       const bp = price(broad, date);
       if (bp && bp > 0) tradeBroad(broad, targetBroad / bp, date);
 
