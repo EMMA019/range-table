@@ -12,6 +12,12 @@ export const ROUND12_PREREG = "a4eba5a074f72aae273651b17b277e2e4b3f08dd";
 export const SOLAR = ["ENPH", "SEDG", "FSLR", "RUN", "ARRY", "NXT", "SHLS", "CSIQ", "JKS", "SPWR", "MAXN", "NOVA"] as const;
 export const CRYPTO = ["COIN", "MSTR", "MARA", "RIOT", "CLSK", "HUT", "IREN", "CIFR", "WULF", "BTDR", "BITF"] as const;
 export const NUCLEAR_LIST = ["CEG", "TLN", "OKLO", "SMR", "CCJ", "LEU", "NNE", "BWXT"] as const;
+/**
+ * Quantum-computing names Emma asked to record on 2026-10-04, beside solar, crypto, and nuclear.
+ * QMCO is Quantum Corporation, a storage company, and is not included.
+ * `listExcluded` does not read this list. The round-12 rows stay as pre-registered.
+ */
+export const QUANTUM = ["IONQ", "RGTI", "QBTS", "QUBT", "ARQQ"] as const;
 export const HOOD = "HOOD";
 export const EXCEPTION_KEEP = "SPCX";
 export const FOCUS = ["COIN", "HOOD", "MSTR"] as const;

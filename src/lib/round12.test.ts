@@ -4,6 +4,8 @@ import {
   CRYPTO,
   HOOD,
   NUCLEAR_LIST,
+  QUANTUM,
+  ROUND12_IDS,
   SOLAR,
   absentFills,
   dropReason,
@@ -35,6 +37,13 @@ describe("round-12 lists", () => {
     assert.equal(listExcluded("CEG", "N"), true);
     assert.equal(listExcluded("ENPH", "A"), true);
     assert.equal(listExcluded("ENPH", "B"), false);
+    assert.deepEqual(QUANTUM, ["IONQ", "RGTI", "QBTS", "QUBT", "ARQQ"]);
+    const named = new Set<string>([...SOLAR, ...CRYPTO, ...NUCLEAR_LIST, HOOD, "SPCX", "QMCO"]);
+    for (const ticker of QUANTUM) {
+      assert.equal(named.has(ticker), false);
+      for (const id of ROUND12_IDS) assert.equal(listExcluded(ticker, id), false);
+    }
+    assert.equal(listExcluded("QMCO", "A"), false);
   });
 
   it("drops a listed name only inside the window when it is not voided", () => {
