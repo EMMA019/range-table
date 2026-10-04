@@ -156,6 +156,38 @@ function estimatedEntry(
   );
 }
 
+function confirmedEntry(date: string, now: number, key: string): EarningsEnrichEntry {
+  return cacheEntry(
+    {
+      date,
+      status: "confirmed",
+      source: "nasdaq-calendar",
+      error: null,
+      fetchedAt: now,
+    },
+    key,
+    now,
+  );
+}
+
+/** Nasdaq calendar (confirmed) wins over Yahoo/EDGAR merge — used by enrich and tests. */
+export function pickEarningsEnrichSource(
+  today: string,
+  opts: {
+    nasdaqCalendarDate: string | null;
+    yahooDate: string | null;
+    nasdaqSummaryDate: string | null;
+    edgarEst: EarningsEstimate | null;
+  },
+): "confirmed-calendar" | "yahoo" | "nasdaq-summary" | "edgar-only" | "none" {
+  const cal = opts.nasdaqCalendarDate && opts.nasdaqCalendarDate >= today ? opts.nasdaqCalendarDate : null;
+  if (cal) return "confirmed-calendar";
+  if (opts.yahooDate) return "yahoo";
+  if (opts.nasdaqSummaryDate) return "nasdaq-summary";
+  if (opts.edgarEst) return "edgar-only";
+  return "none";
+}
+
 export async function enrichEarningsDate(
   ticker: string,
   watch: EarningsInput | null,
@@ -171,33 +203,31 @@ export async function enrichEarningsDate(
   const item202 = await fetchEdgarItem202Dates(key);
   const edgarEst = item202.length ? estimateNextFrom202Dates(item202, today) : null;
 
+  await warmNasdaqEarningsCalendar(today);
+  const cal = lookupNasdaqCalendar(key, today);
   const yahoo = eps?.nextEarningsDate ?? null;
-  if (yahoo) {
+  const nasdaq = cal ? null : await fetchNasdaqNextEarnings(key);
+
+  const pick = pickEarningsEnrichSource(today, {
+    nasdaqCalendarDate: cal,
+    yahooDate: yahoo,
+    nasdaqSummaryDate: nasdaq,
+    edgarEst,
+  });
+
+  if (pick === "confirmed-calendar" && cal) {
+    return confirmedEntry(cal, now, key);
+  }
+
+  if (pick === "yahoo" && yahoo) {
     return estimatedEntry(yahoo, "yahoo", edgarEst, now, key);
   }
 
-  await warmNasdaqEarningsCalendar(today);
-  const cal = lookupNasdaqCalendar(key, today);
-  if (cal) {
-    const entry: EarningsEnrichEntry = {
-      date: cal,
-      status: "confirmed",
-      source: "nasdaq-calendar",
-      error: null,
-      fetchedAt: now,
-    };
-    const cache = readCache();
-    cache.quotes[key] = entry;
-    writeCache(cache);
-    return entry;
-  }
-
-  const nasdaq = await fetchNasdaqNextEarnings(key);
-  if (nasdaq) {
+  if (pick === "nasdaq-summary" && nasdaq) {
     return estimatedEntry(nasdaq, "nasdaq", edgarEst, now, key);
   }
 
-  if (edgarEst) {
+  if (pick === "edgar-only" && edgarEst) {
     return cacheEntry(
       {
         date: edgarEst.date,

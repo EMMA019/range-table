@@ -5,6 +5,33 @@ import { submissionsUrl } from "./edgar-filings";
 
 const EARNINGS_FORMS = new Set(["10-Q", "10-Q/A", "10-K", "10-K/A"]);
 
+/** Drop 2.02 clusters closer than this (duplicate/amended 8-Ks, not separate quarters). */
+export const MIN_ITEM202_FILING_GAP_DAYS = 60;
+
+function calendarDaysBetween(a: string, b: string): number {
+  const t0 = Date.parse(`${a.slice(0, 10)}T12:00:00Z`);
+  const t1 = Date.parse(`${b.slice(0, 10)}T12:00:00Z`);
+  return Math.round((t1 - t0) / 86_400_000);
+}
+
+/** Keep the first 2.02 in each cluster; skip later filings within {@link MIN_ITEM202_FILING_GAP_DAYS}. */
+export function thinItem202ToQuarterlyCadence(dates: readonly string[]): string[] {
+  const sorted = [...dates]
+    .map((d) => d.slice(0, 10))
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
+    .sort();
+  const out: string[] = [];
+  for (const d of sorted) {
+    if (!out.length) {
+      out.push(d);
+      continue;
+    }
+    if (calendarDaysBetween(out[out.length - 1], d) < MIN_ITEM202_FILING_GAP_DAYS) continue;
+    out.push(d);
+  }
+  return out;
+}
+
 function column(recent: Record<string, unknown>, key: string): string[] {
   const raw = recent[key];
   if (!Array.isArray(raw)) return [];
@@ -18,7 +45,8 @@ export function item202FilingDates(json: unknown): string[] {
   const form = column(recent, "form");
   const filingDate = column(recent, "filingDate");
   const items = column(recent, "items");
-  return [...new Set(item202Dates(form, filingDate, items))].sort();
+  const raw = [...new Set(item202Dates(form, filingDate, items))].sort();
+  return thinItem202ToQuarterlyCadence(raw);
 }
 
 /** Latest 8-K (2.02) or 10-Q/10-K filing date — do not use for next-earnings projection (10-Q lags 2.02). */

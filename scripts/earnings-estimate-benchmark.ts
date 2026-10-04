@@ -3,12 +3,12 @@
  *   SEC_USER_AGENT='range-table research contact@example.com' npx tsx scripts/earnings-estimate-benchmark.ts
  */
 import { todayEt } from "../src/lib/calendar";
+import { enrichEarningsDate, warmNasdaqEarningsCalendar } from "../src/lib/earnings-enrich";
 import { fetchEdgarItem202Dates, lastEarningsRelatedFilingDate } from "../src/lib/edgar-earnings-date";
 import {
   addCalendarDays,
   estimateNextFrom202Dates,
   legacyMixedFilingEstimate,
-  mergeEstimatedWithHistory,
 } from "../src/lib/earnings-estimate";
 import { edgarGet } from "../src/lib/edgar-client";
 import { submissionsUrl } from "../src/lib/edgar-filings";
@@ -35,11 +35,26 @@ function daysBetween(a: string, b: string): number {
   return Math.round((t1 - t0) / 86_400_000);
 }
 
+/** Signed error: estimate − actual (positive = estimate later than actual). */
+function signedError(estimate: string, actual: string): number {
+  return daysBetween(actual, estimate);
+}
+
 type RollStats = {
   n: number;
   meanSignedDays: number;
   maxAbsDays: number;
   pctEstimateLaterThanActual: number;
+};
+
+type RollSample = {
+  asOf: string;
+  last202: string;
+  actual: string;
+  oldDate: string;
+  newDate: string;
+  oldErr: number;
+  newErr: number;
 };
 
 function aggregate(errors: number[]): RollStats {
@@ -55,9 +70,9 @@ function aggregate(errors: number[]): RollStats {
 function rollingBacktest(
   dates: string[],
   mixedAtEnd: string | null,
-): { old: RollStats; new: RollStats; samples: Array<{ asOf: string; actual: string; oldDate: string; newDate: string; oldErr: number; newErr: number }> } {
-  const samples: Array<{ asOf: string; actual: string; oldDate: string; newDate: string; oldErr: number; newErr: number }> = [];
-  if (dates.length < 2) return { old: aggregate([]), new: aggregate([]), samples };
+): { old: RollStats; new: RollStats; samples: RollSample[]; worstNew: RollSample | null } {
+  const samples: RollSample[] = [];
+  if (dates.length < 2) return { old: aggregate([]), new: aggregate([]), samples, worstNew: null };
 
   const startIdx = Math.max(1, dates.length - ROLLING_QUARTERS);
   for (let i = startIdx; i < dates.length; i += 1) {
@@ -69,14 +84,25 @@ function rollingBacktest(
     const oldDate = legacyMixedFilingEstimate(mixed).date;
     const newEst = estimateNextFrom202Dates(history, asOf);
     const newDate = newEst?.date ?? oldDate;
-    const oldErr = daysBetween(oldDate, actual);
-    const newErr = daysBetween(newDate, actual);
-    samples.push({ asOf, actual, oldDate, newDate, oldErr, newErr });
+    samples.push({
+      asOf,
+      last202,
+      actual,
+      oldDate,
+      newDate,
+      oldErr: signedError(oldDate, actual),
+      newErr: signedError(newDate, actual),
+    });
   }
+  const worstNew = samples.reduce(
+    (best, s) => (!best || Math.abs(s.newErr) > Math.abs(best.newErr) ? s : best),
+    null as RollSample | null,
+  );
   return {
     old: aggregate(samples.map((s) => s.oldErr)),
     new: aggregate(samples.map((s) => s.newErr)),
     samples,
+    worstNew,
   };
 }
 
@@ -92,28 +118,39 @@ async function submissionsJson(ticker: string): Promise<unknown | null> {
 
 async function main() {
   const today = todayEt();
-  const backtest: Record<string, { old: RollStats; new: RollStats; item202Count: number }> = {};
+  await warmNasdaqEarningsCalendar(today);
+
+  const backtest: Record<
+    string,
+    { old: RollStats; new: RollStats; item202Count: number; worstNew: RollSample | null }
+  > = {};
 
   for (const ticker of BENCHMARK_TICKERS) {
     const dates = await fetchEdgarItem202Dates(ticker);
     const json = await submissionsJson(ticker);
     const mixed = json ? lastEarningsRelatedFilingDate(json) : null;
     const roll = rollingBacktest(dates, mixed);
-    backtest[ticker] = { old: roll.old, new: roll.new, item202Count: dates.length };
+    backtest[ticker] = {
+      old: roll.old,
+      new: roll.new,
+      item202Count: dates.length,
+      worstNew: roll.worstNew,
+    };
   }
 
   const candidates: Record<string, unknown> = {};
   for (const ticker of CANDIDATES) {
-    const dates = await fetchEdgarItem202Dates(ticker);
-    const edgarEst = dates.length ? estimateNextFrom202Dates(dates, today) : null;
     const oldLive = LIVE_OLD[ticker];
-    const merged = oldLive ? mergeEstimatedWithHistory(oldLive, edgarEst) : edgarEst;
+    const enrich = await enrichEarningsDate(ticker, null, oldLive ? { nextEarningsDate: oldLive } : null);
+    const dates = await fetchEdgarItem202Dates(ticker);
     candidates[ticker] = {
       liveOld: oldLive,
-      new: merged,
+      status: enrich.status,
+      date: enrich.date,
+      source: enrich.source,
+      estimateLabel: enrich.estimateLabel ?? null,
       item202Count: dates.length,
       last202: dates.length ? dates[dates.length - 1] : null,
-      edgarOnly: edgarEst,
     };
   }
 
