@@ -412,15 +412,23 @@ export function metricsFromCurve(curve: Round18EquityPoint[], from: string, to: 
     }
   }
 
+  const equityAtOrBefore = (date: string): number | null => {
+    let best: number | null = null;
+    for (const p of slice) {
+      if (p.date <= date) best = p.equity;
+      else break;
+    }
+    return best;
+  };
+
   const calendarYears: Record<string, number> = {};
   for (let y = ROUND18_CAL_YEAR_START; y <= ROUND18_CAL_YEAR_END; y += 1) {
-    const yStart = `${y}-01-01`;
     const yEnd = y === ROUND18_CAL_YEAR_END ? to : `${y}-12-31`;
-    const ys = slice.filter((p) => p.date >= yStart && p.date <= yEnd);
-    if (ys.length < 2) continue;
-    const e0 = ys[0].equity;
-    const e1 = ys[ys.length - 1].equity;
-    calendarYears[String(y)] = e0 > 0 ? e1 / e0 - 1 : 0;
+    const prevAnchor = `${y - 1}-12-31`;
+    const e0 = equityAtOrBefore(prevAnchor);
+    const e1 = equityAtOrBefore(yEnd);
+    if (e0 == null || e1 == null || e0 <= 0) continue;
+    calendarYears[String(y)] = e1 / e0 - 1;
   }
 
   return { cagr, maxDrawdown: maxDd, recoveryDays, calendarYears };
