@@ -82,6 +82,37 @@ Stocks only. Start $3,200, five stock slots, rank 20-session excess return over 
 4. **Semis + AI DC cap:** same entries as baseline; portfolio allows at most **two** concurrent positions among tickers in watchlist groups `semi`, `equipment`, `network`, `server`, `cloud`, or `power` (full table in code). Other groups unchanged.
 5. **Descriptive (semis only):** no pass/fail. For box windows 5, 10, and 20 sessions, count how often semis would touch the 25% line under the common filters (no portfolio). Reporting only.
 
+### Amendment 2026-10-04 — SOXX entry filter (variants A)
+
+On the **signal session**, when the SOXX rule applies to a name:
+
+1. SOXX close ≥ SOXX 20-day simple moving average (same calendar date as the signal).
+2. **SOXX stabilization:** let `recentLow` = minimum SOXX session low over the 10 SOXX sessions ending on the signal date. Require SOXX close and each of the prior `N−1` SOXX closes (same dates as the stock signal and its prior sessions) to be **strictly above** that `recentLow` (`N ∈ {2, 3}`).
+
+Tune `N` on the **tuning** window (`oos`, 2022–10–03 … 2024–10–02) using variant **A2** (all names): pick the `N` with higher total $1.90-net P&L; ties go to the smaller `N`. Freeze that `N` for all SOXX rows below.
+
+Rows (same pass criteria as other variants on confirmation vs baseline):
+
+- **A1 `soxx-semi`:** SOXX rule applies only to watchlist groups `semi` and `equipment`. Other names ignore SOXX (still use common filters including SPY≥20DMA unless noted).
+- **A2 `soxx-all`:** SOXX rule applies to every name in the pool.
+
+**SPY comparison** (confirmation + tuning reported; pass/fail only vs baseline on confirmation for the main variants):
+
+| Row id | SPY≥20DMA on signal | SOXX rule |
+|--------|---------------------|-----------|
+| `no-spy` | off | off |
+| `baseline` | on | off |
+| `spy-soxx-all` | on | A2 with tuned `N` |
+
+### Amendment 2026-10-04 — Dollar risk stop (variant B)
+
+**`exit-risk30`:** same entries as baseline. Exit walk is round-7 variant C except the stop is the **first** price hit of:
+
+- the signal session 20-day box low (same intraday/open/close rules as `planRound7Exit` variant C), and  
+- a **dollar stop** `entry − (30 + 0.70) / qty` (open loss **$30 net of the $0.70 sell fee** on a full exit at that price).
+
+Use `effectiveStop = max(boxLow, dollarStop)` for the walk. Report how many fills exit at the dollar stop (effective stop strictly above box low at entry) vs box low.
+
 ## Pass criteria (confirmation window vs baseline)
 
 A variant **passes** on confirmation (`in`) when simultaneously:
