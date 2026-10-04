@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { addDays, isTradingDay } from "./calendar";
 import { EPS_CACHE_TTL_MS } from "./constants";
 import type { EarningsInput, EarningsStatus } from "./types";
 
@@ -14,6 +13,9 @@ export type EarningsEnrichEntry = {
   source: EarningsEnrichSource | null;
   error: string | null;
   fetchedAt: number;
+  estimateEarliest?: string | null;
+  estimateLatest?: string | null;
+  estimateLabel?: string | null;
 };
 
 type CacheBody = { v: 1; quotes: Record<string, EarningsEnrichEntry> };
@@ -46,10 +48,14 @@ export function resolveEarningsInput(
   enrich: EarningsEnrichEntry | null,
 ): EarningsInput | null {
   if (watch?.date) return watch;
-  if (eps?.nextEarningsDate) return { date: eps.nextEarningsDate, status: "estimated" };
   if (enrich?.date && enrich.status) {
-    return { date: enrich.date, status: enrich.status };
+    const out: EarningsInput = { date: enrich.date, status: enrich.status };
+    if (enrich.estimateEarliest) out.estimateEarliest = enrich.estimateEarliest;
+    if (enrich.estimateLatest) out.estimateLatest = enrich.estimateLatest;
+    if (enrich.estimateLabel) out.estimateLabel = enrich.estimateLabel;
+    return out;
   }
+  if (eps?.nextEarningsDate) return { date: eps.nextEarningsDate, status: "estimated" };
   return null;
 }
 
@@ -62,7 +68,13 @@ export function earningsDateUnknown(
 }
 
 import { EARNINGS_UNKNOWN_PROMINENT } from "./constants";
-import { fetchEdgarLastEarningsFilingDate } from "./edgar-earnings-date";
+import { fetchEdgarItem202Dates } from "./edgar-earnings-date";
+import {
+  estimateNextFrom202Dates,
+  legacyMixedFilingEstimate,
+  mergeEstimatedWithHistory,
+  type EarningsEstimate,
+} from "./earnings-estimate";
 import { lookupNasdaqCalendar, refreshNasdaqCalendarIfNeeded } from "./nasdaq-earnings-calendar";
 import { todayEt } from "./calendar";
 
@@ -100,20 +112,80 @@ export async function fetchNasdaqNextEarnings(ticker: string): Promise<string | 
   }
 }
 
+/** @deprecated Legacy 91-session projection from a mixed filing date. */
 export function estimateNextEarningsFromLast(lastDate: string): EarningsInput {
-  let date = lastDate;
-  for (let i = 0; i < 120; i++) {
-    date = addDays(date, 1);
-    if (!isTradingDay(date)) continue;
-    let count = 0;
-    let cursor = date;
-    while (count < 91) {
-      cursor = addDays(cursor, 1);
-      if (isTradingDay(cursor)) count += 1;
-    }
-    return { date: cursor, status: "estimated" };
-  }
-  return { date: addDays(lastDate, 91), status: "estimated" };
+  const est = legacyMixedFilingEstimate(lastDate);
+  return {
+    date: est.date,
+    status: "estimated",
+    estimateEarliest: est.earliest,
+    estimateLatest: est.latest,
+    estimateLabel: est.label,
+  };
+}
+
+function cacheEntry(entry: EarningsEnrichEntry, key: string, now: number): EarningsEnrichEntry {
+  const out = { ...entry, fetchedAt: now };
+  const cache = readCache();
+  cache.quotes[key] = out;
+  writeCache(cache);
+  return out;
+}
+
+function estimatedEntry(
+  candidateDate: string,
+  source: EarningsEnrichSource,
+  edgarEst: EarningsEstimate | null,
+  now: number,
+  key: string,
+): EarningsEnrichEntry {
+  const merged = mergeEstimatedWithHistory(candidateDate, edgarEst);
+  return cacheEntry(
+    {
+      date: merged.date,
+      status: "estimated",
+      source,
+      error: null,
+      estimateEarliest: merged.estimateEarliest,
+      estimateLatest: merged.estimateLatest,
+      estimateLabel: merged.estimateLabel,
+      fetchedAt: now,
+    },
+    key,
+    now,
+  );
+}
+
+function confirmedEntry(date: string, now: number, key: string): EarningsEnrichEntry {
+  return cacheEntry(
+    {
+      date,
+      status: "confirmed",
+      source: "nasdaq-calendar",
+      error: null,
+      fetchedAt: now,
+    },
+    key,
+    now,
+  );
+}
+
+/** Nasdaq calendar (confirmed) wins over Yahoo/EDGAR merge — used by enrich and tests. */
+export function pickEarningsEnrichSource(
+  today: string,
+  opts: {
+    nasdaqCalendarDate: string | null;
+    yahooDate: string | null;
+    nasdaqSummaryDate: string | null;
+    edgarEst: EarningsEstimate | null;
+  },
+): "confirmed-calendar" | "yahoo" | "nasdaq-summary" | "edgar-only" | "none" {
+  const cal = opts.nasdaqCalendarDate && opts.nasdaqCalendarDate >= today ? opts.nasdaqCalendarDate : null;
+  if (cal) return "confirmed-calendar";
+  if (opts.yahooDate) return "yahoo";
+  if (opts.nasdaqSummaryDate) return "nasdaq-summary";
+  if (opts.edgarEst) return "edgar-only";
+  return "none";
 }
 
 export async function enrichEarningsDate(
@@ -127,60 +199,50 @@ export async function enrichEarningsDate(
     return { date: watch.date, status: watch.status, source: "watchlist", error: null, fetchedAt: now };
   }
 
-  const yahoo = eps?.nextEarningsDate ?? null;
-  if (yahoo) {
-    const entry: EarningsEnrichEntry = { date: yahoo, status: "estimated", source: "yahoo", error: null, fetchedAt: now };
-    const cache = readCache();
-    cache.quotes[key] = entry;
-    writeCache(cache);
-    return entry;
-  }
-
   const today = todayEt();
+  const item202 = await fetchEdgarItem202Dates(key);
+  const edgarEst = item202.length ? estimateNextFrom202Dates(item202, today) : null;
+
   await warmNasdaqEarningsCalendar(today);
   const cal = lookupNasdaqCalendar(key, today);
-  if (cal) {
-    const entry: EarningsEnrichEntry = {
-      date: cal,
-      status: "confirmed",
-      source: "nasdaq-calendar",
-      error: null,
-      fetchedAt: now,
-    };
-    const cache = readCache();
-    cache.quotes[key] = entry;
-    writeCache(cache);
-    return entry;
+  const yahoo = eps?.nextEarningsDate ?? null;
+  const nasdaq = cal ? null : await fetchNasdaqNextEarnings(key);
+
+  const pick = pickEarningsEnrichSource(today, {
+    nasdaqCalendarDate: cal,
+    yahooDate: yahoo,
+    nasdaqSummaryDate: nasdaq,
+    edgarEst,
+  });
+
+  if (pick === "confirmed-calendar" && cal) {
+    return confirmedEntry(cal, now, key);
   }
 
-  const nasdaq = await fetchNasdaqNextEarnings(key);
-  if (nasdaq) {
-    const entry: EarningsEnrichEntry = { date: nasdaq, status: "estimated", source: "nasdaq", error: null, fetchedAt: now };
-    const cache = readCache();
-    cache.quotes[key] = entry;
-    writeCache(cache);
-    return entry;
+  if (pick === "yahoo" && yahoo) {
+    return estimatedEntry(yahoo, "yahoo", edgarEst, now, key);
   }
 
-  const lastFiling = await fetchEdgarLastEarningsFilingDate(key);
-  if (lastFiling) {
-    const estimated = estimateNextEarningsFromLast(lastFiling);
-    const entry: EarningsEnrichEntry = {
-      date: estimated.date,
-      status: "estimated",
-      source: "estimate",
-      error: null,
-      fetchedAt: now,
-    };
-    const cache = readCache();
-    cache.quotes[key] = entry;
-    writeCache(cache);
-    return entry;
+  if (pick === "nasdaq-summary" && nasdaq) {
+    return estimatedEntry(nasdaq, "nasdaq", edgarEst, now, key);
   }
 
-  const entry: EarningsEnrichEntry = { date: null, status: null, source: null, error: "決算日が見つからない", fetchedAt: now };
-  const cache = readCache();
-  cache.quotes[key] = entry;
-  writeCache(cache);
-  return entry;
+  if (pick === "edgar-only" && edgarEst) {
+    return cacheEntry(
+      {
+        date: edgarEst.date,
+        status: "estimated",
+        source: "estimate",
+        error: null,
+        estimateEarliest: edgarEst.earliest,
+        estimateLatest: edgarEst.latest,
+        estimateLabel: edgarEst.label,
+        fetchedAt: now,
+      },
+      key,
+      now,
+    );
+  }
+
+  return cacheEntry({ date: null, status: null, source: null, error: "決算日が見つからない", fetchedAt: now }, key, now);
 }
