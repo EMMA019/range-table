@@ -98,7 +98,7 @@ function closeOnOrBefore(bars: Bar[], date: string): number | null {
   return best;
 }
 
-function trailingLogReturns(
+export function trailingLogReturns(
   calendar: string[],
   closes: Map<string, number>,
   date: string,
@@ -114,6 +114,15 @@ function trailingLogReturns(
     rets.push(Math.log(p1 / p0));
   }
   return rets.length === lookback ? rets : null;
+}
+
+export function hasCorrHistoryAtDate(
+  calendar: string[],
+  closes: Map<string, number>,
+  date: string,
+): boolean {
+  const rets = trailingLogReturns(calendar, closes, date);
+  return rets != null && rets.length >= SAKA_CORR_MIN_OBS;
 }
 
 function annualizedVol(rets: number[]): number {
