@@ -363,7 +363,8 @@ async function main() {
 - S&P 500 PIT: [fja05680/sp500](https://github.com/fja05680/sp500) \`sp500_ticker_start_end.csv\`（Round 19 同等）
 - **Dow 30 PIT:** 無料で信頼できる機械可読な在籍履歴が無いため **未実施**（Wikipedia 手動履歴は本ラウンド対象外）
 - 価格: Yahoo **adjclose**（\`totalReturn: true\`）、フォワード **252 営業日**（約 12 か月）
-- 形成: 各月末 **${ROUND20_FORMATION_START.slice(0, 4)}–${ROUND20_FORMATION_END.slice(0, 7)}**（${monthEnds.length} か月）
+- SPY カレンダー: **${calendar[0]}** ～ **${calendar[calendar.length - 1]}**（フォワード 252 日が取れる月末のみ形成、${monthEnds.length} か月）
+- 形成意図: **${ROUND20_FORMATION_START.slice(0, 4)}–${ROUND20_FORMATION_END.slice(0, 7)}**
 - メンバー×月の試行: **${attemptedMember}**、フォワード価格欠損で除外: **${missingForward}**（${attemptedMember ? pct(missingForward / attemptedMember) : "—"}）
 - 除名イベント（期間内）: **${removals.length}**、実価格フォワード不可: **${removalMissing}**（ストレス −50% / −100% を併記）
 
