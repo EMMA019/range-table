@@ -113,6 +113,36 @@ Rows (same pass criteria as other variants on confirmation vs baseline):
 
 Use `effectiveStop = max(boxLow, dollarStop)` for the walk. Report how many fills exit at the dollar stop (effective stop strictly above box low at entry) vs box low.
 
+### Amendment 2026-10-04 — Exit comparison (variant C)
+
+Same **entries** as baseline (live band, SPY≥20DMA, theme exclusions, round-7 sizing). Portfolio starts at **$3,200**, five slots, semi cap 2, RS rank unchanged.
+
+**C0 (current):** Round-7 variant **C** with stop at the signal session 20-day box low and max hold **20** sessions after entry (sell on box-low break; otherwise target at box high or timeout).
+
+**C1 (no stop):** No stop-loss. Exit only at take-profit (signal session 20-day box high, same target rules as variant C) or max-hold **timeout** at the session close. Two rows:
+
+- **`exit-c1-20`:** max hold **20** trading sessions after entry (same calendar span as C0).
+- **`exit-c1-40`:** max hold **40** trading sessions after entry.
+
+**Windows** (each is one continuous portfolio, not a restart):
+
+| Label | Dates |
+|-------|--------|
+| `live` | **2026-07-30** through **2026-10-02** (Emma’s paper/live screen period; single book from $3,200). |
+| `in` | **2024-10-03** through the last SPY session on or before **2026-10-02** (same as confirmation window elsewhere). |
+
+**Metrics** (report in this order for variant C rows):
+
+1. **Max drawdown on mark-to-market equity** (daily close marks on open positions; same engine path as other round-17 books).
+2. Max consecutive losing **closed** trades.
+3. Total $1.90-net P&L and trade count.
+4. **Worst single-trade open drawdown:** peak underwater MTM loss while the position is open (entry to exit).
+5. **C1 only:** count of timeout exits where MTM loss on the exit close is **strictly greater than $30** (“deep underwater at timeout”).
+
+Pass criteria vs **C0 on the same window** (not vs full baseline entries): same rules as other variants (DD, losing streak, ≥70% trades; flag if profit drops >15% vs C0).
+
+The Japanese report may show Emma’s **actual** brokerage return over the live window (+10.9%, worst DD about −6%) as a **reference line only** — different trade set, not a pass/fail target.
+
 ## Pass criteria (confirmation window vs baseline)
 
 A variant **passes** on confirmation (`in`) when simultaneously:
