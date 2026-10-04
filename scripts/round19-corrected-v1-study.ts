@@ -42,7 +42,7 @@ import {
   type SakaCandidateContext,
   type SakaConfig,
 } from "../src/lib/round19-saka";
-import { loadPitBars, loadPitCikMap, PIT_CACHE, pitPaths } from "../src/lib/pit-dataset";
+import { loadPitBars, loadPitCikMap, loadPitCikOverrides, PIT_CACHE, pitPaths } from "../src/lib/pit-dataset";
 import { buildPitFactsIndex, pitFactsPathForTicker } from "../src/lib/pit-facts-index";
 import { buildPitCikMapForTickers } from "../src/lib/pit-cik";
 import { loadSp500PitFiles, membersOnDate, uniqueTickersInRange } from "../src/lib/sp500-pit";
@@ -98,7 +98,9 @@ async function main() {
     pitCik.size > 0
       ? pitCik
       : new Map(
-          [...(await buildPitCikMapForTickers(PIT_CACHE, gics, tickers)).entries()].map(([t, r]) => [t, r.cik]),
+          [...(await buildPitCikMapForTickers(PIT_CACHE, gics, tickers, loadPitCikOverrides().cik)).entries()].map(
+            ([t, r]) => [t, r.cik],
+          ),
         );
   const factsIndex = buildPitFactsIndex(PIT_CACHE);
   const hasFactsFile = (t: string) =>
@@ -356,6 +358,21 @@ async function main() {
       return m.length ? n / m.length : 0;
     }),
   );
+  const minPriceRebal = Math.min(
+    ...rebals.map((d) => {
+      const m = membersOn(d);
+      let n = 0;
+      for (const t of m) if (loadBars(t).length > 0) n += 1;
+      return m.length ? n / m.length : 0;
+    }),
+  );
+  const baselineE2380 = {
+    adopted: "plain_15__equal",
+    oosCagr: 0.154,
+    oosDd: -0.203,
+    rank: 5,
+    nConfigs: 30,
+  };
 
   const section = `
 
@@ -367,7 +384,8 @@ async function main() {
 
 | 修正 | 内容 |
 |---|---|
-| CIK | SEC \`company_tickers.json\` + \`company_tickers_exchange.json\` + GICS CIK + \`PIT_TICKER_ALIASES\`（\`pit-cik.ts\`） |
+| CIK | SEC マップ + \`PIT_TICKER_ALIASES\` + \`data/pit_cik_overrides.json\`（版管理） |
+| 価格 | Yahoo（\`pit_price_ticker_aliases.json\` で現行ティッカー）→ Stooq → pickdani GitHub CSV；\`price_meta.json\` に source |
 | EDGAR | facts 欠損は **unknown**；黒字は **filed ≤ リバランス日** の四半期のみ TTM（\`ttmNetIncomePitAudit\`） |
 | 相関 | 日付キーでリターンを揃えて Pearson |
 | 株クラス | 同一 CIK は 1 銘柄（GOOG/GOOGL 等） |
@@ -377,7 +395,10 @@ async function main() {
 
 - PIT ユニーク: **${tickers.length}**／facts ファイル **${factsFileCount}**（${((100 * factsFileCount) / tickers.length).toFixed(1)}%）
 - CIK 未解決: **${noCik}**
-- リバランス日 PIT 構成に対する facts 最悪値: **${(minFactsRebal * 100).toFixed(1)}%**（目標 ≥95%）
+- リバランス日 PIT 構成に対する **facts** 最悪値: **${(minFactsRebal * 100).toFixed(1)}%**（目標 ≥95%）
+- リバランス日 PIT 構成に対する **価格** 最悪値: **${(minPriceRebal * 100).toFixed(1)}%**（目標 ≥95%）
+
+**Before/after（\`e2380b8\` → 本実行）:** 採用 **${baselineE2380.adopted}** → **${adopted.id}**；OOS CAGR **${(baselineE2380.oosCagr * 100).toFixed(1)}%** → **${pct(adoptedRun.oos.cagr)}**；OOS DD **${(baselineE2380.oosDd * 100).toFixed(1)}%** → **${pct(adoptedRun.oos.maxDrawdown)}**；OOS 順位 **${baselineE2380.rank}/${baselineE2380.nConfigs}** → **${adoptedRank}/${oosSorted.length}**
 
 ### 事実 — PIT 黒字（コード根拠）
 

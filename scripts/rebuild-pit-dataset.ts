@@ -11,7 +11,10 @@ import { edgarJson, EdgarDisabledError } from "../src/lib/edgar-client";
 import { fetchDailyBars } from "../src/lib/yahoo";
 import {
   PIT_CACHE,
+  loadPitBars,
+  loadPitCikOverrides,
   pitPaths,
+  pitPriceTicker,
   type PitManifest,
 } from "../src/lib/pit-dataset";
 import { buildPitFactsIndex, pitFactsPathForTicker } from "../src/lib/pit-facts-index";
@@ -62,8 +65,13 @@ async function main() {
   const { intervals, gics } = await loadSp500PitFiles(PIT_CACHE);
   const pitTickers = uniqueTickersInRange(intervals, SAKA_START, SAKA_END);
 
-  let overrides: Record<string, number> = {};
-  if (fs.existsSync(paths.overrides)) overrides = JSON.parse(fs.readFileSync(paths.overrides, "utf8")) as Record<string, number>;
+  const overrideFile = loadPitCikOverrides();
+  let overrides: Record<string, number> = { ...overrideFile.cik };
+  if (eftsSearch && fs.existsSync(paths.overrides)) {
+    const cacheOnly = JSON.parse(fs.readFileSync(paths.overrides, "utf8")) as Record<string, number> | { cik: Record<string, number> };
+    if (cacheOnly && typeof cacheOnly === "object" && "cik" in cacheOnly) overrides = { ...overrides, ...cacheOnly.cik };
+    else overrides = { ...overrides, ...(cacheOnly as Record<string, number>) };
+  }
 
   const cikRes = await buildPitCikMapForTickers(PIT_CACHE, gics, pitTickers, overrides);
   const missing = pitTickers.filter((t) => !cikRes.has(t));
@@ -138,26 +146,56 @@ async function main() {
     }
   }
 
+  const priceMeta: Record<string, { symbol: string; sources: string[] }> = {};
+  if (fs.existsSync(paths.priceMeta)) {
+    Object.assign(priceMeta, JSON.parse(fs.readFileSync(paths.priceMeta, "utf8")) as Record<string, { symbol: string; sources: string[] }>);
+  }
+
   if (fetchPrices) {
     for (let i = 0; i < pitTickers.length; i += 1) {
       const t = pitTickers[i];
       const dest = path.join(paths.prices, `${t.replace(/\./g, "-")}.json`);
       if (fs.existsSync(dest)) continue;
+      const ySym = pitPriceTicker(t).replace(/\./g, "-");
       let bars = loadLegacyBars(t);
+      const sources: string[] = [];
+      if (!bars.length) {
+        bars = loadLegacyBars(ySym);
+        if (bars.length) sources.push(`legacy:${ySym}`);
+      }
       if (!bars.length) {
         try {
-          const { bars: y } = await fetchDailyBars(t.replace(/\./g, "-"), { range: "20y", keep: 3200, totalReturn: true });
+          const { bars: y } = await fetchDailyBars(ySym, { range: "20y", keep: 3200, totalReturn: true });
           bars = y;
+          if (y.length) sources.push(`yahoo:${ySym}`);
         } catch {
           bars = [];
         }
       }
-      const stooq = await fetchStooqDailyBars(t);
+      let stooq = await fetchStooqDailyBars(ySym);
+      if (!stooq.length && ySym !== t.replace(/\./g, "-")) stooq = await fetchStooqDailyBars(t);
+      if (stooq.length) sources.push(`stooq:${stooq.length ? ySym : t}`);
       bars = mergePriceBars(bars, stooq);
-      if (bars.length) fs.writeFileSync(dest, JSON.stringify(bars));
+      if (!stooq.length) {
+        const st2 = await fetchStooqDailyBars(t);
+        if (st2.length) {
+          bars = mergePriceBars(bars, st2);
+          sources.push(`stooq:${t}`);
+        }
+      }
+      if (bars.length) {
+        fs.writeFileSync(dest, JSON.stringify(bars));
+        priceMeta[t] = { symbol: ySym, sources: sources.length ? sources : ["merged"] };
+      }
       if (i % 50 === 0) console.error(`[pit] prices ${i}/${pitTickers.length}`);
       await sleep(80);
     }
+    fs.writeFileSync(paths.priceMeta, JSON.stringify(priceMeta, null, 2));
+    const { spawnSync } = await import("node:child_process");
+    spawnSync("npx", ["tsx", path.join(process.cwd(), "scripts", "import-pickdani-prices.ts")], {
+      stdio: "inherit",
+      env: process.env,
+    });
   } else if (!resolveOnly) {
     for (const t of pitTickers) {
       const dest = path.join(paths.prices, `${t.replace(/\./g, "-")}.json`);
@@ -178,8 +216,7 @@ async function main() {
     for (const t of members) {
       const cik = cikRes.get(t)?.cik;
       if (pitFactsPathForTicker(t, cik, factsIndex, PIT_CACHE)) withFacts += 1;
-      const pb = path.join(paths.prices, `${t.replace(/\./g, "-")}.json`);
-      if (fs.existsSync(pb)) withPrice += 1;
+      if (loadPitBars(t, PIT_CACHE).length > 0) withPrice += 1;
     }
     const n = members.length || 1;
     return {
@@ -228,7 +265,7 @@ async function main() {
 1. GICS \`sp500.csv\` の CIK 列（クォート付き CSV パース）
 2. SEC \`company_tickers.json\` + \`company_tickers_exchange.json\`
 3. \`src/lib/pit-cik.ts\` の \`PIT_TICKER_ALIASES\`（旧ティッカー→現行）
-4. \`data/.cache/pit/cik_overrides.json\`（手動 / \`--efts-search\`）
+4. \`data/pit_cik_overrides.json\`（版管理）+ キャッシュ \`cik_overrides.json\`（\`--efts-search\`）
 
 ## 価格
 

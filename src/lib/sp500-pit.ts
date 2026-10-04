@@ -6,6 +6,7 @@ export type Sp500Interval = { ticker: string; startDate: string; endDate: string
 
 export type Sp500Gics = {
   ticker: string;
+  security: string;
   sector: string;
   subIndustry: string;
   cik: number | null;
@@ -59,11 +60,12 @@ export function parseSp500GicsCsv(text: string): Map<string, Sp500Gics> {
     const parts = parseCsvLine(lines[i]);
     if (parts.length < 4) continue;
     const ticker = parts[0].trim().toUpperCase();
+    const security = parts[1]?.trim() ?? "";
     const sector = parts[2]?.trim() ?? "";
     const subIndustry = parts[3]?.trim() ?? "";
     const cikRaw = parts[6]?.trim();
     const cik = cikRaw && /^\d+$/.test(cikRaw) ? Number(cikRaw) : null;
-    out.set(ticker, { ticker, sector, subIndustry, cik });
+    out.set(ticker, { ticker, security, sector, subIndustry, cik });
   }
   return out;
 }
