@@ -33,12 +33,14 @@ import {
   tradingDaysFromBars,
   type Round18Config,
 } from "../src/lib/round18-portfolio";
+import { buildSdiMeta, simulateSdi } from "../src/lib/round18-sdi";
 import type { Bar } from "../src/lib/types";
 
 const CACHE = path.join(process.cwd(), "data", ".cache", "round18");
 const DOC = path.join(process.cwd(), "docs", "ROUND18_ja.md");
 const BENCH = ["SPY", "QQQ", "SOXX"] as const;
 const PREREG = "b8ec490";
+const PREREG_SDI = "ea093c3";
 
 function yahooSymbol(ticker: string): string {
   return ticker.replace(/\./g, "-");
@@ -159,7 +161,7 @@ async function main() {
   const tickers = watchlistTickers();
   const barsBy = new Map<string, Bar[]>();
 
-  for (const b of BENCH) {
+  for (const b of [...BENCH, "SPTM"]) {
     barsBy.set(b, await loadBars(b, fresh));
   }
 
@@ -241,15 +243,98 @@ async function main() {
 
   const topIs = [...inSampleRows].sort((a, b) => b.cagr - a.cagr).slice(0, 5);
 
+  const sdiMeta = buildSdiMeta(loadWatchlist(), firstDates);
+  const sptmFirst = firstBarDate(barsBy.get("SPTM") ?? []) ?? null;
+  const runSdi = (commission: number) => {
+    const { curve, broadProxyDays, broadSptmDays } = simulateSdi(calendar, sdiMeta, barsBy, isProfitable, commission, sptmFirst);
+    return {
+      curve,
+      broadProxyDays,
+      broadSptmDays,
+      full: metricsFromCurve(curve, ROUND18_START, ROUND18_END),
+      is: metricsFromCurve(curve, ROUND18_START, ROUND18_IS_END),
+      oos: metricsFromCurve(curve, ROUND18_OOS_START, ROUND18_END),
+    };
+  };
+  const sdi35 = runSdi(0.35);
+  const sdi1 = runSdi(1);
+  const sdiPosYears = countPositiveYears(sdi35.full.calendarYears);
+  const sdiPassCagr = sdi35.oos.cagr >= 0.1;
+  const sdiPassDd = sdi35.oos.maxDrawdown > spyOos.maxDrawdown;
+  const sdiPassYears = sdiPosYears >= 7;
+  const qqqOos = benchMetrics.QQQ.oos;
+
+  const sdiSection = `## Small Direct Index（65% 広い米国 + 35%×15 銘柄）
+
+事前登録追補: \`${PREREG_SDI}\`（\`docs/ROUND18_PREREG_SDI_ja.md\`）— **本レポート最初の比較**
+
+| 項目 | 内容 |
+|---|---|
+| 広いスリーブ | **65%** — SPTM（調整後終値）。SPTM 開始日: ${sptmFirst ?? "—"}。四半期リバランスで SPTM 未上場日は **SPY 代理**（${sdi35.broadProxyDays} 回 / SPTM ${sdi35.broadSptmDays} 回） |
+| 個別スリーブ | **35%**、**15** 銘柄等ウェイト、**小数株** |
+| 入替 | 四半期ごと、**条件外のみ**差替え・サバイバー維持 → 65/35 へ再平衡 |
+| 条件 | 黒字（ルックアヘッド）・ATR14≥3%・Round 18 同除外・半導体+設備 **最大4/15** |
+| 15超の候補 | **12か月−1か月の SPY 超過リターン**降順、同点はティッカー昇順 |
+
+### SDI — 期間別（$0.35）
+
+|  | In-sample 2016–20 | OOS 2021–10/02 |
+|---|---:|---:|
+| CAGR | ${pct(sdi35.is.cagr)} | **${pct(sdi35.oos.cagr)}** |
+| 最大DD | ${pct(sdi35.is.maxDrawdown)} | **${pct(sdi35.oos.maxDrawdown)}** |
+| DD回復(日) | ${sdi35.is.recoveryDays ?? "—"} | ${sdi35.oos.recoveryDays ?? "—"} |
+
+| 手数料/約定 | OOS CAGR | OOS 最大DD |
+|---|---:|---:|
+| $0.35 | ${pct(sdi35.oos.cagr)} | ${pct(sdi35.oos.maxDrawdown)} |
+| $1.00 | ${pct(sdi1.oos.cagr)} | ${pct(sdi1.oos.maxDrawdown)} |
+
+### SDI vs ベンチ（OOS）
+
+| | CAGR | 最大DD |
+|---|---:|---:|
+| **SDI** | ${pct(sdi35.oos.cagr)} | ${pct(sdi35.oos.maxDrawdown)} |
+| SPY 100% | ${pct(spyOos.cagr)} | ${pct(spyOos.maxDrawdown)} |
+| QQQ 100% | ${pct(qqqOos.cagr)} | ${pct(qqqOos.maxDrawdown)} |
+
+### SDI 暦年（$0.35）
+
+| 年 | SDI | SPY | QQQ |
+|---|---:|---:|---:|
+${Array.from({ length: ROUND18_CAL_YEAR_END - ROUND18_CAL_YEAR_START + 1 }, (_, i) => {
+  const y = ROUND18_CAL_YEAR_START + i;
+  const ys = String(y);
+  const p = sdi35.full.calendarYears[ys];
+  const spyY = yearReturnPct(barsBy.get("SPY")!, y);
+  const qqqY = yearReturnPct(barsBy.get("QQQ")!, y);
+  return `| ${ys}${y === ROUND18_CAL_YEAR_END ? " YTD" : ""} | ${p != null ? pct(p) : "—"} | ${spyY != null ? pct(spyY) : "—"} | ${qqqY != null ? pct(qqqY) : "—"} |`;
+}).join("\n")}
+
+プラス年数 2017–2026: **${sdiPosYears}/10**
+
+### SDI 合格判定（OOS・$0.35、Round 18 同一基準）
+
+| 条件 | 結果 |
+|---|---|
+| CAGR ≥ 10% | ${sdiPassCagr ? "✓" : "✗"} (${pct(sdi35.oos.cagr)}) |
+| 最大DD < SPY | ${sdiPassDd ? "✓" : "✗"} (SDI ${pct(sdi35.oos.maxDrawdown)} vs SPY ${pct(spyOos.maxDrawdown)}) |
+| 7/10 年プラス | ${sdiPassYears ? "✓" : "✗"} |
+| 参考 ≥12% / ≥13% | ${sdi35.oos.cagr >= 0.12 ? "✓" : "✗"} / ${sdi35.oos.cagr >= 0.13 ? "✓" : "✗"} |
+
+---
+
+`;
+
   const md = `# Round 18 — ロングオンリー・ポートフォリオ研究
 
-## 事前登録
+${sdiSection}
+## グリッド構成（36通り）— 事前登録
 
 - コミット: \`${PREREG}\`（\`docs/ROUND18_PREREG_ja.md\`）
 - 試行構成数: **${configs.length}**（多重検定に注意）
 - サイト非掲載・研究のみ
 
-## 事実
+## 事実（グリッド）
 
 ### ユニバース（実行時点）
 
@@ -332,6 +417,11 @@ ${Array.from({ length: ROUND18_CAL_YEAR_END - ROUND18_CAL_YEAR_START + 1 }, (_, 
         pass: { passCagr, passDd, passYears, posYears },
         oosCagr35: at35.oos.cagr,
         configsTried: configs.length,
+        sdi: {
+          oosCagr35: sdi35.oos.cagr,
+          pass: { sdiPassCagr, sdiPassDd, sdiPassYears },
+          sptmFirst,
+        },
       },
       null,
       2,
