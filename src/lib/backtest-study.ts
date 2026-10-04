@@ -698,6 +698,7 @@ export type Book = {
     pnlUsd: number;
     entryDate: string;
     exitDate: string;
+    positionKey?: string;
     qty?: number;
     riskUsd?: number | null;
     hold?: number;
@@ -791,6 +792,8 @@ type OpenPos = {
   /** Shares still open. Round-7 legs reduce this. Other books leave it equal to qty. */
   left: number;
   taken: Round7Taken[];
+  /** Round-7 books call finishRound7 once; flatten must not record the same close twice. */
+  finished?: boolean;
 };
 
 type WalkFill = {
@@ -800,6 +803,7 @@ type WalkFill = {
   hold: number;
   reason: ExitReason;
   entryDate: string;
+  positionKey?: string;
   qty: number;
   riskUsd: number | null;
   legs?: Round7Taken[];
@@ -1024,6 +1028,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
       hold: exitI - entryI,
       reason,
       entryDate: pos.cand.entryDate,
+      positionKey: pos.cand.positionKey ?? pos.cand.ticker,
       qty: pos.qty,
       riskUsd: riskDollars(pos.qty, pos.cand.entry, pos.cand.stop),
     });
@@ -1039,6 +1044,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
       hold: exitI - entryI,
       reason: pos.reason,
       entryDate: pos.cand.entryDate,
+      positionKey: pos.cand.positionKey ?? pos.cand.ticker,
       qty: pos.qty,
       riskUsd: riskDollars(pos.qty, pos.cand.entry, pos.cand.scale?.stop ?? pos.cand.stop),
     });
@@ -1092,6 +1098,8 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
     return true;
   };
   const finishRound7 = (pos: OpenPos, date: string) => {
+    if (pos.finished) return;
+    pos.finished = true;
     const entryI = sessionIndex.get(pos.cand.entryDate) ?? 0;
     const exitI = sessionIndex.get(date) ?? entryI;
     const lastLeg = pos.taken[pos.taken.length - 1];
@@ -1102,6 +1110,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
       hold: exitI - entryI,
       reason: engineReason(lastLeg?.reason ?? "window"),
       entryDate: pos.cand.entryDate,
+      positionKey: pos.cand.positionKey ?? pos.cand.ticker,
       qty: pos.qty,
       riskUsd: riskDollars(pos.qty, pos.cand.entry, pos.cand.stop),
       legs: pos.taken.map((leg) => ({ ...leg })),
@@ -1283,7 +1292,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
       for (let i = positions.length - 1; i >= 0; i -= 1) {
         const pos = positions[i];
         if (pos.cand.round7Legs) {
-          if (pos.left > 0) {
+          if (!pos.finished && pos.left > 0) {
             const price = closePx(pos.cand.ticker, date, pos.cand.entry);
             const qty = pos.left;
             const fee = exitFee(qty, price);
@@ -1463,6 +1472,7 @@ function walkBook(opts: PortfolioOpts, cands: Candidate[]): Book {
             pnlUsd: round(fill.pnlUsd),
             entryDate: fill.entryDate,
             exitDate: fill.exitDate,
+            positionKey: fill.positionKey,
             ...(opts.keepRisk ? { qty: fill.qty, riskUsd: fill.riskUsd == null ? null : round(fill.riskUsd, 4) } : {}),
             ...(opts.keepRound7
               ? {

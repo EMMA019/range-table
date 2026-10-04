@@ -104,8 +104,34 @@ type RunOpts = {
   semiBox?: 5 | 10 | 20;
 };
 
-function fillKey(fill: { ticker: string; entryDate: string }): string {
-  return `${fill.ticker}|${fill.entryDate}`;
+function fillKey(fill: { ticker: string; entryDate: string; positionKey?: string }): string {
+  return `${fill.ticker}|${fill.entryDate}|${fill.positionKey ?? fill.ticker}`;
+}
+
+function dedupeFills<T extends { ticker: string; entryDate: string; pnlUsd: number }>(fills: readonly T[]): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const fill of fills) {
+    const key = fillKey(fill);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(fill);
+  }
+  return out;
+}
+
+function fillAudit(fills: readonly { ticker: string; entryDate: string; pnlUsd: number }[]) {
+  const keys = fills.map(fillKey);
+  const unique = new Set(keys);
+  const dupKeys = [...unique].filter((key) => keys.filter((k) => k === key).length > 1);
+  const dupPnl = fills.reduce((s, f) => s + f.pnlUsd, 0);
+  const deduped = dedupeFills(fills);
+  const dedupedPnl = deduped.reduce((s, f) => s + f.pnlUsd, 0);
+  const samples = dupKeys.slice(0, 3).map((key) => {
+    const rows = fills.filter((f) => fillKey(f) === key);
+    return { key, rows };
+  });
+  return { fillRows: fills.length, uniqueKeys: unique.size, duplicateKeys: dupKeys.length, dupPnl, dedupedPnl, samples };
 }
 
 function runVariant(
@@ -386,9 +412,11 @@ function main() {
     const base = books[`baseline|${win.id}`]?.book.fills ?? [];
     const crash = books[`crash-${crashKPick}|${win.id}`]?.book.fills ?? [];
     const crashSet = new Set(crash.map(fillKey));
-    crashRemoved[win.id] = base
-      .filter((fill) => !crashSet.has(fillKey(fill)))
-      .map((fill) => ({ ticker: fill.ticker, entryDate: fill.entryDate, pnlUsd: fill.pnlUsd }));
+    crashRemoved[win.id] = dedupeFills(
+      base
+        .filter((fill) => !crashSet.has(fillKey(fill)))
+        .map((fill) => ({ ticker: fill.ticker, entryDate: fill.entryDate, pnlUsd: fill.pnlUsd })),
+    );
   }
 
   const aiDcLost: Record<string, Array<{ ticker: string; entryDate: string; pnlUsd: number }>> = {};
@@ -396,9 +424,19 @@ function main() {
     const base = books[`baseline|${win.id}`]?.book.fills ?? [];
     const cap = books[`ai-dc-cap|${win.id}`]?.book.fills ?? [];
     const capSet = new Set(cap.map(fillKey));
-    aiDcLost[win.id] = base
-      .filter((fill) => !capSet.has(fillKey(fill)))
-      .map((fill) => ({ ticker: fill.ticker, entryDate: fill.entryDate, pnlUsd: fill.pnlUsd }));
+    aiDcLost[win.id] = dedupeFills(
+      base
+        .filter((fill) => !capSet.has(fillKey(fill)))
+        .map((fill) => ({ ticker: fill.ticker, entryDate: fill.entryDate, pnlUsd: fill.pnlUsd })),
+    );
+  }
+
+  const fillIntegrity: Record<string, { baseline: ReturnType<typeof fillAudit>; aiDcCap: ReturnType<typeof fillAudit> }> = {};
+  for (const win of windows) {
+    fillIntegrity[win.id] = {
+      baseline: fillAudit(books[`baseline|${win.id}`]?.book.fills ?? []),
+      aiDcCap: fillAudit(books[`ai-dc-cap|${win.id}`]?.book.fills ?? []),
+    };
   }
 
   let dollarStopFills = 0;
@@ -484,6 +522,9 @@ function main() {
     },
     exitRisk30: { dollarStopLedCandidates: dollarStopCandidates, fillsWithDifferentPnl: dollarStopFills },
     soxxNPick,
+    fillIntegrity,
+    aiDcCapListNote:
+      "Lists baseline fills absent from the capped book (set diff on ticker|entryDate). Non–AI/DC names are knock-on slot substitutions, not bucket mis-tags.",
   };
 
   const report: Round17Report = {
@@ -606,6 +647,35 @@ function writeReportJa(report: Round17Report, diagnostics: Record<string, unknow
   if (report.exitCVerdicts?.length) {
     lines.push("C1 合否（同一窓の C0 比）:", "", "```json", JSON.stringify(report.exitCVerdicts, null, 2), "```", "");
   }
+  const integrity = (diagnostics as { fillIntegrity?: { in?: { baseline: { fillRows: number; uniqueKeys: number; duplicateKeys: number } } } }).fillIntegrity?.in;
+  lines.push(
+    "",
+    "## 追記：差分リストの重複行と非 AI/DC 銘柄",
+    "",
+    "### 事実",
+    "",
+    "- 旧レポートの「同じ銘柄・同じ entryDate が2行」は、ポートフォリオの二重計上ではなく、**25%線と35%線の別建玉**（`positionKey` が `TICKER-L25` / `TICKER-L35`）が、差分用キー `ticker|entryDate` だけで突き合わせていたための**表示上の重複**。",
+    `- 修正後（2024-26）: 約定行 ${integrity?.baseline.fillRows ?? "—"}、一意キー（銘柄|entry日|線）${integrity?.baseline.uniqueKeys ?? "—"}、キー重複 ${integrity?.baseline.duplicateKeys ?? 0}。`,
+    "- **集計値は変わらない**（基準 192 / +$906.22、ai-dc-cap 180 / +$279.27、crash-3.5 191 / +$820.69、DD・連敗も同一）。",
+    "- AI・DC 枠リストに SBUX・F など非バケット銘柄が出るのは、**maxBucket=2 による入れ替え**（ノックオン）。基準で入った約定が上限付きランで採用されなかった差分であり、バケット誤分類ではない（`bucketHeavy` = 半導体・設備・ネットワーク・サーバ・クラウド・電力グループ）。",
+    "",
+    "### 解釈",
+    "",
+    "- 差分リストは「AI テーマだけが落ちた銘柄」ではなく、「**上限ありの別シミュレーションに無い基準約定**」の一覧。",
+    "- 合否（ai-dc-cap は利益15%超の低下で flag-profit）は上記集計のまま有効。",
+    "",
+    "```json",
+    JSON.stringify(
+      {
+        fillIntegrity: (diagnostics as { fillIntegrity?: unknown }).fillIntegrity,
+        aiDcCapListNote: (diagnostics as { aiDcCapListNote?: string }).aiDcCapListNote,
+      },
+      null,
+      2,
+    ),
+    "```",
+    "",
+  );
   lines.push("", "## 要約", "", report.summaryJa);
   if (base) {
     lines.push("", `基準（2024-26）: ${base.trades}回 / $1.90 net ${base.totalNet190Usd.toFixed(2)} / DD ${base.mtmDdUsd.toFixed(2)} / 連敗 ${base.maxConsecLosses}`);

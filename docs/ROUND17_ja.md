@@ -1,7 +1,7 @@
 # Round 17 結果（日本語）
 
 事前登録: `200b35f8189439abbce3671e58b0a18bdfb37e1e`
-生成: 2026-10-04T08:59:10.067Z
+生成: 2026-10-04T09:16:53.969Z
 
 ## 安定化フィルタ（訂正メモ）
 
@@ -36,6 +36,16 @@
   "oos": [],
   "in": [
     {
+      "ticker": "POWL",
+      "entryDate": "2025-01-28",
+      "pnlUsd": -21.64
+    },
+    {
+      "ticker": "ANET",
+      "entryDate": "2026-01-15",
+      "pnlUsd": 40.76
+    },
+    {
       "ticker": "NOK",
       "entryDate": "2026-01-23",
       "pnlUsd": 13.82
@@ -44,11 +54,6 @@
       "ticker": "AVGO",
       "entryDate": "2026-01-27",
       "pnlUsd": -22.41
-    },
-    {
-      "ticker": "VST",
-      "entryDate": "2026-02-09",
-      "pnlUsd": 28.1
     },
     {
       "ticker": "VST",
@@ -76,9 +81,9 @@
         "pnlUsd": 31.15
       },
       {
-        "ticker": "MOD",
-        "entryDate": "2022-12-13",
-        "pnlUsd": 27.18
+        "ticker": "APLD",
+        "entryDate": "2022-11-11",
+        "pnlUsd": -38.85
       },
       {
         "ticker": "MOD",
@@ -101,11 +106,6 @@
         "pnlUsd": 7.19
       },
       {
-        "ticker": "TYL",
-        "entryDate": "2023-01-10",
-        "pnlUsd": 7.19
-      },
-      {
         "ticker": "INTC",
         "entryDate": "2023-02-09",
         "pnlUsd": -40
@@ -114,6 +114,11 @@
         "ticker": "EW",
         "entryDate": "2023-02-09",
         "pnlUsd": -19.05
+      },
+      {
+        "ticker": "MPC",
+        "entryDate": "2023-02-09",
+        "pnlUsd": 20.45
       },
       {
         "ticker": "FN",
@@ -131,9 +136,9 @@
         "pnlUsd": -19.4
       },
       {
-        "ticker": "POET",
-        "entryDate": "2023-03-22",
-        "pnlUsd": -19.4
+        "ticker": "ENTG",
+        "entryDate": "2023-04-21",
+        "pnlUsd": -27.4
       },
       {
         "ticker": "ENTG",
@@ -166,11 +171,6 @@
         "pnlUsd": 39.12
       },
       {
-        "ticker": "POWL",
-        "entryDate": "2023-06-21",
-        "pnlUsd": 39.12
-      },
-      {
         "ticker": "POET",
         "entryDate": "2023-07-31",
         "pnlUsd": -42.12
@@ -179,11 +179,6 @@
         "ticker": "POET",
         "entryDate": "2023-09-01",
         "pnlUsd": -31.41
-      },
-      {
-        "ticker": "SMCI",
-        "entryDate": "2023-08-31",
-        "pnlUsd": -29.44
       },
       {
         "ticker": "SMCI",
@@ -216,14 +211,9 @@
         "pnlUsd": 58.28
       },
       {
-        "ticker": "SMCI",
-        "entryDate": "2023-12-04",
-        "pnlUsd": 58.28
-      },
-      {
-        "ticker": "CIEN",
-        "entryDate": "2023-12-20",
-        "pnlUsd": 47.7
+        "ticker": "CAMT",
+        "entryDate": "2023-12-15",
+        "pnlUsd": 40.74
       },
       {
         "ticker": "CIEN",
@@ -241,9 +231,9 @@
         "pnlUsd": -7.26
       },
       {
-        "ticker": "CLS",
-        "entryDate": "2024-01-17",
-        "pnlUsd": -7.26
+        "ticker": "POET",
+        "entryDate": "2023-12-26",
+        "pnlUsd": 41.54
       },
       {
         "ticker": "GFS",
@@ -254,11 +244,6 @@
         "ticker": "NOK",
         "entryDate": "2024-02-14",
         "pnlUsd": 21.06
-      },
-      {
-        "ticker": "POET",
-        "entryDate": "2024-03-05",
-        "pnlUsd": -51.53
       },
       {
         "ticker": "POET",
@@ -289,11 +274,6 @@
         "ticker": "ARM",
         "entryDate": "2024-03-12",
         "pnlUsd": -0.16
-      },
-      {
-        "ticker": "POET",
-        "entryDate": "2024-04-08",
-        "pnlUsd": -32.7
       },
       {
         "ticker": "POET",
@@ -336,6 +316,11 @@
         "pnlUsd": -29.98
       },
       {
+        "ticker": "ETN",
+        "entryDate": "2024-06-17",
+        "pnlUsd": -10.03
+      },
+      {
         "ticker": "RMBS",
         "entryDate": "2024-06-21",
         "pnlUsd": 47.46
@@ -351,11 +336,6 @@
         "pnlUsd": 23.12
       },
       {
-        "ticker": "HUBB",
-        "entryDate": "2024-07-03",
-        "pnlUsd": 23.12
-      },
-      {
         "ticker": "QCOM",
         "entryDate": "2024-07-05",
         "pnlUsd": -29.2
@@ -364,11 +344,6 @@
         "ticker": "CLS",
         "entryDate": "2024-07-18",
         "pnlUsd": -42.28
-      },
-      {
-        "ticker": "EME",
-        "entryDate": "2024-07-09",
-        "pnlUsd": -17.94
       },
       {
         "ticker": "EME",
@@ -398,16 +373,6 @@
         "pnlUsd": 36.7
       },
       {
-        "ticker": "POET",
-        "entryDate": "2024-11-07",
-        "pnlUsd": 36.7
-      },
-      {
-        "ticker": "MOS",
-        "entryDate": "2024-11-26",
-        "pnlUsd": -29.94
-      },
-      {
         "ticker": "MOS",
         "entryDate": "2024-11-26",
         "pnlUsd": -29.94
@@ -423,9 +388,9 @@
         "pnlUsd": -13.15
       },
       {
-        "ticker": "AMKR",
-        "entryDate": "2025-01-17",
-        "pnlUsd": 23.27
+        "ticker": "RMBS",
+        "entryDate": "2024-12-26",
+        "pnlUsd": 60.5
       },
       {
         "ticker": "AMKR",
@@ -433,9 +398,9 @@
         "pnlUsd": 23.27
       },
       {
-        "ticker": "POET",
-        "entryDate": "2025-01-22",
-        "pnlUsd": -32.67
+        "ticker": "ALAB",
+        "entryDate": "2025-01-17",
+        "pnlUsd": -38.56
       },
       {
         "ticker": "POET",
@@ -458,11 +423,6 @@
         "pnlUsd": -2.5
       },
       {
-        "ticker": "STX",
-        "entryDate": "2025-02-04",
-        "pnlUsd": -2.5
-      },
-      {
         "ticker": "VRT",
         "entryDate": "2025-04-03",
         "pnlUsd": -13.48
@@ -473,9 +433,9 @@
         "pnlUsd": 46.62
       },
       {
-        "ticker": "SNDK",
-        "entryDate": "2025-04-30",
-        "pnlUsd": 46.62
+        "ticker": "UBER",
+        "entryDate": "2025-05-30",
+        "pnlUsd": 44.65
       },
       {
         "ticker": "MOD",
@@ -488,9 +448,9 @@
         "pnlUsd": -29.72
       },
       {
-        "ticker": "MOD",
-        "entryDate": "2025-07-11",
-        "pnlUsd": 54.54
+        "ticker": "NBIS",
+        "entryDate": "2025-07-08",
+        "pnlUsd": -34.9
       },
       {
         "ticker": "MOD",
@@ -518,11 +478,6 @@
         "pnlUsd": 10.52
       },
       {
-        "ticker": "VRT",
-        "entryDate": "2025-08-28",
-        "pnlUsd": 10.52
-      },
-      {
         "ticker": "CRWV",
         "entryDate": "2025-08-29",
         "pnlUsd": 20.92
@@ -533,14 +488,19 @@
         "pnlUsd": 74.34
       },
       {
-        "ticker": "POET",
-        "entryDate": "2025-09-30",
-        "pnlUsd": 74.34
+        "ticker": "MOD",
+        "entryDate": "2025-09-29",
+        "pnlUsd": 37.18
       },
       {
         "ticker": "VST",
         "entryDate": "2025-10-08",
         "pnlUsd": -30.82
+      },
+      {
+        "ticker": "NRG",
+        "entryDate": "2025-10-22",
+        "pnlUsd": 19.26
       },
       {
         "ticker": "ANET",
@@ -573,11 +533,6 @@
         "pnlUsd": 71.2
       },
       {
-        "ticker": "GLW",
-        "entryDate": "2026-01-08",
-        "pnlUsd": 71.2
-      },
-      {
         "ticker": "ALAB",
         "entryDate": "2026-01-27",
         "pnlUsd": -28.18
@@ -598,9 +553,19 @@
         "pnlUsd": -20.56
       },
       {
+        "ticker": "VST",
+        "entryDate": "2026-02-09",
+        "pnlUsd": 28.1
+      },
+      {
         "ticker": "CLS",
         "entryDate": "2026-05-11",
         "pnlUsd": -32.74
+      },
+      {
+        "ticker": "TEL",
+        "entryDate": "2026-05-07",
+        "pnlUsd": -31.9
       },
       {
         "ticker": "JBL",
@@ -616,6 +581,11 @@
         "ticker": "VLO",
         "entryDate": "2026-05-28",
         "pnlUsd": 19.18
+      },
+      {
+        "ticker": "POWL",
+        "entryDate": "2026-05-19",
+        "pnlUsd": 32.92
       },
       {
         "ticker": "TSM",
@@ -651,6 +621,11 @@
         "ticker": "ANET",
         "entryDate": "2026-09-04",
         "pnlUsd": 36.56
+      },
+      {
+        "ticker": "TSLA",
+        "entryDate": "2026-09-29",
+        "pnlUsd": -4.99
       }
     ]
   },
@@ -770,6 +745,65 @@ C1 合否（同一窓の C0 比）:
     }
   }
 ]
+```
+
+
+## 追記：差分リストの重複行と非 AI/DC 銘柄
+
+### 事実
+
+- 旧レポートの「同じ銘柄・同じ entryDate が2行」は、ポートフォリオの二重計上ではなく、**25%線と35%線の別建玉**（`positionKey` が `TICKER-L25` / `TICKER-L35`）が、差分用キー `ticker|entryDate` だけで突き合わせていたための**表示上の重複**。
+- 修正後（2024-26）: 約定行 192、一意キー（銘柄|entry日|線）192、キー重複 0。
+- **集計値は変わらない**（基準 192 / +$906.22、ai-dc-cap 180 / +$279.27、crash-3.5 191 / +$820.69、DD・連敗も同一）。
+- AI・DC 枠リストに SBUX・F など非バケット銘柄が出るのは、**maxBucket=2 による入れ替え**（ノックオン）。基準で入った約定が上限付きランで採用されなかった差分であり、バケット誤分類ではない（`bucketHeavy` = 半導体・設備・ネットワーク・サーバ・クラウド・電力グループ）。
+
+### 解釈
+
+- 差分リストは「AI テーマだけが落ちた銘柄」ではなく、「**上限ありの別シミュレーションに無い基準約定**」の一覧。
+- 合否（ai-dc-cap は利益15%超の低下で flag-profit）は上記集計のまま有効。
+
+```json
+{
+  "fillIntegrity": {
+    "oos": {
+      "baseline": {
+        "fillRows": 173,
+        "uniqueKeys": 173,
+        "duplicateKeys": 0,
+        "dupPnl": 1590.5200000000004,
+        "dedupedPnl": 1590.5200000000004,
+        "samples": []
+      },
+      "aiDcCap": {
+        "fillRows": 158,
+        "uniqueKeys": 158,
+        "duplicateKeys": 0,
+        "dupPnl": 1116.4900000000007,
+        "dedupedPnl": 1116.4900000000007,
+        "samples": []
+      }
+    },
+    "in": {
+      "baseline": {
+        "fillRows": 192,
+        "uniqueKeys": 192,
+        "duplicateKeys": 0,
+        "dupPnl": 1136.620000000001,
+        "dedupedPnl": 1136.620000000001,
+        "samples": []
+      },
+      "aiDcCap": {
+        "fillRows": 180,
+        "uniqueKeys": 180,
+        "duplicateKeys": 0,
+        "dupPnl": 495.2700000000001,
+        "dedupedPnl": 495.2700000000001,
+        "samples": []
+      }
+    }
+  },
+  "aiDcCapListNote": "Lists baseline fills absent from the capped book (set diff on ticker|entryDate). Non–AI/DC names are knock-on slot substitutions, not bucket mis-tags."
+}
 ```
 
 
