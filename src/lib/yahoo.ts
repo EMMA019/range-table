@@ -38,6 +38,7 @@ type YahooResult = {
       close?: Array<number | null>;
       volume?: Array<number | null>;
     }>;
+    adjclose?: Array<{ adjclose?: Array<number | null> }>;
   };
   events?: { splits?: Record<string, YahooSplit> };
 };
@@ -131,9 +132,20 @@ export function dropPartialBar(
   return { bars, dropped: false };
 }
 
-export function parseChart(result: YahooResult, nowSec = Date.now() / 1000, keep = CHART_SESSIONS): ParsedSeries {
+export type ParseChartOptions = {
+  /** Use Yahoo adjclose (split + dividend adjusted) for bar close; skips manual split adjustment. */
+  useTotalReturn?: boolean;
+};
+
+export function parseChart(
+  result: YahooResult,
+  nowSec = Date.now() / 1000,
+  keep = CHART_SESSIONS,
+  options: ParseChartOptions = {},
+): ParsedSeries {
   const timestamps = result.timestamp;
   const quote = result.indicators?.quote?.[0];
+  const adjSeries = options.useTotalReturn ? result.indicators?.adjclose?.[0]?.adjclose : undefined;
   if (!timestamps || !quote) {
     throw new Error("日足が空");
   }
@@ -143,7 +155,11 @@ export function parseChart(result: YahooResult, nowSec = Date.now() / 1000, keep
     const o = quote.open?.[i];
     const h = quote.high?.[i];
     const l = quote.low?.[i];
-    const c = quote.close?.[i];
+    let c = quote.close?.[i];
+    const adjC = adjSeries?.[i];
+    if (options.useTotalReturn && adjC != null && Number.isFinite(adjC)) {
+      c = adjC;
+    }
     const v = quote.volume?.[i];
     if (
       o == null ||
@@ -166,7 +182,7 @@ export function parseChart(result: YahooResult, nowSec = Date.now() / 1000, keep
   raw.sort((a, b) => a.t - b.t);
 
   const splits = Object.values(result.events?.splits ?? {});
-  const adjusted = applySplits(raw, splits);
+  const adjusted = options.useTotalReturn ? raw : applySplits(raw, splits);
   const { bars: completed, dropped } = dropPartialBar(adjusted, result.meta, nowSec);
 
   const byDate = new Map<string, Bar>();
@@ -187,8 +203,15 @@ export function parseChart(result: YahooResult, nowSec = Date.now() / 1000, keep
   return { bars: kept, droppedPartial: dropped };
 }
 
-function fetchHost(host: string, symbol: string, range: string, maxBytes: number): Promise<YahooResult> {
-  const path = `/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${encodeURIComponent(range)}&events=split&includePrePost=false`;
+function fetchHost(
+  host: string,
+  symbol: string,
+  range: string,
+  maxBytes: number,
+  useTotalReturn = false,
+): Promise<YahooResult> {
+  const events = useTotalReturn ? "div,split" : "split";
+  const path = `/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${encodeURIComponent(range)}&events=${events}&includePrePost=false`;
   return new Promise((resolve, reject) => {
     const req = https.request(
       {
@@ -261,6 +284,8 @@ export type FetchBarsOptions = {
   range?: string;
   /** Completed sessions to keep from the end. */
   keep?: number;
+  /** Split + dividend adjusted closes (Yahoo adjclose). */
+  totalReturn?: boolean;
 };
 
 /**
@@ -270,14 +295,15 @@ export type FetchBarsOptions = {
 export async function fetchDailyBars(symbol: string, options: FetchBarsOptions = {}): Promise<ParsedSeries> {
   const range = options.range ?? "6mo";
   const keep = options.keep ?? CHART_SESSIONS;
+  const totalReturn = options.totalReturn ?? false;
   const maxBytes = range === "6mo" ? 256_000 : 2_000_000;
   let lastError: Error | null = null;
   for (let i = 0; i < ATTEMPTS.length; i++) {
     await yahooGate.wait();
     try {
-      const result = await fetchHost(ATTEMPTS[i], symbol, range, maxBytes);
+      const result = await fetchHost(ATTEMPTS[i], symbol, range, maxBytes, totalReturn);
       yahooGate.ok();
-      return parseChart(result, Date.now() / 1000, keep);
+      return parseChart(result, Date.now() / 1000, keep, { useTotalReturn: totalReturn });
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
       if (NOT_FOUND_RE.test(lastError.message)) break;
