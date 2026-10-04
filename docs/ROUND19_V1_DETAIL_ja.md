@@ -838,6 +838,151 @@
 
 ---
 
+## (A) 選定・フィルタ規則一覧（コード根拠）
+
+
+本レポートの採用構成は **`plain_15__mcap_cap5`**（選定=`plain`・N=15・ウェイト=`mcap_cap5`）。以下は **時価総額順位以外**の全フィルタ／変換をコード行番号付きで列挙する（`src/lib/round19-saka.ts` ほか）。
+
+### 1. ユニバース（S&P 500・PIT 構成）
+
+| 規則 | 実装 |
+|---|---|
+| リバランス日 `d` に **S&P 500 構成銘柄**のみ | `membersOnDate`（`src/lib/sp500-pit.ts:93-100`）— `sp500_ticker_start_end.csv` の `startDate`/`endDate` で PIT 判定（`isSp500MemberOnDate` `sp500-pit.ts:84-90`） |
+| ウォッチリスト（`data/watchlist.yaml`）は **不使用** | 事前登録 `docs/ROUND19_PREREG_ja.md`・スタディは PIT S&P のみ |
+
+### 2. テーマ／銘柄除外（eligible 前）
+
+| 規則 | 実装 |
+|---|---|
+| **ONDS** は常に除外 | `isExcludedTheme` `round19-saka.ts:73-77` |
+| **solar / crypto / nuclear / quantum / space** テーマ銘柄を除外 | 同上 + `themeOf`（`src/lib/themes.ts:60-66`） |
+| テーマ定義リスト | SOLAR/CRYPTO/NUCLEAR/QUANTUM/SPACE 定数（`themes.ts:8-46`）。**SPCX** は `THEME_KEEP` でテーマ扱いしない（`themes.ts:48,62`）— space テーマだが **S&P 用バックテストでは space 除外リストに SPCX は含めない**（`themeOf` が null） |
+| **Financials** セクター除外 | `isFinancialSector` `round19-saka.ts:79-81`（GICS sector === `"Financials"`） |
+
+### 3. 黒字（profitability）— TTM・filed PIT
+
+| 規則 | 実装 |
+|---|---|
+| 状態 | `profitabilityStatus` `round19-saka.ts:24-29` → `profitable` / `loss` / `unknown` |
+| **eligible には `profitable` のみ**（`unknown`・`loss` は除外） | `filterEligibleCandidates` `round19-saka.ts:531-539`（`ctx.profitable`） |
+| TTM net income | 直近 **4 四半期**（10-K/20-F/40-F 除く）の `NetIncomeLoss` 等を合算（`ttmNetIncomePitAudit` `round19-saka.ts:908-937`） |
+| PIT | 各四半期ファクトは **`filed` 日 ≤ リバランス日`** のみ（`factFiledOnOrBefore` `round19-saka.ts:887-891`） |
+| facts 欠損 | `unknown` → **採用プール外**（赤字扱いにしない） |
+
+### 4. 価格・時価総額・データ
+
+| 規則 | 実装 |
+|---|---|
+| **当日以前の終値が無い銘柄は除外** | `hasPrice` / `filterEligibleCandidates` `round19-saka.ts:537` |
+| **別途出来高・流動性フィルタは無し** | 価格存在のみ |
+| 時価総額 `mcap = 終値 × 株数`（PIT） | 株数 `pit-shares.ts` / `sharesOutstandingAsOf`；詳細レポートの `buildCtx` で stale 株数繰越 |
+| `mcap ≤ 0` は **plain 選定で上位15に入らない** | `pickHoldings` `round19-saka.ts:555-559`（`.filter((r) => r.m > 0)`） |
+
+### 5. 株クラス重複（同一 CIK）
+
+| 規則 | 実装 |
+|---|---|
+| eligible 整列後 **CIK ごとに1ティッカー** | `dedupeShareClassesByCik` `pit-share-class.ts:18-37`（`filterEligibleCandidates` `round19-saka.ts:542-543`） |
+| 優先ティッカー表 | `PREFERRED_OVER`（例 GOOG→GOOGL）`pit-share-class.ts:2-8`；同 CIK は **mcap 高い方**を残す |
+
+### 6. 採用構成の「選定」(`plain`) — 時価総額順
+
+| 規則 | 実装 |
+|---|---|
+| eligible の **mcap 降順**で先頭 **15** | `pickHoldings` `plain` 分岐 `round19-saka.ts:555-559` |
+| ※ `corrdiverse` / `volprune` は **本採用では未使用**（252日相関 greedy・ρ>0.7 等は `round19-saka.ts:546-554, 291-374`） |
+
+### 7. ウェイト（`mcap_cap5`）と半導体 30% キャップ
+
+| 規則 | 実装 |
+|---|---|
+| まず **mcap 比例** | `targetWeights` `round19-saka.ts:585-593` |
+| **単一銘柄 5% 上限**（超過は他銘柄へ再分配） | `applySingleNameCap(..., 0.05)` `round19-saka.ts:596-597`・アルゴ `407-428` |
+| **半導体サブ業種**（GICS Sub-Industry に `"semiconductor"` を含む）のウェイト合計 **≤ 30%** | `isSemiSubIndustry` `round19-saka.ts:68-71`；`applySemiCap` `round19-saka.ts:431-448`（`SAKA_SEMI_CAP = 0.3` `16`）— 超過分は半導体をスケールダウンし、**非半導体に按分**（`442-447`） |
+
+### 8. リバランス・手数料（シミュレーション）
+
+| 規則 | 実装 |
+|---|---|
+| 四半期初の **最初の営業日** | `rebalanceDates` `round19-saka.ts:601-613` |
+| **差分リバランス**（継続保有の微小調整はスキップ） | `simulateSaka` `rebalance: "delta"`；`|Δ$| < $25` **かつ** 相対ドリフト < **20%** ならスキップ（`round19-saka.ts:17-19, 749-750, 839-868`） |
+| 手数料 | **$0.35/注文**（本レポート） |
+| 初期資金 | `SAKA_INITIAL_CASH = 3200` `round19-saka.ts:11` |
+
+### 9. In-sample 採用（30構成グリッド・本レポート外の選定手順）
+
+| 規則 | 実装 |
+|---|---|
+| IS 2016-01-01～2020-12-31（`SAKA_IS_END` `9`） | |
+| IS **MaxDD が SPY より浅い**構成のみ | `selectSakaConfig` `round19-saka.ts:706-716` |
+| 残りから **IS CAGR 最大**、同点は **ターンオーバー低** | 同上 `712-715` |
+
+
+---
+
+## (B) 保有相関・SPY 相関／β
+
+
+**対象:** 採用 `plain_15__mcap_cap5` の各リバランス日時点の **保有15**（ウェイトは `targetWeights` 適用後）。
+
+**保有間相関（中央値）:** 各銘柄の **252 営業日**対数リターン（`SAKA_CORR_LOOKBACK` `round19-saka.ts:12`）を **日付揃え**（`pearsonOnAlignedSeries` `147-159`）し、15銘柄の **上三角ペア相関の中央値**（`medianPairwiseCorr` `249-261`）。最低 **126** 観測（`SAKA_CORR_MIN_OBS` `13`）。
+
+**ポートフォリオ vs SPY:** リバランス日の **固定ウェイト**で日次ポート対数リターン（`Σ w_i r_i`）を構成し、同日 SPY 対数リターンと **Pearson 相関・β（OLS）**。
+- **1年:** 直近 **252 営業日**（リバランス日を含む終端ウィンドウ）
+- **全期間:** `2016-01-01` 以降の最初の営業日～リバランス日（同じウェイト仮定・バックテスト平均行は各四半期スナップショットの算術平均）
+
+### 直近4リバランス
+
+| リバランス日 | 保有間ρ 中央値 | ρ(ポート,SPY) 1y | β vs SPY 1y | ρ(ポート,SPY) 全期間 | β vs SPY 全期間 |
+|---|---:|---:|---:|---:|---:|
+| 2026-01-02 | 0.198 | 0.948 | 1.125 | 0.920 | 1.119 |
+| 2026-04-01 | 0.186 | 0.954 | 1.112 | 0.916 | 1.122 |
+| 2026-07-01 | 0.072 | 0.904 | 1.269 | 0.905 | 1.206 |
+| 2026-10-01 | 0.091 | 0.910 | 1.208 | 0.913 | 1.181 |
+
+### 全リバランス平均（44 四半期）
+
+| | 保有間ρ 中央値 | ρ(ポート,SPY) 1y | β vs SPY 1y | ρ(ポート,SPY) 全期間 | β vs SPY 全期間 |
+|---|---:|---:|---:|---:|---:|
+| 平均 | 0.302 | 0.926 | 0.951 | 0.938 | 0.968 |
+
+
+---
+
+## (C) 事前登録と 2021+ データの関係（証跡）
+
+
+### コミット年表（抜粋・JST）
+
+| hash | 日時 (JST) | メッセージ |
+|---|---|---|
+| `ad777dc` | 2026/10/4 20:57:18 JST | docs(round19): preregister Saka Index study before any runs |
+| `6e3ad93` | 2026/10/4 20:59:19 JST | docs(round19): prereg amendment — weight grid, PIT mcap, IS selection (pre-results) |
+| `487152e` | 2026/10/4 21:42:23 JST | feat(round19): Saka Index — 30-config grid, PIT SP500, EDGAR mcap, report |
+| `05e2d3e` | 2026/10/5 5:06:55 JST | fix(round19): full CIK map, unknown profitability, delta rebalance, corrected v1 audit |
+| `e2380b8` | 2026/10/5 5:51:56 JST | feat(pit): dataset rebuild, PIT filed profitability, share-class dedup, audit v2 |
+| `09acebc` | 2026/10/5 7:32:51 JST | feat(pit): resolve 745 CIKs, price aliases, coverage push; rerun Corrected v1 |
+| `e2a2aec` | 2026/10/5 8:26:41 JST | Fix META shares and XOM CIK; add PIT checks and live-window detail |
+
+### 事前登録と OOS 結果の時間順
+
+- **`ad777dc` / `6e3ad93`**（2026-10-04 夜 JST）: `docs/ROUND19_PREREG_ja.md` の初版と追補（30構成・IS 採用規則・半導体30%・PIT mcap 等）。**いずれも `487152e`（初回スタディ結果）より前**。
+- **`487152e`**: 初回 `round19-saka-study` 実行・`docs/ROUND19_ja.md` 等の **結果コミット**（同一日・登録の約45分後 UTC）。
+
+### 正直な限界（過大評価しない）
+
+1. **IS 採用規則そのもの**（IS DD < SPY → IS CAGR 最大）は事前登録どおりだが、**OOS 表は初回スタディ（`487152e`）以降、リポジトリ内で繰り返し参照・再掲されている**。完全な「OOS を一度も見ずに固定」は、**結果コミット後の読者視点では成立しない**。
+2. **Corrected v1 データ修正**（`05e2d3e` filed PIT 黒字、`e2380b8` PIT データセット、`09acebc` CIK/価格拡充、`e2a2aec` META/XOM）は **2021+ のバックテスト数字を見た後**に入った。これは **ルール変更ではなくデータ修正**が主だが、**IS を再計算すると採用 ID が変わる**（例: `plain_15__equal` → `plain_15__mcap_cap5`、`ROUND19_AUDIT_ja.md` / 本レポート）。
+3. **差分リバランス**（$25 / 20%）は `05e2d3e` 以降の corrected v1 シミュレーションで使う。事前登録本文は主にフル清算想定；**実装・Corrected v1 は delta**（`round19-corrected-v1-study.ts` の `simOpts`）。
+4. **半導体 30% キャップ**は追補 `6e3ad93` で **結果コミット前**に文書化（`applySemiCap` は `487152e` からコードに存在）。
+5. **テーマリスト**（quantum 等）は `themes.ts` の watchlist 系コミットと同日の研究フロー。**Saka バックテスト専用の独立 prereg ではない**（ただし `isExcludedTheme` が参照するリストはコードで固定）。
+6. **本レポートの採用構成**はデータ修正後の **再選定結果**を記載。OOS 順位・CAGR は **データ版に依存**する。
+
+**結論:** 「2016–2020 のみでルールを決め、2021+ は一度だけ評価」は **手順として事前登録されている**が、**データ修正と再実行により採用 `plain_15__mcap_cap5` は初回結果（`plain_15__equal`）と異なる**。OOS を **設計に使った**というより、**公開後にデータを直し IS をやり直した**のが正確。
+
+
+---
+
 ## 解釈（全体）
 
 - **plain_15__mcap_cap5** は mega-cap 寄りだが **5%キャップ** により単一超大株依存を抑える設計。
