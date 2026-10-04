@@ -5,13 +5,17 @@ import Link from "next/link";
 import { formatDollar, formatPnl, formatPx } from "@/lib/format";
 import { isIgnoredTicker } from "@/lib/holdings";
 import {
+  BAND_HIGH_PCT,
+  BAND_LOW_PCT,
   PAPER_RISK_USD,
   PAPER_SCREEN_START,
   USUAL_COST_CAP,
+  buySlot,
   entryPrice,
   excludeReasons,
-  lineHit,
   lotFlags,
+  morningBuyLines,
+  reboundConfirmed,
   spyFilter,
   type LineHit,
 } from "@/lib/morning";
@@ -109,8 +113,8 @@ export function MorningView() {
   const cards = rows.flatMap((row) => {
     const quote = row.quote;
     if (!quote) return [];
-    const line = lineHit(quote);
-    if (!line) return [];
+    const lines = morningBuyLines(quote);
+    if (lines.length === 0) return [];
     const reasons = excludeReasons({
       ticker: row.ticker,
       sectorId: row.sectorId,
@@ -123,9 +127,22 @@ export function MorningView() {
     const others = reasons.filter((reason) => reason !== "financials");
     if (financials && dropFinancials) return [];
     if (others.length > 0 && !showExcluded) return [];
-    return [{ row, line, reasons, lot: lotFlags(quote, line) }];
+    return lines.map((line) => ({
+      row,
+      line,
+      slot: buySlot(line),
+      rebound: reboundConfirmed(quote),
+      reasons,
+      lot: lotFlags(quote, line),
+    }));
   });
-  cards.sort((a, b) => Math.abs((a.row.quote?.boxPct ?? 0) - (a.line === "15" ? 15 : 25)) - Math.abs((b.row.quote?.boxPct ?? 0) - (b.line === "15" ? 15 : 25)) || a.row.ticker.localeCompare(b.row.ticker));
+  cards.sort(
+    (a, b) =>
+      Math.abs((a.row.quote?.boxPct ?? 0) - (a.line === "25" ? 25 : 35)) -
+        Math.abs((b.row.quote?.boxPct ?? 0) - (b.line === "25" ? 25 : 35)) ||
+      a.row.ticker.localeCompare(b.row.ticker) ||
+      a.slot - b.slot,
+  );
 
   function record(row: TickerRow, line: LineHit) {
     if (!ledger || !row.quote) return;
@@ -172,7 +189,7 @@ export function MorningView() {
 
       <main className="space-y-4 px-4 py-4 pb-[max(2rem,env(safe-area-inset-bottom))]">
         <section className="rounded-2xl border border-line bg-elev px-3 py-3 text-sm leading-relaxed">
-          <p>1銘柄につき買いは2回まで。先に15%線、その次に25%線。</p>
+          <p>1銘柄につき買いは2回まで。1回目は25%線、2回目は35%線（箱の位置が{BAND_LOW_PCT}〜{BAND_HIGH_PCT}%）。反発の確認は不要。参考として「反発あり」を出す。</p>
           <p className="mt-1">利確は箱の高値で、持っている株を一度に全部。</p>
           <p className="mt-1 text-[11px] text-muted">
             損切りは箱の安値。株数は ${PAPER_RISK_USD} ÷（入り − 安値）と ${USUAL_COST_CAP} ÷ 入り の小さい方。$450が株数を決めたときは「$450上限」と、その株数での損切り損を出す。1株が $450 を超えるときは、代金と $550 の印をこれまで通り出す。
@@ -201,7 +218,9 @@ export function MorningView() {
             <h2 className="text-sm font-medium">今日の買い候補</h2>
             <p className="text-[11px] text-muted">{cards.length}件</p>
           </div>
-          <p className="mt-1 text-[11px] leading-relaxed text-muted">終値が15%線か25%線の近く（箱の位置が±2ポイント）。線に近い順。</p>
+          <p className="mt-1 text-[11px] leading-relaxed text-muted">
+            終値の箱の位置が{BAND_LOW_PCT}〜{BAND_HIGH_PCT}%（25〜35%帯±2pt）。各線から±{2}ポイント以内ならその線のカード。線に近い順。
+          </p>
           <div className="mt-2 flex flex-wrap gap-2">
             <button
               type="button"
@@ -224,14 +243,16 @@ export function MorningView() {
             金融はウォッチリストの「金融」。初期状態では候補から外す。赤字は過去12か月EPSがマイナスの銘柄で、SPCXは残す。箱の上、原子力、暗号、太陽光、量子、ATRが終値の3%未満は除外。ATRは詳細のATR(14)を終値で割ったもの。量子は Emma の指定（IONQ、RGTI、QBTS、QUBT、ARQQ）。
           </p>
           <ul className="mt-3 space-y-2">
-            {cards.map(({ row, line, reasons, lot }) => {
+            {cards.map(({ row, line, slot, rebound, reasons, lot }) => {
               const grey = reasons.length > 0;
               const taken = ledger?.positions.some((position) => position.ticker === row.ticker && position.line === line) ?? false;
               return (
                 <li key={`${row.ticker}-${line}`} className={cn("rounded-2xl border border-line bg-elev px-3 py-3", grey && "opacity-60")}>
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className="flex items-center gap-2">
+                    <span className="flex flex-wrap items-center gap-2">
                       <span className="font-mono text-base font-medium">{row.ticker}</span>
+                      <span className="rounded-full bg-chip px-2 py-0.5 text-[10px] text-ink">{slot === 1 ? "1回目" : "2回目"}</span>
+                      {rebound && <span className="rounded-full border border-line px-2 py-0.5 text-[10px] text-muted">反発あり</span>}
                       {lot.flags.capBinding && (
                         <span className="rounded-full bg-chip px-2 py-0.5 text-[10px] text-ink">$450上限</span>
                       )}
@@ -272,7 +293,7 @@ export function MorningView() {
                     disabled={grey || taken || lot.shares == null || lot.shares < 1 || !ledger}
                     onClick={() => record(row, line)}
                   >
-                    {taken ? "この線は記録済み" : "紙に記録"}
+                    {taken ? `${slot}回目は記録済み` : "紙に記録"}
                   </Button>
                 </li>
               );

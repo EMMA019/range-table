@@ -34,7 +34,7 @@ describe("computeQuote", () => {
     assert.equal(result.quote.brokeHigh, false);
     const expected = ((18 - 16) / (31 - 16)) * 100;
     assert.ok(Math.abs(result.quote.boxPct - expected) < 0.001);
-    assert.deepEqual(entryGuides(16, 31), { line15: 18.25, line25: 19.75 });
+    assert.deepEqual(entryGuides(16, 31), { line15: 18.25, line25: 19.75, line35: 21.25 });
     assert.equal(result.quote.line15, 18.25);
     assert.equal(result.quote.line25, 19.75);
     assert.equal(result.quote.reboundDays, 0);
@@ -81,7 +81,7 @@ describe("computeQuote", () => {
     if (!quote.ok) return;
     assert.equal(quote.quote.reboundDays, 2);
     assert.equal(quote.quote.low20, 10);
-    assert.deepEqual(entryGuides(10, 22), { line15: quote.quote.line15, line25: quote.quote.line25 });
+    assert.deepEqual(entryGuides(10, 22), { line15: quote.quote.line15, line25: quote.quote.line25, line35: quote.quote.line35 });
     assert.equal(quote.quote.line15, 11.8);
     assert.equal(quote.quote.line25, 13);
 

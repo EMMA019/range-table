@@ -69,6 +69,8 @@ export type Quote = {
   line15: number;
   /** 20-day low plus 25% of the 20-day range. */
   line25: number;
+  /** 20-day low plus 35% of the 20-day range. */
+  line35: number;
   /**
    * Consecutive bullish candles after the latest 20-day low.
    * 0 when that low is the latest bar (安値更新中).
