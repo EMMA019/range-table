@@ -4,7 +4,7 @@ import { computeQuote } from "./compute";
 import { EARNINGS_HOLD_DAYS } from "./constants";
 import { EARNINGS_UNKNOWN_PROMINENT } from "./constants";
 import { classifyEarnings } from "./earnings";
-import { SEMI_CAP_BADGE, formatDollar, formatEarnings, formatRs, formatEarningsForAlert } from "./format";
+import { SEMI_CAP_BADGE, formatDollar, formatRs, formatEarningsForAlert } from "./format";
 import { isIgnoredTicker } from "./holdings";
 import { LOSS_UNKNOWN_TAG } from "./constants";
 import { lossUnknown, type Profitability } from "./loss-filter";
