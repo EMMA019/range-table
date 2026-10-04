@@ -1,10 +1,5 @@
-import { Suspense } from "react";
-import { Dashboard, DashboardFallback } from "@/components/dashboard";
+import { MorningView } from "@/components/morning-view";
 
 export default function Page() {
-  return (
-    <Suspense fallback={<DashboardFallback />}>
-      <Dashboard />
-    </Suspense>
-  );
+  return <MorningView />;
 }

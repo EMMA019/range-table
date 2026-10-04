@@ -2,7 +2,8 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const TABS = [
-  { href: "/", label: "レンジ表" },
+  { href: "/", label: "今朝" },
+  { href: "/range", label: "詳細" },
   { href: "/picks", label: "チーム注目" },
   { href: "/alerts", label: "アラート" },
   { href: "/holdings", label: "保有" },
