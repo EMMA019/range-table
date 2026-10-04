@@ -4,6 +4,7 @@ import { themeOf } from "./themes";
 import { isIgnoredTicker } from "./holdings";
 import { resolveProfitability } from "./loss-filter";
 import { cachedTtmIncome } from "./edgar-companyfacts";
+import { corrEqualWeights, pickCorrPortfolio, type CorrPickVariant } from "./round18-corr";
 import type { Bar } from "./types";
 import type { Watchlist } from "./types";
 
@@ -20,7 +21,13 @@ export const ROUND18_MOMENTUM_SKIP_DAYS = 21;
 export const ROUND18_MOMENTUM_LOOKBACK_DAYS = 252;
 export const ROUND18_INV_VOL_WINDOW = 60;
 
-export type Round18Method = "equal" | "mcap" | "invvol" | "momentum";
+export type Round18Method =
+  | "equal"
+  | "mcap"
+  | "invvol"
+  | "momentum"
+  | "corrdiverse"
+  | "corrdiverse_volprune";
 export type Round18Rebal = "monthly" | "quarterly" | "annual";
 
 export type Round18Config = {
@@ -224,6 +231,12 @@ export function targetWeights(
 ): Record<string, number> {
   const metaBy = new Map(eligible.map((m) => [m.ticker, m]));
   const scored: Array<{ ticker: string; score: number }> = [];
+
+  if (config.method === "corrdiverse" || config.method === "corrdiverse_volprune") {
+    const variant: CorrPickVariant = config.method;
+    const picked = pickCorrPortfolio(eligible, config.n, calendar, closeHistory, date, variant, price);
+    return corrEqualWeights(picked, eligible);
+  }
 
   for (const m of eligible) {
     const p = price(m.ticker);

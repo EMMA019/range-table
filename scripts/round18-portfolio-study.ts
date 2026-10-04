@@ -4,6 +4,7 @@
  *
  *   SEC_USER_AGENT='range-table research contact@example.com' npx tsx scripts/round18-portfolio-study.ts
  */
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { loadWatchlist } from "../src/lib/watchlist";
@@ -34,7 +35,14 @@ import {
   targetWeights,
   tradingDaysFromBars,
   type Round18Config,
+  type Round18Rebal,
 } from "../src/lib/round18-portfolio";
+import {
+  buildCorrInputs,
+  correlationMatrix,
+  hierarchicalClusterOrder,
+  listHighCorrPairs,
+} from "../src/lib/round18-corr";
 import {
   buildSdiMeta,
   SDI_SPLIT_5050,
@@ -42,6 +50,7 @@ import {
   simulateSdi,
   type SdiDailyState,
   type SdiSplit,
+  type SdiStockSelection,
 } from "../src/lib/round18-sdi";
 import type { Bar } from "../src/lib/types";
 
@@ -50,6 +59,9 @@ const DOC = path.join(process.cwd(), "docs", "ROUND18_ja.md");
 const BENCH = ["SPY", "QQQ", "SOXX"] as const;
 const PREREG = "b8ec490";
 const PREREG_SDI = "bdc45c9";
+const PREREG_CORR = "9605999";
+const HEATMAP_JSON = path.join(CACHE, "corr-heatmap.json");
+const HEATMAP_PNG = path.join(process.cwd(), "docs", "round18_corr_heatmap.png");
 
 function yahooSymbol(ticker: string): string {
   return ticker.replace(/\./g, "-");
@@ -281,7 +293,7 @@ async function main() {
 
   const sdiMeta = buildSdiMeta(loadWatchlist(), firstDates);
   const sptmFirst = firstBarDate(barsBy.get("SPTM") ?? []) ?? null;
-  const runSdi = (commission: number, split: SdiSplit) => {
+  const runSdi = (commission: number, split: SdiSplit, stockSelection: SdiStockSelection = "momentum") => {
     const { curve, broadProxyDays, broadSptmDays } = simulateSdi(
       calendar,
       sdiMeta,
@@ -290,6 +302,9 @@ async function main() {
       commission,
       sptmFirst,
       split,
+      ROUND18_START,
+      ROUND18_END,
+      { stockSelection },
     );
     return {
       curve,
@@ -304,7 +319,82 @@ async function main() {
   const sdi6535_1 = runSdi(1, SDI_SPLIT_6535);
   const sdi5050_35 = runSdi(0.35, SDI_SPLIT_5050);
   const sdi5050_1 = runSdi(1, SDI_SPLIT_5050);
+  const sdi6535_corr_35 = runSdi(0.35, SDI_SPLIT_6535, "corrdiverse");
+  const sdi5050_corr_35 = runSdi(0.35, SDI_SPLIT_5050, "corrdiverse");
   const qqqOos = benchMetrics.QQQ.oos;
+
+  type CorrCompareMethod = "equal" | "invvol" | "corrdiverse" | "corrdiverse_volprune";
+  const corrMethods: CorrCompareMethod[] = ["equal", "invvol", "corrdiverse", "corrdiverse_volprune"];
+  const corrNs = [10, 20, 30] as const;
+  const corrRebals: Round18Rebal[] = ["monthly", "quarterly", "annual"];
+  const corrCell = new Map<string, { is: ReturnType<typeof metricsFromCurve>; oos: ReturnType<typeof metricsFromCurve> }>();
+  for (const n of corrNs) {
+    for (const rebal of corrRebals) {
+      for (const method of corrMethods) {
+        const cfg: Round18Config = { method, n, rebal };
+        const curve = simulateRound18(cfg, calendar, universe, barsBy, 0.35, ROUND18_START, ROUND18_END);
+        corrCell.set(`${method}/${n}/${rebal}`, {
+          is: metricsFromCurve(curve, ROUND18_START, ROUND18_IS_END),
+          oos: metricsFromCurve(curve, ROUND18_OOS_START, ROUND18_END),
+        });
+      }
+    }
+  }
+  const priceAt = (ticker: string, date: string) => {
+    const bars = barsBy.get(ticker);
+    if (!bars) return null;
+    let best: number | null = null;
+    for (const b of bars) {
+      if (b.date <= date) best = b.c;
+      else break;
+    }
+    return best;
+  };
+
+  const mcapAt = (ticker: string, date: string) => {
+    const m = universe.find((u) => u.ticker === ticker);
+    const p = priceAt(ticker, date);
+    if (!m || p == null) return 0;
+    return p * (m.shares > 0 ? m.shares : 1);
+  };
+  const heatmapEligible = universe.filter((m) => m.firstDate <= ROUND18_END);
+  const heatmapTickers = [...heatmapEligible]
+    .sort((a, b) => mcapAt(b.ticker, ROUND18_END) - mcapAt(a.ticker, ROUND18_END))
+    .slice(0, 40)
+    .map((m) => m.ticker);
+  const stockClosesHm = new Map<string, Map<string, number>>();
+  for (const [ticker, bars] of barsBy) {
+    const m = new Map<string, number>();
+    for (const b of bars) m.set(b.date, b.c);
+    stockClosesHm.set(ticker, m);
+  }
+  const hmInputs = buildCorrInputs(heatmapTickers, calendar, stockClosesHm, ROUND18_END);
+  let heatmapPairsBlock = "（相関窓が不足）";
+  if (hmInputs) {
+    const hmCorr = correlationMatrix(hmInputs);
+    const order = hierarchicalClusterOrder(hmCorr, hmInputs.tickers);
+    const matrix = order.map((a) => order.map((b) => hmCorr.get(a)?.get(b) ?? 0));
+    fs.mkdirSync(CACHE, { recursive: true });
+    fs.writeFileSync(
+      HEATMAP_JSON,
+      JSON.stringify({
+        title: `Round 18 eligible top-40 mcap · 1y to ${ROUND18_END}`,
+        labels: order,
+        matrix,
+      }),
+    );
+    const py = spawnSync("python3", ["scripts/round18-corr-heatmap.py", HEATMAP_JSON, HEATMAP_PNG], {
+      encoding: "utf8",
+    });
+    if (py.status !== 0) console.error("[round18] heatmap", py.stderr || py.stdout);
+    const pairs = listHighCorrPairs(hmInputs.tickers, hmCorr);
+    heatmapPairsBlock = pairs.length
+      ? pairs
+          .slice(0, 25)
+          .map((p) => `- ${p.a}–${p.b}: ρ=${p.rho.toFixed(2)}`)
+          .join("\n")
+      : "（|ρ|>0.7 のペアなし・上位40内）";
+  }
 
   const sdiPassMark = (r: ReturnType<typeof runSdi>) => {
     const pos = countPositiveYears(r.full.calendarYears);
@@ -316,6 +406,8 @@ async function main() {
   };
   const p6535 = sdiPassMark(sdi6535_35);
   const p5050 = sdiPassMark(sdi5050_35);
+  const p6535Corr = sdiPassMark(sdi6535_corr_35);
+  const p5050Corr = sdiPassMark(sdi5050_corr_35);
 
   const sdiAuditSim = simulateSdi(
     calendar,
@@ -363,16 +455,6 @@ async function main() {
     for (const b of bars) m.set(b.date, b.c);
     stockClosesAudit.set(ticker, m);
   }
-  const priceAt = (ticker: string, date: string) => {
-    const bars = barsBy.get(ticker);
-    if (!bars) return null;
-    let best: number | null = null;
-    for (const b of bars) {
-      if (b.date <= date) best = b.c;
-      else break;
-    }
-    return best;
-  };
   const gridRebals = rebalanceDates(calendar, "quarterly", "2019-01-01", "2022-12-31");
   const gridHoldingsLines: string[] = [];
   for (const d of gridRebals) {
@@ -483,12 +565,15 @@ ${invvolDriverBlock}
 
 ### 65/35 vs 50/50 — OOS（2021–2026-10-02・$0.35）
 
-| | **65/35** | **50/50**（希望） | SPY | QQQ |
-|---|---:|---:|---:|---:|
-| CAGR | ${pct(sdi6535_35.oos.cagr)} | **${pct(sdi5050_35.oos.cagr)}** | ${pct(spyOos.cagr)} | ${pct(qqqOos.cagr)} |
-| 最大DD | ${pct(sdi6535_35.oos.maxDrawdown)} | ${pct(sdi5050_35.oos.maxDrawdown)} | ${pct(spyOos.maxDrawdown)} | ${pct(qqqOos.maxDrawdown)} |
-| DD回復(営業日) | ${sdi6535_35.oos.recoveryDays ?? "—"} | ${sdi5050_35.oos.recoveryDays ?? "—"} | — | — |
-| 暦年プラス | ${p6535.pos}/10 | ${p5050.pos}/10 | — | — |
+| | **65/35** モメンタム | **65/35** 相関分散 | **50/50** モメンタム | **50/50** 相関分散 | SPY | QQQ |
+|---|---:|---:|---:|---:|---:|---:|
+| CAGR | ${pct(sdi6535_35.oos.cagr)} | ${pct(sdi6535_corr_35.oos.cagr)} | **${pct(sdi5050_35.oos.cagr)}** | ${pct(sdi5050_corr_35.oos.cagr)} | ${pct(spyOos.cagr)} | ${pct(qqqOos.cagr)} |
+| 最大DD | ${pct(sdi6535_35.oos.maxDrawdown)} | ${pct(sdi6535_corr_35.oos.maxDrawdown)} | ${pct(sdi5050_35.oos.maxDrawdown)} | ${pct(sdi5050_corr_35.oos.maxDrawdown)} | ${pct(spyOos.maxDrawdown)} | ${pct(qqqOos.maxDrawdown)} |
+| DD回復(営業日) | ${sdi6535_35.oos.recoveryDays ?? "—"} | ${sdi6535_corr_35.oos.recoveryDays ?? "—"} | ${sdi5050_35.oos.recoveryDays ?? "—"} | ${sdi5050_corr_35.oos.recoveryDays ?? "—"} | — | — |
+| 暦年プラス | ${p6535.pos}/10 | ${p6535Corr.pos}/10 | ${p5050.pos}/10 | ${p5050Corr.pos}/10 | — | — |
+| 3条件合格 | ${p6535.passAll ? "✓" : "✗"} | ${p6535Corr.passAll ? "✓" : "✗"} | ${p5050.passAll ? "✓" : "✗"} | ${p5050Corr.passAll ? "✓" : "✗"} | — | — |
+
+（SDI 相関分散 = 個別15枠を \`corrdiverse\` 一次ルールで選び、広いスリーブは同一。）
 
 ### 65/35 vs 50/50 — In-sample（2016–2020・$0.35）
 
@@ -532,10 +617,61 @@ ${Array.from({ length: ROUND18_CAL_YEAR_END - ROUND18_CAL_YEAR_START + 1 }, (_, 
 
 `;
 
+  const corrQuarterRows = corrNs
+    .map((n) => {
+      const cells = corrMethods.map((m) => {
+        const c = corrCell.get(`${m}/${n}/quarterly`)!;
+        return `${pct(c.oos.cagr)} / ${pct(c.oos.maxDrawdown)}`;
+      });
+      return `| ${n} | ${cells.join(" | ")} |`;
+    })
+    .join("\n");
+  const corrBestOos = [...corrCell.entries()]
+    .map(([k, v]) => ({ k, cagr: v.oos.cagr, dd: v.oos.maxDrawdown }))
+    .sort((a, b) => b.cagr - a.cagr)[0];
+  const corrSection = `## 相関分散（correlation-diversified）
+
+事前登録追補: \`${PREREG_CORR}\`（\`docs/ROUND18_PREREG_CORR_ja.md\`）
+
+### 事実
+
+- **一次:** 直近252営業日の日次リターン相関 → 平均相関が低い順に greedy 追加、既選銘柄と **ρ>0.7** ならスキップ。ウェイトは等ウェイト＋Round 18 セクター上限。
+- **二次（volprune）:** ρ>0.7 ペアでボラ高い方を先に除外してから一次。
+- 本編36構成の勝者選択は**変更なし**（相関は追試 36 セル）。
+
+#### OOS CAGR / 最大DD（$0.35・**quarterly**）
+
+| N | equal | invvol | corrdiverse | volprune |
+|---:|---:|---:|---:|---:|
+${corrQuarterRows}
+
+（各セル: **CAGR / 最大DD**）
+
+OOS CAGR 最大（全36セル）: \`${corrBestOos?.k ?? "—"}\`（CAGR ${corrBestOos ? pct(corrBestOos.cagr) : "—"}、DD ${corrBestOos ? pct(corrBestOos.dd) : "—"}）。
+
+#### 相関ヒートマップ（${ROUND18_END} 時点・時価総額上位40・直近1年）
+
+![相関ヒートマップ](round18_corr_heatmap.png)
+
+**ρ > 0.7 のペア（上位40内・最大25件）**
+
+${heatmapPairsBlock}
+
+### 解釈
+
+- equal / invvol は **時価総額上位 N** から選ぶが、corrdiverse は **全候補**から相関だけで選ぶため、セクター集中の出方が異なる。
+- 二次 volprune は高相関ペアを削るが、OOS で常に優れるとは限らない（結果は上表）。
+- 相関も **当日までの窓のみ**だが、銘柄集合・黒字は Round 18 同様のサバイバーシップ／ルックアヘッドあり。
+
+---
+
+`;
+
   const md = `# Round 18 — ロングオンリー・ポートフォリオ研究
 
 ${auditSection}
 ${sdiSection}
+${corrSection}
 ## グリッド構成（36通り）— 事前登録
 
 - コミット: \`${PREREG}\`（\`docs/ROUND18_PREREG_ja.md\`）

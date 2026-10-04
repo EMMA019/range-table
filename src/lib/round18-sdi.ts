@@ -12,8 +12,11 @@ import {
 import { isIgnoredTicker } from "./holdings";
 import { isSemiGroup } from "./semis";
 import { themeOf } from "./themes";
+import { pickSdiCorrStocks } from "./round18-corr";
 import type { Bar } from "./types";
 import type { Watchlist } from "./types";
+
+export type SdiStockSelection = "momentum" | "corrdiverse" | "corrdiverse_volprune";
 
 export const SDI_STOCK_SLOTS = 15;
 export const SDI_MAX_SEMI_SLOTS = 4;
@@ -184,8 +187,9 @@ export function simulateSdi(
   split: SdiSplit = SDI_SPLIT_6535,
   from = ROUND18_START,
   to = ROUND18_END,
-  options?: { captureDaily?: boolean },
+  options?: { captureDaily?: boolean; stockSelection?: SdiStockSelection },
 ): SdiSimResult {
+  const stockSelection = options?.stockSelection ?? "momentum";
   const metaBy = new Map(metaList.map((m) => [m.ticker, m]));
   const rebal = new Set(rebalanceDates(calendar, "quarterly", from, to));
   const stockCloses = new Map<string, Map<string, number>>();
@@ -260,9 +264,20 @@ export function simulateSdi(
         eligible.push(meta.ticker);
       }
 
-      holdings = pickSdiStocks(survivors, eligible, metaBy, scores);
+      if (stockSelection === "momentum") {
+        holdings = pickSdiStocks(survivors, eligible, metaBy, scores);
+      } else {
+        holdings = pickSdiCorrStocks(
+          survivors,
+          eligible,
+          metaBy,
+          calendar,
+          stockCloses,
+          date,
+          stockSelection,
+        );
+      }
 
-      const eq = equityOn(date);
       liquidateAll(date);
 
       broadSymbol = broad;
