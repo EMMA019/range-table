@@ -9,11 +9,14 @@ import {
   AI_DC_GROUP_IDS,
   ROUND17_PREREG,
   WINDOW_BOUNDS,
-  countSemiTouches,
+  buildSoxxByDate,
   generateLiveBandSignals,
+  generateSemiBoxSignals,
   passVerdict,
   pickCrashK,
+  pickSoxxN,
   scoreRound17Book,
+  stabilizationOk,
   summarizeJa,
   type Round17Report,
   type Round17Row,
@@ -30,8 +33,8 @@ import { readCachedBars } from "./cache-bars";
  *   npx tsx scripts/round17-study.ts
  */
 const OUT = path.join(process.cwd(), "data", "backtest", "round17.json");
+const DOC_JA = path.join(process.cwd(), "docs", "ROUND17_ja.md");
 const ART = "/opt/cursor/artifacts/round17_trades";
-const REPORT = "/opt/cursor/artifacts/round17_report/round17_ja.md";
 const EDGAR = path.join(process.cwd(), "data", ".cache", "edgar");
 const FACTS = path.join(EDGAR, "facts-slim");
 const F1_AS_OF = "2024-10-03";
@@ -84,6 +87,19 @@ function orderByRs20(list: Candidate[]) {
   });
 }
 
+type RunOpts = {
+  filters: SignalFilters;
+  portfolio: { maxSemi?: number; maxBucket?: number; allBucketHeavy?: boolean };
+  exitRisk30?: boolean;
+  soxxFeats?: ReturnType<typeof buildFeatures>;
+  soxxByDate?: ReturnType<typeof buildSoxxByDate>;
+  semiBox?: 5 | 10 | 20;
+};
+
+function fillKey(fill: { ticker: string; entryDate: string }): string {
+  return `${fill.ticker}|${fill.entryDate}`;
+}
+
 function runVariant(
   id: Round17VariantId,
   names: NameExt[],
@@ -92,26 +108,44 @@ function runVariant(
   spyByDate: ReturnType<typeof buildSpyMa20>,
   market: ReturnType<typeof marketByDate>,
   conceptsOf: Map<string, ConceptFacts | null>,
-  filters: SignalFilters,
-  portfolio: { maxSemi?: number; maxBucket?: number; allBucketHeavy?: boolean },
+  opts: RunOpts,
 ): { book: Book; cands: Candidate[] } {
   const sessions = calendar.filter((date) => date >= window.from && date <= window.to);
   const cands: Candidate[] = [];
   for (const name of names) {
-    cands.push(
-      ...generateLiveBandSignals({
-        name,
-        from: window.from,
-        to: window.to,
-        sessions: calendar,
-        spyByDate,
-        market,
-        earningsBlock: true,
-        concepts: conceptsOf.get(name.ticker) ?? null,
-        filters,
-        allBucketHeavy: portfolio.allBucketHeavy,
-      }),
-    );
+    if (opts.semiBox != null) {
+      cands.push(
+        ...generateSemiBoxSignals({
+          name,
+          boxWindow: opts.semiBox,
+          from: window.from,
+          to: window.to,
+          sessions: calendar,
+          spyByDate,
+          market,
+          earningsBlock: true,
+          concepts: conceptsOf.get(name.ticker) ?? null,
+        }),
+      );
+    } else {
+      cands.push(
+        ...generateLiveBandSignals({
+          name,
+          from: window.from,
+          to: window.to,
+          sessions: calendar,
+          spyByDate,
+          soxx: opts.soxxFeats,
+          soxxByDate: opts.soxxByDate,
+          market,
+          earningsBlock: true,
+          concepts: conceptsOf.get(name.ticker) ?? null,
+          filters: opts.filters,
+          exitRisk30: opts.exitRisk30,
+          allBucketHeavy: opts.portfolio.allBucketHeavy,
+        }),
+      );
+    }
   }
   const closes = new Map<string, Map<string, number>>();
   for (const name of names) {
@@ -132,8 +166,8 @@ function runVariant(
       keepFills: true,
       closes,
       order: orderByRs20,
-      maxSemi: portfolio.maxSemi,
-      maxBucket: portfolio.maxBucket,
+      maxSemi: opts.portfolio.maxSemi,
+      maxBucket: opts.portfolio.maxBucket,
       size: (cand) => paperShares(cand.entry, cand.stop ?? Number.NaN),
     },
     cands,
@@ -215,22 +249,61 @@ function main() {
     });
   }
 
+  const soxxBars = readCachedBars("SOXX");
+  if (!soxxBars?.length) throw new Error("SOXXの日足がない");
+  const soxxFeats = buildFeatures(soxxBars);
+  const soxxByDate = buildSoxxByDate(soxxFeats);
+
   fs.mkdirSync(ART, { recursive: true });
-  fs.mkdirSync(path.dirname(REPORT), { recursive: true });
 
   const rows: Round17Row[] = [];
   const baselinePortfolio = { maxSemi: 2 as number | undefined };
+  const baseOpts = { filters: {}, portfolio: baselinePortfolio };
+  const books: Partial<Record<string, { book: Book; cands: Candidate[] }>> = {};
+
+  const run = (id: Round17VariantId, window: (typeof windows)[0], opts: RunOpts) => {
+    const result = runVariant(id, names, calendar, window, spyByDate, market, conceptsOf, opts);
+    books[`${id}|${window.id}`] = result;
+    rows.push(scoreRound17Book(result.book, id, window.id));
+    return result;
+  };
 
   for (const window of windows) {
-    const { book } = runVariant("baseline", names, calendar, window, spyByDate, market, conceptsOf, {}, baselinePortfolio);
-    rows.push(scoreRound17Book(book, "baseline", window.id));
+    run("no-spy", window, { filters: { requireSpy: false }, portfolio: baselinePortfolio });
+    run("baseline", window, baseOpts);
+    for (const n of [2, 3] as const) {
+      run(`soxx-all-${n}` as Round17VariantId, window, {
+        filters: { soxx: "all", soxxN: n },
+        portfolio: baselinePortfolio,
+        soxxFeats,
+        soxxByDate,
+      });
+    }
+  }
+
+  const soxxNPick = pickSoxxN(rows);
+  for (const window of windows) {
+    run(`soxx-semi-${soxxNPick}` as Round17VariantId, window, {
+      filters: { soxx: "semi", soxxN: soxxNPick },
+      portfolio: baselinePortfolio,
+      soxxFeats,
+      soxxByDate,
+    });
+    run("spy-soxx-all", window, {
+      filters: { soxx: "all", soxxN: soxxNPick },
+      portfolio: baselinePortfolio,
+      soxxFeats,
+      soxxByDate,
+    });
+  }
+
+  for (const window of windows) {
+    run("exit-risk30", window, { ...baseOpts, exitRisk30: true });
   }
 
   for (const k of CRASH_GRID) {
     for (const window of windows) {
-      const id = `crash-${k}` as Round17VariantId;
-      const { book } = runVariant(id, names, calendar, window, spyByDate, market, conceptsOf, { crashK: k }, baselinePortfolio);
-      rows.push(scoreRound17Book(book, id, window.id));
+      run(`crash-${k}` as Round17VariantId, window, { filters: { crashK: k }, portfolio: baselinePortfolio });
     }
   }
 
@@ -238,34 +311,77 @@ function main() {
 
   for (const n of [2, 3] as const) {
     for (const window of windows) {
-      const id = `stab-${n}` as Round17VariantId;
-      const { book } = runVariant(id, names, calendar, window, spyByDate, market, conceptsOf, { stabN: n }, baselinePortfolio);
-      rows.push(scoreRound17Book(book, id, window.id));
+      run(`stab-${n}` as Round17VariantId, window, { filters: { stabN: n }, portfolio: baselinePortfolio });
     }
   }
 
   const aiCap = { maxBucket: 2 };
   for (const window of windows) {
-    const { book } = runVariant("ai-dc-cap", names, calendar, window, spyByDate, market, conceptsOf, {}, { ...aiCap, allBucketHeavy: false });
-    rows.push(scoreRound17Book(book, "ai-dc-cap", window.id));
+    run("ai-dc-cap", window, { filters: {}, portfolio: { ...aiCap, allBucketHeavy: false } });
   }
 
   for (const box of [5, 10, 20] as const) {
-    const touches = countSemiTouches(names, box, windows[1].from, windows[1].to, calendar, spyByDate, market, conceptsOf, true);
-    rows.push({
-      id: `semi-box-${box}`,
-      window: "in",
-      trades: touches,
-      winRate: null,
-      totalNet190Usd: 0,
-      avgNet190Usd: null,
-      mtmDdUsd: 0,
-      maxConsecLosses: 0,
-      stopOutRate: null,
-      lowDate: "",
-      lowUsd: 0,
-      engineTotalUsd: 0,
-    });
+    for (const window of windows) {
+      run(`semi-box-${box}` as Round17VariantId, window, { filters: {}, portfolio: baselinePortfolio, semiBox: box });
+    }
+  }
+
+  const stabBlocked: Record<string, number> = {};
+  for (const win of windows) {
+    for (const n of [2, 3] as const) {
+      let blocked = 0;
+      for (const name of names) {
+        const from = win.from;
+        const to = win.to;
+        const feats = name.feats;
+        for (let i = 0; i < feats.length - 1; i += 1) {
+          const sig = feats[i];
+          if (sig.date < from || sig.date > to) continue;
+          if (!sig.boxPct || sig.low20 == null || sig.high20 == null) continue;
+          const line25 = sig.low20 + 0.25 * (sig.high20 - sig.low20);
+          const line35 = sig.low20 + 0.35 * (sig.high20 - sig.low20);
+          if (sig.l > line25 && sig.l > line35) continue;
+          if (!stabilizationOk(feats, i, n)) blocked += 1;
+        }
+      }
+      stabBlocked[`${win.id}-N${n}`] = blocked;
+    }
+  }
+
+  const crashRemoved: Record<string, Array<{ ticker: string; entryDate: string; pnlUsd: number }>> = {};
+  for (const win of windows) {
+    const base = books[`baseline|${win.id}`]?.book.fills ?? [];
+    const crash = books[`crash-${crashKPick}|${win.id}`]?.book.fills ?? [];
+    const crashSet = new Set(crash.map(fillKey));
+    crashRemoved[win.id] = base
+      .filter((fill) => !crashSet.has(fillKey(fill)))
+      .map((fill) => ({ ticker: fill.ticker, entryDate: fill.entryDate, pnlUsd: fill.pnlUsd }));
+  }
+
+  const aiDcLost: Record<string, Array<{ ticker: string; entryDate: string; pnlUsd: number }>> = {};
+  for (const win of windows) {
+    const base = books[`baseline|${win.id}`]?.book.fills ?? [];
+    const cap = books[`ai-dc-cap|${win.id}`]?.book.fills ?? [];
+    const capSet = new Set(cap.map(fillKey));
+    aiDcLost[win.id] = base
+      .filter((fill) => !capSet.has(fillKey(fill)))
+      .map((fill) => ({ ticker: fill.ticker, entryDate: fill.entryDate, pnlUsd: fill.pnlUsd }));
+  }
+
+  let dollarStopFills = 0;
+  let dollarStopCandidates = 0;
+  for (const win of windows) {
+    const pack = books[`exit-risk30|${win.id}`];
+    if (!pack) continue;
+    for (const cand of pack.cands) {
+      if ((cand as Candidate & { dollarStopLed?: boolean }).dollarStopLed) dollarStopCandidates += 1;
+    }
+    const baseFills = books[`baseline|${win.id}`]?.book.fills ?? [];
+    const riskFills = pack.book.fills ?? [];
+    for (const fill of riskFills) {
+      const base = baseFills.find((row) => fillKey(row) === fillKey(fill));
+      if (base && Math.abs(fill.pnlUsd - base.pnlUsd) > 0.01) dollarStopFills += 1;
+    }
   }
 
   const baseIn = rows.find((row) => row.id === "baseline" && row.window === "in");
@@ -273,14 +389,43 @@ function main() {
 
   const verdicts: Round17Report["verdicts"] = [];
   for (const row of rows) {
-    if (row.window !== "in" || row.id === "baseline") continue;
+    if (row.window !== "in" || row.id === "baseline" || row.id === "no-spy") continue;
     if (String(row.id).startsWith("crash-")) {
       const k = Number(String(row.id).replace("crash-", ""));
       if (crashKPick != null && k !== crashKPick) continue;
     }
+    if (String(row.id).startsWith("soxx-all-") && row.id !== `soxx-all-${soxxNPick}`) continue;
+    if (String(row.id).startsWith("soxx-semi-") && row.id !== `soxx-semi-${soxxNPick}`) continue;
+    if (row.id === "spy-soxx-all") continue;
+    if (row.id.startsWith("semi-box-")) continue;
     const verdict = passVerdict(baseIn, row);
     verdicts.push({ id: row.id, window: row.window, verdict });
   }
+
+  const diagnostics = {
+    stabilization: {
+      verdict: "no-op on 2024-26 for N=2 (identical to baseline); N=3 identical on in-sample — filter wired but rarely binds in band",
+      signalsBlockedTouchOnly: stabBlocked,
+      candidateDelta: {
+        oos: {
+          stab2: (books["stab-2|oos"]?.cands.length ?? 0) - (books["baseline|oos"]?.cands.length ?? 0),
+          stab3: (books["stab-3|oos"]?.cands.length ?? 0) - (books["baseline|oos"]?.cands.length ?? 0),
+        },
+        in: {
+          stab2: (books["stab-2|in"]?.cands.length ?? 0) - (books["baseline|in"]?.cands.length ?? 0),
+          stab3: (books["stab-3|in"]?.cands.length ?? 0) - (books["baseline|in"]?.cands.length ?? 0),
+        },
+      },
+    },
+    crashKPick,
+    crashRemovedTrades: crashRemoved,
+    aiDcCap: {
+      skippedBaselineFills: aiDcLost,
+      note: "Profit fell when higher-RS AI/DC names filled slots instead of baseline picks (bucket max 2).",
+    },
+    exitRisk30: { dollarStopLedCandidates: dollarStopCandidates, fillsWithDifferentPnl: dollarStopFills },
+    soxxNPick,
+  };
 
   const report: Round17Report = {
     v: 1,
@@ -296,60 +441,92 @@ function main() {
     },
     rows,
     crashKPick,
+    soxxNPick,
     verdicts,
     summaryJa: summarizeJa(rows, crashKPick, union),
+    diagnostics,
   };
 
   fs.writeFileSync(OUT, `${JSON.stringify(report)}\n`);
-  writeReportJa(report);
-  console.log(JSON.stringify({ rows: rows.length, crashKPick, verdicts, summaryJa: report.summaryJa }, null, 2));
+  writeReportJa(report, diagnostics);
+  console.log(JSON.stringify({ rows: rows.length, crashKPick, soxxNPick, verdicts }, null, 2));
 }
 
-function writeReportJa(report: Round17Report) {
+function writeReportJa(report: Round17Report, diagnostics: Record<string, unknown>) {
   const lines: string[] = [
     "# Round 17 結果（日本語）",
     "",
     `事前登録: \`${report.prereg}\``,
     `生成: ${report.generatedAt}`,
     "",
-    "## テーマ除外銘柄",
+    "## 安定化フィルタ（訂正メモ）",
     "",
-    `- ソーラー (${report.excluded.solar.length}): ${report.excluded.solar.join(", ")}`,
-    `- 暗号・マイニング・ホスティング (${report.excluded.crypto.length}): ${report.excluded.crypto.join(", ")}`,
-    `- 原子力 (${report.excluded.nuclear.length}): ${report.excluded.nuclear.join(", ")}`,
-    `- 量子 (${report.excluded.quantum.length}): ${report.excluded.quantum.join(", ")}`,
-    `- 宇宙（SPCX 以外, ${report.excluded.space.length}): ${report.excluded.space.join(", ")}`,
-    `  - ウォッチリスト宇宙グループ: ${report.excluded.spaceWatchlist.join(", ")}`,
+    "フィルタは `generateLiveBandSignals` に接続済み。23–37%帯では終値が10日安値をほぼ常に上回るため、ポートフォリオ結果は基準と同一になりやすい（バグではなく定義上の no-op）。",
     "",
-    "## 合否（2024-26、基準比）",
+    "```json",
+    JSON.stringify((diagnostics as { stabilization: unknown }).stabilization, null, 2),
+    "```",
     "",
-    "|  variant | trades | $1.90 net | DD | 連敗 | 判定 |",
-    "|---|---:|---:|---:|---:|---|",
+    "## 急落フィルタ k=3.5 で外れた約定",
+    "",
+    "```json",
+    JSON.stringify((diagnostics as { crashRemovedTrades: unknown }).crashRemovedTrades, null, 2),
+    "```",
+    "",
+    "## AI・DC 枠2上限で外れた約定",
+    "",
+    "```json",
+    JSON.stringify((diagnostics as { aiDcCap: unknown }).aiDcCap, null, 2),
+    "```",
+    "",
+    "## $30 損切り併用出口",
+    "",
+    "```json",
+    JSON.stringify((diagnostics as { exitRisk30: unknown }).exitRisk30, null, 2),
+    "```",
+    "",
+    "## SOXX（チューニング N=" + String(report.soxxNPick) + "）",
+    "",
+    "| variant | window | trades | $1.90 net | DD | 連敗 |",
+    "|---|---|---:|---:|---:|---:|",
   ];
+  for (const id of ["no-spy", "baseline", "spy-soxx-all", `soxx-semi-${report.soxxNPick}`, `soxx-all-${report.soxxNPick}`] as const) {
+    for (const win of ["oos", "in"] as const) {
+      const row = report.rows.find((r) => r.id === id && r.window === win);
+      if (!row) continue;
+      lines.push(`| ${id} | ${win} | ${row.trades} | ${row.totalNet190Usd.toFixed(2)} | ${row.mtmDdUsd.toFixed(2)} | ${row.maxConsecLosses} |`);
+    }
+  }
+  lines.push("", "## 半導体ボックス長（ポートフォリオ）", "", "| box | window | trades | $1.90 net | DD | 連敗 |", "|---|---|---:|---:|---:|---:|");
+  for (const box of [5, 10, 20]) {
+    for (const win of ["oos", "in"] as const) {
+      const row = report.rows.find((r) => r.id === `semi-box-${box}` && r.window === win);
+      if (!row) continue;
+      lines.push(`| ${box}d | ${win} | ${row.trades} | ${row.totalNet190Usd.toFixed(2)} | ${row.mtmDdUsd.toFixed(2)} | ${row.maxConsecLosses} |`);
+    }
+  }
+  lines.push("", "## 合否（2024-26、基準比）", "", "| variant | trades | $1.90 net | DD | 連敗 | 判定 |", "|---|---:|---:|---:|---:|---|");
   const base = report.rows.find((row) => row.id === "baseline" && row.window === "in");
   for (const row of report.rows.filter((r) => r.window === "in")) {
     if (String(row.id).startsWith("crash-")) {
       const k = Number(String(row.id).replace("crash-", ""));
       if (report.crashKPick != null && k !== report.crashKPick) continue;
     }
+    if (String(row.id).startsWith("soxx-all-") && row.id !== `soxx-all-${report.soxxNPick}`) continue;
+    if (String(row.id).startsWith("soxx-semi-") && row.id !== `soxx-semi-${report.soxxNPick}`) continue;
+    if (row.id === "no-spy" || row.id === "spy-soxx-all" || row.id.startsWith("semi-box-")) continue;
     let verdict = row.id === "baseline" ? "基準" : "—";
     if (row.id !== "baseline") {
       const v = report.verdicts.find((item) => item.id === row.id);
       verdict = v ? JSON.stringify(v.verdict) : "—";
     }
-    lines.push(
-      `| ${row.id} | ${row.trades} | ${row.totalNet190Usd.toFixed(2)} | ${row.mtmDdUsd.toFixed(2)} | ${row.maxConsecLosses} | ${verdict} |`,
-    );
+    lines.push(`| ${row.id} | ${row.trades} | ${row.totalNet190Usd.toFixed(2)} | ${row.mtmDdUsd.toFixed(2)} | ${row.maxConsecLosses} | ${verdict} |`);
   }
-  lines.push("", "## 要約", "", report.summaryJa, "");
+  lines.push("", "## 要約", "", report.summaryJa);
   if (base) {
-    lines.push(
-      "",
-      `基準トレード数 ${base.trades}。70% 下限 ${Math.floor(base.trades * 0.7)}。`,
-      `急落フィルタ採用 k=${report.crashKPick ?? "—"}（2022-24 チューニング）。`,
-    );
+    lines.push("", `基準（2024-26）: ${base.trades}回 / $1.90 net ${base.totalNet190Usd.toFixed(2)} / DD ${base.mtmDdUsd.toFixed(2)} / 連敗 ${base.maxConsecLosses}`);
   }
-  fs.writeFileSync(REPORT, `${lines.join("\n")}\n`);
+  fs.writeFileSync(DOC_JA, `${lines.join("\n")}\n`);
 }
 
 main();

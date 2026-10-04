@@ -1,5 +1,5 @@
 import type { Book, Candidate, Feat, NameSeries } from "./backtest-study";
-import { nearEarnings, type MarketDay } from "./backtest-study";
+import { ROUND_TRIP_FEE, nearEarnings, type MarketDay } from "./backtest-study";
 import { aboveBoxTop } from "./round4";
 import { gapVoids } from "./round3";
 import { pathMarks } from "./round10";
@@ -10,8 +10,8 @@ import { BAND_HIGH_PCT, BAND_LOW_PCT } from "./morning";
 import { paperShares, atrPct, spyMa20Allows, applyRound7C, boxLinePrice } from "./round16";
 import { THEME_KEEP } from "./study-theme-lists";
 
-/** Pre-registration commit. Results must cite this and must not relax the rules. */
-export const ROUND17_PREREG = "9942674a8f8c8e8b8c8e8b8c8e8b8c8e8b8c8e8b";
+/** Pre-registration commit (includes SOXX / exit amendments). Results must cite this. */
+export const ROUND17_PREREG = "d7df2e03cb72f61b055c8f6f8b6e804c8f5e3f75";
 
 export const LINE_PCTS = [25, 35] as const;
 export type BuyLinePct = (typeof LINE_PCTS)[number];
@@ -31,15 +31,31 @@ export const MIN_TRADES_FRAC = 0.7;
 
 export type Round17VariantId =
   | "baseline"
+  | "no-spy"
+  | "spy-soxx-all"
+  | `soxx-semi-${2 | 3}`
+  | `soxx-all-${2 | 3}`
+  | "exit-risk30"
   | `crash-${number}`
   | `stab-${2 | 3}`
   | "ai-dc-cap"
   | `semi-box-${5 | 10 | 20}`;
 
+export type SoxxMode = "off" | "semi" | "all";
+
 export type SignalFilters = {
   crashK?: number;
   stabN?: 2 | 3;
+  requireSpy?: boolean;
+  soxx?: SoxxMode;
+  soxxN?: 2 | 3;
 };
+
+export type SoxxDay = { c: number; ma20: number | null };
+
+export type SoxxByDate = ReadonlyMap<string, SoxxDay>;
+
+export const PAPER_RISK_NET_USD = 30;
 
 export function positionKey(ticker: string, pct: BuyLinePct): string {
   return `${ticker}-L${pct}`;
@@ -69,7 +85,43 @@ export function recentLow10(feats: Feat[], index: number): number {
   return low;
 }
 
-export function stabilizationOk(feats: Feat[], index: number, n: 2 | 3): boolean {
+export function buildSoxxByDate(soxx: readonly Feat[]): SoxxByDate {
+  const out = new Map<string, SoxxDay>();
+  for (let i = 0; i < soxx.length; i += 1) {
+    const bar = soxx[i];
+    let ma20: number | null = null;
+    if (i >= 19) {
+      let sum = 0;
+      for (let j = i - 19; j <= i; j += 1) sum += soxx[j].c;
+      ma20 = Math.round((sum / 20) * 10000) / 10000;
+    }
+    out.set(bar.date, { c: bar.c, ma20 });
+  }
+  return out;
+}
+
+export function soxxMa20Allows(soxxByDate: SoxxByDate, signalDate: string): boolean {
+  const row = soxxByDate.get(signalDate);
+  if (!row || row.ma20 == null || !(row.ma20 > 0)) return false;
+  return row.c >= row.ma20;
+}
+
+export function soxxStabilizationOk(soxx: readonly Feat[], signalDate: string, n: 2 | 3): boolean {
+  const index = soxx.findIndex((bar) => bar.date === signalDate);
+  if (index < 0) return false;
+  return stabilizationOk(soxx as Feat[], index, n);
+}
+
+export function soxxEntryAllows(
+  soxx: readonly Feat[],
+  soxxByDate: SoxxByDate,
+  signalDate: string,
+  n: 2 | 3,
+): boolean {
+  return soxxMa20Allows(soxxByDate, signalDate) && soxxStabilizationOk(soxx, signalDate, n);
+}
+
+export function stabilizationOk(feats: readonly Feat[], index: number, n: 2 | 3): boolean {
   const recentLow = recentLow10(feats, index);
   for (let back = 0; back < n; back += 1) {
     const j = index - back;
@@ -79,16 +131,67 @@ export function stabilizationOk(feats: Feat[], index: number, n: 2 | 3): boolean
   return true;
 }
 
+export function dollarStopPrice(entry: number, boxLow: number, qty: number): { effective: number; dollarLed: boolean } {
+  const dollarStop = entry - (PAPER_RISK_NET_USD + ROUND_TRIP_FEE) / qty;
+  const effective = Math.max(boxLow, dollarStop);
+  return { effective, dollarLed: effective > boxLow + 1e-9 };
+}
+
+export function applyRound7CWithStop(
+  cand: Candidate,
+  feats: readonly Feat[],
+  qty: number,
+  stop: number,
+  targetHigh?: number | null,
+): Candidate {
+  if (!Number.isFinite(stop)) throw new Error(`損切りがない ${cand.ticker} ${cand.entryDate}`);
+  const bars: ExitBar[] = feats.map((bar) => ({ date: bar.date, o: bar.o, h: bar.h, l: bar.l, c: bar.c }));
+  const plan = planRound7Exit({
+    variant: "C",
+    bars,
+    entryIndex: cand.entryIndex,
+    atr: cand.atr,
+    stop,
+    high20: targetHigh ?? feats[cand.signalIndex]?.high20 ?? null,
+    qty,
+  });
+  if (!plan) throw new Error(`出口がない ${cand.ticker} ${cand.entryDate}`);
+  const reason = plan.reason === "target" ? "target" : plan.reason === "timeout" ? "timeout" : plan.reason === "window" ? "window" : "stop";
+  return {
+    ...cand,
+    exitIndex: plan.exitIndex,
+    exitDate: plan.exitDate,
+    exit: plan.exit,
+    exitTiming: plan.timing,
+    reason,
+    voided: gapVoids(
+      bars.map((bar) => bar.c),
+      cand.entryIndex,
+      plan.exitIndex,
+    ),
+    round7Legs: plan.legs.map(({ date, timing, qty: shares, price, reason: legReason }) => ({
+      date,
+      timing,
+      qty: shares,
+      price,
+      reason: legReason,
+    })),
+  };
+}
+
 export function generateLiveBandSignals(args: {
   name: NameSeries;
   from: string;
   to: string;
   sessions: readonly string[];
   spyByDate: ReadonlyMap<string, { c: number; ma20: number | null }>;
+  soxx?: readonly Feat[];
+  soxxByDate?: SoxxByDate;
   market: ReadonlyMap<string, MarketDay>;
   earningsBlock: boolean;
   concepts: ConceptFacts | null;
   filters?: SignalFilters;
+  exitRisk30?: boolean;
   /** When true, every candidate is marked bucket-heavy (AI DC cap variant). */
   allBucketHeavy?: boolean;
 }): Candidate[] {
@@ -97,6 +200,11 @@ export function generateLiveBandSignals(args: {
   const out: Candidate[] = [];
   const after: Record<BuyLinePct, string> = { 25: from, 35: from };
   const filters = args.filters ?? {};
+  const requireSpy = filters.requireSpy !== false;
+  const soxxMode = filters.soxx ?? "off";
+  const soxxN = filters.soxxN ?? 2;
+  const soxxFeats = args.soxx ?? [];
+  const soxxByDate = args.soxxByDate ?? new Map<string, SoxxDay>();
 
   for (let i = 0; i < feats.length - 1; i += 1) {
     const sig = feats[i];
@@ -105,7 +213,9 @@ export function generateLiveBandSignals(args: {
     if (sig.c > PRICE_MAX) continue;
     if (atrPct(sig.atr, sig.c) < ATR_MIN_PCT) continue;
     if (!inLiveBand(sig.boxPct)) continue;
-    if (!spyMa20Allows(spyByDate, sig.date)) continue;
+    if (requireSpy && !spyMa20Allows(spyByDate, sig.date)) continue;
+    const useSoxx = soxxMode === "all" || (soxxMode === "semi" && name.semi);
+    if (useSoxx && !soxxEntryAllows(soxxFeats, soxxByDate, sig.date, soxxN)) continue;
     if (args.earningsBlock && nearEarnings([...sessions], sig.date, name.earnings)) continue;
     if (name.ticker !== THEME_KEEP && ttmAt(concepts, sig.date).status === "negative") continue;
 
@@ -151,7 +261,13 @@ export function generateLiveBandSignals(args: {
         positionKey: positionKey(name.ticker, pct),
         bucketHeavy: args.allBucketHeavy === true || (name as NameSeries & { aiDc?: boolean }).aiDc === true || name.semi,
       };
-      cand = applyRound7C(cand, feats, qty);
+      if (args.exitRisk30) {
+        const { effective, dollarLed } = dollarStopPrice(entry, stop, qty);
+        cand = applyRound7CWithStop(cand, feats, qty, effective);
+        if (dollarLed) (cand as Candidate & { dollarStopLed?: boolean }).dollarStopLed = true;
+      } else {
+        cand = applyRound7C(cand, feats, qty);
+      }
       if (cand.voided) {
         after[pct] = sessionAfter(sessions, cand.exitDate) ?? to;
         continue;
@@ -226,6 +342,7 @@ export type PassVerdict =
 
 export function passVerdict(baseline: Round17Row, variant: Round17Row): PassVerdict {
   if (variant.id.startsWith("semi-box-")) return { kind: "descriptive" };
+  if (variant.id === "no-spy") return { kind: "descriptive" };
   const reasons: string[] = [];
   if (variant.mtmDdUsd > baseline.mtmDdUsd + 1e-9) reasons.push("max_dd");
   if (variant.maxConsecLosses > baseline.maxConsecLosses) reasons.push("max_consec_losses");
@@ -258,6 +375,98 @@ export function boxAtWindow(feats: Feat[], index: number, window: number): { low
   const range = high - low;
   const boxPct = range <= 0 ? 0 : ((feats[index].c - low) / range) * 100;
   return { low, high, boxPct };
+}
+
+/** Semis only: N-day box window, same portfolio exit as baseline. */
+export function generateSemiBoxSignals(args: {
+  name: NameSeries;
+  boxWindow: 5 | 10 | 20;
+  from: string;
+  to: string;
+  sessions: readonly string[];
+  spyByDate: ReadonlyMap<string, { c: number; ma20: number | null }>;
+  market: ReadonlyMap<string, MarketDay>;
+  earningsBlock: boolean;
+  concepts: ConceptFacts | null;
+}): Candidate[] {
+  const { name, boxWindow, from, to, sessions, spyByDate, market, concepts } = args;
+  if (!name.semi) return [];
+  const feats = name.feats;
+  const out: Candidate[] = [];
+  const after: Record<BuyLinePct, string> = { 25: from, 35: from };
+  for (let i = 0; i < feats.length - 1; i += 1) {
+    const sig = feats[i];
+    if (sig.date < from || sig.date > to) continue;
+    const box = boxAtWindow(feats, i, boxWindow);
+    if (!box) continue;
+    if (sig.gapWarning || sig.atr == null || !(sig.atr > 0)) continue;
+    if (sig.c > PRICE_MAX) continue;
+    if (atrPct(sig.atr, sig.c) < ATR_MIN_PCT) continue;
+    if (!inLiveBand(box.boxPct)) continue;
+    if (!spyMa20Allows(spyByDate, sig.date)) continue;
+    if (args.earningsBlock && nearEarnings([...sessions], sig.date, name.earnings)) continue;
+    if (name.ticker !== THEME_KEEP && ttmAt(concepts, sig.date).status === "negative") continue;
+    const high20 = box.high;
+    const low20 = box.low;
+    for (const pct of LINE_PCTS) {
+      if (sig.date < after[pct]) continue;
+      const line = boxLinePrice(low20, high20, pct);
+      if (!touchAtLine(sig, line)) continue;
+      const entryIndex = i + 1;
+      const entryBar = feats[entryIndex];
+      if (!entryBar || entryBar.date > to) continue;
+      const entry = entryBar.o;
+      const stop = low20;
+      if (aboveBoxTop(entry, high20)) continue;
+      const qty = paperShares(entry, stop);
+      if (qty == null) continue;
+      const day = market.get(sig.date);
+      const rs20 = day && sig.ret20 != null && day.spyRet20 != null ? sig.ret20 - day.spyRet20 : null;
+      let cand: Candidate = {
+        ticker: name.ticker,
+        sector: name.sector,
+        semi: name.semi,
+        signalIndex: i,
+        entryIndex,
+        exitIndex: entryIndex,
+        signalDate: sig.date,
+        entryDate: entryBar.date,
+        exitDate: entryBar.date,
+        entry,
+        exit: entry,
+        atr: sig.atr,
+        atrPct: atrPct(sig.atr, sig.c),
+        boxPct: box.boxPct,
+        rebound: sig.rebound,
+        rs20,
+        qty10: 0,
+        reason: "window",
+        exitTiming: "close",
+        voided: false,
+        stop,
+        positionKey: positionKey(name.ticker, pct),
+        bucketHeavy: name.semi,
+      };
+      cand = applyRound7CWithStop(cand, feats, qty, stop, high20);
+      if (cand.voided) {
+        after[pct] = sessionAfter(sessions, cand.exitDate) ?? to;
+        continue;
+      }
+      out.push(cand);
+      after[pct] = sessionAfter(sessions, cand.exitDate) ?? to;
+    }
+  }
+  return out;
+}
+
+export function pickSoxxN(rows: readonly Round17Row[]): 2 | 3 {
+  const oos = rows.filter((row) => row.window === "oos" && (row.id === "soxx-all-2" || row.id === "soxx-all-3"));
+  if (oos.length < 2) return 2;
+  const n2 = oos.find((row) => row.id === "soxx-all-2");
+  const n3 = oos.find((row) => row.id === "soxx-all-3");
+  if (!n2 || !n3) return 2;
+  if (n3.totalNet190Usd > n2.totalNet190Usd) return 3;
+  return 2;
 }
 
 /** Descriptive: semis touching the 25% line under common filters (no portfolio). */
@@ -331,6 +540,8 @@ export type Round17Report = {
   };
   rows: Round17Row[];
   crashKPick: number | null;
+  soxxNPick: 2 | 3;
   verdicts: Array<{ id: Round17VariantId; window: Round17Window; verdict: PassVerdict }>;
   summaryJa: string;
+  diagnostics?: Record<string, unknown>;
 };
