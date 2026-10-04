@@ -33,6 +33,7 @@ function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow
       avgDollarVolume20: 10_000_000,
       line15: 8.6,
       line25: 9,
+      line35: 9.4,
       reboundDays: null,
       entrySignal: "chase",
     },

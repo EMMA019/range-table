@@ -1,7 +1,7 @@
 import { excludeReasons, type ExcludeReason } from "./morning";
 import type { Profitability } from "./loss-filter";
 import type { PrecheckFlag } from "./precheck-flags";
-import { themeOf, type ThemeName } from "./themes";
+import type { ThemeName } from "./themes";
 
 export type ScreenRowInput = {
   ticker: string;
