@@ -43,7 +43,7 @@ export function cikForTicker(ticker: string): number | null {
   return typeof cik === "number" && cik > 0 ? cik : null;
 }
 
-function companyFactsUrl(cik: number): string {
+export function companyFactsUrl(cik: number): string {
   const padded = String(cik).padStart(10, "0");
   return `https://data.sec.gov/api/xbrl/companyfacts/CIK${padded}.json`;
 }
