@@ -14,10 +14,16 @@ import {
   generateSemiBoxSignals,
   passVerdict,
   pickCrashK,
+  EXIT_C_WINDOW_BOUNDS,
   pickSoxxN,
+  passVerdictExitC,
+  scoreExitCRow,
   scoreRound17Book,
   stabilizationOk,
   summarizeJa,
+  type Round17ExitCRow,
+  type Round17ExitCVariantId,
+  type Round17ExitCWindow,
   type Round17Report,
   type Round17Row,
   type Round17VariantId,
@@ -91,6 +97,8 @@ type RunOpts = {
   filters: SignalFilters;
   portfolio: { maxSemi?: number; maxBucket?: number; allBucketHeavy?: boolean };
   exitRisk30?: boolean;
+  exitNoStop?: boolean;
+  exitMaxHold?: number;
   soxxFeats?: ReturnType<typeof buildFeatures>;
   soxxByDate?: ReturnType<typeof buildSoxxByDate>;
   semiBox?: 5 | 10 | 20;
@@ -101,10 +109,10 @@ function fillKey(fill: { ticker: string; entryDate: string }): string {
 }
 
 function runVariant(
-  id: Round17VariantId,
+  id: string,
   names: NameExt[],
   calendar: string[],
-  window: { id: Round17Window; from: string; to: string },
+  window: { id: string; from: string; to: string },
   spyByDate: ReturnType<typeof buildSpyMa20>,
   market: ReturnType<typeof marketByDate>,
   conceptsOf: Map<string, ConceptFacts | null>,
@@ -142,6 +150,8 @@ function runVariant(
           concepts: conceptsOf.get(name.ticker) ?? null,
           filters: opts.filters,
           exitRisk30: opts.exitRisk30,
+          exitNoStop: opts.exitNoStop,
+          exitMaxHold: opts.exitMaxHold,
           allBucketHeavy: opts.portfolio.allBucketHeavy,
         }),
       );
@@ -173,6 +183,29 @@ function runVariant(
     cands,
   );
   return { book, cands };
+}
+
+function runExitCVariant(
+  id: Round17ExitCVariantId,
+  win: Round17ExitCWindow,
+  names: NameExt[],
+  calendar: string[],
+  bounds: { from: string; to: string },
+  spyByDate: ReturnType<typeof buildSpyMa20>,
+  market: ReturnType<typeof marketByDate>,
+  conceptsOf: Map<string, ConceptFacts | null>,
+): { book: Book; cands: Candidate[]; row: Round17ExitCRow } {
+  const to = bounds.to;
+  const opts: RunOpts = {
+    filters: {},
+    portfolio: { maxSemi: 2 },
+    exitNoStop: id !== "exit-c0",
+    exitMaxHold: id === "exit-c1-40" ? 40 : 20,
+  };
+  const { book, cands } = runVariant(id, names, calendar, { id: win, from: bounds.from, to }, spyByDate, market, conceptsOf, opts);
+  const featsByTicker = new Map(names.map((name) => [name.ticker, name.feats]));
+  const row = scoreExitCRow(book, cands, featsByTicker, id, win);
+  return { book, cands, row };
 }
 
 function main() {
@@ -384,6 +417,32 @@ function main() {
     }
   }
 
+  const exitCRows: Round17ExitCRow[] = [];
+  const exitCWindows: Array<{ id: Round17ExitCWindow; from: string; to: string }> = [
+    { id: "live", ...EXIT_C_WINDOW_BOUNDS.live },
+    {
+      id: "in",
+      from: EXIT_C_WINDOW_BOUNDS.in.from,
+      to: lastBar < EXIT_C_WINDOW_BOUNDS.in.to ? lastBar : EXIT_C_WINDOW_BOUNDS.in.to,
+    },
+  ];
+  for (const win of exitCWindows) {
+    for (const id of ["exit-c0", "exit-c1-20", "exit-c1-40"] as Round17ExitCVariantId[]) {
+      const { row } = runExitCVariant(id, win.id, names, calendar, win, spyByDate, market, conceptsOf);
+      exitCRows.push(row);
+    }
+  }
+  const exitCVerdicts: Round17Report["exitCVerdicts"] = [];
+  for (const win of ["live", "in"] as Round17ExitCWindow[]) {
+    const c0 = exitCRows.find((row) => row.id === "exit-c0" && row.window === win);
+    if (!c0) continue;
+    for (const id of ["exit-c1-20", "exit-c1-40"] as Round17ExitCVariantId[]) {
+      const variant = exitCRows.find((row) => row.id === id && row.window === win);
+      if (!variant) continue;
+      exitCVerdicts.push({ id, window: win, verdict: passVerdictExitC(c0, variant) });
+    }
+  }
+
   const baseIn = rows.find((row) => row.id === "baseline" && row.window === "in");
   if (!baseIn) throw new Error("baseline in-sample missing");
 
@@ -443,6 +502,13 @@ function main() {
     crashKPick,
     soxxNPick,
     verdicts,
+    exitC: exitCRows,
+    exitCVerdicts,
+    emmaLiveReference: {
+      returnPct: 10.9,
+      maxDrawdownPct: -6,
+      note: "Emma brokerage account over 2026-07-30..2026-10-02; different trade set than backtest C0/C1.",
+    },
     summaryJa: summarizeJa(rows, crashKPick, union),
     diagnostics,
   };
@@ -521,6 +587,24 @@ function writeReportJa(report: Round17Report, diagnostics: Record<string, unknow
       verdict = v ? JSON.stringify(v.verdict) : "—";
     }
     lines.push(`| ${row.id} | ${row.trades} | ${row.totalNet190Usd.toFixed(2)} | ${row.mtmDdUsd.toFixed(2)} | ${row.maxConsecLosses} | ${verdict} |`);
+  }
+  lines.push("", "## 出口比較（variant C）", "");
+  lines.push(
+    "### 参考：Emma実口座（別約定セット・合格基準ではない）",
+    "",
+    `期間 **2026-07-30〜2026-10-02**（ライブ窓と同じ）。実口座リターン **+${report.emmaLiveReference?.returnPct ?? 10.9}%**、最大DD **約${report.emmaLiveReference?.maxDrawdownPct ?? -6}%**。バックテスト C0/C1 は銘柄・タイミングが異なるため対照線のみ。`,
+    "",
+    "| variant | window | trades | $1.90 net | MTM DD | 連敗 | 最大建玉含み損 | タイムアウト>$30 |",
+    "|---|---|---:|---:|---:|---:|---:|---:|",
+  );
+  for (const row of report.exitC ?? []) {
+    lines.push(
+      `| ${row.id} | ${row.window} | ${row.trades} | ${row.totalNet190Usd.toFixed(2)} | ${row.mtmDdUsd.toFixed(2)} | ${row.maxConsecLosses} | ${row.worstOpenDrawdownUsd.toFixed(2)} | ${row.id === "exit-c0" ? "—" : row.deepUnderwaterTimeouts} |`,
+    );
+  }
+  lines.push("", "**解釈（C）**: C0 は箱底損切り＋20日。C1 は損切りなし（利確 or タイムアウト）。ライブ窓は単一ポートフォリオ $3,200 起点。", "");
+  if (report.exitCVerdicts?.length) {
+    lines.push("C1 合否（同一窓の C0 比）:", "", "```json", JSON.stringify(report.exitCVerdicts, null, 2), "```", "");
   }
   lines.push("", "## 要約", "", report.summaryJa);
   if (base) {

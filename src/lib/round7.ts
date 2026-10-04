@@ -91,6 +91,41 @@ export function planRound7Exit(args: PlanArgs): ExitPlan | null {
   return planSingle(args, target, qty, maxHold);
 }
 
+/** Variant C1: take-profit at `target` or timeout; no stop-loss walk. */
+export function planRound7TargetOrTimeout(args: {
+  bars: readonly ExitBar[];
+  entryIndex: number;
+  target: number | null;
+  qty: number;
+  maxHold: number;
+}): ExitPlan | null {
+  const { bars, entryIndex, qty, maxHold, target } = args;
+  if (entryIndex >= bars.length || !(qty >= 1)) return null;
+  const lastIndex = Math.min(bars.length - 1, entryIndex + maxHold);
+  const legs: Array<Round7Leg & { index: number }> = [];
+  for (let j = entryIndex; j <= lastIndex; j += 1) {
+    const bar = bars[j];
+    const after = j > entryIndex;
+    const gapTarget = target != null && after && bar.o >= target;
+    const highTarget = target != null && bar.h >= target;
+    if (gapTarget && target != null) {
+      push(legs, bar, j, qty, bar.o, "open", "target");
+      return planFrom(legs);
+    }
+    if (highTarget && target != null) {
+      push(legs, bar, j, qty, target, "intraday", "target");
+      return planFrom(legs);
+    }
+    if (j === entryIndex + maxHold) {
+      push(legs, bar, j, qty, bar.c, "close", "timeout");
+      return planFrom(legs);
+    }
+  }
+  const bar = bars[lastIndex];
+  push(legs, bar, lastIndex, qty, bar.c, "close", "window");
+  return planFrom(legs);
+}
+
 function planFrom(legs: Round7Leg[]): ExitPlan | null {
   const last = legs[legs.length - 1];
   if (!last) return null;

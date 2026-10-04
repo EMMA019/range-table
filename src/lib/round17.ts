@@ -4,14 +4,14 @@ import { aboveBoxTop } from "./round4";
 import { gapVoids } from "./round3";
 import { pathMarks } from "./round10";
 import { totalNet190 } from "./round8";
-import { planRound7Exit, type ExitBar } from "./round7";
+import { planRound7Exit, planRound7TargetOrTimeout, type ExitBar } from "./round7";
 import { ttmAt, type ConceptFacts } from "./round4";
 import { BAND_HIGH_PCT, BAND_LOW_PCT } from "./morning";
 import { paperShares, atrPct, spyMa20Allows, applyRound7C, boxLinePrice } from "./round16";
 import { THEME_KEEP } from "./study-theme-lists";
 
-/** Pre-registration commit (includes SOXX / exit amendments). Results must cite this. */
-export const ROUND17_PREREG = "d7df2e03cb72f61b055c8f6f8b6e804c8f5e3f75";
+/** Pre-registration commit (includes variant C exit comparison). Results must cite this. */
+export const ROUND17_PREREG = "200b35f8189439abbce3671e58b0a18bdfb37e1e";
 
 export const LINE_PCTS = [25, 35] as const;
 export type BuyLinePct = (typeof LINE_PCTS)[number];
@@ -21,6 +21,15 @@ export const WINDOW_BOUNDS: Record<Round17Window, { from: string; to: string }> 
   oos: { from: "2022-10-03", to: "2024-10-02" },
   in: { from: "2024-10-03", to: "2026-10-02" },
 };
+
+/** Variant C windows (see prereg amendment 2026-10-04). */
+export type Round17ExitCWindow = "live" | "in";
+export const EXIT_C_WINDOW_BOUNDS: Record<Round17ExitCWindow, { from: string; to: string }> = {
+  live: { from: "2026-07-30", to: "2026-10-02" },
+  in: WINDOW_BOUNDS.in,
+};
+export type Round17ExitCVariantId = "exit-c0" | "exit-c1-20" | "exit-c1-40";
+export const DEEP_UNDERWATER_USD = 30;
 
 export const PRICE_MAX = 550;
 export const ATR_MIN_PCT = 3;
@@ -78,7 +87,7 @@ export function crashBlocksFirstBuy(feats: Feat[], index: number, k: number): bo
   return high5 - sig.c >= k * sig.atr;
 }
 
-export function recentLow10(feats: Feat[], index: number): number {
+export function recentLow10(feats: readonly Feat[], index: number): number {
   const start = Math.max(0, index - 9);
   let low = feats[index].l;
   for (let j = start; j <= index; j += 1) low = Math.min(low, feats[j].l);
@@ -137,12 +146,52 @@ export function dollarStopPrice(entry: number, boxLow: number, qty: number): { e
   return { effective, dollarLed: effective > boxLow + 1e-9 };
 }
 
+export function applyRound7C1NoStop(
+  cand: Candidate,
+  feats: readonly Feat[],
+  qty: number,
+  targetHigh: number | null,
+  maxHold: number,
+): Candidate {
+  const bars: ExitBar[] = feats.map((bar) => ({ date: bar.date, o: bar.o, h: bar.h, l: bar.l, c: bar.c }));
+  const plan = planRound7TargetOrTimeout({
+    bars,
+    entryIndex: cand.entryIndex,
+    target: targetHigh,
+    qty,
+    maxHold,
+  });
+  if (!plan) throw new Error(`出口がない ${cand.ticker} ${cand.entryDate}`);
+  const reason = plan.reason === "target" ? "target" : plan.reason === "timeout" ? "timeout" : plan.reason === "window" ? "window" : "stop";
+  return {
+    ...cand,
+    exitIndex: plan.exitIndex,
+    exitDate: plan.exitDate,
+    exit: plan.exit,
+    exitTiming: plan.timing,
+    reason,
+    voided: gapVoids(
+      bars.map((bar) => bar.c),
+      cand.entryIndex,
+      plan.exitIndex,
+    ),
+    round7Legs: plan.legs.map(({ date, timing, qty: shares, price, reason: legReason }) => ({
+      date,
+      timing,
+      qty: shares,
+      price,
+      reason: legReason,
+    })),
+  };
+}
+
 export function applyRound7CWithStop(
   cand: Candidate,
   feats: readonly Feat[],
   qty: number,
   stop: number,
   targetHigh?: number | null,
+  maxHold?: number,
 ): Candidate {
   if (!Number.isFinite(stop)) throw new Error(`損切りがない ${cand.ticker} ${cand.entryDate}`);
   const bars: ExitBar[] = feats.map((bar) => ({ date: bar.date, o: bar.o, h: bar.h, l: bar.l, c: bar.c }));
@@ -154,6 +203,7 @@ export function applyRound7CWithStop(
     stop,
     high20: targetHigh ?? feats[cand.signalIndex]?.high20 ?? null,
     qty,
+    maxHold,
   });
   if (!plan) throw new Error(`出口がない ${cand.ticker} ${cand.entryDate}`);
   const reason = plan.reason === "target" ? "target" : plan.reason === "timeout" ? "timeout" : plan.reason === "window" ? "window" : "stop";
@@ -192,6 +242,8 @@ export function generateLiveBandSignals(args: {
   concepts: ConceptFacts | null;
   filters?: SignalFilters;
   exitRisk30?: boolean;
+  exitNoStop?: boolean;
+  exitMaxHold?: number;
   /** When true, every candidate is marked bucket-heavy (AI DC cap variant). */
   allBucketHeavy?: boolean;
 }): Candidate[] {
@@ -261,7 +313,9 @@ export function generateLiveBandSignals(args: {
         positionKey: positionKey(name.ticker, pct),
         bucketHeavy: args.allBucketHeavy === true || (name as NameSeries & { aiDc?: boolean }).aiDc === true || name.semi,
       };
-      if (args.exitRisk30) {
+      if (args.exitNoStop) {
+        cand = applyRound7C1NoStop(cand, feats, qty, sig.high20, args.exitMaxHold ?? 20);
+      } else if (args.exitRisk30) {
         const { effective, dollarLed } = dollarStopPrice(entry, stop, qty);
         cand = applyRound7CWithStop(cand, feats, qty, effective);
         if (dollarLed) (cand as Candidate & { dollarStopLed?: boolean }).dollarStopLed = true;
@@ -339,6 +393,76 @@ export type PassVerdict =
   | { kind: "fail"; reasons: string[] }
   | { kind: "flag-profit"; reasons: string[] }
   | { kind: "descriptive" };
+
+export type Round17ExitCRow = {
+  id: Round17ExitCVariantId;
+  window: Round17ExitCWindow;
+  trades: number;
+  totalNet190Usd: number;
+  mtmDdUsd: number;
+  maxConsecLosses: number;
+  worstOpenDrawdownUsd: number;
+  deepUnderwaterTimeouts: number;
+};
+
+export function scoreExitCRow(
+  book: Book,
+  cands: readonly Candidate[],
+  featsByTicker: ReadonlyMap<string, readonly Feat[]>,
+  id: Round17ExitCVariantId,
+  window: Round17ExitCWindow,
+): Round17ExitCRow {
+  const fills = book.fills ?? [];
+  const trades = fills.map((fill) => {
+    const legs = fill.legs ?? [];
+    return { pnlUsd: fill.pnlUsd, sells: legs.length || 1 };
+  });
+  const net = totalNet190(trades);
+  const candByKey = new Map(cands.map((c) => [`${c.ticker}|${c.entryDate}`, c]));
+  let worstOpen = 0;
+  let deepTimeouts = 0;
+  for (const fill of fills) {
+    const cand = candByKey.get(`${fill.ticker}|${fill.entryDate}`);
+    if (!cand) continue;
+    const feats = featsByTicker.get(fill.ticker);
+    const sized = fill.qty ?? paperShares(cand.entry, cand.stop ?? Number.NaN);
+    if (sized == null || !(sized > 0) || !feats) continue;
+    const qty = sized;
+    const entry = cand.entry;
+    let peak = 0;
+    for (let j = cand.entryIndex; j <= cand.exitIndex && j < feats.length; j += 1) {
+      const underwater = Math.max(0, (entry - feats[j].l) * qty);
+      if (underwater > peak) peak = underwater;
+    }
+    if (peak > worstOpen) worstOpen = peak;
+    if (id !== "exit-c0" && cand.reason === "timeout") {
+      const mtmLoss = Math.max(0, (entry - cand.exit) * qty);
+      if (mtmLoss > DEEP_UNDERWATER_USD) deepTimeouts += 1;
+    }
+  }
+  return {
+    id,
+    window,
+    trades: trades.length,
+    totalNet190Usd: net,
+    mtmDdUsd: book.maxDrawdownUsd,
+    maxConsecLosses: book.maxConsecLosses,
+    worstOpenDrawdownUsd: Math.round(worstOpen * 100) / 100,
+    deepUnderwaterTimeouts: deepTimeouts,
+  };
+}
+
+export function passVerdictExitC(c0: Round17ExitCRow, variant: Round17ExitCRow): PassVerdict {
+  const reasons: string[] = [];
+  if (variant.mtmDdUsd > c0.mtmDdUsd + 1e-9) reasons.push("max_dd");
+  if (variant.maxConsecLosses > c0.maxConsecLosses) reasons.push("max_consec_losses");
+  if (variant.trades < Math.floor(c0.trades * MIN_TRADES_FRAC)) reasons.push("trade_count");
+  const profitDrop =
+    c0.totalNet190Usd > 0 && variant.totalNet190Usd < c0.totalNet190Usd * (1 - PROFIT_DROP_FLAG);
+  if (reasons.length) return { kind: "fail", reasons };
+  if (profitDrop) return { kind: "flag-profit", reasons: ["profit_drop_15pct"] };
+  return { kind: "pass" };
+}
 
 export function passVerdict(baseline: Round17Row, variant: Round17Row): PassVerdict {
   if (variant.id.startsWith("semi-box-")) return { kind: "descriptive" };
@@ -542,6 +666,9 @@ export type Round17Report = {
   crashKPick: number | null;
   soxxNPick: 2 | 3;
   verdicts: Array<{ id: Round17VariantId; window: Round17Window; verdict: PassVerdict }>;
+  exitC?: Round17ExitCRow[];
+  exitCVerdicts?: Array<{ id: Round17ExitCVariantId; window: Round17ExitCWindow; verdict: PassVerdict }>;
+  emmaLiveReference?: { returnPct: number; maxDrawdownPct: number; note: string };
   summaryJa: string;
   diagnostics?: Record<string, unknown>;
 };
