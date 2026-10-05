@@ -206,6 +206,8 @@ async function main() {
     gitHead ? `**ブランチ HEAD:** \`${gitHead.slice(0, 7)}\`` : "",
     "**サイト非掲載。** v2 探索なし。",
     "",
+    "**関連:** 残存 35 リークの年次表への影響 → [`ROUND19_REMAINING_LEAKS_IMPACT_ja.md`](ROUND19_REMAINING_LEAKS_IMPACT_ja.md)",
+    "",
     "## スナップショットの取り方",
     "",
     `- 対象期間 ${SAKA_START} ～ ${SAKA_END}。各年 **Y** について、四半期初 SPY セッションのうち **Y 年内で最も遅い日**を採用（2026 年は **2026-10-01**）。`,
@@ -278,7 +280,7 @@ async function main() {
     prevSet = curSet;
   }
 
-  fs.writeFileSync(OUT_MD, lines.filter((l) => l !== "").join("\n") + "\n");
+  fs.writeFileSync(OUT_MD, lines.join("\n") + "\n");
   console.log(`wrote ${OUT_MD}`);
   for (const s of snapshots) {
     console.log(`${s.year}\t${s.date}\tsemi=${(s.semiPct * 100).toFixed(1)}%\tai=${(s.aiPct * 100).toFixed(1)}%\t${s.tickers.join(",")}`);
