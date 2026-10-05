@@ -15,8 +15,8 @@ export const BASIS = {
   dev: "(終値 − 20日線) ÷ 20日線",
   low20: "直近20本の安値の最小",
   high20: "直近20本の高値の最大",
-  range5: "参考: 直近5本の安値〜高値",
-  range10: "参考: 直近10本の安値〜高値",
+  range5: "参考: 直近5本の安値〜高値（20日箱の主指標ではない）",
+  range10: "参考: 直近10本の安値〜高値（20日箱の主指標ではない）",
   box: "(終値 − 20日安値) ÷ (20日高値 − 20日安値)。0%が底、100%が天井",
   atr: "直近14本の真の値幅の平均。真の値幅は、高値−安値・|高値−前日終値|・|安値−前日終値|の最大",
   shares10: "1日の平均値幅(ATR14)で$10取るのに必要な株数と金額",
@@ -94,3 +94,12 @@ export const CHIPS = [
 ] as const;
 
 export type ChipKey = (typeof CHIPS)[number]["key"];
+
+/** Dashboard list scope (URL ?u=). Default watchlist-only; index adds S&P500+NDX100 monitor names. */
+export const UNIVERSE_SCOPES = [
+  { id: "watch", label: "ウォッチリスト" },
+  { id: "index", label: "指数監視のみ" },
+  { id: "all", label: "すべて" },
+] as const;
+
+export type UniverseScopeId = (typeof UNIVERSE_SCOPES)[number]["id"];

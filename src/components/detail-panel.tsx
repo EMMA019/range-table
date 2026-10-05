@@ -103,10 +103,15 @@ export function DetailPanel({
                 <BoxBar pct={row.quote.boxPct} />
                 <p className="mt-1 text-[11px] text-muted">{BASIS.box}</p>
                 <p className="mt-3 text-sm leading-relaxed">{guideLineText(row.quote.line15, row.quote.line25)}</p>
-                <p className="mt-2 text-xs leading-relaxed text-muted">
-                  参考レンジ: {rangeRefText(row.quote.low5, row.quote.high5, row.quote.low10, row.quote.high10)}
-                </p>
-                <p className="mt-0.5 text-[11px] text-muted">{BASIS.range5} · {BASIS.range10}</p>
+                <div className="mt-3 rounded-xl border border-line bg-elev px-3 py-2">
+                  <p className="text-[11px] font-medium text-ink">参考レンジ（20日箱の補助）</p>
+                  <p className="mt-1 font-mono text-sm tabular-nums text-ink">
+                    {rangeRefText(row.quote.low5, row.quote.high5, row.quote.low10, row.quote.high10)}
+                  </p>
+                  <p className="mt-1 text-[11px] leading-relaxed text-muted">
+                    {BASIS.range5} · {BASIS.range10}
+                  </p>
+                </div>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <EntryBadge signal={row.quote.entrySignal} className="text-[11px]" />
                   <p className="text-sm">{reboundText(row.quote.reboundDays)}</p>
@@ -155,6 +160,24 @@ export function DetailPanel({
                 />
                 <Stat label="20日安値" value={formatPx(row.quote.low20)} basis={BASIS.low20} />
                 <Stat label="20日高値" value={formatPx(row.quote.high20)} basis={BASIS.high20} />
+                <Stat
+                  label="5日レンジ"
+                  value={
+                    row.quote.low5 != null && row.quote.high5 != null
+                      ? `$${formatPx(row.quote.low5)} – $${formatPx(row.quote.high5)}`
+                      : "—"
+                  }
+                  basis={BASIS.range5}
+                />
+                <Stat
+                  label="10日レンジ"
+                  value={
+                    row.quote.low10 != null && row.quote.high10 != null
+                      ? `$${formatPx(row.quote.low10)} – $${formatPx(row.quote.high10)}`
+                      : "—"
+                  }
+                  basis={BASIS.range10}
+                />
                 <Stat label="箱の位置" value={formatBox(row.quote.boxPct)} basis={BASIS.box} tone={zoneTone(row.quote.boxPct)} />
                 <Stat
                   label="ATR(14)"

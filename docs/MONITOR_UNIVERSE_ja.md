@@ -8,6 +8,6 @@
 npx tsx scripts/refresh-monitor-index.ts [YYYY-MM-DD]
 ```
 
-**利用:** `src/lib/monitor-universe.ts` が和集合を **日足キャッシュ** と **エントリーアラート走査** に追加（指数のみ銘柄は `sectorId: index`・監視のみ扱い）。**ダッシュボードの表**は従来どおり `data/watchlist.yaml` のみ。保有・reviewLine アラート・`HOLDINGS_JSON` は変更なし。
+**利用:** `src/lib/monitor-universe.ts` が和集合を **日足キャッシュ** と **エントリーアラート走査** に追加。**レンジ表**では「表示範囲」で **ウォッチリスト / 指数監視のみ / すべて** を切り替え（デフォルトはウォッチのみ）。指数のみ銘柄は `sectorId: index`・監視のみ扱い。保有・reviewLine アラート・`HOLDINGS_JSON` は変更なし。
 
 2026-10-02 時点の例: SP500 **503** · NDX100 **101** · union **518**（重複除外後）。
