@@ -549,6 +549,9 @@ function attributionFromSnapshots(
     portRetExTop1: portRet - top1,
     portRetExTop3: portRet - top3,
     portRetExTop5: portRet - top5,
+    portRetExTopNeg1: portRet - (topNeg[0]?.[1] ?? 0),
+    portRetExTopNeg3: portRet - top3Neg,
+    portRetExTopNeg5: portRet - top5Neg,
     sectorRows,
   };
 }
@@ -970,7 +973,7 @@ ${formatAttrTable(attr, env, baseUsd, true)}
 - 窓のポートリターン: **${(attr.portRet * 100).toFixed(2)}%**；同期間 SPY: **${(attr.spyRet * 100).toFixed(2)}%**（ギャップ **${(attr.gap * 100).toFixed(2)}pt**）
 - 半導体サブ業種の寄与合計: **${(attr.semiC * 100).toFixed(2)}pt**（マイナス寄与合計に占める比率 **${(attr.semiShareOfNeg * 100).toFixed(0)}%**）
 - マイナス寄与の集中度（上位1/3/5銘柄シェア）: **${(attr.top1NegShare * 100).toFixed(0)}% / ${(attr.top3NegShare * 100).toFixed(0)}% / ${(attr.top5NegShare * 100).toFixed(0)}%**
-- カウンターファクト（当該銘柄の寄与を差し引いた窓リターン・単純）: 上位1除く **${(attr.portRetExTop1 * 100).toFixed(2)}%**、上位3除く **${(attr.portRetExTop3 * 100).toFixed(2)}%**、上位5除く **${(attr.portRetExTop5 * 100).toFixed(2)}%**
+- カウンターファクト（マイナス寄与上位銘柄を除いた窓リターン・単純）: 上位1除く **${(attr.portRetExTopNeg1 * 100).toFixed(2)}%**、上位3除く **${(attr.portRetExTopNeg3 * 100).toFixed(2)}%**、上位5除く **${(attr.portRetExTopNeg5 * 100).toFixed(2)}%**
 
 **事実 — セクター寄与（マイナス寄与のみ抜粋）**
 
