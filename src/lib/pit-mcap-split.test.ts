@@ -4,7 +4,7 @@ import { describe, it } from "node:test";
 import { PIT_CACHE } from "./pit-dataset";
 import { loadPitBars } from "./pit-dataset";
 import { loadMergedPitFacts } from "./pit-facts-index";
-import { pitMarketCapForTicker } from "./pit-mcap";
+import { detectMcapJump, pitMarketCapForTicker } from "./pit-mcap";
 import { loadPitSplits } from "./pit-splits";
 
 describe("pit mcap split alignment", { skip: !fs.existsSync(PIT_CACHE) }, () => {
@@ -29,5 +29,15 @@ describe("pit mcap split alignment", { skip: !fs.existsSync(PIT_CACHE) }, () => 
       PIT_CACHE,
     );
     assert.ok(m > 3e12, `NVDA mcapB ${m / 1e12}`);
+  });
+
+  it("no >40% mcap jumps on NVDA around 2024-06-10 split", () => {
+    const bars = loadPitBars("NVDA", PIT_CACHE);
+    const facts = loadMergedPitFacts("NVDA", null, new Map(), PIT_CACHE);
+    const splits = loadPitSplits("NVDA", PIT_CACHE);
+    const jumps = detectMcapJump(bars, facts, splits, 0.4).filter(
+      (j) => j.from >= "2024-05-01" && j.to <= "2024-07-31",
+    );
+    assert.equal(jumps.length, 0, jumps.map((j) => `${j.from}->${j.to} x${j.ratio}`).join("; "));
   });
 });
