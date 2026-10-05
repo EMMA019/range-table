@@ -34,6 +34,7 @@ import type {
   EpsSnapshot,
   IndexRow,
   MarketPayload,
+  MonitorMeta,
   PickQuote,
   PicksPayload,
   Quote,
@@ -42,7 +43,12 @@ import type {
   EarningsInput,
 } from "./types";
 import { loadWatchlist } from "./watchlist";
-import { monitorUnionSymbols } from "./monitor-universe";
+import {
+  indexMonitorTickers,
+  loadMonitorIndex,
+  monitorIndexPath,
+  monitorUnionSymbols,
+} from "./monitor-universe";
 import { fetchDailyBars } from "./yahoo";
 import {
   dueSymbols,
@@ -131,7 +137,11 @@ export async function getPicksPayload(): Promise<PicksPayload> {
 export async function getChart(ticker: string): Promise<ChartPayload | { error: string }> {
   const symbol = ticker.toUpperCase();
   const list = loadWatchlist();
-  const known = new Set(list.groups.flatMap((group) => group.tickers.map((item) => item.ticker)));
+  const known = new Set([
+    ...list.groups.flatMap((group) => group.tickers.map((item) => item.ticker)),
+    ...indexMonitorTickers(list),
+    ...monitorUnionSymbols(),
+  ]);
   if (!known.has(symbol)) return { error: "リストにないティッカー" };
 
   const cache = await ensureSeries(list);
@@ -261,11 +271,19 @@ async function waitForPrices(): Promise<void> {
 let payloadMemo: { key: string; payload: MarketPayload } | null = null;
 
 function memoPayload(cache: CacheBody, list: Watchlist): MarketPayload {
-  const key = `${cache.version}:${epsStamp()}:${basketStamp()}`;
+  const key = `${cache.version}:${epsStamp()}:${basketStamp()}:${monitorStamp()}`;
   if (payloadMemo?.key === key) return payloadMemo.payload;
   const payload = buildPayload(cache, list, readCachedEps());
   payloadMemo = { key, payload };
   return payload;
+}
+
+function monitorStamp(): string {
+  try {
+    return String(fs.statSync(monitorIndexPath()).mtimeMs);
+  } catch {
+    return "0";
+  }
 }
 
 function basketStamp(): string {
@@ -489,6 +507,19 @@ function buildPayload(
 
   const failCount = rows.filter((row) => !row.quote).length;
   const staleCount = rows.filter((row) => row.stale).length;
+  const indexBuilt = buildIndexMonitorRows(cache, list, corr, spyBars, eps);
+  let monitor: MonitorMeta | null = null;
+  try {
+    const indexFile = loadMonitorIndex();
+    monitor = {
+      asOfDate: indexFile.asOfDate,
+      unionCount: indexFile.union.length,
+      watchlistCount: rows.length,
+      indexOnlyCount: indexBuilt.rows.length,
+    };
+  } catch {
+    monitor = null;
+  }
   const fetchedAt = oldestOkAt(cache, rows.map((row) => row.ticker), Date.now());
   const barDate = modeDate(indices, rows);
   const excludedPartial = BENCHMARKS.some(
@@ -505,11 +536,88 @@ function buildPayload(
     source: SOURCE,
     indices,
     rows,
+    indexRows: indexBuilt.rows,
+    monitor,
     okCount: rows.length - failCount,
     failCount,
+    indexFailCount: indexBuilt.failCount,
     staleCount,
     usdJpy: usdJpyOf(cache),
   };
+}
+
+let indexTickerNames: Record<string, string> | null = null;
+
+function indexTickerDescription(ticker: string): string {
+  if (!indexTickerNames) {
+    try {
+      indexTickerNames = JSON.parse(
+        fs.readFileSync(path.join(process.cwd(), "data", "pit_ticker_names.json"), "utf8"),
+      ) as Record<string, string>;
+    } catch {
+      indexTickerNames = {};
+    }
+  }
+  const name = indexTickerNames[ticker];
+  return name ? `${name}（指数監視）` : `${ticker}（S&P500 / Nasdaq-100 監視）`;
+}
+
+function buildIndexMonitorRows(
+  cache: CacheBody,
+  list: Watchlist,
+  corr: Map<string, CorrPair>,
+  spyBars: NonNullable<CacheBody["series"][string]["bars"]>,
+  eps: Record<string, EpsSnapshot>,
+): { rows: TickerRow[]; failCount: number } {
+  let sp500 = new Set<string>();
+  let ndx = new Set<string>();
+  try {
+    const indexFile = loadMonitorIndex();
+    sp500 = new Set(indexFile.sp500);
+    ndx = new Set(indexFile.ndx100);
+  } catch {
+    return { rows: [], failCount: 0 };
+  }
+  const tickers = indexMonitorTickers(list).sort((a, b) => a.localeCompare(b));
+  const rows: TickerRow[] = [];
+  let failCount = 0;
+  for (const ticker of tickers) {
+    const entry = cache.series[ticker];
+    const built = quoteFromEntry(entry);
+    if (!built.quote) failCount += 1;
+    const pair = corr.get(ticker);
+    const epsSnap = eps[ticker] ?? null;
+    const sector =
+      sp500.has(ticker) && ndx.has(ticker)
+        ? "S&P500 · NDX100"
+        : sp500.has(ticker)
+          ? "S&P500"
+          : "Nasdaq-100";
+    rows.push({
+      ticker,
+      sectorId: "index",
+      sector,
+      sectorLabel: "指数監視",
+      description: indexTickerDescription(ticker),
+      notes: "",
+      tags: [],
+      watchOnly: true,
+      earnings: null,
+      earningsUnknown: true,
+      profitability: profitabilityFromCache(ticker, epsSnap),
+      corrBasket: pair?.basket ?? null,
+      corrSoxx: pair?.soxx ?? null,
+      rs20: built.quote && entry?.bars ? rs20(entry.bars, spyBars) : null,
+      semi: false,
+      semiFull: false,
+      quote: built.quote,
+      pe: peView(built.quote?.close, epsSnap),
+      error: built.error,
+      errorDetail: built.errorDetail,
+      stale: built.stale,
+    });
+  }
+  return { rows, failCount };
 }
 
 function toPickQuote(quote: Quote | null): PickQuote | null {

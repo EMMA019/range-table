@@ -165,6 +165,14 @@ export type IndexRow = {
   error: string | null;
 };
 
+/** S&P 500 + Nasdaq-100 monitor coverage (see data/monitor_index.json). */
+export type MonitorMeta = {
+  asOfDate: string;
+  unionCount: number;
+  watchlistCount: number;
+  indexOnlyCount: number;
+};
+
 export type MarketPayload = {
   fetchedAt: number;
   fetchedAtJst: string;
@@ -175,9 +183,15 @@ export type MarketPayload = {
   excludedPartial: boolean;
   source: string;
   indices: IndexRow[];
+  /** Curated watchlist rows (data/watchlist.yaml). */
   rows: TickerRow[];
+  /** Index-only tickers (union minus watchlist). Same shape; sectorId is `index`. */
+  indexRows: TickerRow[];
+  monitor: MonitorMeta | null;
   okCount: number;
   failCount: number;
+  /** Index-only rows without a usable quote. */
+  indexFailCount: number;
   /** Rows showing bars from an earlier fetch. */
   staleCount: number;
   /** Latest USD/JPY daily close (Yahoo JPY=X). */

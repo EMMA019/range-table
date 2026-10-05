@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CHIPS, SORT_OPTIONS, type ChipKey, type SortId } from "@/lib/copy";
+import { CHIPS, SORT_OPTIONS, UNIVERSE_SCOPES, type ChipKey, type SortId, type UniverseScopeId } from "@/lib/copy";
 import { formatPe } from "@/lib/pe";
 import {
   SEMI_CAP_BADGE,
@@ -17,6 +17,7 @@ import {
   formatRs,
   formatVolumeRatio,
   guideLineText,
+  rangeRefText,
   reboundText,
   shortDate,
   slopeLabel,
@@ -36,6 +37,12 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 
 const SORTS = new Set<string>(SORT_OPTIONS.map((option) => option.id));
+const UNIVERSE = new Set<string>(UNIVERSE_SCOPES.map((scope) => scope.id));
+
+function parseUniverse(raw: string | null): UniverseScopeId {
+  if (raw && UNIVERSE.has(raw)) return raw as UniverseScopeId;
+  return "watch";
+}
 
 const CHIP_PARAM: Record<ChipKey, string> = {
   bottom: "bottom",
@@ -118,6 +125,34 @@ export function Dashboard() {
 
   const tickerRaw = sp.get("t");
   const ticker = tickerRaw && !isIgnoredTicker(tickerRaw) ? tickerRaw : null;
+  const universe = parseUniverse(sp.get("u"));
+
+  const watchRows = useMemo(
+    () => (data?.rows ?? []).filter((row) => !isIgnoredTicker(row.ticker)),
+    [data],
+  );
+  const indexRows = useMemo(
+    () => (data?.indexRows ?? []).filter((row) => !isIgnoredTicker(row.ticker)),
+    [data],
+  );
+  const rows = useMemo(() => {
+    if (universe === "index") return indexRows;
+    if (universe === "all") return [...watchRows, ...indexRows];
+    return watchRows;
+  }, [universe, watchRows, indexRows]);
+  const visible = useMemo(() => applyView(rows, filters), [rows, filters]);
+  const items = useMemo(() => withDividers(visible, filters.sort), [visible, filters.sort]);
+  const sectors = useMemo(() => sectorsOf(rows), [rows]);
+  const selected =
+    [...watchRows, ...indexRows].find((row) => row.ticker === ticker) ?? null;
+  const universeLabel =
+    UNIVERSE_SCOPES.find((scope) => scope.id === universe)?.label ?? UNIVERSE_SCOPES[0].label;
+  const scopeTotal =
+    universe === "watch"
+      ? watchRows.length
+      : universe === "index"
+        ? indexRows.length
+        : watchRows.length + indexRows.length;
 
   const commit = useCallback(
     (patch: Record<string, string | null>, history: "push" | "replace") => {
@@ -163,11 +198,6 @@ export function Dashboard() {
     };
   }, [ticker]);
 
-  const rows = useMemo(() => (data?.rows ?? []).filter((row) => !isIgnoredTicker(row.ticker)), [data]);
-  const visible = useMemo(() => applyView(rows, filters), [rows, filters]);
-  const items = useMemo(() => withDividers(visible, filters.sort), [visible, filters.sort]);
-  const sectors = useMemo(() => sectorsOf(rows), [rows]);
-  const selected = rows.find((row) => row.ticker === ticker) ?? null;
   const filtersOn =
     filters.sector !== "all" ||
     filters.bottom ||
@@ -222,6 +252,9 @@ export function Dashboard() {
                 {data?.barDate ? `終値日 ${data.barDate}` : "終値日 —"}
                 {data ? ` · ${formatAge(data.fetchedAt, now)}` : ""}
                 {data?.usdJpy ? ` · ドル円 ${data.usdJpy.rate.toFixed(2)}` : ""}
+                {data?.monitor
+                  ? ` · 監視和集合 ${data.monitor.unionCount}（WL ${data.monitor.watchlistCount} + 指数のみ ${data.monitor.indexOnlyCount}）`
+                  : ""}
               </p>
             </div>
             <ThemeToggle />
@@ -283,6 +316,37 @@ export function Dashboard() {
             autoComplete="off"
             enterKeyHint="search"
           />
+          <label className="block text-[11px] text-muted">
+            表示範囲（S&amp;P500 + Nasdaq-100 監視）
+            <select
+              className="mt-1 h-11 w-full rounded-xl border border-line bg-elev px-2 text-base text-ink"
+              value={universe}
+              onChange={(event) => {
+                const next = event.target.value as UniverseScopeId;
+                commit({ u: next === "watch" ? null : next }, "replace");
+              }}
+            >
+              {UNIVERSE_SCOPES.map((scope) => {
+                const count =
+                  scope.id === "watch"
+                    ? watchRows.length
+                    : scope.id === "index"
+                      ? indexRows.length
+                      : watchRows.length + indexRows.length;
+                return (
+                  <option key={scope.id} value={scope.id}>
+                    {scope.label} {count}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
+          {data?.monitor && universe !== "watch" && (
+            <p className="text-[11px] leading-relaxed text-muted">
+              指数構成 as-of {data.monitor.asOfDate} · 和集合 {data.monitor.unionCount}（ウォッチと重複除く指数のみ{" "}
+              {data.monitor.indexOnlyCount}）
+            </p>
+          )}
           <div className="grid grid-cols-2 gap-2">
             <label className="block text-[11px] text-muted">
               セクター
@@ -293,7 +357,7 @@ export function Dashboard() {
                   commit({ g: event.target.value === "all" ? null : event.target.value }, "replace")
                 }
               >
-                <option value="all">すべて {rows.length}</option>
+                <option value="all">すべて {scopeTotal}</option>
                 {sectors.map((sector) => (
                   <option key={sector.id} value={sector.id}>
                     {sector.name} {sector.count}
@@ -323,7 +387,7 @@ export function Dashboard() {
           </div>
           <div className="flex items-center justify-between gap-3 text-xs text-muted">
             <p>
-              {data ? `${visible.length} / ${rows.length}銘柄` : "銘柄"} · {sortLabel}
+              {data ? `${visible.length} / ${scopeTotal}銘柄` : "銘柄"} · {universeLabel} · {sortLabel}
             </p>
             {filtersOn && (
               <button type="button" className="min-h-11 text-ink underline-offset-2 hover:underline" onClick={clearFilters}>
@@ -343,6 +407,11 @@ export function Dashboard() {
         )}
         {error && data && (
           <p className="mx-4 mb-3 rounded-xl bg-rust-soft px-3 py-2 text-xs text-rust">{error}</p>
+        )}
+        {data && universe !== "watch" && data.indexFailCount > 0 && (
+          <p className="mx-4 mb-3 rounded-xl bg-rust-soft px-3 py-2 text-xs leading-relaxed text-rust">
+            指数監視 {data.indexFailCount}銘柄は日足を取れなかった。
+          </p>
         )}
         {data && data.failCount > 0 && (
           <p className="mx-4 mb-3 rounded-xl bg-rust-soft px-3 py-2 text-xs leading-relaxed text-rust">
@@ -396,7 +465,10 @@ export function Dashboard() {
           <footer className="text-[11px] leading-relaxed text-muted">
             <p>読み取り専用。証券口座にはつながっていない。注文は出さない。</p>
             <p className="mt-1">{data?.source ?? "価格は米ドル。日足から計算する。"}</p>
-            <p className="mt-1">15分より頻繁には取りにいかない。銘柄の追加と削除は data/watchlist.yaml。</p>
+            <p className="mt-1">
+              15分より頻繁には取りにいかない。ウォッチリストは data/watchlist.yaml。S&amp;P500+Nasdaq-100 は「表示範囲」で切り替え（保有・reviewLine
+              アラートはウォッチのみ）。
+            </p>
           </footer>
         </div>
       </div>
@@ -569,6 +641,9 @@ function TickerCard({
           </div>
           <p className="mt-2 text-[11px] text-muted">{formatEarnings(row.earnings)}</p>
           <p className="mt-1 text-[11px] leading-relaxed text-muted">{guideLineText(quote.line15, quote.line25)}</p>
+          <p className="mt-1 font-mono text-[11px] leading-relaxed text-ink">
+            参考 {rangeRefText(quote.low5, quote.high5, quote.low10, quote.high10)}
+          </p>
           <p className="text-[11px] text-ink">{reboundText(quote.reboundDays)}</p>
           <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-muted">
             <span>

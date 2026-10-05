@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
-import { loadMonitorIndex, validateMonitorIndex, watchlistTickerSet } from "./monitor-universe";
+import { indexMonitorTickers, loadMonitorIndex, validateMonitorIndex, watchlistTickerSet } from "./monitor-universe";
 import { loadWatchlist } from "./watchlist";
 
 describe("monitor-universe", () => {
@@ -26,6 +26,16 @@ describe("monitor-universe", () => {
       union: ["AAPL", "MSFT"],
     };
     assert.deepEqual(validateMonitorIndex(sample).union, ["AAPL", "MSFT"]);
+  });
+
+  it("index-only count matches union minus watchlist", () => {
+    const wl = loadWatchlist();
+    const index = loadMonitorIndex();
+    const wlSet = watchlistTickerSet(wl);
+    const only = indexMonitorTickers(wl);
+    const expected = index.union.filter((t) => !wlSet.has(t)).length;
+    assert.equal(only.length, expected);
+    assert.ok(only.length >= 300);
   });
 
   it("index monitor tickers exclude watchlist duplicates", () => {

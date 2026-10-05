@@ -7,6 +7,8 @@ const ITEMS = [
   ["乖離", BASIS.dev],
   ["20日安値", BASIS.low20],
   ["20日高値", BASIS.high20],
+  ["5日レンジ", BASIS.range5],
+  ["10日レンジ", BASIS.range10],
   ["箱の位置", BASIS.box],
   ["15%・25%ラインと反発", BASIS.guide],
   ["IN OK!", BASIS.entryInOk],
