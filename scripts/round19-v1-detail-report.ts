@@ -46,7 +46,7 @@ import {
 import { buildPitCikMapForTickers } from "../src/lib/pit-cik";
 import { buildPitFactsIndex, loadMergedPitFacts, pitFactsPathForTicker } from "../src/lib/pit-facts-index";
 import { mcapCloseOnOrBefore } from "../src/lib/pit-mcap-price";
-import { loadPitBars, loadPitCikMap, loadPitCikOverrides, PIT_CACHE } from "../src/lib/pit-dataset";
+import { loadPitBars, loadPitCikOverrides, PIT_CACHE } from "../src/lib/pit-dataset";
 import { dedupeShareClassesByCik } from "../src/lib/pit-share-class";
 import {
   isSp500MemberOnDate,
@@ -109,21 +109,15 @@ type ExclCategory =
   | "黒字不明（facts欠損等）"
   | "時価総額算出不可"
   | "株クラス重複で除外"
-  | "eligibleだが上位15外";
+  | "eligibleだが上位N外";
 
 function buildCtx() {
   return (async () => {
     const { intervals, gics } = await loadSp500PitFiles(PIT_CACHE);
     const tickers = uniqueTickersInRange(intervals, SAKA_START, SAKA_END);
-    const pitCik = loadPitCikMap(PIT_CACHE);
-    const cikMapBuilt =
-      pitCik.size > 0
-        ? pitCik
-        : new Map(
-            [...(await buildPitCikMapForTickers(PIT_CACHE, gics, tickers, loadPitCikOverrides().cik)).entries()].map(
-              ([t, r]) => [t, r.cik],
-            ),
-          );
+    const overrides = loadPitCikOverrides().cik;
+    const cikResolved = await buildPitCikMapForTickers(PIT_CACHE, gics, tickers, overrides);
+    const cikMapBuilt = new Map([...cikResolved.entries()].map(([t, r]) => [t, r.cik]));
     const factsIndex = buildPitFactsIndex(PIT_CACHE);
     const hasFactsFile = (t: string) =>
       pitFactsPathForTicker(t, cikMapBuilt.get(t), factsIndex, PIT_CACHE) != null ||
@@ -220,7 +214,7 @@ function buildCtx() {
       return i >= 0 ? i + 1 : null;
     };
 
-    const exclusionCategory = (t: string, date: string): ExclCategory => {
+    const exclusionCategory = (t: string, date: string, pickN: number): ExclCategory => {
       if (!inSp500(t, date)) return "S&P構成外";
       if (isExcludedTheme(t)) return "テーマ除外";
       const g = ctx.gicsOf(t);
@@ -241,7 +235,7 @@ function buildCtx() {
         const deduped = dedupeShareClassesByCik(profitableList, ctx.cikOf, (x) => ctx.mcap(x, date));
         if (!deduped.includes(t) && profitableList.includes(t)) return "株クラス重複で除外";
       }
-      return "eligibleだが上位15外";
+      return "eligibleだが上位N外";
     };
 
     return {
@@ -333,8 +327,8 @@ function simulateInstrumented(config: SakaConfig, env: Awaited<ReturnType<typeof
 
       const removeReasons = removed.map((t) => {
         if (!inSp500(t, date)) return { t, reason: "S&P 500構成から除外" };
-        const cat = exclusionCategory(t, date);
-        if (cat !== "eligibleだが上位15外") return { t, reason: cat };
+        const cat = exclusionCategory(t, date, config.n);
+        if (cat !== "eligibleだが上位N外") return { t, reason: cat };
         const rNow = mcapRankEligible(t, date);
         const rPrev = mcapRankEligible(t, getPrevRebalDate(rebalRows));
         const rankTxt =
@@ -702,9 +696,11 @@ function fmtR(v: number | null, digits = 3): string {
   return v == null || !Number.isFinite(v) ? "—" : v.toFixed(digits);
 }
 
-function buildSectionACriteria(adoptedId: string): string {
+function buildSectionACriteria(adopted: SakaConfig): string {
+  const adoptedId = adopted.id;
+  const pickN = adopted.n;
   return `
-本レポートの採用構成は **\`${adoptedId}\`**（選定=\`plain\`・N=15・ウェイト=\`mcap_cap5\`）。以下は **時価総額順位以外**の全フィルタ／変換をコード行番号付きで列挙する（\`src/lib/round19-saka.ts\` ほか）。
+本レポートの採用構成は **\`${adoptedId}\`**（選定=\`${adopted.pick}\`・N=${pickN}・ウェイト=\`${adopted.weight}\`）。以下は **時価総額順位以外**の全フィルタ／変換をコード行番号付きで列挙する（\`src/lib/round19-saka.ts\` ほか）。
 
 ### 1. ユニバース（S&P 500・PIT 構成）
 
@@ -739,7 +735,7 @@ function buildSectionACriteria(adoptedId: string): string {
 | **当日以前の終値が無い銘柄は除外** | \`hasPrice\` / \`filterEligibleCandidates\` \`round19-saka.ts:537\` |
 | **別途出来高・流動性フィルタは無し** | 価格存在のみ |
 | 時価総額 \`mcap = 終値 × 株数\`（PIT） | 株数 \`pit-shares.ts\` / \`sharesOutstandingAsOf\`；詳細レポートの \`buildCtx\` で stale 株数繰越 |
-| \`mcap ≤ 0\` は **plain 選定で上位15に入らない** | \`pickHoldings\` \`round19-saka.ts:555-559\`（\`.filter((r) => r.m > 0)\`） |
+| \`mcap ≤ 0\` は **plain 選定で上位${pickN}に入らない** | \`pickHoldings\` \`round19-saka.ts:555-559\`（\`.filter((r) => r.m > 0)\`） |
 
 ### 5. 株クラス重複（同一 CIK）
 
@@ -752,15 +748,15 @@ function buildSectionACriteria(adoptedId: string): string {
 
 | 規則 | 実装 |
 |---|---|
-| eligible の **mcap 降順**で先頭 **15** | \`pickHoldings\` \`plain\` 分岐 \`round19-saka.ts:555-559\` |
+| eligible の **mcap 降順**で先頭 **${pickN}** | \`pickHoldings\` \`plain\` 分岐 \`round19-saka.ts:555-559\` |
 | ※ \`corrdiverse\` / \`volprune\` は **本採用では未使用**（252日相関 greedy・ρ>0.7 等は \`round19-saka.ts:546-554, 291-374\`） |
 
-### 7. ウェイト（\`mcap_cap5\`）と半導体 30% キャップ
+### 7. ウェイト（\`${adopted.weight}\`）と半導体 30% キャップ
 
 | 規則 | 実装 |
 |---|---|
 | まず **mcap 比例** | \`targetWeights\` \`round19-saka.ts:585-593\` |
-| **単一銘柄 5% 上限**（超過は他銘柄へ再分配） | \`applySingleNameCap(..., 0.05)\` \`round19-saka.ts:596-597\`・アルゴ \`407-428\` |
+| **単一銘柄 ${adopted.weight === "mcap_cap10" ? "10" : adopted.weight === "mcap_cap5" ? "5" : "—"}% 上限**（超過は他銘柄へ再分配） | \`applySingleNameCap\` \`round19-saka.ts:596-597\`・アルゴ \`407-428\` |
 | **半導体サブ業種**（GICS Sub-Industry に \`"semiconductor"\` を含む）のウェイト合計 **≤ 30%** | \`isSemiSubIndustry\` \`round19-saka.ts:68-71\`；\`applySemiCap\` \`round19-saka.ts:431-448\`（\`SAKA_SEMI_CAP = 0.3\` \`16\`）— 超過分は半導体をスケールダウンし、**非半導体に按分**（\`442-447\`） |
 
 ### 8. リバランス・手数料（シミュレーション）
@@ -826,7 +822,7 @@ ${lines.join("\n")}
 4. **半導体 30% キャップ**は追補 \`6e3ad93\` で **結果コミット前**に文書化（\`applySemiCap\` は \`487152e\` からコードに存在）。
 5. **テーマリスト**（quantum 等）は \`themes.ts\` の watchlist 系コミットと同日の研究フロー。**Saka バックテスト専用の独立 prereg ではない**（ただし \`isExcludedTheme\` が参照するリストはコードで固定）。
 6. **本レポートの採用構成**はデータ修正後の **再選定結果**を記載。OOS 順位・CAGR は **データ版に依存**する。
-7. **STOP-SHIP 修正**（\`216dfc6\` 詳細レポート初版の後、\`${stopShipHash.slice(0, 7)}\` 付近）: PIT 時価総額の **分割調整済み終値バグ**、ATVI→MSFT CIK/価格エイリアス、CERN→ORCL 価格エイリアス削除、GOOGL レガシー facts マージ、MaxDD ピーク日、ライブ窓 USD/JPY 日付など。**本レポートは再生成版であり、採用構成 ID はまた変わる可能性がある**。
+7. **STOP-SHIP 修正**（\`216dfc6\` 以降、\`${stopShipHash.slice(0, 7)}\` 付近）: PIT mcap（\`mcapC\`）、ATVI/CERN エイリアス、GOOGL レガシー facts、**HOLX \`CommonStockSharesIssued\` 300B 誤株数**（\`pit-shares.ts\`）、**XOM CIK override を \`buildCtx\` 全体に適用**、MaxDD ピーク日、USD/JPY など。**本レポートは再生成版であり、採用構成 ID はまた変わる可能性がある**。
 
 **結論:** 「2016–2020 のみでルールを決め、2021+ は一度だけ評価」は **手順として事前登録されている**が、**データ修正と再実行により採用構成は初回結果（\`plain_15__equal\`）と異なる**。OOS を **設計に使った**というより、**公開後にデータを直し IS をやり直した**のが正確。
 `;
@@ -938,7 +934,7 @@ async function main() {
     }
     liveSection = `
 **窓:** ${LIVE_ENTRY} 終値時点で **¥${LIVE_JPY_START.toLocaleString("ja-JP")}** を USD へ換算し投資（USD/JPY **${entryFx!.toFixed(2)}** → ${LIVE_END} 時点 **${endFx?.toFixed(2) ?? "—"}**）。  
-**保有の起点:** ${LIVE_BOOT_REBAL} リバランスの採用15（${adopted.id}）。**${LIVE_END}** までに **2026-10-01** リバランスを適用。手数料 **$${COMMISSION}/注文**（差分リバランス）。
+**保有の起点:** ${LIVE_BOOT_REBAL} リバランスの採用${adopted.n}（${adopted.id}）。**${LIVE_END}** までに **2026-10-01** リバランスを適用。手数料 **$${COMMISSION}/注文**（差分リバランス）。
 
 | | USD建て | 円建て（日次 USD/JPY で換算） |
 |---|---:|---:|
@@ -1013,15 +1009,16 @@ ${basketLines.join("\n")}
 
   const byReason = new Map<string, Array<{ t: string; rank: number; mcapB: number }>>();
   for (const r of excludedTop40) {
-    const cat = exclusionCategory(r.t, lastRebal.date);
-    const list = byReason.get(cat) ?? [];
+    const cat = exclusionCategory(r.t, lastRebal.date, adopted.n);
+    const catKey = cat === "eligibleだが上位N外" ? `eligibleだが上位${adopted.n}外` : cat;
+    const list = byReason.get(catKey) ?? [];
     const globalRank = rankedMembers.findIndex((x) => x.t === r.t) + 1;
     list.push({ t: r.t, rank: globalRank, mcapB: r.m / 1e9 });
-    byReason.set(cat, list);
+    byReason.set(catKey, list);
   }
 
   const eligible = eligibleRanked(lastRebal.date);
-  const nearMiss = eligible.slice(15, 25);
+  const nearMiss = eligible.slice(adopted.n, adopted.n + 10);
 
   let cumFee035 = 0;
   let cumFee100 = 0;
@@ -1079,7 +1076,7 @@ ${remLines || ""}
 
   const nearMd = nearMiss
     .map((r, i) => {
-      const rank = 16 + i;
+      const rank = adopted.n + 1 + i;
       return `| ${rank} | ${r.t} | ${(r.m / 1e9).toFixed(0)} |`;
     })
     .join("\n");
@@ -1097,11 +1094,11 @@ ${remLines || ""}
           `| ${row.date} | ${fmtR(row.medPair)} | ${fmtR(row.meanPair)} | ${fmtR(row.corr1y)} | ${fmtR(row.beta1y)} | ${fmtR(row.corrFull)} | ${fmtR(row.betaFull)} |`,
       )
       .join("\n");
-  const sectionA = buildSectionACriteria(adopted.id);
+  const sectionA = buildSectionACriteria(adopted);
   const sectionB = `
-**対象:** 採用 \`${adopted.id}\` の各リバランス日時点の **保有15**（ウェイトは \`targetWeights\` 適用後）。
+**対象:** 採用 \`${adopted.id}\` の各リバランス日時点の **保有${adopted.n}**（ウェイトは \`targetWeights\` 適用後）。
 
-**保有間相関（中央値）:** 各銘柄の **252 営業日**対数リターン（\`SAKA_CORR_LOOKBACK\` \`round19-saka.ts:12\`）を **日付揃え**（\`pearsonOnAlignedSeries\` \`147-159\`）し、15銘柄の **上三角ペア相関の中央値**（\`medianPairwiseCorr\` \`249-261\`）。最低 **126** 観測（\`SAKA_CORR_MIN_OBS\` \`13\`）。
+**保有間相関（中央値・平均）:** 各銘柄の **252 営業日**対数リターン（\`SAKA_CORR_LOOKBACK\` \`round19-saka.ts:12\`）を **日付揃え**（\`pearsonOnAlignedSeries\` \`147-159\`）し、${adopted.n}銘柄の **上三角ペア相関の中央値・平均**（\`medianPairwiseCorr\` / \`meanPairwiseCorr\`）。最低 **126** 観測（\`SAKA_CORR_MIN_OBS\` \`13\`）。
 
 **ポートフォリオ vs SPY:** リバランス日の **固定ウェイト**で日次ポート対数リターン（\`Σ w_i r_i\`）を構成し、同日 SPY 対数リターンと **Pearson 相関・β（OLS）**。
 - **1年:** 直近 **252 営業日**（リバランス日を含む終端ウィンドウ）
@@ -1155,6 +1152,21 @@ ${lines.join("\n")}
     });
   }
 
+  const pickN = adopted.n;
+  const passCagr = adoptedMetrics.oos.cagr >= 0.1;
+  const passDdOos = adoptedMetrics.oos.maxDrawdown > spyOos.maxDrawdown;
+  const passYears = adoptedMetrics.oos.positiveYearShare >= 0.7;
+  const passTag = (ok: boolean) => (ok ? "**合格**" : "**不合格**");
+  const ddOosDetail = drawdownFromCurve(sim.curve, SAKA_OOS_START, SAKA_END);
+  const configVersionTable = `
+| データ版 (git) | 採用構成 ID | 備考 |
+|---|---|---|
+| \`e2380b8\` | \`plain_15__equal\` | filed PIT 黒字・初回 corrected v1 PIT データ |
+| \`216dfc6\` | \`plain_15__mcap_cap5\` | 詳細レポート初版（mcap 順位バグ残存） |
+| \`fe6c787\` | \`plain_20__mcap_cap10\` | mcapC・ATVI/CERN 修正後 IS 再採用 |
+| \`${stopShipHash.slice(0, 7)}\` | \`${adopted.id}\` | HOLX 株数・XOM CIK 一貫・本稿 |
+`;
+
   const md = `# Round 19 Corrected v1 — 採用構成の詳細レポート
 
 **対象:** Corrected v1 再実行（事前登録 \`6e3ad93\`・差分リバランス・PIT データ）  
@@ -1168,6 +1180,22 @@ ${lines.join("\n")}
 |---|---:|---:|---:|---:|
 | IS (${SAKA_START.slice(0, 4)}–${SAKA_IS_END.slice(0, 4)}) | ${(adoptedMetrics.is.cagr * 100).toFixed(2)}% | ${(spyIs.cagr * 100).toFixed(2)}% | ${(adoptedMetrics.is.maxDrawdown * 100).toFixed(2)}% | ${(spyIs.maxDrawdown * 100).toFixed(2)}% |
 | OOS (${SAKA_OOS_START.slice(0, 4)}–${SAKA_END.slice(0, 4)}) | ${(adoptedMetrics.oos.cagr * 100).toFixed(2)}% | ${(spyOos.cagr * 100).toFixed(2)}% | ${(adoptedMetrics.oos.maxDrawdown * 100).toFixed(2)}% | ${(spyOos.maxDrawdown * 100).toFixed(2)}% |
+
+**OOS 最大ドローダウン（重要）:** 採用構成の OOS MaxDD **${(adoptedMetrics.oos.maxDrawdown * 100).toFixed(1)}%** は SPY **${(spyOos.maxDrawdown * 100).toFixed(1)}%** より**深い（悪化）**。Emma 事前登録の合格基準②「OOS DD < SPY」は **${passDdOos ? "満たす" : "満たさない"}**。
+
+全期間の最大 DD 局面（採用曲線）: ピーク **${ddPort.peakDate}** → ボトム **${ddPort.troughDate}**（深さ ${(ddPort.maxDd * 100).toFixed(1)}%）→ 回復 **${ddPort.recoveryDate ?? "未回復"}**。
+
+### 事前登録合格基準（OOS・$${COMMISSION}・\`ROUND19_PREREG_ja.md\`）
+
+| # | 基準 | 採用 | SPY/参照 | 判定 |
+|---|---|---:|---:|---|
+| 1 | OOS CAGR ≥ 10% | ${(adoptedMetrics.oos.cagr * 100).toFixed(1)}% | — | ${passTag(passCagr)} |
+| 2 | OOS MaxDD **が SPY より浅い** | ${(adoptedMetrics.oos.maxDrawdown * 100).toFixed(1)}% | ${(spyOos.maxDrawdown * 100).toFixed(1)}% | ${passTag(passDdOos)} |
+| 3 | 暦年プラス比率 ≥ 70%（OOS 暦年） | ${(adoptedMetrics.oos.positiveYearShare * 100).toFixed(0)}% | — | ${passTag(passYears)} |
+
+### 採用構成のデータ版別変遷
+
+${configVersionTable}
 
 ---
 
@@ -1197,7 +1225,7 @@ ${rebalSummary.join("\n")}
 ${rebalDetail}
 
 <details>
-<summary>全リバランス日の保有15（クリックで展開）</summary>
+<summary>全リバランス日の保有${pickN}（クリックで展開）</summary>
 
 | 日付 | 保有ティッカー |
 |---|---|
@@ -1209,8 +1237,8 @@ ${holdingsAppendix}
 
 ## (2) 追加・除外の理由（要約）
 
-- **入り:** 原則として「その日の eligible プール（黒字・価格あり・金融/テーマ除外・株クラス1本）」の**時価総額順位が上位15入り**。
-- **外れ:** (a) S&P 500から外れた (b) 赤字化（TTM net income・filed日 PIT）(c) 株価/facts 欠損 (d) 順位が15位以下に低下、など。四半期別の文言は上表。
+- **入り:** 原則として「その日の eligible プール（黒字・価格あり・金融/テーマ除外・株クラス1本）」の**時価総額順位が上位${pickN}入り**。
+- **外れ:** (a) S&P 500から外れた (b) 赤字化（TTM net income・filed日 PIT）(c) 株価/facts 欠損 (d) 順位が${pickN}位以下に低下、など。四半期別の文言は上表。
 
 ---
 
@@ -1220,7 +1248,7 @@ ${holdingsAppendix}
 |---|---:|---:|---:|---:|---:|---:|---:|
 ${feeRows.join("\n")}
 
-**定義:** **スワップ系**＝そのリバランスで「前回は保有15に無かった銘柄」への新規買い、または「今回の15から外れた銘柄」の売却に伴う注文。**リウェイト系**＝継続保有銘柄のウェイト調整注文。
+**定義:** **スワップ系**＝そのリバランスで「前回は保有${pickN}に無かった銘柄」への新規買い、または「今回の${pickN}から外れた銘柄」の売却に伴う注文。**リウェイト系**＝継続保有銘柄のウェイト調整注文。
 
 ---
 
@@ -1236,11 +1264,11 @@ ${attrMd}
 
 ## (5) 最終リバランス（${lastRebal.date}）で持っていない銘柄
 
-### S&P 構成員の時価総額上位40のうち、保有15外
+### S&P 構成員の時価総額上位40のうち、保有${pickN}外
 
 ${exclMd}
 
-### eligible プールの16～25位（惜しくも15入りしなかった銘柄）
+### eligible プールの${pickN + 1}～${pickN + 10}位（惜しくも${pickN}入りしなかった銘柄）
 
 | eligible順位 | ティッカー | 時価総額（約・B USD） |
 |---:|---|---:|
@@ -1265,6 +1293,10 @@ ${yearRows.join("\n")}
 | 深さ | ${(ddPort.maxDd * 100).toFixed(1)}% | ${(ddSpy.maxDd * 100).toFixed(1)}% |
 | 回復 | ${ddPort.recoveryDate ?? "未回復"} | ${ddSpy.recoveryDate ?? "未回復"} |
 | 回復営業日数 | ${ddPort.recoveryDays ?? "—"} | ${ddSpy.recoveryDays ?? "—"} |
+
+**OOS 期間のみの MaxDD:** 採用 **${(ddOosDetail.maxDd * 100).toFixed(1)}%**（ピーク ${ddOosDetail.peakDate} → ボトム ${ddOosDetail.troughDate}） vs SPY **${(drawdownFromCurve(spyBench, SAKA_OOS_START, SAKA_END).maxDd * 100).toFixed(1)}%** — 事前登録合格②は ${passTag(passDdOos)}。
+
+上表の全期間最大 DD は主に **2022–2023 の株式調整**（ピーク **${ddPort.peakDate}**、ボトム **${ddPort.troughDate}**、回復 **${ddPort.recoveryDate ?? "—"}**）に由来する。
 
 ---
 

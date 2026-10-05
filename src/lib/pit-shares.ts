@@ -1,14 +1,17 @@
 /** PIT shares outstanding for market-cap (EDGAR companyfacts). */
 
+/** Do not use CommonStockSharesIssued — often mis-scaled vs outstanding (e.g. HOLX 300B "issued"). */
 const SHARE_TAGS: Array<[string, string]> = [
   ["dei", "EntityCommonStockSharesOutstanding"],
   ["us-gaap", "CommonStockSharesOutstanding"],
-  ["us-gaap", "CommonStockSharesIssued"],
   ["us-gaap", "WeightedAverageNumberOfSharesOutstandingBasic"],
   ["us-gaap", "WeightedAverageNumberOfDilutedSharesOutstanding"],
 ];
 
-const STRICT_SHARE_TAGS = SHARE_TAGS.slice(0, 3);
+const STRICT_SHARE_TAGS = SHARE_TAGS.slice(0, 2);
+
+/** Reject bogus EDGAR points (authorized / mis-tagged issued counts). */
+const MAX_REASONABLE_SHARES = 20_000_000_000;
 
 function sharesFromTags(
   json: unknown,
@@ -26,7 +29,15 @@ function sharesFromTags(
     const block = facts[ns]?.[tag]?.units?.shares;
     if (!block) continue;
     for (const p of block) {
-      if (!p.end || p.end > asOf || !Number.isFinite(p.val) || (p.val ?? 0) <= 0) continue;
+      if (
+        !p.end ||
+        p.end > asOf ||
+        !Number.isFinite(p.val) ||
+        (p.val ?? 0) <= 0 ||
+        (p.val ?? 0) > MAX_REASONABLE_SHARES
+      ) {
+        continue;
+      }
       if (p.end > bestEnd || (p.end === bestEnd && pri < bestPri)) {
         bestEnd = p.end;
         bestPri = pri;

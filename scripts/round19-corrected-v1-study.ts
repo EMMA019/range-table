@@ -42,7 +42,7 @@ import {
   type SakaCandidateContext,
   type SakaConfig,
 } from "../src/lib/round19-saka";
-import { loadPitBars, loadPitCikMap, loadPitCikOverrides, PIT_CACHE, pitPaths } from "../src/lib/pit-dataset";
+import { loadPitBars, loadPitCikOverrides, PIT_CACHE, pitPaths } from "../src/lib/pit-dataset";
 import { buildPitFactsIndex, loadMergedPitFacts, pitFactsPathForTicker } from "../src/lib/pit-facts-index";
 import { buildPitCikMapForTickers } from "../src/lib/pit-cik";
 import { loadSp500PitFiles, membersOnDate, uniqueTickersInRange } from "../src/lib/sp500-pit";
@@ -94,15 +94,9 @@ function factsCoverageOnDate(members: string[], date: string, hasFacts: (t: stri
 async function main() {
   const { intervals, gics } = await loadSp500PitFiles(PIT_CACHE);
   const tickers = uniqueTickersInRange(intervals, SAKA_START, SAKA_END);
-  const pitCik = loadPitCikMap(PIT_CACHE);
-  const cikMapBuilt =
-    pitCik.size > 0
-      ? pitCik
-      : new Map(
-          [...(await buildPitCikMapForTickers(PIT_CACHE, gics, tickers, loadPitCikOverrides().cik)).entries()].map(
-            ([t, r]) => [t, r.cik],
-          ),
-        );
+  const overrides = loadPitCikOverrides().cik;
+  const cikResolved = await buildPitCikMapForTickers(PIT_CACHE, gics, tickers, overrides);
+  const cikMapBuilt = new Map([...cikResolved.entries()].map(([t, r]) => [t, r.cik]));
   const factsIndex = buildPitFactsIndex(PIT_CACHE);
   const hasFactsFile = (t: string) =>
     pitFactsPathForTicker(t, cikMapBuilt.get(t), factsIndex, PIT_CACHE) != null ||
