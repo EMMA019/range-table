@@ -49,6 +49,11 @@ export type Quote = {
   low20: number;
   high20: number;
   priorHigh20: number;
+  /** Reference: last 5 sessions high/low (not the primary box). */
+  low5: number | null;
+  high5: number | null;
+  low10: number | null;
+  high10: number | null;
   boxPct: number;
   atr14: number;
   /** Shares so one ATR(14) move is about $10. Null when ATR is missing. */

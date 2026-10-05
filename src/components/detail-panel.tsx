@@ -18,6 +18,7 @@ import {
   formatRs,
   formatShares,
   guideLineText,
+  rangeRefText,
   reboundText,
   formatSlope,
   formatVolumeRatioExact,
@@ -102,6 +103,10 @@ export function DetailPanel({
                 <BoxBar pct={row.quote.boxPct} />
                 <p className="mt-1 text-[11px] text-muted">{BASIS.box}</p>
                 <p className="mt-3 text-sm leading-relaxed">{guideLineText(row.quote.line15, row.quote.line25)}</p>
+                <p className="mt-2 text-xs leading-relaxed text-muted">
+                  参考レンジ: {rangeRefText(row.quote.low5, row.quote.high5, row.quote.low10, row.quote.high10)}
+                </p>
+                <p className="mt-0.5 text-[11px] text-muted">{BASIS.range5} · {BASIS.range10}</p>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <EntryBadge signal={row.quote.entrySignal} className="text-[11px]" />
                   <p className="text-sm">{reboundText(row.quote.reboundDays)}</p>

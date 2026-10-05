@@ -42,6 +42,7 @@ import type {
   EarningsInput,
 } from "./types";
 import { loadWatchlist } from "./watchlist";
+import { monitorUnionSymbols } from "./monitor-universe";
 import { fetchDailyBars } from "./yahoo";
 import {
   dueSymbols,
@@ -156,6 +157,7 @@ function symbolsFor(list: Watchlist): string[] {
     for (const ticker of group.tickers) set.add(ticker.ticker);
   }
   for (const holding of holdingsSource().load().holdings) set.add(holding.ticker);
+  for (const t of monitorUnionSymbols()) set.add(t);
   return [...set];
 }
 

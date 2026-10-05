@@ -37,6 +37,20 @@ export function guideLineText(line15: number, line25: number): string {
   return `15%ライン $${formatPx(line15)} / 25%ライン $${formatPx(line25)}`;
 }
 
+/** Judgment aid: shorter ranges alongside the 20-day box. */
+export function rangeRefText(
+  low5: number | null,
+  high5: number | null,
+  low10: number | null,
+  high10: number | null,
+): string {
+  const part5 =
+    low5 != null && high5 != null ? `5日 $${formatPx(low5)}–$${formatPx(high5)}` : "5日 —";
+  const part10 =
+    low10 != null && high10 != null ? `10日 $${formatPx(low10)}–$${formatPx(high10)}` : "10日 —";
+  return `${part5} · ${part10}`;
+}
+
 export const ENTRY_SIGNAL_LABEL: Record<EntrySignal, string> = {
   in_ok: "IN OK!",
   early: "まだ早いよ！",
