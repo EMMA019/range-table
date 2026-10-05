@@ -371,8 +371,10 @@ async function main() {
   const divCache = new Map<string, DivEvent[]>();
 
   const variants = [
-    { id: "divGold_K1_thin", megaMax: 1 },
-    { id: "divGold_K2_thin", megaMax: 2 },
+    { id: "divGold_K1_thin", megaMax: 1, semiThin: true },
+    { id: "divGold_K1_keep", megaMax: 1, semiThin: false },
+    { id: "divGold_K2_thin", megaMax: 2, semiThin: true },
+    { id: "divGold_K2_keep", megaMax: 2, semiThin: false },
   ] as const;
 
   const sections: string[] = [
@@ -386,7 +388,7 @@ async function main() {
   ];
 
   for (const v of variants) {
-    const mcapH = pickMcapSleeve(eligible, DATE, ctx, v.megaMax, true, calendar, ctx.closeHistory);
+    const mcapH = pickMcapSleeve(eligible, DATE, ctx, v.megaMax, v.semiThin, calendar, ctx.closeHistory);
     const divH = await pickDivSleeve(eligible, DATE, ctx, new Set(mcapH), divCache, barsBy);
     const weights = combineBook(mcapH, divH, gold, DATE, ctx, semiOf);
     const rows = buildRows(weights, new Set(mcapH), new Set(divH), gold);
