@@ -45,7 +45,7 @@ import {
 import { loadPitBars, loadPitCikOverrides, PIT_CACHE, pitPaths } from "../src/lib/pit-dataset";
 import { buildPitFactsIndex, loadMergedPitFacts, pitFactsPathForTicker } from "../src/lib/pit-facts-index";
 import { buildPitCikMapForTickers } from "../src/lib/pit-cik";
-import { loadSp500PitFiles, membersOnDate, uniqueTickersInRange } from "../src/lib/sp500-pit";
+import { loadSp500PitFiles, membersOnDate, uniqueTickersInRange, buildSameCikHandoffResolver } from "../src/lib/sp500-pit";
 import { pitMarketCapForTicker } from "../src/lib/pit-mcap";
 import { mcapCloseOnOrBefore } from "../src/lib/pit-mcap-price";
 import { loadPitSplits } from "../src/lib/pit-splits";
@@ -228,7 +228,13 @@ async function main() {
     : "| — | — | — | — | — |";
 
   const semiOf = (t: string) => ctx.gicsOf(t)?.semiBucket ?? false;
-  const simOptsDelta = { rebalance: "delta" as const, minTradeUsd: SAKA_REBAL_MIN_TRADE_USD, relDrift: SAKA_REBAL_REL_DRIFT };
+  const handoffSuccessor = buildSameCikHandoffResolver(intervals, (t) => cikMapBuilt.get(t) ?? null);
+  const simOptsDelta = {
+    rebalance: "delta" as const,
+    minTradeUsd: SAKA_REBAL_MIN_TRADE_USD,
+    relDrift: SAKA_REBAL_REL_DRIFT,
+    handoffSuccessor,
+  };
   const simOptsFull = { rebalance: "legacy_full_liquidate" as const };
 
   const runConfig = (config: SakaConfig, commission: number, simOpts = simOptsDelta) => {

@@ -22,6 +22,20 @@
 
 ## 事実
 
+**修正前（`930540d`・リーク在庫のみ）との主レンズ比較（参考）**
+
+| 集合 | 指標 | 修正前 | 修正後（本スキャン） |
+|---|---|---:|---:|
+| 全開始月 | 材料割れ | 80% | 81% |
+| 全開始月 | 最深中央値 | −8.2% | −8.2% |
+| 全開始月 | 最深 p90 | −21.7% | −22.1% |
+| 2021–2026 | 材料割れ | 83% | 84% |
+| 2021–2026 | 最深中央値 | −10.4% | −11.0% |
+| 2021–2026 | 最深 p90 | −23.2% | −26.1% |
+| 2021–2026 & ≥252日 | 水中 p90（取引日） | 288 | 307 |
+
+2021-11 開始: 最深 −29.4% → **−32.1%**（353 → 400 水中取引日）。2022-01-03: −34.1% → **−36.4%**（460 → 473 日）。修正後ブックに AMZN/GOOGL/NVDA が戻り、2022 年の下落をよりフルに受ける。
+
 開始月は 130。うち 2021-01 以降は 70。残取引日 ≥ 252 は全期間 118、2021 以降 58。
 四半期リバランスは 2016-01-04 から 2026-10-01 の 44 日。
 差分ループは、四半期日に揃えた開始（2016-01-04 と 2021-01-04）で `simulateSaka` の delta と資産曲線が一致する（絶対差 < $0.05）。月の途中の開始だけ、窓の初日をリバランスにしない点で `simulateSaka` と違う。
@@ -30,10 +44,10 @@
 
 | 集合 | 開始月 | 厳密に割れた割合 | 材料割れの割合 | 最深の中央値 | 最深の p90 | 水中 取引日/月 の中央値 | 水中 取引日/月 の p90 | 材料の水中取引日 中央値/p90 | 古典 MaxDD が SPY より浅い割合 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 2016–2026 の全開始月 | 130 | 100% | 80% | -8.2% | -21.7% | 31 / 1.4 | 205 / 9.5 | 22 / 185 | 0% |
-| 2021–2026 の開始月 | 70 | 100% | 83% | -10.4% | -23.2% | 51 / 2.3 | 283 / 13.5 | 42 / 272 | 0% |
-| 残取引日 ≥ 252 | 118 | 100% | 81% | -7.8% | -22.0% | 31 / 1.4 | 230 / 10.9 | 22 / 212 | 0% |
-| 2021–2026 かつ残取引日 ≥ 252 | 58 | 100% | 86% | -10.7% | -24.3% | 52 / 2.4 | 288 / 13.8 | 44 / 278 | 0% |
+| 2016–2026 の全開始月 | 130 | 100% | 81% | -8.2% | -22.1% | 30 / 1.4 | 222 / 10.5 | 21 / 210 | 2% |
+| 2021–2026 の開始月 | 70 | 100% | 84% | -11.0% | -26.1% | 48 / 2.2 | 300 / 14.2 | 44 / 284 | 3% |
+| 残取引日 ≥ 252 | 118 | 100% | 81% | -8.2% | -22.4% | 31 / 1.4 | 254 / 12.1 | 22 / 248 | 0% |
+| 2021–2026 かつ残取引日 ≥ 252 | 58 | 100% | 86% | -11.6% | -27.6% | 52 / 2.5 | 307 / 14.5 | 46 / 293 | 0% |
 
 水中の「月」はカレンダー日の合計であり、材料列は取引日（NAV が元本の 99% を下回ったセッション数）である。材料列は、手数料だけの凹みを期間から外している。
 
@@ -43,14 +57,14 @@
 
 | 開始月 | 開始日 | エントリー PIT | 次の四半期リバランス | 最深元本割れ | 谷の日 | 水中取引日 | 水中月 | 材料割れ | 古典 MaxDD | SPY MaxDD | 終了時の元本比 | 終了時 | エントリー 15 |
 |---|---|---|---|---:|---|---:|---:|---|---:|---:|---:|---|---|
-| 2022-01 | 2022-01-03 | 2022-01-03 | 2022-04-01 | -34.1% | 2023-01-05 | 460 | 21.8 | あり | -34.0% | -24.5% | +91.6% | 上 | AAPL, MSFT, FB, NVDA, UNH, TSLA, JNJ, WMT, HD, PG, DIS, ADBE, NFLX, AVGO, TMO |
-| 2021-12 | 2021-12-01 | 2021-10-01 | 2022-01-03 | -30.5% | 2023-01-05 | 372 | 17.7 | あり | -34.1% | -24.5% | +102.0% | 上 | AAPL, MSFT, FB, NVDA, JNJ, WMT, UNH, DIS, HD, PG, ADBE, NFLX, CRM, TSLA, CERN |
-| 2021-11 | 2021-11-01 | 2021-10-01 | 2022-01-03 | -29.4% | 2023-01-05 | 353 | 16.7 | あり | -34.2% | -24.5% | +105.6% | 上 | AAPL, MSFT, FB, NVDA, JNJ, WMT, UNH, DIS, HD, PG, ADBE, NFLX, CRM, TSLA, CERN |
-| 2022-02 | 2022-02-01 | 2022-01-03 | 2022-04-01 | -28.5% | 2023-01-05 | 334 | 15.9 | あり | -29.0% | -22.1% | +107.5% | 上 | AAPL, MSFT, FB, NVDA, UNH, TSLA, JNJ, WMT, HD, PG, DIS, ADBE, NFLX, AVGO, TMO |
-| 2021-09 | 2021-09-01 | 2021-07-01 | 2021-10-01 | -26.7% | 2023-01-05 | 358 | 17.0 | あり | -34.3% | -24.5% | +113.5% | 上 | AAPL, MSFT, FB, TSLA, JNJ, WMT, UNH, HD, PG, ADBE, NFLX, NKE, CMCSA, CRM, INTC |
-| 2022-04 | 2022-04-01 | 2022-04-01 | 2022-07-01 | -26.6% | 2023-01-05 | 286 | 13.6 | あり | -27.7% | -21.3% | +113.7% | 上 | AAPL, MSFT, NVDA, FB, UNH, JNJ, WMT, TSLA, PG, HD, CVX, LLY, ABBV, COST, DIS |
-| 2020-02 | 2020-02-03 | 2020-01-02 | 2020-04-01 | -23.7% | 2020-03-23 | 59 | 2.6 | あり | -34.1% | -33.7% | +221.7% | 上 | MSFT, AMZN, GOOGL, FB, BA, JNJ, AAPL, WMT, DIS, PG, UNH, INTC, HD, KO, MRK |
-| 2021-08 | 2021-08-02 | 2021-07-01 | 2021-10-01 | -23.3% | 2023-01-05 | 294 | 14.1 | あり | -34.5% | -24.5% | +123.3% | 上 | AAPL, MSFT, FB, TSLA, JNJ, WMT, UNH, HD, PG, ADBE, NFLX, NKE, CMCSA, CRM, INTC |
+| 2022-01 | 2022-01-03 | 2022-01-03 | 2022-04-01 | -36.4% | 2023-01-05 | 473 | 22.5 | あり | -36.3% | -24.5% | +101.8% | 上 | AAPL, MSFT, GOOGL, AMZN, TSLA, FB, NVDA, UNH, JNJ, WMT, HD, PG, DIS, ADBE, NFLX |
+| 2021-12 | 2021-12-01 | 2021-10-01 | 2022-01-03 | -33.1% | 2023-01-05 | 429 | 20.5 | あり | -36.3% | -24.5% | +111.7% | 上 | AAPL, MSFT, GOOGL, AMZN, FB, TSLA, NVDA, JNJ, ISRG, WMT, UNH, DIS, HD, PG, ADBE |
+| 2021-11 | 2021-11-01 | 2021-10-01 | 2022-01-03 | -32.1% | 2023-01-05 | 400 | 18.9 | あり | -36.2% | -24.5% | +114.2% | 上 | AAPL, MSFT, GOOGL, AMZN, FB, TSLA, NVDA, JNJ, ISRG, WMT, UNH, DIS, HD, PG, ADBE |
+| 2022-04 | 2022-04-01 | 2022-04-01 | 2022-07-01 | -31.0% | 2023-01-05 | 317 | 14.9 | あり | -32.4% | -21.3% | +118.0% | 上 | AAPL, MSFT, GOOGL, AMZN, TSLA, NVDA, FB, UNH, JNJ, WMT, PG, HD, CVX, LLY, ABBV |
+| 2022-02 | 2022-02-01 | 2022-01-03 | 2022-04-01 | -30.4% | 2023-01-05 | 344 | 16.3 | あり | -32.5% | -22.1% | +119.0% | 上 | AAPL, MSFT, GOOGL, AMZN, TSLA, FB, NVDA, UNH, JNJ, WMT, HD, PG, DIS, ADBE, NFLX |
+| 2021-09 | 2021-09-01 | 2021-07-01 | 2021-10-01 | -30.2% | 2023-01-05 | 376 | 17.8 | あり | -36.7% | -24.5% | +120.8% | 上 | AAPL, MSFT, AMZN, GOOGL, FB, TSLA, NVDA, JNJ, WMT, UNH, HD, PG, ADBE, NFLX, NKE |
+| 2021-10 | 2021-10-01 | 2021-10-01 | 2022-01-03 | -26.5% | 2023-01-05 | 300 | 14.2 | あり | -36.6% | -24.5% | +132.8% | 上 | AAPL, MSFT, GOOGL, AMZN, FB, TSLA, NVDA, JNJ, ISRG, WMT, UNH, DIS, HD, PG, ADBE |
+| 2021-08 | 2021-08-02 | 2021-07-01 | 2021-10-01 | -26.1% | 2023-01-05 | 303 | 14.3 | あり | -36.5% | -24.5% | +133.7% | 上 | AAPL, MSFT, AMZN, GOOGL, FB, TSLA, NVDA, JNJ, WMT, UNH, HD, PG, ADBE, NFLX, NKE |
 
 ### 2021 年後半の開始
 
@@ -58,18 +72,18 @@
 
 | 開始月 | 開始日 | エントリー PIT | 次の四半期リバランス | 最深元本割れ | 谷の日 | 水中取引日 | 水中月 | 材料割れ | 古典 MaxDD | SPY MaxDD | 終了時の元本比 | 終了時 | エントリー 15 |
 |---|---|---|---|---:|---|---:|---:|---|---:|---:|---:|---|---|
-| 2021-09 | 2021-09-01 | 2021-07-01 | 2021-10-01 | -26.7% | 2023-01-05 | 358 | 17.0 | あり | -34.3% | -24.5% | +113.5% | 上 | AAPL, MSFT, FB, TSLA, JNJ, WMT, UNH, HD, PG, ADBE, NFLX, NKE, CMCSA, CRM, INTC |
-| 2021-10 | 2021-10-01 | 2021-10-01 | 2022-01-03 | -23.1% | 2023-01-05 | 283 | 13.5 | あり | -34.3% | -24.5% | +123.9% | 上 | AAPL, MSFT, FB, NVDA, JNJ, WMT, UNH, DIS, HD, PG, ADBE, NFLX, CRM, TSLA, CERN |
-| 2021-11 | 2021-11-01 | 2021-10-01 | 2022-01-03 | -29.4% | 2023-01-05 | 353 | 16.7 | あり | -34.2% | -24.5% | +105.6% | 上 | AAPL, MSFT, FB, NVDA, JNJ, WMT, UNH, DIS, HD, PG, ADBE, NFLX, CRM, TSLA, CERN |
-| 2021-12 | 2021-12-01 | 2021-10-01 | 2022-01-03 | -30.5% | 2023-01-05 | 372 | 17.7 | あり | -34.1% | -24.5% | +102.0% | 上 | AAPL, MSFT, FB, NVDA, JNJ, WMT, UNH, DIS, HD, PG, ADBE, NFLX, CRM, TSLA, CERN |
-| 2022-01 | 2022-01-03 | 2022-01-03 | 2022-04-01 | -34.1% | 2023-01-05 | 460 | 21.8 | あり | -34.0% | -24.5% | +91.6% | 上 | AAPL, MSFT, FB, NVDA, UNH, TSLA, JNJ, WMT, HD, PG, DIS, ADBE, NFLX, AVGO, TMO |
+| 2021-09 | 2021-09-01 | 2021-07-01 | 2021-10-01 | -30.2% | 2023-01-05 | 376 | 17.8 | あり | -36.7% | -24.5% | +120.8% | 上 | AAPL, MSFT, AMZN, GOOGL, FB, TSLA, NVDA, JNJ, WMT, UNH, HD, PG, ADBE, NFLX, NKE |
+| 2021-10 | 2021-10-01 | 2021-10-01 | 2022-01-03 | -26.5% | 2023-01-05 | 300 | 14.2 | あり | -36.6% | -24.5% | +132.8% | 上 | AAPL, MSFT, GOOGL, AMZN, FB, TSLA, NVDA, JNJ, ISRG, WMT, UNH, DIS, HD, PG, ADBE |
+| 2021-11 | 2021-11-01 | 2021-10-01 | 2022-01-03 | -32.1% | 2023-01-05 | 400 | 18.9 | あり | -36.2% | -24.5% | +114.2% | 上 | AAPL, MSFT, GOOGL, AMZN, FB, TSLA, NVDA, JNJ, ISRG, WMT, UNH, DIS, HD, PG, ADBE |
+| 2021-12 | 2021-12-01 | 2021-10-01 | 2022-01-03 | -33.1% | 2023-01-05 | 429 | 20.5 | あり | -36.3% | -24.5% | +111.7% | 上 | AAPL, MSFT, GOOGL, AMZN, FB, TSLA, NVDA, JNJ, ISRG, WMT, UNH, DIS, HD, PG, ADBE |
+| 2022-01 | 2022-01-03 | 2022-01-03 | 2022-04-01 | -36.4% | 2023-01-05 | 473 | 22.5 | あり | -36.3% | -24.5% | +101.8% | 上 | AAPL, MSFT, GOOGL, AMZN, TSLA, FB, NVDA, UNH, JNJ, WMT, HD, PG, DIS, ADBE, NFLX |
 
 ### 固定の長い経路
 
 | 開始月 | 開始日 | エントリー PIT | 次の四半期リバランス | 最深元本割れ | 谷の日 | 水中取引日 | 水中月 | 材料割れ | 古典 MaxDD | SPY MaxDD | 終了時の元本比 | 終了時 | エントリー 15 |
 |---|---|---|---|---:|---|---:|---:|---|---:|---:|---:|---|---|
-| 2016-01 | 2016-01-04 | 2016-01-04 | 2016-04-01 | -7.6% | 2016-02-11 | 56 | 2.6 | あり | -33.8% | -33.7% | +569.6% | 上 | AAPL, GOOGL, MSFT, AMZN, FB, JNJ, WMT, PG, KO, CERN, HD, BA, INTC, PFE, MRK |
-| 2021-01 | 2021-01-04 | 2021-01-04 | 2021-04-01 | -9.1% | 2023-01-05 | 82 | 3.6 | あり | -34.3% | -24.5% | +162.7% | 上 | AAPL, AMZN, MSFT, GOOGL, FB, TSLA, WMT, JNJ, UNH, PG, HD, ADBE, NFLX, NKE, CRM |
+| 2016-01 | 2016-01-04 | 2016-01-04 | 2016-04-01 | -7.6% | 2016-02-11 | 56 | 2.6 | あり | -36.1% | -33.7% | +670.7% | 上 | AAPL, GOOGL, MSFT, AMZN, FB, JNJ, WMT, PG, KO, CERN, HD, BA, INTC, PFE, MRK |
+| 2021-01 | 2021-01-04 | 2021-01-04 | 2021-04-01 | -11.0% | 2023-01-05 | 88 | 3.9 | あり | -36.3% | -24.5% | +181.7% | 上 | AAPL, AMZN, MSFT, GOOGL, FB, TSLA, WMT, JNJ, NVDA, UNH, PG, HD, ADBE, NFLX, NKE |
 
 ### リークがブックに出ている四半期
 
@@ -77,17 +91,17 @@
 
 | リバランス日 | 監視銘柄のうち採用 | 監視銘柄のうち不在 | 採用 15（ウェイト降順） |
 |---|---|---|---|
-| 2021-07-01 | AAPL, MSFT, FB | AMZN, GOOGL, NVDA, META | AAPL, MSFT, FB, TSLA, JNJ, WMT, UNH, HD, PG, ADBE, NFLX, NKE, CMCSA, CRM, INTC |
-| 2021-10-01 | AAPL, MSFT, NVDA, FB | AMZN, GOOGL, META | AAPL, MSFT, FB, NVDA, JNJ, WMT, UNH, DIS, HD, PG, ADBE, NFLX, CRM, TSLA, CERN |
-| 2022-01-03 | AAPL, MSFT, NVDA, FB | AMZN, GOOGL, META | AAPL, MSFT, FB, NVDA, UNH, TSLA, JNJ, WMT, HD, PG, DIS, ADBE, NFLX, AVGO, TMO |
-| 2022-04-01 | AAPL, MSFT, NVDA, FB | AMZN, GOOGL, META | AAPL, MSFT, NVDA, FB, UNH, JNJ, WMT, TSLA, PG, HD, CVX, LLY, ABBV, COST, DIS |
-| 2022-07-01 | AAPL, MSFT, AMZN, GOOGL, NVDA, META | FB | AAPL, MSFT, GOOGL, AMZN, UNH, META, JNJ, NVDA, WMT, PG, LLY, HD, KO, CVX, TSLA |
+| 2021-07-01 | AAPL, MSFT, AMZN, GOOGL, NVDA, FB | META | AAPL, MSFT, AMZN, GOOGL, FB, TSLA, NVDA, JNJ, WMT, UNH, HD, PG, ADBE, NFLX, NKE |
+| 2021-10-01 | AAPL, MSFT, AMZN, GOOGL, NVDA, FB | META | AAPL, MSFT, GOOGL, AMZN, FB, TSLA, NVDA, JNJ, ISRG, WMT, UNH, DIS, HD, PG, ADBE |
+| 2022-01-03 | AAPL, MSFT, AMZN, GOOGL, NVDA, FB | META | AAPL, MSFT, GOOGL, AMZN, TSLA, FB, NVDA, UNH, JNJ, WMT, HD, PG, DIS, ADBE, NFLX |
+| 2022-04-01 | AAPL, MSFT, AMZN, GOOGL, NVDA, FB | META | AAPL, MSFT, GOOGL, AMZN, TSLA, NVDA, FB, UNH, JNJ, WMT, PG, HD, CVX, LLY, ABBV |
+| 2022-07-01 | AAPL, MSFT, AMZN, GOOGL, NVDA, META | FB | GOOGL, AAPL, MSFT, AMZN, TSLA, UNH, META, JNJ, NVDA, WMT, PG, LLY, HD, KO, CVX |
 | 2022-10-03 | AAPL, MSFT, AMZN, GOOGL, NVDA, META | FB | AAPL, MSFT, GOOGL, AMZN, TSLA, UNH, JNJ, META, WMT, NVDA, LLY, PG, HD, CVX, KO |
-| 2025-10-01 | AAPL, MSFT, AMZN, GOOGL, META | NVDA, FB | MSFT, AAPL, GOOGL, AMZN, META, AVGO, TSLA, ORCL, WMT, LLY, PLTR, JNJ, ABBV, COST, HD |
-| 2026-01-02 | AAPL, MSFT, AMZN, GOOGL, META | NVDA, FB | AAPL, GOOGL, MSFT, AMZN, TSLA, AVGO, META, LLY, WMT, ORCL, JNJ, PLTR, ABBV, NFLX, COST |
-| 2026-04-01 | AAPL, MSFT, AMZN, GOOGL, META | NVDA, FB | AAPL, GOOGL, MSFT, AMZN, AVGO, META, TSLA, WMT, LLY, JNJ, COST, ORCL, MU, NFLX, CVX |
-| 2026-07-01 | MSFT, AMZN, META | AAPL, GOOGL, NVDA, FB | MSFT, AMZN, AVGO, TSLA, META, MU, LLY, AMD, WMT, JNJ, AMAT, LRCX, CSCO, CAT, ABBV |
-| 2026-10-01 | MSFT, AMZN, META | AAPL, GOOGL, NVDA, FB | MSFT, AMZN, META, AVGO, TSLA, MU, LLY, AMD, WMT, JNJ, ABBV, PLTR, CSCO, LRCX, AMAT |
+| 2025-10-01 | AAPL, MSFT, AMZN, GOOGL, NVDA, META | FB | NVDA, MSFT, AAPL, GOOGL, AMZN, META, AVGO, TSLA, ORCL, WMT, LLY, NFLX, PLTR, JNJ, ABBV |
+| 2026-01-02 | AAPL, MSFT, AMZN, GOOGL, NVDA, META | FB | NVDA, AAPL, GOOGL, MSFT, AMZN, TSLA, AVGO, META, LLY, WMT, ORCL, JNJ, PLTR, ABBV, NFLX |
+| 2026-04-01 | AAPL, MSFT, AMZN, GOOGL, NVDA, META | FB | NVDA, AAPL, GOOGL, BKNG, MSFT, AMZN, AVGO, META, TSLA, WMT, LLY, JNJ, COST, ORCL, MU |
+| 2026-07-01 | AAPL, MSFT, AMZN, GOOGL, NVDA, META | FB | GOOGL, AAPL, NVDA, MSFT, AMZN, TSLA, META, AVGO, LLY, MU, WMT, AMD, JNJ, AMAT, LRCX |
+| 2026-10-01 | AAPL, MSFT, AMZN, GOOGL, NVDA, META | FB | NVDA, AAPL, GOOGL, MSFT, AMZN, META, AVGO, TSLA, MU, LLY, AMD, WMT, JNJ, ABBV, PLTR |
 
 ## 解釈
 

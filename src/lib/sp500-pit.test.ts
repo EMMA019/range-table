@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { isSp500MemberOnDate, membersOnDate, parseSp500GicsCsv, parseTickerStartEndCsv } from "./sp500-pit";
+import { isSp500MemberOnDate, membersOnDate, parseSp500GicsCsv, parseTickerStartEndCsv, buildSameCikHandoffs, sameCikHandoffSuccessor } from "./sp500-pit";
 
 describe("sp500-pit", () => {
   it("parses membership intervals", () => {
@@ -25,5 +25,19 @@ AAPL,1996-01-02,
 MSFT,1996-01-02,`);
     const m = membersOnDate(rows, "2020-01-02");
     assert.deepEqual(m, ["AAPL", "MSFT"]);
+  });
+
+  it("resolves FB→META handoff after rename", () => {
+    const rows = parseTickerStartEndCsv(`ticker,start_date,end_date
+FB,2013-12-23,2022-06-09
+META,2022-06-09,`);
+    const gics = parseSp500GicsCsv(`Symbol,Security,GICS Sector,GICS Sub-Industry,Headquarters Location,Date added,CIK,Founded
+FB,Meta,Communication Services,Interactive Media,Menlo Park,2013-12-23,1326801,2004
+META,Meta,Communication Services,Interactive Media,Menlo Park,2022-06-09,1326801,2004`);
+    const cikOf = (t: string) => gics.get(t)?.cik ?? null;
+    const handoffs = buildSameCikHandoffs(rows, cikOf);
+    assert.ok(handoffs.some((h) => h.from === "FB" && h.to === "META"));
+    assert.equal(sameCikHandoffSuccessor("FB", "2022-07-01", handoffs, rows), "META");
+    assert.equal(sameCikHandoffSuccessor("FB", "2022-04-01", handoffs, rows), null);
   });
 });

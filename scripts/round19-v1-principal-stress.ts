@@ -20,6 +20,7 @@ import {
   pickHoldings,
   profitabilityStatus,
   rebalanceDates,
+  applySameCikHandoffTransfers,
   simulateSaka,
   targetWeights,
   tradingDaysFromBars,
@@ -33,7 +34,7 @@ import { pitMarketCapAtDate } from "../src/lib/pit-mcap";
 import { mcapCloseOnOrBefore } from "../src/lib/pit-mcap-price";
 import { loadPitSplits, type PitSplit } from "../src/lib/pit-splits";
 import { loadPitBars, loadPitCikOverrides, PIT_CACHE } from "../src/lib/pit-dataset";
-import { loadSp500PitFiles, membersOnDate, uniqueTickersInRange } from "../src/lib/sp500-pit";
+import { loadSp500PitFiles, membersOnDate, uniqueTickersInRange, buildSameCikHandoffResolver } from "../src/lib/sp500-pit";
 import type { Bar } from "../src/lib/types";
 
 const OUT_MD = path.join(process.cwd(), "docs", "ROUND19_V1_PRINCIPAL_STRESS_ja.md");
@@ -137,6 +138,7 @@ function simulateDelta(
   bootstrapPit: string | null,
   bookOf: (pitDate: string) => Record<string, number>,
   price: (ticker: string, date: string) => number | null,
+  handoffSuccessor?: (fromTicker: string, pitDate: string) => string | null,
 ): SakaEquityPoint[] {
   const minTradeUsd = SAKA_REBAL_MIN_TRADE_USD;
   const relDrift = SAKA_REBAL_REL_DRIFT;
@@ -168,6 +170,9 @@ function simulateDelta(
       const pitDate = scheduled ? date : bootstrapPit!;
       if (bootstrapToday) bootstrapped = true;
       const weights = bookOf(pitDate);
+      if (handoffSuccessor) {
+        applySameCikHandoffTransfers(shares, weights, pitDate, price, lastPrice, handoffSuccessor);
+      }
       const eq = equityOn(date);
       const targetSet = new Set(Object.keys(weights));
       for (const t of Object.keys(shares)) {
@@ -372,6 +377,7 @@ async function main() {
     cikOf: (t) => cikMap.get(t) ?? null,
   };
   const semiOf = (t: string) => ctx.gicsOf(t)?.semiBucket ?? false;
+  const handoffSuccessor = buildSameCikHandoffResolver(intervals, (t) => cikMap.get(t) ?? null);
   const membersOn = (date: string) => membersOnDate(intervals, date);
   const rebals = rebalanceDates(calendar, SAKA_START, SAKA_END);
   const rebalSet = new Set(rebals);
@@ -393,12 +399,13 @@ async function main() {
   const bookOf = (pitDate: string) => books.get(pitDate)?.weights ?? {};
   const aligned = rebals[0];
   if (!aligned) throw new Error("no rebalance dates");
-  const mine = simulateDelta(calendar, aligned, SAKA_END, rebalSet, null, bookOf, price);
+  const mine = simulateDelta(calendar, aligned, SAKA_END, rebalSet, null, bookOf, price, handoffSuccessor);
   const ref = simulateSaka(CONFIG, calendar, membersOn, ctx, semiOf, price, COMMISSION, aligned, SAKA_END, {
     rebalance: "delta",
     minTradeUsd: SAKA_REBAL_MIN_TRADE_USD,
     relDrift: SAKA_REBAL_REL_DRIFT,
     initialCash: PRINCIPAL,
+    handoffSuccessor,
   });
   let maxDiff = 0;
   if (mine.length !== ref.curve.length) maxDiff = Infinity;
@@ -416,12 +423,13 @@ async function main() {
 
   const q2021 = rebals.find((d) => d >= SAKA_OOS_START);
   if (q2021) {
-    const mine21 = simulateDelta(calendar, q2021, SAKA_END, rebalSet, null, bookOf, price);
+    const mine21 = simulateDelta(calendar, q2021, SAKA_END, rebalSet, null, bookOf, price, handoffSuccessor);
     const ref21 = simulateSaka(CONFIG, calendar, membersOn, ctx, semiOf, price, COMMISSION, q2021, SAKA_END, {
       rebalance: "delta",
       minTradeUsd: SAKA_REBAL_MIN_TRADE_USD,
       relDrift: SAKA_REBAL_REL_DRIFT,
       initialCash: PRINCIPAL,
+      handoffSuccessor,
     });
     let d21 = mine21.length === ref21.curve.length ? 0 : Infinity;
     if (d21 === 0) {
@@ -449,7 +457,7 @@ async function main() {
     const startIsRebal = rebalSet.has(start);
     const bootstrapPit = startIsRebal ? null : pitDate;
     const nextRebal = rebals.find((d) => d > start) ?? "";
-    const curve = simulateDelta(calendar, start, SAKA_END, rebalSet, bootstrapPit, bookOf, price);
+    const curve = simulateDelta(calendar, start, SAKA_END, rebalSet, bootstrapPit, bookOf, price, handoffSuccessor);
     const p0 = price("SPY", start);
     if (p0 == null || p0 <= 0) throw new Error(`SPY price missing at ${start}`);
     const spyCurve: SakaEquityPoint[] = curve.map((p) => {

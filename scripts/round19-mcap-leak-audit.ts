@@ -14,7 +14,7 @@ import { PIT_TICKER_ALIASES } from "../src/lib/pit-cik";
 import { buildPitCikMapForTickers } from "../src/lib/pit-cik";
 import { pitPaths, pitPriceTicker, PIT_CACHE, loadPitBars } from "../src/lib/pit-dataset";
 import { buildPitFactsIndex, loadMergedPitFacts } from "../src/lib/pit-facts-index";
-import { pitMarketCapAtDate } from "../src/lib/pit-mcap";
+import { pitMarketCapAtDate, PIT_MCAP_MAX_USD } from "../src/lib/pit-mcap";
 import { forwardShareMultiplier, loadPitSplits, normalizeYahooSplits, savePitSplits, nominalCloseFromAdjusted, type PitSplit } from "../src/lib/pit-splits";
 import { sharesOutstandingPit } from "../src/lib/pit-shares";
 import {
@@ -372,9 +372,9 @@ function buildReason(pit: number, ref: number, snap: Snap, pxRatio: number | nul
     `事実: PIT ${fmtUsd(pit)}、Yahoo参照 ${fmtUsd(ref)}、前四半期比 adjclose ${px}、` +
     `EDGAR株数 ${snap.sh0 > 0 ? snap.sh0.toLocaleString("en-US") : "なし"}（factEnd ${snap.factEnd ?? "—"}、前方分割 ×${snap.fwd.toFixed(2)}）、` +
     `mAdj ${fmtUsd(snap.mAdj)}、mNom ${fmtUsd(snap.mNom)}、asOf後400日の分割 ×${snap.upcoming.toFixed(2)}。`;
-  const overCap = Math.max(snap.mAdj, snap.mNom) >= 4e12;
+  const overCap = Math.max(snap.mAdj, snap.mNom) >= PIT_MCAP_MAX_USD;
   if (!(pit > 0) && overCap) {
-    return `${head} 事実（コード）: pit-mcap.ts は候補を 1e9 超かつ 4e12 未満に限る。試算が 4兆ドル以上なので 0 になる。`;
+    return `${head} 事実（コード）: pit-mcap.ts は候補を 1e9 超かつ ${PIT_MCAP_MAX_USD / 1e12}兆ドル以下に限る。試算が上限を超えるので 0 になる。`;
   }
   if (!(pit > 0) && !(snap.sh0 > 0)) {
     return `${head} 推定: 株数ファクトが無く pitMarketCap が 0。`;
@@ -630,28 +630,10 @@ async function main() {
         const key = `${a.ticker}->${b.ticker}@${date}`;
         if (renameKeys.has(key)) continue;
         renameKeys.add(key);
-        const prev = rebals[rebals.indexOf(date) - 1];
-        const prevRank = prev ? rankOf(prev, a.ticker) : null;
-        const nowB = rankOf(date, b.ticker);
-        const snapB = snaps.get(b.ticker)?.get(date);
-        push({
-          date,
-          ticker: `${a.ticker}→${b.ticker}`,
-          kind: "ティッカー変更",
-          reason:
-            `事実: 会員区間 ${a.ticker} ${a.startDate}～${a.endDate}、${b.ticker} ${b.startDate}～${b.endDate ?? "継続"}。同一 CIK ${cik}。` +
-            `終了日と開始日の差は ${gap} 日。${date} のメンバー集合では ${a.ticker} が消え ${b.ticker} だけが残るため、シミュレータは売却＋新規買いになる。`,
-          wrong: prevRank
-            ? `${a.ticker} は構成外扱い（直前 ${prev} は PIT ${rankTxt(prevRank.pitRank, prevRank.pit)}）`
-            : `${a.ticker} は構成外扱い`,
-          right: nowB
-            ? `${b.ticker} 参照 ${nowB.refRank ?? "—"}位 / PIT ${rankTxt(nowB.pitRank, snapB?.pit ?? 0)}（同一会社）`
-            : `${b.ticker} は eligible 外（黒字・価格・セクターを確認）`,
-          note: "価格エイリアスはあっても会員名簿はティッカー別のまま。",
-          refRank: nowB?.refRank ?? null,
-          pitRank: nowB?.pitRank ?? null,
-          gap: 0,
-        });
+        renameAppendix.push(
+          `- **${date} ${a.ticker}→${b.ticker}**（CIK ${cik}）: 会員 CSV 上は旧ティッカー脱落。` +
+            ` \`simulateSaka\` は同一 CIK 連続として株数を引き継ぐ（売却＋新規買いにしない）。`,
+        );
       }
     }
   }
@@ -716,7 +698,7 @@ async function main() {
   const lines: string[] = [];
   lines.push("# Round 19 PIT 時価総額リーク在庫");
   lines.push("");
-  lines.push("**状態:** 検出のみ。`src/lib/pit-mcap.ts` を含む本番の時価計算は変更していない。修正コミットはまだない。");
+  lines.push("**状態:** 修正後の再スキャン。`pit-mcap.ts`（4T 上限撤廃・名目時価優先）と `simulateSaka` 同一 CIK 連続を反映。2023-04 AMZN 赤字除外は変更なし。");
   lines.push(`**生成:** \`scripts/round19-mcap-leak-audit.ts\`（${new Date().toISOString().slice(0, 10)}）`);
   lines.push("**サイト非掲載。** v2 の探索はしていない。");
   lines.push("");
@@ -726,7 +708,7 @@ async function main() {
   lines.push("");
   lines.push("| 項目 | 定義 |");
   lines.push("|---|---|");
-  lines.push("| PIT 時価 | 現行 `pitMarketCapAtDate`。本スキャンでは未修正 |");
+  lines.push("| PIT 時価 | 現行 `pitMarketCapAtDate`（名目×株数優先、上限 50T USD） |");
   lines.push("| Yahoo 参照 | 取得日の `sharesOutstanding` × その日の adjclose（分割・配当調整済み終値）。現行株数なので、自社株買いの分だけ遠い過去は過少・増資の分だけ過大になり得る。四半期の価格比と、PIT との倍率を主に使う |");
   lines.push("| eligible | `filterEligibleCandidates`（テーマ除外、金融、価格あり、TTM 黒字、同一 CIK は優先株クラス）。mcap≤0 でも eligible には残る |");
   lines.push("| PIT 順位 | eligible のうち **mcap>0** だけを降順。0 は「順位なし（算出不可）」 |");
@@ -756,7 +738,23 @@ async function main() {
   if (charts.failed.length) lines.push(`チャート失敗（先頭）: ${charts.failed.slice(0, 12).join(", ")}`);
   if (facts.failed.length) lines.push(`facts 失敗（先頭）: ${facts.failed.slice(0, 12).join(", ")}`);
   lines.push("");
-  lines.push("## 件数");
+  lines.push("## 件数（修正後・本スキャン）");
+  lines.push("");
+  lines.push("修正前（在庫のみコミット `930540d`）との対比。ティッカー変更は mcap リークではなく、同一 CIK 連続は `simulateSaka` で処理するため表から外した。");
+  lines.push("");
+  lines.push("| 現象 | 修正前 | 修正後 |");
+  lines.push("|---|---:|---:|");
+  const beforeFix: Record<(typeof kindOrder)[number], number> = {
+    算出不可: 19,
+    偽急落: 7,
+    参照上位なのにPIT下位: 30,
+    ティッカー変更: 24,
+    穴埋め: 51,
+  };
+  for (const k of kindOrder) {
+    lines.push(`| ${k} | ${beforeFix[k]} | ${counts[k]} |`);
+  }
+  lines.push(`| 合計 | 131 | ${rows.length} |`);
   lines.push("");
   lines.push("| 現象 | 件数 |");
   lines.push("|---|---:|");

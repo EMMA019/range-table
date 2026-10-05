@@ -1,25 +1,23 @@
-# plain_15__mcap ウェイト — 2026-10-01
+# plain_15__mcap weights (2026-10-01)
 
-`targetWeights`（`weight: "mcap"` のあと `applySemiCap`、半導体サブ業 30%）。時価は現行 `pitMarketCapForTicker`。修正は入れていない。
+Semi sub-industry sum **30.00%** (30% cap binds).
 
-半導体サブ業（AVGO, MU, AMD, LRCX, AMAT）の合計は **25.80%** で 30% 以下。キャップは掛かっておらず、下の比率は時価比例そのもの。未丸めの合計は 100%。2桁表示の合計は **99.99%**（丸め）。
+| Ticker | Weight % | PIT mcap |
+|---|---:|---|
+| NVDA | 17.81 | $5.679T |
+| AAPL | 15.25 | $4.821T |
+| GOOGL | 13.08 | $4.137T |
+| MSFT | 12.04 | $3.808T |
+| AMZN | 8.47 | $2.677T |
+| META | 5.83 | $1.842T |
+| AVGO | 5.15 | $1.640T |
+| TSLA | 4.42 | $1.399T |
+| MU | 3.89 | $1.239T |
+| LLY | 3.42 | $1.082T |
+| AMD | 3.15 | $1.005T |
+| WMT | 2.62 | $0.827T |
+| JNJ | 1.97 | $0.623T |
+| ABBV | 1.45 | $0.459T |
+| PLTR | 1.44 | $0.457T |
 
-| ティッカー | ウェイト |
-|---|---:|
-| MSFT | 20.77% |
-| AMZN | 14.60% |
-| META | 10.05% |
-| AVGO | 8.95% |
-| TSLA | 7.63% |
-| MU | 6.76% |
-| LLY | 5.90% |
-| AMD | 5.48% |
-| WMT | 4.51% |
-| JNJ | 3.40% |
-| ABBV | 2.51% |
-| PLTR | 2.49% |
-| CSCO | 2.33% |
-| LRCX | 2.32% |
-| AMAT | 2.29% |
-
-**AAPL / GOOGL / NVDA は不在。** 3つとも 2026-10-01 の S&P 構成で、価格あり、TTM 黒字。`pitMarketCap` が 0（算出不可）なので上位15に入らない。GOOG も同じ理由で 0。原因の数値は `docs/ROUND19_MCAP_LEAK_AUDIT_ja.md` の 2026-10-01 行（試算が 4兆ドルを超え、候補条件 `m < 4e12` で落ちる）。
+Display sum (2 dp): **99.99%**.

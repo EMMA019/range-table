@@ -2,6 +2,10 @@ import type { Bar } from "./types";
 import { forwardShareMultiplier, loadPitSplits, nominalCloseFromAdjusted, type PitSplit } from "./pit-splits";
 import { sharesOutstandingPit } from "./pit-shares";
 
+/** Ignore micro-caps and absurd values; allow multi-trillion mega-caps (no legacy 4T ceiling). */
+export const PIT_MCAP_MIN_USD = 1e9;
+export const PIT_MCAP_MAX_USD = 50e12;
+
 function priorCalendarDate(asOf: string, daysBack: number): string {
   const t = Date.parse(`${asOf}T12:00:00Z`) - daysBack * 86_400_000;
   return new Date(t).toISOString().slice(0, 10);
@@ -52,19 +56,6 @@ function priceFactorAllSplitsAfterBar(barDate: string, splits: PitSplit[]): numb
   return m;
 }
 
-function priceFactorBarToAsOf(barDate: string, asOf: string, splits: PitSplit[]): number {
-  return forwardShareMultiplier(splits, barDate, asOf);
-}
-
-function upcomingSplitInflate(barDate: string, asOf: string, splits: PitSplit[]): number {
-  const end = new Date(Date.parse(`${asOf}T12:00:00Z`) + 400 * 86_400_000).toISOString().slice(0, 10);
-  let m = 1;
-  for (const sp of splits) {
-    if (sp.date > asOf && sp.date <= end) m *= sp.numerator / sp.denominator;
-  }
-  return m;
-}
-
 /** Apply Yahoo split factors to EDGAR shares only when facts still use pre-split units. */
 function sharesForMcap(facts: unknown, asOf: string, splits: PitSplit[]): number {
   const pit = sharesOutstandingPit(facts, asOf);
@@ -96,44 +87,15 @@ export function pitMarketCapAtDate(
   const sh = sharesForMcap(facts, asOf, sp);
   if (sh <= 0) return 0;
   const pfAll = priceFactorAllSplitsAfterBar(bar.date, sp);
-  const pfToAsOf = priceFactorBarToAsOf(bar.date, asOf, sp);
   const mNomRaw = px * sh;
-  let mNominal = mNomRaw;
+  const mNominal = mNomRaw;
   const corrupt = barCloseLooksCorrupt(bar);
   const mAdj = corrupt ? 0 : bar.c * sh;
   const mAdjPf = corrupt ? 0 : bar.c * sh * pfAll;
-  const upcoming = upcomingSplitInflate(bar.date, asOf, sp);
-  if (
-    mAdj > 1e9 &&
-    upcoming > 1.5 &&
-    pfAll < 5 &&
-    pfToAsOf < 1.01 &&
-    mNomRaw > mAdj * 2.2 &&
-    mNomRaw / mAdj < upcoming * 1.05 &&
-    mNomRaw <= mAdj * (upcoming * 1.25)
-  ) {
-    return mAdj;
-  }
-  if (
-    mAdj > 1e9 &&
-    mAdj < 200e9 &&
-    mNomRaw > mAdj * 4 &&
-    upcoming > 1.5 &&
-    pfToAsOf < 1.01
-  ) {
-    return mAdj;
-  }
-  if (
-    upcoming < 1.5 &&
-    pfAll > 3 &&
-    pfToAsOf < 1.01 &&
-    mAdjPf > 1e9 &&
-    mNomRaw > (mAdj > 0 ? mAdj * 3 : 0)
-  ) {
-    return (mNomRaw + mAdjPf) / 2;
-  }
-  if (mAdj > 0 && mNominal > mAdj * 2.5) mNominal = 0;
-  const candidates = [mNominal, mAdj, mAdjPf].filter((m) => m > 1e9 && m < 4e12).sort((a, b) => a - b);
+  if (mNominal > PIT_MCAP_MIN_USD && mNominal <= PIT_MCAP_MAX_USD) return mNominal;
+  const candidates = [mNominal, mAdj, mAdjPf]
+    .filter((m) => m > PIT_MCAP_MIN_USD && m <= PIT_MCAP_MAX_USD)
+    .sort((a, b) => a - b);
   if (!candidates.length) return 0;
   for (let i = candidates.length - 1; i >= 1; i -= 1) {
     for (let j = i - 1; j >= 0; j -= 1) {

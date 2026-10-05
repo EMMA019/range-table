@@ -39,7 +39,7 @@ import {
   type SakaCandidateContext,
   type SakaConfig,
 } from "../src/lib/round19-saka";
-import { loadSp500PitFiles, membersOnDate, uniqueTickersInRange } from "../src/lib/sp500-pit";
+import { loadSp500PitFiles, membersOnDate, uniqueTickersInRange, buildSameCikHandoffResolver } from "../src/lib/sp500-pit";
 import type { Bar } from "../src/lib/types";
 
 const CACHE = path.join(process.cwd(), "data", ".cache", "round19");

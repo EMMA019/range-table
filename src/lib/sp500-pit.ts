@@ -110,6 +110,66 @@ export function uniqueTickersInRange(all: Sp500Interval[], from: string, to: str
   return [...set].sort((a, b) => a.localeCompare(b));
 }
 
+export type SameCikHandoff = { from: string; to: string; cik: number; oldEnd: string; newStart: string };
+
+function daysBetweenMembership(a: string, b: string): number {
+  return Math.round((Date.parse(`${b}T12:00:00Z`) - Date.parse(`${a}T12:00:00Z`)) / 86_400_000);
+}
+
+/** Same-CIK ticker renames / handoffs (membership interval gap −1..3 calendar days). */
+export function buildSameCikHandoffs(
+  intervals: Sp500Interval[],
+  cikOf: (ticker: string) => number | null,
+): SameCikHandoff[] {
+  const byTicker = buildMembershipIndex(intervals);
+  const rows: Array<Sp500Interval & { cik: number }> = [];
+  for (const [ticker, list] of byTicker) {
+    const cik = cikOf(ticker);
+    if (!cik) continue;
+    for (const row of list) rows.push({ ...row, cik });
+  }
+  const out: SameCikHandoff[] = [];
+  for (const a of rows) {
+    if (!a.endDate) continue;
+    for (const b of rows) {
+      if (a.cik !== b.cik || a.ticker === b.ticker) continue;
+      const gap = daysBetweenMembership(a.endDate, b.startDate);
+      if (gap < -1 || gap > 3) continue;
+      out.push({ from: a.ticker, to: b.ticker, cik: a.cik, oldEnd: a.endDate, newStart: b.startDate });
+    }
+  }
+  out.sort((x, y) => x.oldEnd.localeCompare(y.oldEnd) || x.from.localeCompare(y.from));
+  return out;
+}
+
+/** On `date`, if `fromTicker` is no longer an index member but `toTicker` is, return the successor. */
+export function sameCikHandoffSuccessor(
+  fromTicker: string,
+  date: string,
+  handoffs: SameCikHandoff[],
+  intervals: Sp500Interval[],
+): string | null {
+  const from = fromTicker.trim().toUpperCase();
+  const fromIntervals = buildMembershipIndex(intervals).get(from) ?? [];
+  if (isSp500MemberOnDate(fromIntervals, date)) return null;
+  for (const h of handoffs) {
+    if (h.from !== from) continue;
+    if (date < h.newStart) continue;
+    const toIntervals = buildMembershipIndex(intervals).get(h.to) ?? [];
+    if (!isSp500MemberOnDate(toIntervals, date)) continue;
+    return h.to;
+  }
+  return null;
+}
+
+export function buildSameCikHandoffResolver(
+  intervals: Sp500Interval[],
+  cikOf: (ticker: string) => number | null,
+): (fromTicker: string, date: string) => string | null {
+  const handoffs = buildSameCikHandoffs(intervals, cikOf);
+  return (fromTicker, date) => sameCikHandoffSuccessor(fromTicker, date, handoffs, intervals);
+}
+
 export async function loadSp500PitFiles(cacheDir: string): Promise<{ intervals: Sp500Interval[]; gics: Map<string, Sp500Gics> }> {
   fs.mkdirSync(cacheDir, { recursive: true });
   const pitPath = path.join(cacheDir, "sp500_ticker_start_end.csv");

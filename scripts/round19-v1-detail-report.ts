@@ -33,6 +33,7 @@ import {
   profitabilityStatus,
   rebalanceDates,
   sharesOutstandingAsOf,
+  applySameCikHandoffTransfers,
   simulateSaka,
   targetWeights,
   tradingDaysFromBars,
@@ -55,6 +56,7 @@ import {
   loadSp500PitFiles,
   membersOnDate,
   uniqueTickersInRange,
+  buildSameCikHandoffResolver,
   type Sp500Interval,
 } from "../src/lib/sp500-pit";
 import { fetchDailyBars } from "../src/lib/yahoo";
@@ -191,6 +193,7 @@ function buildCtx() {
       cikOf: (t) => cikMapBuilt.get(t) ?? null,
     };
     const semiOf = (t: string) => ctx.gicsOf(t)?.semiBucket ?? false;
+    const handoffSuccessor = buildSameCikHandoffResolver(intervals, (t) => cikMapBuilt.get(t) ?? null);
     const membershipIndex = new Map<string, Sp500Interval[]>();
     for (const row of intervals) {
       const list = membershipIndex.get(row.ticker) ?? [];
@@ -252,6 +255,7 @@ function buildCtx() {
       closeHistory,
       spyBars,
       factForTicker,
+      handoffSuccessor,
     };
   })();
 }
@@ -283,7 +287,7 @@ function simulateInstrumented(
   env: Awaited<ReturnType<typeof buildCtx>>,
   simOpts: InstrumentedSimOpts = {},
 ) {
-  const { calendar, ctx, semiOf, price, membersOn, mcapRankEligible, exclusionCategory, inSp500, profitOf } = env;
+  const { calendar, ctx, semiOf, price, membersOn, mcapRankEligible, exclusionCategory, inSp500, profitOf, handoffSuccessor } = env;
   const minTradeUsd = SAKA_REBAL_MIN_TRADE_USD;
   const relDrift = SAKA_REBAL_REL_DRIFT;
   const rangeFrom = simOpts.from ?? SAKA_START;
@@ -327,6 +331,9 @@ function simulateInstrumented(
       const eligible = filterEligibleCandidates(membersOn(pitDate), pitDate, ctx);
       const holdings = pickHoldings(config, eligible, pitDate, ctx);
       const weights = targetWeights(config, holdings, pitDate, ctx, semiOf);
+      if (handoffSuccessor) {
+        applySameCikHandoffTransfers(shares, weights, pitDate, price, lastPrice, handoffSuccessor);
+      }
       const added = holdings.filter((t) => !prevHoldings.includes(t));
       const removed = prevHoldings.filter((t) => !holdings.includes(t));
       const swaps = added.length;
@@ -357,6 +364,10 @@ function simulateInstrumented(
       });
 
       const removeReasons = removed.map((t) => {
+        const succ = handoffSuccessor?.(t, pitDate);
+        if (succ && holdings.includes(succ)) {
+          return { t, reason: `同一CIKのティッカー変更（${t}→${succ}、連続保有）` };
+        }
         if (!inSp500(t, date)) return { t, reason: "S&P 500構成から除外" };
         const cat = exclusionCategory(t, date, config.n);
         if (cat !== "eligibleだが上位N外") return { t, reason: cat };
@@ -1033,6 +1044,7 @@ async function main() {
     rebalance: "delta" as const,
     minTradeUsd: SAKA_REBAL_MIN_TRADE_USD,
     relDrift: SAKA_REBAL_REL_DRIFT,
+    handoffSuccessor: env.handoffSuccessor,
   };
   const runConfigIs = (config: SakaConfig) => {
     const { curve, turnoverPerRebal } = simulateSaka(

@@ -791,7 +791,35 @@ export type SakaSimOptions = {
   initialCash?: number;
   /** First session in range: invest using holdings/weights as of this rebalance date (PIT). */
   bootstrapHoldingsDate?: string;
+  /** Map delisted ticker → successor on same CIK (rename continuity; no sell+rebuy). */
+  handoffSuccessor?: (fromTicker: string, pitDate: string) => string | null;
 };
+
+/** Move share count to successor ticker at same USD (used before delta trim/add). */
+export function applySameCikHandoffTransfers(
+  shares: Record<string, number>,
+  weights: Record<string, number>,
+  pitDate: string,
+  price: (ticker: string, date: string) => number | null,
+  lastPrice: Record<string, number>,
+  handoffSuccessor: (fromTicker: string, pitDate: string) => string | null,
+): void {
+  const targetSet = new Set(Object.keys(weights));
+  for (const t of [...Object.keys(shares)]) {
+    if (targetSet.has(t)) continue;
+    const to = handoffSuccessor(t, pitDate);
+    if (!to || !targetSet.has(to)) continue;
+    const sh = shares[t] ?? 0;
+    if (sh <= 0) continue;
+    const pFrom = price(t, pitDate) ?? lastPrice[t];
+    const pTo = price(to, pitDate) ?? lastPrice[to];
+    if (!pFrom || !pTo || pFrom <= 0 || pTo <= 0) continue;
+    const usd = sh * pFrom;
+    shares[to] = (shares[to] ?? 0) + usd / pTo;
+    delete shares[t];
+    lastPrice[to] = pTo;
+  }
+}
 
 export function simulateSaka(
   config: SakaConfig,
@@ -808,6 +836,7 @@ export function simulateSaka(
   const rebalanceMode = simOpts.rebalance ?? "legacy_full_liquidate";
   const minTradeUsd = simOpts.minTradeUsd ?? SAKA_REBAL_MIN_TRADE_USD;
   const relDrift = simOpts.relDrift ?? SAKA_REBAL_REL_DRIFT;
+  const handoffSuccessor = simOpts.handoffSuccessor;
   const rebal = new Set(rebalanceDates(calendar, from, to));
   let cash = simOpts.initialCash ?? SAKA_INITIAL_CASH;
   const bootstrapHoldingsDate = simOpts.bootstrapHoldingsDate;
@@ -857,6 +886,10 @@ export function simulateSaka(
       turnoverSum += to / 2;
       rebalCount += 1;
       prevWeights = { ...weights };
+
+      if (handoffSuccessor) {
+        applySameCikHandoffTransfers(shares, weights, pitDate, price, lastPrice, handoffSuccessor);
+      }
 
       if (rebalanceMode === "legacy_full_liquidate") {
         markOrders(date, Object.keys(shares).length);
