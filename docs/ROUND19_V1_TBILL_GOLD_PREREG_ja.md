@@ -22,34 +22,32 @@
 | **短期国債 ETF** | **15% または 20%** | **SHY**（1–3y Treasury）を第一候補。**SGOV**（0–3m Treasury）を第二候補（データ取得可否で doc に明記） |
 | **金** | **0% または 5%** | **GLD**（取得不能時 IAU、doc 明記） |
 
-残りウェイトは mcap に按分しない — **mcap 75% + tbill + gold = 100%** 固定（例: mcap 75% + tbill 20% + gold 5%）。
-
-**Mcap ルール（divGold と同 spirit）**
-
-- eligible は `filterEligibleCandidates`（テーマ・金融・黒字・2023-04 AMZN 等は既存パス）
-- **GOOGL / MSFT / META** 上限 **K ∈ {1, 2}**（4 variant = K1/K2 × gold 0/5 × tbill 15/20 の部分 grid、下表）
-- **semiThin=off**（quad 間引きは divGold 結果どおり効かなかったため本実験では省略）
+残りウェイトは mcap に按分しない — **mcap + tbill + gold = 100%**。Gold 5% のとき tbill **20%**（mcap **75%**）。Gold 0% のとき tbill **25%**（mcap **75%**）。T-bill **15%** + gold **5%** の組は mcap **80%**（合計 100%・doc に明記）。
 
 ---
 
 ## 3. Variant grid（結果探索前に固定）
 
-| ID | Mega K | T-bill ETF | T-bill % | GLD % |
-|---|---|---|---:|---:|
-| `tbill_K1_SHY15_G0` | 1 | SHY | 15 | 0 |
-| `tbill_K1_SHY15_G5` | 1 | SHY | 15 | 5 |
-| `tbill_K1_SHY20_G0` | 1 | SHY | 20 | 0 |
-| `tbill_K1_SHY20_G5` | 1 | SHY | 20 | 5 |
-| `tbill_K2_SHY15_G0` | 2 | SHY | 15 | 0 |
-| `tbill_K2_SHY15_G5` | 2 | SHY | 15 | 5 |
-| `tbill_K2_SHY20_G0` | 2 | SHY | 20 | 0 |
-| `tbill_K2_SHY20_G5` | 2 | SHY | 20 | 5 |
+| ID | Mega K | T-bill ETF | Mcap % | T-bill % | GLD % |
+|---|---|---|---:|---:|---:|
+| `tbill_K1_SHY20_G5` | 1 | SHY | 75 | 20 | 5 |
+| `tbill_K1_SHY25_G0` | 1 | SHY | 75 | 25 | 0 |
+| `tbill_K1_SHY15_G5` | 1 | SHY | 80 | 15 | 5 |
+| `tbill_K2_SHY20_G5` | 2 | SHY | 75 | 20 | 5 |
+| `tbill_K2_SHY25_G0` | 2 | SHY | 75 | 25 | 0 |
+| `tbill_K2_SHY15_G5` | 2 | SHY | 80 | 15 | 5 |
 
-**SGOV:** SHY と同 grid で **1 代表**（`tbill_K2_SGOV20_G5`）のみ再シミュレーション — SHY との差を doc に記載。
+**SGOV:** 代表 1 本 `tbill_K2_SGOV20_G5`（mcap 75 / SGOV 20 / GLD 5）。
 
 **参考（採用判定外）**
 
 - `ref_IEF20_G5`: mcap 75% + **IEF 20%** + GLD 5% + mega K=2（中期国債・Emma 非優先）
+
+**Mcap ルール（divGold と同 spirit）**
+
+- eligible は `filterEligibleCandidates`（テーマ・金融・黒字・2023-04 AMZN 等は既存パス）
+- **GOOGL / MSFT / META** 上限 **K ∈ {1, 2}**
+- **semiThin=off**
 
 ---
 
