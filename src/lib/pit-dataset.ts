@@ -1,7 +1,18 @@
 import fs from "node:fs";
 import path from "node:path";
 import { PIT_TICKER_ALIASES } from "./pit-cik";
+import { barCloseLooksCorrupt } from "./pit-mcap";
 import type { Bar } from "./types";
+
+function priceSeriesScore(bars: Bar[]): number {
+  if (!bars.length) return -1;
+  const tail = bars.slice(-80);
+  let ok = 0;
+  for (const b of tail) {
+    if (!barCloseLooksCorrupt(b)) ok += 1;
+  }
+  return ok * 1_000_000 + bars.length;
+}
 
 export const PIT_CACHE = path.join(process.cwd(), "data", ".cache", "pit");
 export const REPO_PIT_CIK_OVERRIDES = path.join(process.cwd(), "data", "pit_cik_overrides.json");
@@ -106,21 +117,20 @@ export function loadPitBars(ticker: string, root = PIT_CACHE): Bar[] {
   };
   const direct = read(sym);
   const pitAlias = PIT_TICKER_ALIASES[key]?.replace(/\./g, "-");
-  if (pitAlias && pitAlias !== sym) {
-    const viaPit = read(pitAlias);
-    if (viaPit.length > direct.length) return viaPit;
-  }
-  if (direct.length) return direct;
-  if (pitAlias && pitAlias !== sym) {
-    const viaPit = read(pitAlias);
-    if (viaPit.length) return viaPit;
-  }
   const alias = pitPriceTicker(key).replace(/\./g, "-");
+  const candidates: Bar[][] = [];
+  if (direct.length) candidates.push(direct);
+  if (pitAlias && pitAlias !== sym) {
+    const viaPit = read(pitAlias);
+    if (viaPit.length) candidates.push(viaPit);
+  }
   if (alias !== sym && alias !== pitAlias) {
     const viaAlias = read(alias);
-    if (viaAlias.length) return viaAlias;
+    if (viaAlias.length) candidates.push(viaAlias);
   }
-  return [];
+  if (!candidates.length) return [];
+  candidates.sort((a, b) => priceSeriesScore(b) - priceSeriesScore(a));
+  return candidates[0]!;
 }
 
 export function hasPitFacts(ticker: string, root = PIT_CACHE): boolean {

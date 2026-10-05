@@ -20,6 +20,17 @@ describe("pit mcap split alignment", { skip: !fs.existsSync(PIT_CACHE) }, () => 
     assert.ok(ratio > 0.85 && ratio < 1.15, `split jump ratio ${ratio}`);
   });
 
+  it("NVDA mcap sane at 2021-10-01 (post 4:1 split)", () => {
+    const m = pitMarketCapForTicker(
+      "NVDA",
+      loadPitBars("NVDA", PIT_CACHE),
+      loadMergedPitFacts("NVDA", null, new Map(), PIT_CACHE),
+      "2021-10-01",
+      PIT_CACHE,
+    );
+    assert.ok(m > 400e9 && m < 700e9, `NVDA 2021-10-01 mcap ${m / 1e9}B`);
+  });
+
   it("NVDA in eligible top 10 at 2025-01-02 by mcap magnitude", () => {
     const m = pitMarketCapForTicker(
       "NVDA",

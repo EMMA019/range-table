@@ -310,13 +310,26 @@ function simulateInstrumented(config: SakaConfig, env: Awaited<ReturnType<typeof
       const removed = prevHoldings.filter((t) => !holdings.includes(t));
       const swaps = added.length;
 
+      const rankChangeTxt = (t: string, d: string, dPrev: string | null) => {
+        const rNow = mcapRankEligible(t, d);
+        const rPrev = dPrev ? mcapRankEligible(t, dPrev) : null;
+        const fmt = (r: number | null, on: string) => {
+          if (r != null) return `${r}位`;
+          const cat = exclusionCategory(t, on, config.n);
+          return `not eligible: ${cat}`;
+        };
+        if (dPrev && (rPrev != null || rNow != null)) return `eligible順位 ${fmt(rPrev, dPrev)}→${fmt(rNow, d)}`;
+        if (rNow != null) return `eligible順位 ${rNow}位`;
+        return `not eligible: ${exclusionCategory(t, d, config.n)}`;
+      };
+
       const addReasons = added.map((t) => {
-        const rNow = mcapRankEligible(t, date);
-        const rPrev = mcapRankEligible(t, getPrevRebalDate(rebalRows));
-        const rankTxt =
-          rPrev != null && rNow != null ? `eligible順位 ${rPrev}位→${rNow}位` : rNow != null ? `eligible順位 ${rNow}位` : "eligible順位 —";
+        const rankTxt = rankChangeTxt(t, date, getPrevRebalDate(rebalRows));
         if (!inSp500(t, date)) return { t, reason: "S&P新規加入（稀）" };
-        if (rPrev == null && profitOf(t, date) === "profitable") {
+        if (mcapRankEligible(t, date) == null) {
+          return { t, reason: `${rankTxt}（上位${config.n}入り）` };
+        }
+        if (mcapRankEligible(t, getPrevRebalDate(rebalRows)) == null && profitOf(t, date) === "profitable") {
           return { t, reason: `新規eligible化＋${rankTxt}（上位${config.n}入り）` };
         }
         return { t, reason: `${rankTxt}（時価総額上位${config.n}入り）` };
@@ -326,10 +339,7 @@ function simulateInstrumented(config: SakaConfig, env: Awaited<ReturnType<typeof
         if (!inSp500(t, date)) return { t, reason: "S&P 500構成から除外" };
         const cat = exclusionCategory(t, date, config.n);
         if (cat !== "eligibleだが上位N外") return { t, reason: cat };
-        const rNow = mcapRankEligible(t, date);
-        const rPrev = mcapRankEligible(t, getPrevRebalDate(rebalRows));
-        const rankTxt =
-          rPrev != null && rNow != null ? `eligible順位 ${rPrev}位→${rNow ?? "—"}位` : rNow != null ? `eligible順位 ${rNow}位` : "eligible順位 —";
+        const rankTxt = rankChangeTxt(t, date, getPrevRebalDate(rebalRows));
         return { t, reason: `${rankTxt}（上位${config.n}から落ち）` };
       });
 
