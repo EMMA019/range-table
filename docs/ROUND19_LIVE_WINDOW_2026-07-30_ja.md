@@ -5,7 +5,7 @@
 **終端:** 2026-10-02（USD/JPY 参照 **157.93**；実データ **157.93**）。
 **保有起点:** 2026-07-01 リバランスブック → 2026-07-30 投入 → **2026-10-01** リバランス → 2026-10-02。
 **取引:** 差分リバランス $0.35/注文（SPY/QQQ は手数料なし buy&hold）。
-**生成:** `scripts/round19-live-window-scorecard.ts` · **HEAD** `ca4a96f`
+**生成:** `scripts/round19-live-window-scorecard.ts` · **HEAD** `3cfb0b7`
 
 | ID | USD ret | JPY ret | USD MaxDD | JPY MaxDD |
 |---|---:|---:|---:|---:|
