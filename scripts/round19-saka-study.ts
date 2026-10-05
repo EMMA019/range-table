@@ -171,7 +171,7 @@ async function main() {
   const lastKnownShares = new Map<string, number>();
   const sharesLookup = (ticker: string, date: string) => {
     const f = factsBy.get(ticker);
-    let stale = false;
+    const stale = false;
     let sh: number | null = null;
     if (f) sh = sharesOutstandingAsOf(f, date);
     if (sh != null && sh > 0) {

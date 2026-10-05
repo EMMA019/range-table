@@ -182,7 +182,7 @@ function buildCtx() {
         pitMarketCapForTicker(t, barsBy.get(t) ?? [], factForTicker(t), date, PIT_CACHE),
       sharesLookup: (t, date) => {
         const f = factForTicker(t);
-        let sh: number | null = f ? sharesOutstandingAsOf(f, date) : null;
+        const sh: number | null = f ? sharesOutstandingAsOf(f, date) : null;
         if (sh != null && sh > 0) return { shares: sh, stale: false };
         const prev = lastKnownShares.get(t);
         if (prev != null) return { shares: prev, stale: true };

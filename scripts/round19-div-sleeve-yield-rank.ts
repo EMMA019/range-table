@@ -66,7 +66,7 @@ function pickMcapSleeve(eligible: string[], date: string, ctx: SakaCandidateCont
     .map((t) => ({ t, m: ctx.mcap(t, date) }))
     .filter((r) => r.m > 0)
     .sort((a, b) => b.m - a.m || a.t.localeCompare(b.t));
-  let picked: string[] = [];
+  const picked: string[] = [];
   for (const { t } of scored) {
     if (picked.length >= MCAP_N) break;
     if (wouldExceedMega(picked, t, megaMax)) continue;
@@ -239,7 +239,7 @@ async function main() {
     console.log("rank\tticker\tyield\tstatus");
     top10.forEach((r, i) => {
       const rank = i + 1;
-      let status = rank <= DIV_N ? "ADOPTED" : "dropped";
+      const status = rank <= DIV_N ? "ADOPTED" : "dropped";
       console.log(`${rank}\t${r.t}\t${yldPct(r.y)}\t${status}`);
     });
   }

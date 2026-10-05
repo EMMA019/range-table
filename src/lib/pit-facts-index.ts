@@ -65,11 +65,11 @@ export function loadMergedPitFacts(
   root: string,
 ): unknown | undefined {
   const p = pitFactsPathForTicker(ticker, cik, index, root);
-  let primary: unknown | undefined = p ? JSON.parse(fs.readFileSync(p, "utf8")) : undefined;
+  const primary: unknown | undefined = p ? JSON.parse(fs.readFileSync(p, "utf8")) : undefined;
   const supMap = loadFactsSupplementCikMap();
   const supCik = supMap[ticker.trim().toUpperCase()];
   if (!supCik) return primary;
-  let supPath = index.get(supCik) ?? supplementFactsPath(root, supCik);
+  const supPath = index.get(supCik) ?? supplementFactsPath(root, supCik);
   if (!fs.existsSync(supPath)) return primary;
   const supplement = JSON.parse(fs.readFileSync(supPath, "utf8"));
   return mergeCompanyFactsJson(primary, supplement);

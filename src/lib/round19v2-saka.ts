@@ -197,7 +197,7 @@ function allocateSlots(
   nTech = Math.max(1, Math.min(n, nTech));
   nTech = Math.max(Math.ceil(n * techSemiMinShare), Math.min(nTech, Math.floor(n * techSemiMaxShare)));
   slots.set(techKey, nTech);
-  let left = n - nTech;
+  const left = n - nTech;
   const others = [...mcapByKey.keys()].filter((k) => k !== techKey);
   const otherMcap = others.reduce((s, k) => s + (mcapByKey.get(k) ?? 0), 0) || 1;
   for (const k of others) {
@@ -352,7 +352,7 @@ export function targetWeightsV2(
     }
     if (cs > 0) for (const t of core) coreW[t] /= cs;
     const capped = applySingleNameCap(coreW, 0.1);
-    let csum = Object.values(capped).reduce((a, b) => a + b, 0);
+    const csum = Object.values(capped).reduce((a, b) => a + b, 0);
     const out: Record<string, number> = {};
     for (const t of holdings) out[t] = 0;
     for (const [t, v] of Object.entries(capped)) out[t] = v * 0.7;

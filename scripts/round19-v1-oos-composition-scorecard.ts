@@ -130,7 +130,7 @@ function pickMcapSleeve(eligible: string[], date: string, ctx: SakaCandidateCont
     .map((t) => ({ t, m: ctx.mcap(t, date) }))
     .filter((r) => r.m > 0)
     .sort((a, b) => b.m - a.m || a.t.localeCompare(b.t));
-  let picked: string[] = [];
+  const picked: string[] = [];
   for (const { t } of scored) {
     if (picked.length >= MCAP_N) break;
     if (wouldExceedMega(picked, t, megaMax)) continue;

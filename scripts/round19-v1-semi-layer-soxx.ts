@@ -475,7 +475,7 @@ function pickMcapSoxxLow(
     picked.push(t);
   }
 
-  let semiRanked = eligible
+  const semiRanked = eligible
     .filter((t) => semiOf(t))
     .map((t) => ({
       t,

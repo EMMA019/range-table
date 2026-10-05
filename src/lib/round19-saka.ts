@@ -444,7 +444,7 @@ export function applySingleNameCap(weights: Record<string, number>, cap: number)
 
 export function applySemiCap(weights: Record<string, number>, semiOf: (t: string) => boolean): Record<string, number> {
   const w = { ...weights };
-  let sum = Object.values(w).reduce((a, b) => a + b, 0);
+  const sum = Object.values(w).reduce((a, b) => a + b, 0);
   if (sum <= 0) return w;
   for (const k of Object.keys(w)) w[k] /= sum;
   const semiSum = Object.entries(w).filter(([t]) => semiOf(t)).reduce((a, [, v]) => a + v, 0);
