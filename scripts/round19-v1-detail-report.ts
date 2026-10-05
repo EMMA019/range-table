@@ -967,13 +967,12 @@ ${benchRows.join("\n")}
       baskets: Record<string, { before: string[]; after: string[] }>;
       meta: { shares2026_10_01: number | null; xomProfit2026_10_01: string };
     };
-    const basketLines = Object.entries(parsed.baskets).map(([d, b]) => {
-      const before = new Set(b.before);
-      const after = new Set(b.after);
-      const added = b.after.filter((t) => !before.has(t));
-      const removed = b.before.filter((t) => !after.has(t));
-      const changed = added.length || removed.length ? `入替: +${added.join(",") || "—"} / -${removed.join(",") || "—"}` : "変更なし";
-      return `- **${d}:** ${changed}`;
+    const snapshotDates = ["2024-07-01", "2025-01-02", "2026-10-01"];
+    const holdingsByDate = new Map(sim.rebalRows.map((r) => [r.date, r.holdings]));
+    const basketLines = snapshotDates.map((d) => {
+      const h = holdingsByDate.get(d);
+      const head = h?.slice(0, 5).join(", ") ?? "—";
+      return `| ${d} | ${head}${h && h.length > 5 ? " …" : ""} |`;
     });
     dataFixSection = `
 **(a) META 株数:** \`dei:EntityCommonStockSharesOutstanding\` 欠損時は \`us-gaap\` の加重平均株数へフォールバック（\`pit-shares.ts\`）。2026-10-01 時点株数: **${parsed.meta.shares2026_10_01?.toLocaleString() ?? "null"}**。
@@ -986,8 +985,10 @@ ${benchRows.join("\n")}
 | GICS CSV CIK≠解決後 CIK（2026-10-01 構成員） | **${parsed.gicsCsvCikOverrides2026_10_01.length}**（${parsed.gicsCsvCikOverrides2026_10_01.map((r) => `${r.ticker}:${r.gicsCik}→${r.canonicalCik}`).join(", ") || "—"}） |
 | リバランス日・mcap=0（価格あり） | 直近サンプル: ${JSON.stringify(parsed.zeroMcapSample)} |
 
-**2026-07-01 / 2026-10-01 バスケット（株数フォールバック＋XOM 修正前後）**
+**主要リバランス日の採用15（PIT mcap・Yahoo スプリット整合後）:** 詳細は §(1)。検証: \`pit-mcap-top30-validation.test.ts\`（NVDA/AVGO/META が 2025-01-02・2026-10-01 で eligible 上位10）。
 
+| 日付 | 採用15（先頭5銘柄） |
+|---|---|
 ${basketLines.join("\n")}
 `;
   } catch {

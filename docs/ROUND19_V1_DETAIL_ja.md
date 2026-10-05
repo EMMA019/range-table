@@ -9,20 +9,20 @@
 
 | 期間 | 採用 CAGR | SPY CAGR | 採用 MaxDD | SPY MaxDD |
 |---|---:|---:|---:|---:|
-| IS (2016–2020) | 20.62% | 15.42% | -27.74% | -33.72% |
-| OOS (2021–2026) | 17.93% | 15.18% | -34.60% | -24.50% |
+| IS (2016–2020) | 18.94% | 15.42% | -27.60% | -33.72% |
+| OOS (2021–2026) | 19.62% | 15.18% | -33.56% | -24.50% |
 
-**OOS 最大ドローダウン（重要）:** 採用構成の OOS MaxDD **-34.6%** は SPY **-24.5%** より**深い（悪化）**。Emma 事前登録の合格基準②「OOS DD < SPY」は **満たさない**。
+**OOS 最大ドローダウン（重要）:** 採用構成の OOS MaxDD **-33.6%** は SPY **-24.5%** より**深い（悪化）**。Emma 事前登録の合格基準②「OOS DD < SPY」は **満たさない**。
 
-全期間の最大 DD 局面（採用曲線）: ピーク **2022-01-03** → ボトム **2023-01-05**（深さ -34.6%）→ 回復 **2023-11-14**。
+全期間の最大 DD 局面（採用曲線）: ピーク **2022-01-03** → ボトム **2023-01-05**（深さ -33.6%）→ 回復 **2023-11-14**。
 
 ### 事前登録合格基準（OOS・$0.35・`ROUND19_PREREG_ja.md`）
 
 | # | 基準 | 採用 | SPY/参照 | 判定 |
 |---|---|---:|---:|---|
-| 1 | OOS CAGR ≥ 10% | 17.9% | — | **合格** |
-| 2 | OOS MaxDD **が SPY より浅い** | -34.6% | -24.5% | **不合格** |
-| 3 | 暦年プラス比率 ≥ 70%（OOS 暦年） | 90% | — | **合格** |
+| 1 | OOS CAGR ≥ 10% | 19.6% | — | **合格** |
+| 2 | OOS MaxDD **が SPY より浅い** | -33.6% | -24.5% | **不合格** |
+| 3 | 暦年プラス比率 ≥ 70%（OOS 暦年） | 80% | — | **合格** |
 
 ### 採用構成のデータ版別変遷
 
@@ -32,7 +32,8 @@
 | `e2380b8` | `plain_15__equal` | filed PIT 黒字・初回 corrected v1 PIT データ |
 | `216dfc6` | `plain_15__mcap_cap5` | 詳細レポート初版（mcap 順位バグ残存） |
 | `fe6c787` | `plain_20__mcap_cap10` | mcapC・ATVI/CERN 修正後 IS 再採用 |
-| `cc6ffaa` | `plain_15__mcap` | HOLX 株数・XOM CIK 一貫・本稿 |
+| `cc6ffaa` | `plain_15__mcap` | HOLX 株数・XOM CIK 一貫 |
+| `a6bd739` | `plain_15__mcap` | **株価×株数スプリット整合**（Yahoo splits + forward 株数） |
 
 
 ---
@@ -57,10 +58,13 @@
 | GICS CSV CIK≠解決後 CIK（2026-10-01 構成員） | **1**（XOM:2115436→34088） |
 | リバランス日・mcap=0（価格あり） | 直近サンプル: [{"date":"2026-07-01","tickers":["HONA","STZ"]},{"date":"2026-10-01","tickers":["STZ"]}] |
 
-**2026-07-01 / 2026-10-01 バスケット（株数フォールバック＋XOM 修正前後）**
+**主要リバランス日の採用15（PIT mcap・Yahoo スプリット整合後）:** 詳細は §(1) 四半期保有表。検証: `pit-mcap-top30-validation.test.ts`（NVDA/AVGO/META が 2025-01-02・2026-10-01 で eligible 上位10）。
 
-- **2026-07-01:** 入替: +META / -NVDA
-- **2026-10-01:** 入替: +META / -PLTR
+| 日付 | 採用15（先頭5銘柄） |
+|---|---|
+| 2024-07-01 | MSFT, AAPL, **NVDA**, GOOGL, AMZN …（SMCI 非上位） |
+| 2025-01-02 | AAPL, **NVDA**, MSFT, AMZN, GOOGL … |
+| 2026-10-01 | **NVDA**, AAPL, GOOGL, MSFT, AMZN … |
 
 
 ---
@@ -71,154 +75,216 @@
 
 | リバランス日 | 保有数 | 追加 | 除外 | 入替数 | スワップ注文 | リウェイト注文 | 手数料$0.35 |
 |---|---:|---|---|---:|---:|---:|---:|
-| 2016-01-04 | 15 | AAPL, GOOGL, MSFT, XOM, AMZN, FB, JNJ, PG, PFE, WMT, T, VZ, KO, HD, CVX | — | 15 | 14 | 0 | $4.90 |
-| 2016-04-01 | 15 | ORCL | HD | 1 | 1 | 1 | $0.70 |
-| 2016-07-01 | 15 | GE | ORCL | 1 | 0 | 0 | $0.00 |
-| 2016-10-03 | 15 | — | — | 0 | 0 | 1 | $0.35 |
-| 2017-01-03 | 15 | — | — | 0 | 0 | 0 | $0.00 |
-| 2017-04-03 | 15 | ORCL | CVX | 1 | 1 | 1 | $0.70 |
-| 2017-07-03 | 15 | CVX | VZ | 1 | 1 | 1 | $0.70 |
-| 2017-10-02 | 15 | VZ | KO | 1 | 1 | 1 | $0.70 |
-| 2018-01-02 | 15 | BA, INTC, HD | PFE, GE, ORCL | 3 | 6 | 5 | $3.85 |
-| 2018-04-02 | 15 | UNH, PFE | BA, PG | 2 | 4 | 2 | $2.10 |
-| 2018-07-02 | 15 | — | — | 0 | 0 | 1 | $0.35 |
-| 2018-10-01 | 15 | CSCO, BA | INTC, T | 2 | 4 | 2 | $2.10 |
-| 2019-01-02 | 15 | PG, INTC | HD, CSCO | 2 | 3 | 1 | $1.40 |
-| 2019-04-01 | 15 | CSCO | BA | 1 | 1 | 1 | $0.70 |
-| 2019-07-01 | 15 | T, HD | INTC, UNH | 2 | 3 | 3 | $2.10 |
-| 2019-10-01 | 15 | KO, INTC | PFE, CSCO | 2 | 3 | 1 | $1.40 |
-| 2020-01-02 | 15 | BA, UNH, DIS | HD, KO, CVX | 3 | 6 | 2 | $2.80 |
-| 2020-04-01 | 15 | HD, MRK, KO | BA, XOM, DIS | 3 | 5 | 2 | $2.45 |
-| 2020-07-01 | 15 | NVDA, NFLX | MRK, KO | 2 | 2 | 2 | $1.40 |
-| 2020-10-01 | 15 | ADBE, CRM | INTC, T | 2 | 3 | 2 | $1.75 |
-| 2021-01-04 | 15 | TSLA | CRM | 1 | 0 | 8 | $2.80 |
-| 2021-04-01 | 15 | INTC, CMCSA | ADBE, NFLX | 2 | 3 | 1 | $1.40 |
-| 2021-07-01 | 15 | ADBE, NKE | INTC, VZ | 2 | 3 | 2 | $1.75 |
-| 2021-10-01 | 15 | ISRG, DIS | CMCSA, NKE | 2 | 2 | 4 | $2.10 |
-| 2022-01-03 | 15 | PFE, AVGO | ISRG, ADBE | 2 | 3 | 3 | $2.10 |
-| 2022-04-01 | 15 | XOM, CVX | DIS, AVGO | 2 | 2 | 2 | $1.40 |
-| 2022-07-01 | 15 | META, LLY | FB, CVX | 2 | 3 | 12 | $5.25 |
-| 2022-10-03 | 15 | CVX | PFE | 1 | 2 | 12 | $4.90 |
-| 2023-01-03 | 15 | — | — | 0 | 0 | 0 | $0.00 |
-| 2023-04-03 | 15 | ABBV | AMZN | 1 | 2 | 6 | $2.80 |
-| 2023-07-03 | 15 | AMZN, AVGO, ORCL | CVX, HD, ABBV | 3 | 5 | 7 | $4.20 |
-| 2023-10-02 | 15 | CVX | ORCL | 1 | 0 | 0 | $0.00 |
-| 2024-01-02 | 15 | HD | CVX | 1 | 0 | 3 | $1.05 |
+| 2016-01-04 | 15 | AAPL, GOOGL, MSFT, AMZN, FB, JNJ, XOM, NKE, WMT, PG, KO, CERN, HD, BA, INTC | — | 15 | 14 | 0 | $4.90 |
+| 2016-04-01 | 15 | VZ, T | NKE, BA | 2 | 4 | 1 | $1.75 |
+| 2016-07-01 | 15 | GE, PFE | HD, INTC | 2 | 3 | 13 | $5.60 |
+| 2016-10-03 | 15 | INTC, CVX | VZ, PFE | 2 | 4 | 1 | $1.75 |
+| 2017-01-03 | 15 | BA | KO | 1 | 2 | 0 | $0.70 |
+| 2017-04-03 | 15 | HD, UNH, KO | BA, CVX, T | 3 | 6 | 0 | $2.10 |
+| 2017-07-03 | 15 | CVX | INTC | 1 | 2 | 0 | $0.70 |
+| 2017-10-02 | 15 | INTC | KO | 1 | 2 | 0 | $0.70 |
+| 2018-01-02 | 15 | BA | CVX | 1 | 1 | 1 | $0.70 |
+| 2018-04-02 | 15 | DWDP | GE | 1 | 2 | 6 | $2.80 |
+| 2018-07-02 | 15 | NFLX, CVX | CERN, PG | 2 | 4 | 0 | $1.40 |
+| 2018-10-01 | 15 | CSCO, CERN | NFLX, CVX | 2 | 4 | 1 | $1.75 |
+| 2019-01-02 | 15 | PG, PFE, KO | DWDP, CSCO, CERN | 3 | 5 | 1 | $2.10 |
+| 2019-04-01 | 15 | CSCO, DWDP | PFE, KO | 2 | 3 | 1 | $1.40 |
+| 2019-07-01 | 15 | KO | DWDP | 1 | 2 | 1 | $1.05 |
+| 2019-10-01 | 15 | DIS | CSCO | 1 | 2 | 0 | $0.70 |
+| 2020-01-02 | 15 | — | — | 0 | 0 | 1 | $0.35 |
+| 2020-04-01 | 15 | NFLX, VZ | BA, XOM | 2 | 3 | 0 | $1.05 |
+| 2020-07-01 | 15 | NVDA, ADBE | VZ, KO | 2 | 2 | 3 | $1.75 |
+| 2020-10-01 | 15 | CRM | DIS | 1 | 1 | 1 | $0.70 |
+| 2021-01-04 | 15 | TSLA, GE | CRM, INTC | 2 | 2 | 7 | $3.15 |
+| 2021-04-01 | 15 | INTC | ADBE | 1 | 1 | 1 | $0.70 |
+| 2021-07-01 | 15 | ADBE, NKE | GE, INTC | 2 | 3 | 1 | $1.40 |
+| 2021-10-01 | 15 | ISRG, DIS | NVDA, NKE | 2 | 3 | 2 | $1.75 |
+| 2022-01-03 | 15 | NVDA, VIAC | ISRG, NFLX | 2 | 4 | 5 | $3.15 |
+| 2022-04-01 | 15 | PARA, XOM, CVX | VIAC, DIS, ADBE | 3 | 4 | 1 | $1.75 |
+| 2022-07-01 | 15 | META, LLY, KO | GOOGL, FB, CVX | 3 | 5 | 7 | $4.20 |
+| 2022-10-03 | 15 | GOOGL | KO | 1 | 1 | 6 | $2.45 |
+| 2023-01-03 | 15 | — | — | 0 | 0 | 3 | $1.05 |
+| 2023-04-03 | 15 | CVX | AMZN | 1 | 2 | 5 | $2.45 |
+| 2023-07-03 | 15 | AMZN, AVGO | CVX, HD | 2 | 3 | 8 | $3.85 |
+| 2023-10-02 | 15 | ORCL | PARA | 1 | 2 | 3 | $1.75 |
+| 2024-01-02 | 15 | HD | ORCL | 1 | 1 | 2 | $1.05 |
 | 2024-04-01 | 15 | — | — | 0 | 0 | 2 | $0.70 |
-| 2024-07-01 | 15 | SMCI, ORCL, COST | NVDA, JNJ, HD | 3 | 4 | 12 | $5.60 |
-| 2024-10-01 | 15 | LRCX, HD | SMCI, COST | 2 | 2 | 10 | $4.20 |
-| 2025-01-02 | 15 | COST | LRCX | 1 | 2 | 8 | $3.50 |
-| 2025-04-01 | 15 | NFLX | HD | 1 | 1 | 0 | $0.35 |
-| 2025-07-01 | 15 | NVDA | UNH | 1 | 1 | 4 | $1.75 |
-| 2025-10-01 | 15 | JNJ, PLTR | COST, PG | 2 | 3 | 6 | $3.15 |
-| 2026-01-02 | 15 | ABBV | NFLX | 1 | 2 | 4 | $2.10 |
-| 2026-04-01 | 15 | BKNG, COST | ABBV, PLTR | 2 | 2 | 13 | $5.25 |
-| 2026-07-01 | 15 | MU, AMD, AMAT, LRCX | BKNG, COST, NVDA, ORCL | 4 | 7 | 9 | $5.60 |
-| 2026-10-01 | 15 | NVDA, ABBV | AMAT, LRCX | 2 | 3 | 4 | $2.45 |
+| 2024-07-01 | 15 | ORCL, COST | JNJ, HD | 2 | 2 | 2 | $1.40 |
+| 2024-10-01 | 15 | HD | COST | 1 | 0 | 1 | $0.35 |
+| 2025-01-02 | 15 | COST, NFLX | PG, HD | 2 | 3 | 3 | $2.10 |
+| 2025-04-01 | 15 | — | — | 0 | 0 | 0 | $0.00 |
+| 2025-07-01 | 15 | PG | UNH | 1 | 1 | 1 | $0.70 |
+| 2025-10-01 | 15 | PLTR, JNJ | COST, PG | 2 | 2 | 4 | $2.10 |
+| 2026-01-02 | 15 | ABBV | NFLX | 1 | 1 | 5 | $2.10 |
+| 2026-04-01 | 15 | COST, MU | PLTR, ABBV | 2 | 2 | 2 | $1.40 |
+| 2026-07-01 | 15 | AMD, AMAT | COST, ORCL | 2 | 3 | 10 | $4.55 |
+| 2026-10-01 | 15 | ABBV | AMAT | 1 | 0 | 7 | $2.45 |
 
 ### 入替理由（四半期ごと）
 
 #### 2016-01-04（入替 15 銘柄）
 
 **追加:** 
-- **+AAPL**: eligible順位 1位→1位（時価総額上位15入り）
-- **+GOOGL**: eligible順位 2位→2位（時価総額上位15入り）
+- **+AAPL**: eligible順位 2位→1位（時価総額上位15入り）
+- **+GOOGL**: eligible順位 1位→2位（時価総額上位15入り）
 - **+MSFT**: eligible順位 3位→3位（時価総額上位15入り）
-- **+XOM**: eligible順位 4位→4位（時価総額上位15入り）
-- **+AMZN**: eligible順位 5位→5位（時価総額上位15入り）
-- **+FB**: eligible順位 6位→6位（時価総額上位15入り）
-- **+JNJ**: eligible順位 7位→7位（時価総額上位15入り）
-- **+PG**: eligible順位 8位→8位（時価総額上位15入り）
-- **+PFE**: eligible順位 9位→9位（時価総額上位15入り）
-- **+WMT**: eligible順位 10位→10位（時価総額上位15入り）
-- **+T**: eligible順位 11位→11位（時価総額上位15入り）
-- **+VZ**: eligible順位 12位→12位（時価総額上位15入り）
-- **+KO**: eligible順位 13位→13位（時価総額上位15入り）
-- **+HD**: eligible順位 15位→14位（時価総額上位15入り）
-- **+CVX**: eligible順位 14位→15位（時価総額上位15入り）
+- **+AMZN**: eligible順位 4位→4位（時価総額上位15入り）
+- **+FB**: eligible順位 5位→5位（時価総額上位15入り）
+- **+JNJ**: eligible順位 6位→6位（時価総額上位15入り）
+- **+XOM**: eligible順位 7位→7位（時価総額上位15入り）
+- **+NKE**: eligible順位 8位→8位（時価総額上位15入り）
+- **+WMT**: eligible順位 9位→9位（時価総額上位15入り）
+- **+PG**: eligible順位 10位→10位（時価総額上位15入り）
+- **+KO**: eligible順位 11位→11位（時価総額上位15入り）
+- **+CERN**: eligible順位 13位→12位（時価総額上位15入り）
+- **+HD**: eligible順位 14位→13位（時価総額上位15入り）
+- **+BA**: eligible順位 12位→14位（時価総額上位15入り）
+- **+INTC**: eligible順位 15位→15位（時価総額上位15入り）
 
 **除外:** なし
 
 
-#### 2016-04-01（入替 1 銘柄）
+#### 2016-04-01（入替 2 銘柄）
 
 **追加:** 
-- **+ORCL**: eligible順位 17位→15位（時価総額上位15入り）
+- **+VZ**: eligible順位 17位→13位（時価総額上位15入り）
+- **+T**: eligible順位 25位→15位（時価総額上位15入り）
 
 **除外:** 
-- **−HD**: eligible順位 14位→16位（上位15から落ち）
+- **−NKE**: eligible順位 8位→26位（上位15から落ち）
+- **−BA**: eligible順位 14位→32位（上位15から落ち）
 
-#### 2016-07-01（入替 1 銘柄）
+#### 2016-07-01（入替 2 銘柄）
 
 **追加:** 
-- **+GE**: 新規eligible化＋eligible順位 8位（上位15入り）
+- **+GE**: 新規eligible化＋eligible順位 1位（上位15入り）
+- **+PFE**: eligible順位 18位→15位（時価総額上位15入り）
 
 **除外:** 
-- **−ORCL**: eligible順位 15位→16位（上位15から落ち）
+- **−HD**: eligible順位 12位→17位（上位15から落ち）
+- **−INTC**: eligible順位 14位→18位（上位15から落ち）
 
-#### 2016-10-03（入替 0 銘柄）
-
-**追加:** なし
-
-
-**除外:** なし
-
-
-#### 2017-01-03（入替 0 銘柄）
-
-**追加:** なし
-
-
-**除外:** なし
-
-
-#### 2017-04-03（入替 1 銘柄）
+#### 2016-10-03（入替 2 銘柄）
 
 **追加:** 
-- **+ORCL**: eligible順位 21位→14位（時価総額上位15入り）
+- **+INTC**: eligible順位 18位→11位（時価総額上位15入り）
+- **+CVX**: eligible順位 16位→14位（時価総額上位15入り）
 
 **除外:** 
+- **−VZ**: eligible順位 13位→19位（上位15から落ち）
+- **−PFE**: eligible順位 15位→18位（上位15から落ち）
+
+#### 2017-01-03（入替 1 銘柄）
+
+**追加:** 
+- **+BA**: eligible順位 30位→11位（時価総額上位15入り）
+
+**除外:** 
+- **−KO**: eligible順位 13位→16位（上位15から落ち）
+
+#### 2017-04-03（入替 3 銘柄）
+
+**追加:** 
+- **+HD**: eligible順位 20位→13位（時価総額上位15入り）
+- **+UNH**: eligible順位 18位→14位（時価総額上位15入り）
+- **+KO**: eligible順位 16位→15位（時価総額上位15入り）
+
+**除外:** 
+- **−BA**: eligible順位 11位→25位（上位15から落ち）
 - **−CVX**: 赤字（TTM・filed PIT）
+- **−T**: eligible順位 15位→16位（上位15から落ち）
 
 #### 2017-07-03（入替 1 銘柄）
 
 **追加:** 
-- **+CVX**: 新規eligible化＋eligible順位 14位（上位15入り）
+- **+CVX**: 新規eligible化＋eligible順位 15位（上位15入り）
 
 **除外:** 
-- **−VZ**: eligible順位 13位→17位（上位15から落ち）
+- **−INTC**: eligible順位 12位→17位（上位15から落ち）
 
 #### 2017-10-02（入替 1 銘柄）
 
 **追加:** 
-- **+VZ**: eligible順位 17位→15位（時価総額上位15入り）
+- **+INTC**: eligible順位 17位→14位（時価総額上位15入り）
 
 **除外:** 
-- **−KO**: eligible順位 15位→17位（上位15から落ち）
+- **−KO**: eligible順位 14位→17位（上位15から落ち）
 
-#### 2018-01-02（入替 3 銘柄）
+#### 2018-01-02（入替 1 銘柄）
 
 **追加:** 
-- **+BA**: eligible順位 25位→8位（時価総額上位15入り）
-- **+INTC**: eligible順位 19位→13位（時価総額上位15入り）
-- **+HD**: eligible順位 16位→14位（時価総額上位15入り）
+- **+BA**: eligible順位 16位→8位（時価総額上位15入り）
 
 **除外:** 
-- **−PFE**: eligible順位 12位→16位（上位15から落ち）
-- **−GE**: eligible順位 13位→25位（上位15から落ち）
-- **−ORCL**: eligible順位 14位→20位（上位15から落ち）
+- **−CVX**: eligible順位 15位→16位（上位15から落ち）
 
-#### 2018-04-02（入替 2 銘柄）
+#### 2018-04-02（入替 1 銘柄）
 
 **追加:** 
-- **+UNH**: eligible順位 17位→12位（時価総額上位15入り）
-- **+PFE**: eligible順位 16位→13位（時価総額上位15入り）
+- **+DWDP**: 新規eligible化＋eligible順位 8位（上位15入り）
 
 **除外:** 
-- **−BA**: eligible順位 8位→17位（上位15から落ち）
-- **−PG**: eligible順位 12位→16位（上位15から落ち）
+- **−GE**: 赤字（TTM・filed PIT）
 
-#### 2018-07-02（入替 0 銘柄）
+#### 2018-07-02（入替 2 銘柄）
+
+**追加:** 
+- **+NFLX**: eligible順位 20位→14位（時価総額上位15入り）
+- **+CVX**: eligible順位 16位→15位（時価総額上位15入り）
+
+**除外:** 
+- **−CERN**: eligible順位 14位→17位（上位15から落ち）
+- **−PG**: eligible順位 15位→16位（上位15から落ち）
+
+#### 2018-10-01（入替 2 銘柄）
+
+**追加:** 
+- **+CSCO**: 新規eligible化＋eligible順位 14位（上位15入り）
+- **+CERN**: eligible順位 17位→15位（時価総額上位15入り）
+
+**除外:** 
+- **−NFLX**: eligible順位 14位→20位（上位15から落ち）
+- **−CVX**: eligible順位 15位→19位（上位15から落ち）
+
+#### 2019-01-02（入替 3 銘柄）
+
+**追加:** 
+- **+PG**: eligible順位 18位→11位（時価総額上位15入り）
+- **+PFE**: eligible順位 17位→13位（時価総額上位15入り）
+- **+KO**: eligible順位 348位→15位（時価総額上位15入り）
+
+**除外:** 
+- **−DWDP**: eligible順位 9位→54位（上位15から落ち）
+- **−CSCO**: eligible順位 14位→16位（上位15から落ち）
+- **−CERN**: eligible順位 15位→20位（上位15から落ち）
+
+#### 2019-04-01（入替 2 銘柄）
+
+**追加:** 
+- **+CSCO**: eligible順位 16位→13位（時価総額上位15入り）
+- **+DWDP**: eligible順位 54位→14位（時価総額上位15入り）
+
+**除外:** 
+- **−PFE**: eligible順位 13位→21位（上位15から落ち）
+- **−KO**: eligible順位 15位→366位（上位15から落ち）
+
+#### 2019-07-01（入替 1 銘柄）
+
+**追加:** 
+- **+KO**: eligible順位 366位→15位（時価総額上位15入り）
+
+**除外:** 
+- **−DWDP**: S&P 500構成から除外
+
+#### 2019-10-01（入替 1 銘柄）
+
+**追加:** 
+- **+DIS**: 新規eligible化＋eligible順位 12位（上位15入り）
+
+**除外:** 
+- **−CSCO**: eligible順位 13位→19位（上位15から落ち）
+
+#### 2020-01-02（入替 0 銘柄）
 
 **追加:** なし
 
@@ -226,173 +292,113 @@
 **除外:** なし
 
 
-#### 2018-10-01（入替 2 銘柄）
+#### 2020-04-01（入替 2 銘柄）
 
 **追加:** 
-- **+CSCO**: 新規eligible化＋eligible順位 13位（上位15入り）
-- **+BA**: eligible順位 17位→14位（時価総額上位15入り）
-
-**除外:** 
-- **−INTC**: eligible順位 11位→17位（上位15から落ち）
-- **−T**: eligible順位 15位→16位（上位15から落ち）
-
-#### 2019-01-02（入替 2 銘柄）
-
-**追加:** 
-- **+PG**: eligible順位 18位→13位（時価総額上位15入り）
-- **+INTC**: eligible順位 17位→14位（時価総額上位15入り）
-
-**除外:** 
-- **−HD**: eligible順位 12位→19位（上位15から落ち）
-- **−CSCO**: eligible順位 13位→20位（上位15から落ち）
-
-#### 2019-04-01（入替 1 銘柄）
-
-**追加:** 
-- **+CSCO**: eligible順位 20位→12位（時価総額上位15入り）
-
-**除外:** 
-- **−BA**: eligible順位 7位→17位（上位15から落ち）
-
-#### 2019-07-01（入替 2 銘柄）
-
-**追加:** 
-- **+T**: eligible順位 16位→11位（時価総額上位15入り）
-- **+HD**: eligible順位 18位→15位（時価総額上位15入り）
-
-**除外:** 
-- **−INTC**: eligible順位 11位→19位（上位15から落ち）
-- **−UNH**: eligible順位 15位→16位（上位15から落ち）
-
-#### 2019-10-01（入替 2 銘柄）
-
-**追加:** 
-- **+KO**: eligible順位 17位→13位（時価総額上位15入り）
-- **+INTC**: eligible順位 19位→14位（時価総額上位15入り）
-
-**除外:** 
-- **−PFE**: eligible順位 10位→22位（上位15から落ち）
-- **−CSCO**: eligible順位 14位→20位（上位15から落ち）
-
-#### 2020-01-02（入替 3 銘柄）
-
-**追加:** 
-- **+BA**: eligible順位 18位→8位（時価総額上位15入り）
-- **+UNH**: eligible順位 19位→12位（時価総額上位15入り）
-- **+DIS**: eligible順位 17位→13位（時価総額上位15入り）
-
-**除外:** 
-- **−HD**: eligible順位 11位→16位（上位15から落ち）
-- **−KO**: eligible順位 13位→18位（上位15から落ち）
-- **−CVX**: eligible順位 15位→19位（上位15から落ち）
-
-#### 2020-04-01（入替 3 銘柄）
-
-**追加:** 
-- **+HD**: eligible順位 16位→13位（時価総額上位15入り）
-- **+MRK**: eligible順位 17位→14位（時価総額上位15入り）
-- **+KO**: eligible順位 18位→15位（時価総額上位15入り）
+- **+NFLX**: eligible順位 28位→13位（時価総額上位15入り）
+- **+VZ**: eligible順位 18位→14位（時価総額上位15入り）
 
 **除外:** 
 - **−BA**: 赤字（TTM・filed PIT）
-- **−XOM**: eligible順位 10位→21位（上位15から落ち）
-- **−DIS**: eligible順位 13位→17位（上位15から落ち）
+- **−XOM**: eligible順位 13位→25位（上位15から落ち）
 
 #### 2020-07-01（入替 2 銘柄）
 
 **追加:** 
-- **+NVDA**: eligible順位 23位→12位（時価総額上位15入り）
-- **+NFLX**: eligible順位 20位→15位（時価総額上位15入り）
+- **+NVDA**: eligible順位 16位→10位（時価総額上位15入り）
+- **+ADBE**: eligible順位 18位→14位（時価総額上位15入り）
 
 **除外:** 
-- **−MRK**: eligible順位 14位→18位（上位15から落ち）
-- **−KO**: eligible順位 15位→20位（上位15から落ち）
+- **−VZ**: eligible順位 14位→18位（上位15から落ち）
+- **−KO**: eligible順位 15位→17位（上位15から落ち）
 
-#### 2020-10-01（入替 2 銘柄）
+#### 2020-10-01（入替 1 銘柄）
 
 **追加:** 
-- **+ADBE**: eligible順位 16位→13位（時価総額上位15入り）
-- **+CRM**: 新規eligible化＋eligible順位 15位（上位15入り）
+- **+CRM**: 新規eligible化＋eligible順位 14位（上位15入り）
 
 **除外:** 
-- **−INTC**: eligible順位 11位→16位（上位15から落ち）
-- **−T**: eligible順位 14位→20位（上位15から落ち）
+- **−DIS**: 赤字（TTM・filed PIT）
 
-#### 2021-01-04（入替 1 銘柄）
+#### 2021-01-04（入替 2 銘柄）
 
 **追加:** 
 - **+TSLA**: 新規eligible化＋eligible順位 6位（上位15入り）
+- **+GE**: 新規eligible化＋eligible順位 7位（上位15入り）
 
 **除外:** 
-- **−CRM**: eligible順位 15位→23位（上位15から落ち）
+- **−CRM**: eligible順位 14位→17位（上位15から落ち）
+- **−INTC**: eligible順位 15位→20位（上位15から落ち）
 
-#### 2021-04-01（入替 2 銘柄）
+#### 2021-04-01（入替 1 銘柄）
 
 **追加:** 
-- **+INTC**: eligible順位 22位→13位（時価総額上位15入り）
-- **+CMCSA**: eligible順位 16位→14位（時価総額上位15入り）
+- **+INTC**: eligible順位 20位→15位（時価総額上位15入り）
 
 **除外:** 
-- **−ADBE**: eligible順位 14位→17位（上位15から落ち）
-- **−NFLX**: eligible順位 15位→16位（上位15から落ち）
+- **−ADBE**: eligible順位 14位→16位（上位15から落ち）
 
 #### 2021-07-01（入替 2 銘柄）
 
 **追加:** 
-- **+ADBE**: eligible順位 17位→13位（時価総額上位15入り）
-- **+NKE**: eligible順位 22位→15位（時価総額上位15入り）
+- **+ADBE**: eligible順位 16位→13位（時価総額上位15入り）
+- **+NKE**: eligible順位 23位→15位（時価総額上位15入り）
 
 **除外:** 
-- **−INTC**: eligible順位 13位→19位（上位15から落ち）
-- **−VZ**: eligible順位 15位→17位（上位15から落ち）
+- **−GE**: 赤字（TTM・filed PIT）
+- **−INTC**: eligible順位 15位→18位（上位15から落ち）
 
 #### 2021-10-01（入替 2 銘柄）
 
 **追加:** 
-- **+ISRG**: eligible順位 61位→11位（時価総額上位15入り）
-- **+DIS**: 新規eligible化＋eligible順位 14位（上位15入り）
+- **+ISRG**: eligible順位 54位→8位（時価総額上位15入り）
+- **+DIS**: 新規eligible化＋eligible順位 11位（上位15入り）
 
 **除外:** 
-- **−CMCSA**: eligible順位 14位→18位（上位15から落ち）
-- **−NKE**: eligible順位 15位→21位（上位15から落ち）
+- **−NVDA**: eligible順位 7位→366位（上位15から落ち）
+- **−NKE**: eligible順位 15位→20位（上位15から落ち）
 
 #### 2022-01-03（入替 2 銘柄）
 
 **追加:** 
-- **+PFE**: eligible順位 20位→13位（時価総額上位15入り）
-- **+AVGO**: eligible順位 34位→15位（時価総額上位15入り）
+- **+NVDA**: eligible順位 366位→7位（時価総額上位15入り）
+- **+VIAC**: 新規eligible化＋eligible順位 8位（上位15入り）
 
 **除外:** 
-- **−ISRG**: eligible順位 11位→58位（上位15から落ち）
-- **−ADBE**: eligible順位 15位→16位（上位15から落ち）
+- **−ISRG**: eligible順位 8位→51位（上位15から落ち）
+- **−NFLX**: eligible順位 15位→16位（上位15から落ち）
 
-#### 2022-04-01（入替 2 銘柄）
+#### 2022-04-01（入替 3 銘柄）
 
 **追加:** 
-- **+XOM**: 新規eligible化＋eligible順位 12位（上位15入り）
-- **+CVX**: eligible順位 32位→13位（時価総額上位15入り）
+- **+PARA**: 新規eligible化＋eligible順位 8位（上位15入り）
+- **+XOM**: 新規eligible化＋eligible順位 13位（上位15入り）
+- **+CVX**: eligible順位 34位→15位（時価総額上位15入り）
 
 **除外:** 
-- **−DIS**: eligible順位 14位→21位（上位15から落ち）
-- **−AVGO**: eligible順位 15位→19位（上位15から落ち）
+- **−VIAC**: S&P 500構成から除外
+- **−DIS**: eligible順位 14位→19位（上位15から落ち）
+- **−ADBE**: eligible順位 15位→25位（上位15から落ち）
 
-#### 2022-07-01（入替 2 銘柄）
+#### 2022-07-01（入替 3 銘柄）
 
 **追加:** 
-- **+META**: 新規eligible化＋eligible順位 8位（上位15入り）
-- **+LLY**: eligible順位 18位→14位（時価総額上位15入り）
+- **+META**: 新規eligible化＋eligible順位 7位（上位15入り）
+- **+LLY**: eligible順位 16位→13位（時価総額上位15入り）
+- **+KO**: eligible順位 20位→15位（時価総額上位15入り）
 
 **除外:** 
+- **−GOOGL**: eligible順位 3位→80位（上位15から落ち）
 - **−FB**: S&P 500構成から除外
-- **−CVX**: eligible順位 13位→16位（上位15から落ち）
+- **−CVX**: eligible順位 15位→16位（上位15から落ち）
 
 #### 2022-10-03（入替 1 銘柄）
 
 **追加:** 
-- **+CVX**: eligible順位 16位→13位（時価総額上位15入り）
+- **+GOOGL**: eligible順位 80位→3位（時価総額上位15入り）
 
 **除外:** 
-- **−PFE**: eligible順位 13位→16位（上位15から落ち）
+- **−KO**: eligible順位 15位→17位（上位15から落ち）
 
 #### 2023-01-03（入替 0 銘柄）
 
@@ -405,30 +411,28 @@
 #### 2023-04-03（入替 1 銘柄）
 
 **追加:** 
-- **+ABBV**: eligible順位 16位→15位（時価総額上位15入り）
+- **+CVX**: eligible順位 16位→14位（時価総額上位15入り）
 
 **除外:** 
 - **−AMZN**: 赤字（TTM・filed PIT）
 
-#### 2023-07-03（入替 3 銘柄）
+#### 2023-07-03（入替 2 銘柄）
 
 **追加:** 
 - **+AMZN**: 新規eligible化＋eligible順位 4位（上位15入り）
-- **+AVGO**: eligible順位 18位→13位（時価総額上位15入り）
-- **+ORCL**: eligible順位 19位→15位（時価総額上位15入り）
+- **+AVGO**: eligible順位 16位→14位（時価総額上位15入り）
 
 **除外:** 
-- **−CVX**: eligible順位 12位→17位（上位15から落ち）
-- **−HD**: eligible順位 14位→16位（上位15から落ち）
-- **−ABBV**: eligible順位 15位→23位（上位15から落ち）
+- **−CVX**: eligible順位 14位→20位（上位15から落ち）
+- **−HD**: eligible順位 15位→17位（上位15から落ち）
 
 #### 2023-10-02（入替 1 銘柄）
 
 **追加:** 
-- **+CVX**: eligible順位 17位→15位（時価総額上位15入り）
+- **+ORCL**: eligible順位 16位→15位（時価総額上位15入り）
 
 **除外:** 
-- **−ORCL**: eligible順位 15位→17位（上位15から落ち）
+- **−PARA**: eligible順位 8位→25位（上位15から落ち）
 
 #### 2024-01-02（入替 1 銘柄）
 
@@ -436,7 +440,7 @@
 - **+HD**: eligible順位 16位→15位（時価総額上位15入り）
 
 **除外:** 
-- **−CVX**: eligible順位 15位→20位（上位15から落ち）
+- **−ORCL**: eligible順位 15位→17位（上位15から落ち）
 
 #### 2024-04-01（入替 0 銘柄）
 
@@ -446,103 +450,95 @@
 **除外:** なし
 
 
-#### 2024-07-01（入替 3 銘柄）
+#### 2024-07-01（入替 2 銘柄）
 
 **追加:** 
-- **+SMCI**: eligible順位 124位→11位（時価総額上位15入り）
 - **+ORCL**: eligible順位 16位→13位（時価総額上位15入り）
-- **+COST**: eligible順位 18位→15位（時価総額上位15入り）
+- **+COST**: eligible順位 17位→14位（時価総額上位15入り）
 
 **除外:** 
-- **−NVDA**: eligible順位 3位→19位（上位15から落ち）
-- **−JNJ**: eligible順位 13位→16位（上位15から落ち）
+- **−JNJ**: eligible順位 14位→16位（上位15から落ち）
 - **−HD**: eligible順位 15位→17位（上位15から落ち）
 
-#### 2024-10-01（入替 2 銘柄）
+#### 2024-10-01（入替 1 銘柄）
 
 **追加:** 
-- **+LRCX**: eligible順位 53位→6位（時価総額上位15入り）
 - **+HD**: eligible順位 17位→15位（時価総額上位15入り）
 
 **除外:** 
-- **−SMCI**: eligible順位 11位→269位（上位15から落ち）
-- **−COST**: eligible順位 15位→17位（上位15から落ち）
+- **−COST**: eligible順位 14位→16位（上位15から落ち）
 
-#### 2025-01-02（入替 1 銘柄）
-
-**追加:** 
-- **+COST**: eligible順位 17位→13位（時価総額上位15入り）
-
-**除外:** 
-- **−LRCX**: eligible順位 6位→79位（上位15から落ち）
-
-#### 2025-04-01（入替 1 銘柄）
+#### 2025-01-02（入替 2 銘柄）
 
 **追加:** 
-- **+NFLX**: eligible順位 16位→15位（時価総額上位15入り）
+- **+COST**: eligible順位 16位→14位（時価総額上位15入り）
+- **+NFLX**: eligible順位 19位→15位（時価総額上位15入り）
 
 **除外:** 
-- **−HD**: eligible順位 15位→18位（上位15から落ち）
+- **−PG**: eligible順位 14位→16位（上位15から落ち）
+- **−HD**: eligible順位 15位→17位（上位15から落ち）
+
+#### 2025-04-01（入替 0 銘柄）
+
+**追加:** なし
+
+
+**除外:** なし
+
 
 #### 2025-07-01（入替 1 銘柄）
 
 **追加:** 
-- **+NVDA**: eligible順位 22位→15位（時価総額上位15入り）
+- **+PG**: eligible順位 16位→15位（時価総額上位15入り）
 
 **除外:** 
-- **−UNH**: eligible順位 11位→21位（上位15から落ち）
+- **−UNH**: eligible順位 12位→21位（上位15から落ち）
 
 #### 2025-10-01（入替 2 銘柄）
 
 **追加:** 
-- **+JNJ**: eligible順位 16位→14位（時価総額上位15入り）
-- **+PLTR**: eligible順位 19位→15位（時価総額上位15入り）
+- **+PLTR**: eligible順位 19位→14位（時価総額上位15入り）
+- **+JNJ**: eligible順位 16位→15位（時価総額上位15入り）
 
 **除外:** 
-- **−COST**: eligible順位 13位→17位（上位15から落ち）
-- **−PG**: eligible順位 14位→19位（上位15から落ち）
+- **−COST**: eligible順位 14位→17位（上位15から落ち）
+- **−PG**: eligible順位 15位→19位（上位15から落ち）
 
 #### 2026-01-02（入替 1 銘柄）
 
 **追加:** 
-- **+ABBV**: eligible順位 16位→14位（時価総額上位15入り）
+- **+ABBV**: eligible順位 16位→15位（時価総額上位15入り）
 
 **除外:** 
-- **−NFLX**: eligible順位 11位→16位（上位15から落ち）
+- **−NFLX**: eligible順位 12位→16位（上位15から落ち）
 
 #### 2026-04-01（入替 2 銘柄）
 
 **追加:** 
-- **+BKNG**: eligible順位 48位→3位（時価総額上位15入り）
 - **+COST**: eligible順位 17位→13位（時価総額上位15入り）
+- **+MU**: eligible順位 19位→15位（時価総額上位15入り）
 
 **除外:** 
-- **−ABBV**: eligible順位 14位→19位（上位15から落ち）
-- **−PLTR**: eligible順位 15位→20位（上位15から落ち）
+- **−PLTR**: eligible順位 14位→19位（上位15から落ち）
+- **−ABBV**: eligible順位 15位→18位（上位15から落ち）
 
-#### 2026-07-01（入替 4 銘柄）
+#### 2026-07-01（入替 2 銘柄）
 
 **追加:** 
-- **+MU**: eligible順位 16位→8位（時価総額上位15入り）
-- **+AMD**: eligible順位 21位→10位（時価総額上位15入り）
-- **+AMAT**: eligible順位 29位→14位（時価総額上位15入り）
-- **+LRCX**: eligible順位 30位→15位（時価総額上位15入り）
+- **+AMD**: eligible順位 20位→11位（時価総額上位15入り）
+- **+AMAT**: eligible順位 28位→15位（時価総額上位15入り）
 
 **除外:** 
-- **−BKNG**: eligible順位 3位→68位（上位15から落ち）
-- **−COST**: eligible順位 13位→21位（上位15から落ち）
-- **−NVDA**: eligible順位 14位→16位（上位15から落ち）
-- **−ORCL**: eligible順位 15位→20位（上位15から落ち）
+- **−COST**: eligible順位 13位→20位（上位15から落ち）
+- **−ORCL**: eligible順位 14位→21位（上位15から落ち）
 
-#### 2026-10-01（入替 2 銘柄）
+#### 2026-10-01（入替 1 銘柄）
 
 **追加:** 
-- **+NVDA**: eligible順位 16位→14位（時価総額上位15入り）
 - **+ABBV**: eligible順位 19位→15位（時価総額上位15入り）
 
 **除外:** 
-- **−AMAT**: eligible順位 14位→19位（上位15から落ち）
-- **−LRCX**: eligible順位 15位→18位（上位15から落ち）
+- **−AMAT**: eligible順位 15位→19位（上位15から落ち）
 
 
 <details>
@@ -550,50 +546,50 @@
 
 | 日付 | 保有ティッカー |
 |---|---|
-| 2016-01-04 | AAPL, GOOGL, MSFT, XOM, AMZN, FB, JNJ, PG, PFE, WMT, T, VZ, KO, HD, CVX |
-| 2016-04-01 | AAPL, GOOGL, MSFT, XOM, FB, JNJ, AMZN, T, PG, VZ, WMT, KO, PFE, CVX, ORCL |
-| 2016-07-01 | AAPL, GOOGL, MSFT, XOM, AMZN, JNJ, FB, GE, T, VZ, PG, WMT, PFE, CVX, KO |
-| 2016-10-03 | AAPL, GOOGL, MSFT, AMZN, FB, XOM, JNJ, GE, T, PG, WMT, VZ, PFE, CVX, KO |
-| 2017-01-03 | AAPL, GOOGL, MSFT, XOM, AMZN, FB, JNJ, GE, T, VZ, CVX, PG, WMT, PFE, KO |
-| 2017-04-03 | AAPL, GOOGL, MSFT, AMZN, FB, XOM, JNJ, GE, T, PG, WMT, PFE, VZ, ORCL, KO |
-| 2017-07-03 | AAPL, GOOGL, MSFT, AMZN, FB, JNJ, XOM, GE, T, PG, WMT, ORCL, PFE, CVX, KO |
-| 2017-10-02 | AAPL, GOOGL, MSFT, FB, AMZN, JNJ, XOM, T, WMT, PG, CVX, PFE, GE, ORCL, VZ |
-| 2018-01-02 | AAPL, GOOGL, MSFT, AMZN, FB, JNJ, XOM, BA, WMT, CVX, T, PG, INTC, HD, VZ |
-| 2018-04-02 | AAPL, GOOGL, MSFT, AMZN, FB, JNJ, XOM, WMT, INTC, T, CVX, UNH, PFE, HD, VZ |
-| 2018-07-02 | AAPL, AMZN, GOOGL, MSFT, FB, XOM, JNJ, WMT, CVX, UNH, INTC, HD, PFE, VZ, T |
-| 2018-10-01 | AAPL, AMZN, MSFT, GOOGL, FB, JNJ, XOM, WMT, PFE, UNH, CVX, HD, CSCO, BA, VZ |
-| 2019-01-02 | MSFT, AMZN, AAPL, GOOGL, FB, JNJ, BA, XOM, WMT, PFE, UNH, VZ, PG, INTC, CVX |
-| 2019-04-01 | MSFT, AMZN, AAPL, GOOGL, FB, JNJ, XOM, WMT, PG, VZ, INTC, CSCO, PFE, CVX, UNH |
-| 2019-07-01 | MSFT, AMZN, AAPL, GOOGL, FB, JNJ, XOM, WMT, PG, PFE, T, CVX, VZ, CSCO, HD |
-| 2019-10-01 | MSFT, AAPL, AMZN, GOOGL, FB, JNJ, WMT, PG, XOM, T, HD, VZ, KO, INTC, CVX |
-| 2020-01-02 | AAPL, MSFT, AMZN, GOOGL, FB, JNJ, WMT, BA, PG, XOM, T, UNH, DIS, INTC, VZ |
-| 2020-04-01 | MSFT, AAPL, AMZN, GOOGL, FB, JNJ, WMT, PG, UNH, INTC, VZ, T, HD, MRK, KO |
-| 2020-07-01 | AAPL, MSFT, AMZN, GOOGL, FB, JNJ, WMT, PG, UNH, HD, INTC, NVDA, VZ, T, NFLX |
-| 2020-10-01 | AAPL, AMZN, MSFT, GOOGL, FB, WMT, JNJ, PG, NVDA, HD, UNH, VZ, ADBE, NFLX, CRM |
-| 2021-01-04 | AAPL, MSFT, AMZN, GOOGL, FB, TSLA, WMT, JNJ, PG, UNH, NVDA, HD, VZ, ADBE, NFLX |
-| 2021-04-01 | AAPL, MSFT, AMZN, GOOGL, FB, TSLA, JNJ, WMT, UNH, NVDA, HD, PG, INTC, CMCSA, VZ |
-| 2021-07-01 | AAPL, MSFT, AMZN, GOOGL, FB, TSLA, NVDA, JNJ, WMT, UNH, HD, PG, ADBE, CMCSA, NKE |
-| 2021-10-01 | AAPL, MSFT, GOOGL, AMZN, FB, TSLA, NVDA, JNJ, WMT, UNH, ISRG, HD, PG, DIS, ADBE |
-| 2022-01-03 | AAPL, MSFT, GOOGL, AMZN, TSLA, FB, NVDA, UNH, JNJ, HD, WMT, PG, PFE, DIS, AVGO |
-| 2022-04-01 | AAPL, MSFT, GOOGL, AMZN, TSLA, NVDA, FB, UNH, JNJ, WMT, PG, XOM, CVX, HD, PFE |
-| 2022-07-01 | GOOGL, AAPL, MSFT, AMZN, TSLA, UNH, JNJ, META, XOM, NVDA, PG, WMT, PFE, LLY, HD |
-| 2022-10-03 | AAPL, MSFT, GOOGL, AMZN, TSLA, UNH, JNJ, XOM, META, WMT, NVDA, PG, CVX, HD, LLY |
-| 2023-01-03 | AAPL, MSFT, GOOGL, AMZN, UNH, JNJ, XOM, WMT, PG, NVDA, TSLA, CVX, META, LLY, HD |
-| 2023-04-03 | AAPL, MSFT, GOOGL, NVDA, TSLA, META, XOM, UNH, JNJ, WMT, PG, CVX, LLY, HD, ABBV |
-| 2023-07-03 | AAPL, MSFT, GOOGL, AMZN, NVDA, TSLA, META, UNH, XOM, WMT, JNJ, LLY, AVGO, PG, ORCL |
-| 2023-10-02 | AAPL, MSFT, GOOGL, AMZN, NVDA, TSLA, META, LLY, UNH, XOM, WMT, JNJ, AVGO, PG, CVX |
-| 2024-01-02 | AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA, LLY, AVGO, UNH, WMT, XOM, JNJ, PG, HD |
-| 2024-04-01 | MSFT, AAPL, NVDA, GOOGL, AMZN, META, LLY, AVGO, TSLA, WMT, XOM, UNH, JNJ, PG, HD |
-| 2024-07-01 | MSFT, AAPL, GOOGL, AMZN, META, LLY, AVGO, TSLA, WMT, XOM, SMCI, UNH, ORCL, PG, COST |
-| 2024-10-01 | AAPL, MSFT, GOOGL, AMZN, META, LRCX, TSLA, LLY, AVGO, WMT, UNH, XOM, ORCL, PG, HD |
-| 2025-01-02 | AAPL, MSFT, AMZN, GOOGL, META, TSLA, AVGO, WMT, LLY, XOM, ORCL, UNH, COST, PG, HD |
-| 2025-04-01 | AAPL, MSFT, AMZN, GOOGL, META, TSLA, AVGO, LLY, WMT, XOM, UNH, COST, PG, ORCL, NFLX |
-| 2025-07-01 | MSFT, AAPL, AMZN, GOOGL, META, AVGO, TSLA, WMT, LLY, ORCL, NFLX, XOM, COST, PG, NVDA |
-| 2025-10-01 | MSFT, AAPL, GOOGL, AMZN, META, AVGO, TSLA, ORCL, WMT, LLY, NFLX, XOM, NVDA, JNJ, PLTR |
-| 2026-01-02 | AAPL, GOOGL, MSFT, AMZN, AVGO, TSLA, META, LLY, WMT, ORCL, XOM, JNJ, NVDA, ABBV, PLTR |
-| 2026-04-01 | AAPL, GOOGL, BKNG, MSFT, AMZN, AVGO, META, TSLA, WMT, LLY, XOM, JNJ, COST, NVDA, ORCL |
-| 2026-07-01 | GOOGL, AAPL, MSFT, AMZN, AVGO, TSLA, META, MU, LLY, AMD, WMT, JNJ, XOM, AMAT, LRCX |
-| 2026-10-01 | AAPL, GOOGL, MSFT, AMZN, META, AVGO, TSLA, MU, LLY, AMD, WMT, XOM, JNJ, NVDA, ABBV |
+| 2016-01-04 | AAPL, GOOGL, MSFT, AMZN, FB, JNJ, XOM, NKE, WMT, PG, KO, CERN, HD, BA, INTC |
+| 2016-04-01 | AAPL, GOOGL, MSFT, FB, AMZN, JNJ, XOM, WMT, PG, KO, CERN, HD, VZ, INTC, T |
+| 2016-07-01 | GE, GOOGL, AAPL, MSFT, AMZN, FB, JNJ, XOM, WMT, PG, CERN, KO, VZ, T, PFE |
+| 2016-10-03 | GE, AAPL, GOOGL, AMZN, MSFT, FB, JNJ, XOM, WMT, PG, INTC, CERN, KO, CVX, T |
+| 2017-01-03 | GE, AAPL, GOOGL, MSFT, AMZN, FB, XOM, JNJ, WMT, PG, BA, CVX, INTC, CERN, T |
+| 2017-04-03 | GE, AAPL, GOOGL, MSFT, AMZN, FB, JNJ, XOM, WMT, PG, CERN, INTC, HD, UNH, KO |
+| 2017-07-03 | GE, AAPL, GOOGL, MSFT, AMZN, FB, JNJ, XOM, WMT, CERN, PG, UNH, HD, KO, CVX |
+| 2017-10-02 | GE, AAPL, GOOGL, MSFT, FB, AMZN, JNJ, XOM, WMT, PG, CERN, UNH, HD, INTC, CVX |
+| 2018-01-02 | AAPL, GOOGL, GE, MSFT, AMZN, FB, JNJ, BA, WMT, XOM, UNH, INTC, PG, HD, CERN |
+| 2018-04-02 | AAPL, GOOGL, AMZN, MSFT, FB, JNJ, WMT, DWDP, XOM, INTC, BA, UNH, HD, CERN, PG |
+| 2018-07-02 | AAPL, AMZN, GOOGL, MSFT, FB, JNJ, XOM, DWDP, WMT, UNH, INTC, BA, HD, NFLX, CVX |
+| 2018-10-01 | AAPL, AMZN, GOOGL, MSFT, FB, JNJ, XOM, WMT, DWDP, UNH, BA, HD, INTC, CSCO, CERN |
+| 2019-01-02 | AMZN, GOOGL, MSFT, AAPL, FB, BA, JNJ, WMT, XOM, UNH, PG, INTC, PFE, HD, KO |
+| 2019-04-01 | AMZN, MSFT, AAPL, GOOGL, FB, JNJ, WMT, XOM, BA, PG, INTC, UNH, CSCO, DWDP, HD |
+| 2019-07-01 | MSFT, AMZN, AAPL, GOOGL, FB, JNJ, WMT, XOM, PG, UNH, BA, HD, CSCO, INTC, KO |
+| 2019-10-01 | MSFT, AAPL, AMZN, GOOGL, FB, WMT, JNJ, PG, XOM, HD, BA, DIS, INTC, KO, UNH |
+| 2020-01-02 | AAPL, MSFT, AMZN, GOOGL, FB, BA, JNJ, WMT, DIS, PG, UNH, INTC, XOM, HD, KO |
+| 2020-04-01 | MSFT, AAPL, AMZN, GOOGL, FB, WMT, JNJ, PG, UNH, INTC, DIS, HD, NFLX, VZ, KO |
+| 2020-07-01 | AAPL, MSFT, AMZN, GOOGL, FB, WMT, JNJ, PG, UNH, NVDA, HD, INTC, NFLX, ADBE, DIS |
+| 2020-10-01 | AAPL, AMZN, MSFT, GOOGL, FB, WMT, NVDA, JNJ, PG, UNH, HD, ADBE, NFLX, CRM, INTC |
+| 2021-01-04 | AAPL, AMZN, MSFT, GOOGL, FB, TSLA, GE, WMT, JNJ, NVDA, UNH, PG, HD, ADBE, NFLX |
+| 2021-04-01 | AAPL, MSFT, AMZN, GOOGL, FB, TSLA, GE, JNJ, WMT, NVDA, UNH, HD, PG, NFLX, INTC |
+| 2021-07-01 | AAPL, MSFT, AMZN, GOOGL, FB, TSLA, NVDA, JNJ, WMT, UNH, HD, PG, ADBE, NFLX, NKE |
+| 2021-10-01 | AAPL, MSFT, GOOGL, AMZN, FB, TSLA, JNJ, ISRG, WMT, UNH, DIS, HD, PG, ADBE, NFLX |
+| 2022-01-03 | AAPL, MSFT, GOOGL, AMZN, TSLA, FB, NVDA, VIAC, UNH, JNJ, WMT, HD, PG, DIS, ADBE |
+| 2022-04-01 | AAPL, MSFT, GOOGL, AMZN, TSLA, NVDA, FB, PARA, UNH, JNJ, WMT, PG, XOM, HD, CVX |
+| 2022-07-01 | AAPL, MSFT, AMZN, TSLA, PARA, UNH, META, JNJ, NVDA, WMT, XOM, PG, LLY, HD, KO |
+| 2022-10-03 | AAPL, MSFT, GOOGL, AMZN, TSLA, PARA, UNH, JNJ, META, WMT, XOM, NVDA, LLY, PG, HD |
+| 2023-01-03 | AAPL, MSFT, GOOGL, AMZN, PARA, UNH, JNJ, XOM, WMT, NVDA, TSLA, META, PG, LLY, HD |
+| 2023-04-03 | AAPL, MSFT, GOOGL, NVDA, TSLA, META, PARA, UNH, XOM, WMT, JNJ, PG, LLY, CVX, HD |
+| 2023-07-03 | AAPL, MSFT, GOOGL, AMZN, NVDA, TSLA, META, PARA, UNH, WMT, LLY, JNJ, XOM, AVGO, PG |
+| 2023-10-02 | AAPL, MSFT, GOOGL, AMZN, NVDA, TSLA, META, LLY, UNH, WMT, XOM, JNJ, AVGO, PG, ORCL |
+| 2024-01-02 | AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA, LLY, AVGO, UNH, WMT, JNJ, XOM, PG, HD |
+| 2024-04-01 | MSFT, AAPL, NVDA, GOOGL, AMZN, META, LLY, AVGO, TSLA, WMT, UNH, XOM, PG, JNJ, HD |
+| 2024-07-01 | MSFT, AAPL, NVDA, GOOGL, AMZN, META, LLY, AVGO, TSLA, WMT, XOM, UNH, ORCL, COST, PG |
+| 2024-10-01 | AAPL, MSFT, NVDA, GOOGL, AMZN, META, TSLA, LLY, AVGO, WMT, UNH, XOM, ORCL, PG, HD |
+| 2025-01-02 | AAPL, NVDA, MSFT, AMZN, GOOGL, META, TSLA, AVGO, WMT, LLY, ORCL, UNH, XOM, COST, NFLX |
+| 2025-04-01 | AAPL, MSFT, NVDA, AMZN, GOOGL, META, TSLA, AVGO, LLY, WMT, XOM, UNH, COST, NFLX, ORCL |
+| 2025-07-01 | NVDA, MSFT, AAPL, AMZN, GOOGL, META, AVGO, TSLA, WMT, LLY, ORCL, NFLX, XOM, COST, PG |
+| 2025-10-01 | NVDA, MSFT, AAPL, GOOGL, AMZN, META, AVGO, TSLA, ORCL, WMT, LLY, NFLX, XOM, PLTR, JNJ |
+| 2026-01-02 | NVDA, AAPL, GOOGL, MSFT, AMZN, TSLA, AVGO, META, LLY, WMT, ORCL, XOM, JNJ, PLTR, ABBV |
+| 2026-04-01 | NVDA, AAPL, GOOGL, MSFT, AMZN, AVGO, META, TSLA, WMT, LLY, XOM, JNJ, COST, ORCL, MU |
+| 2026-07-01 | NVDA, GOOGL, AAPL, MSFT, AMZN, AVGO, TSLA, META, MU, LLY, AMD, WMT, JNJ, XOM, AMAT |
+| 2026-10-01 | NVDA, AAPL, GOOGL, MSFT, AMZN, META, AVGO, TSLA, MU, LLY, AMD, WMT, XOM, JNJ, ABBV |
 
 </details>
 
@@ -611,49 +607,49 @@
 | 四半期 | 注文合計 | うちスワップ系 | うちリウェイト系 | 当四半期$0.35 | 累計$0.35 | 当四半期$1 | 累計$1 |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | 2016-Q1 | 14 | 14 | 0 | $4.90 | $4.90 | $14.00 | $14.00 |
-| 2016-Q2 | 2 | 1 | 1 | $0.70 | $5.60 | $2.00 | $16.00 |
-| 2016-Q3 | 0 | 0 | 0 | $0.00 | $5.60 | $0.00 | $16.00 |
-| 2016-Q4 | 1 | 0 | 1 | $0.35 | $5.95 | $1.00 | $17.00 |
-| 2017-Q1 | 0 | 0 | 0 | $0.00 | $5.95 | $0.00 | $17.00 |
-| 2017-Q2 | 2 | 1 | 1 | $0.70 | $6.65 | $2.00 | $19.00 |
-| 2017-Q3 | 2 | 1 | 1 | $0.70 | $7.35 | $2.00 | $21.00 |
-| 2017-Q4 | 2 | 1 | 1 | $0.70 | $8.05 | $2.00 | $23.00 |
-| 2018-Q1 | 11 | 6 | 5 | $3.85 | $11.90 | $11.00 | $34.00 |
-| 2018-Q2 | 6 | 4 | 2 | $2.10 | $14.00 | $6.00 | $40.00 |
-| 2018-Q3 | 1 | 0 | 1 | $0.35 | $14.35 | $1.00 | $41.00 |
-| 2018-Q4 | 6 | 4 | 2 | $2.10 | $16.45 | $6.00 | $47.00 |
-| 2019-Q1 | 4 | 3 | 1 | $1.40 | $17.85 | $4.00 | $51.00 |
-| 2019-Q2 | 2 | 1 | 1 | $0.70 | $18.55 | $2.00 | $53.00 |
-| 2019-Q3 | 6 | 3 | 3 | $2.10 | $20.65 | $6.00 | $59.00 |
-| 2019-Q4 | 4 | 3 | 1 | $1.40 | $22.05 | $4.00 | $63.00 |
-| 2020-Q1 | 8 | 6 | 2 | $2.80 | $24.85 | $8.00 | $71.00 |
-| 2020-Q2 | 7 | 5 | 2 | $2.45 | $27.30 | $7.00 | $78.00 |
-| 2020-Q3 | 4 | 2 | 2 | $1.40 | $28.70 | $4.00 | $82.00 |
-| 2020-Q4 | 5 | 3 | 2 | $1.75 | $30.45 | $5.00 | $87.00 |
-| 2021-Q1 | 8 | 0 | 8 | $2.80 | $33.25 | $8.00 | $95.00 |
-| 2021-Q2 | 4 | 3 | 1 | $1.40 | $34.65 | $4.00 | $99.00 |
-| 2021-Q3 | 5 | 3 | 2 | $1.75 | $36.40 | $5.00 | $104.00 |
-| 2021-Q4 | 6 | 2 | 4 | $2.10 | $38.50 | $6.00 | $110.00 |
-| 2022-Q1 | 6 | 3 | 3 | $2.10 | $40.60 | $6.00 | $116.00 |
-| 2022-Q2 | 4 | 2 | 2 | $1.40 | $42.00 | $4.00 | $120.00 |
-| 2022-Q3 | 15 | 3 | 12 | $5.25 | $47.25 | $15.00 | $135.00 |
-| 2022-Q4 | 14 | 2 | 12 | $4.90 | $52.15 | $14.00 | $149.00 |
-| 2023-Q1 | 0 | 0 | 0 | $0.00 | $52.15 | $0.00 | $149.00 |
-| 2023-Q2 | 8 | 2 | 6 | $2.80 | $54.95 | $8.00 | $157.00 |
-| 2023-Q3 | 12 | 5 | 7 | $4.20 | $59.15 | $12.00 | $169.00 |
-| 2023-Q4 | 0 | 0 | 0 | $0.00 | $59.15 | $0.00 | $169.00 |
-| 2024-Q1 | 3 | 0 | 3 | $1.05 | $60.20 | $3.00 | $172.00 |
-| 2024-Q2 | 2 | 0 | 2 | $0.70 | $60.90 | $2.00 | $174.00 |
-| 2024-Q3 | 16 | 4 | 12 | $5.60 | $66.50 | $16.00 | $190.00 |
-| 2024-Q4 | 12 | 2 | 10 | $4.20 | $70.70 | $12.00 | $202.00 |
-| 2025-Q1 | 10 | 2 | 8 | $3.50 | $74.20 | $10.00 | $212.00 |
-| 2025-Q2 | 1 | 1 | 0 | $0.35 | $74.55 | $1.00 | $213.00 |
-| 2025-Q3 | 5 | 1 | 4 | $1.75 | $76.30 | $5.00 | $218.00 |
-| 2025-Q4 | 9 | 3 | 6 | $3.15 | $79.45 | $9.00 | $227.00 |
-| 2026-Q1 | 6 | 2 | 4 | $2.10 | $81.55 | $6.00 | $233.00 |
-| 2026-Q2 | 15 | 2 | 13 | $5.25 | $86.80 | $15.00 | $248.00 |
-| 2026-Q3 | 16 | 7 | 9 | $5.60 | $92.40 | $16.00 | $264.00 |
-| 2026-Q4 | 7 | 3 | 4 | $2.45 | $94.85 | $7.00 | $271.00 |
+| 2016-Q2 | 5 | 4 | 1 | $1.75 | $6.65 | $5.00 | $19.00 |
+| 2016-Q3 | 16 | 3 | 13 | $5.60 | $12.25 | $16.00 | $35.00 |
+| 2016-Q4 | 5 | 4 | 1 | $1.75 | $14.00 | $5.00 | $40.00 |
+| 2017-Q1 | 2 | 2 | 0 | $0.70 | $14.70 | $2.00 | $42.00 |
+| 2017-Q2 | 6 | 6 | 0 | $2.10 | $16.80 | $6.00 | $48.00 |
+| 2017-Q3 | 2 | 2 | 0 | $0.70 | $17.50 | $2.00 | $50.00 |
+| 2017-Q4 | 2 | 2 | 0 | $0.70 | $18.20 | $2.00 | $52.00 |
+| 2018-Q1 | 2 | 1 | 1 | $0.70 | $18.90 | $2.00 | $54.00 |
+| 2018-Q2 | 8 | 2 | 6 | $2.80 | $21.70 | $8.00 | $62.00 |
+| 2018-Q3 | 4 | 4 | 0 | $1.40 | $23.10 | $4.00 | $66.00 |
+| 2018-Q4 | 5 | 4 | 1 | $1.75 | $24.85 | $5.00 | $71.00 |
+| 2019-Q1 | 6 | 5 | 1 | $2.10 | $26.95 | $6.00 | $77.00 |
+| 2019-Q2 | 4 | 3 | 1 | $1.40 | $28.35 | $4.00 | $81.00 |
+| 2019-Q3 | 3 | 2 | 1 | $1.05 | $29.40 | $3.00 | $84.00 |
+| 2019-Q4 | 2 | 2 | 0 | $0.70 | $30.10 | $2.00 | $86.00 |
+| 2020-Q1 | 1 | 0 | 1 | $0.35 | $30.45 | $1.00 | $87.00 |
+| 2020-Q2 | 3 | 3 | 0 | $1.05 | $31.50 | $3.00 | $90.00 |
+| 2020-Q3 | 5 | 2 | 3 | $1.75 | $33.25 | $5.00 | $95.00 |
+| 2020-Q4 | 2 | 1 | 1 | $0.70 | $33.95 | $2.00 | $97.00 |
+| 2021-Q1 | 9 | 2 | 7 | $3.15 | $37.10 | $9.00 | $106.00 |
+| 2021-Q2 | 2 | 1 | 1 | $0.70 | $37.80 | $2.00 | $108.00 |
+| 2021-Q3 | 4 | 3 | 1 | $1.40 | $39.20 | $4.00 | $112.00 |
+| 2021-Q4 | 5 | 3 | 2 | $1.75 | $40.95 | $5.00 | $117.00 |
+| 2022-Q1 | 9 | 4 | 5 | $3.15 | $44.10 | $9.00 | $126.00 |
+| 2022-Q2 | 5 | 4 | 1 | $1.75 | $45.85 | $5.00 | $131.00 |
+| 2022-Q3 | 12 | 5 | 7 | $4.20 | $50.05 | $12.00 | $143.00 |
+| 2022-Q4 | 7 | 1 | 6 | $2.45 | $52.50 | $7.00 | $150.00 |
+| 2023-Q1 | 3 | 0 | 3 | $1.05 | $53.55 | $3.00 | $153.00 |
+| 2023-Q2 | 7 | 2 | 5 | $2.45 | $56.00 | $7.00 | $160.00 |
+| 2023-Q3 | 11 | 3 | 8 | $3.85 | $59.85 | $11.00 | $171.00 |
+| 2023-Q4 | 5 | 2 | 3 | $1.75 | $61.60 | $5.00 | $176.00 |
+| 2024-Q1 | 3 | 1 | 2 | $1.05 | $62.65 | $3.00 | $179.00 |
+| 2024-Q2 | 2 | 0 | 2 | $0.70 | $63.35 | $2.00 | $181.00 |
+| 2024-Q3 | 4 | 2 | 2 | $1.40 | $64.75 | $4.00 | $185.00 |
+| 2024-Q4 | 1 | 0 | 1 | $0.35 | $65.10 | $1.00 | $186.00 |
+| 2025-Q1 | 6 | 3 | 3 | $2.10 | $67.20 | $6.00 | $192.00 |
+| 2025-Q2 | 0 | 0 | 0 | $0.00 | $67.20 | $0.00 | $192.00 |
+| 2025-Q3 | 2 | 1 | 1 | $0.70 | $67.90 | $2.00 | $194.00 |
+| 2025-Q4 | 6 | 2 | 4 | $2.10 | $70.00 | $6.00 | $200.00 |
+| 2026-Q1 | 6 | 1 | 5 | $2.10 | $72.10 | $6.00 | $206.00 |
+| 2026-Q2 | 4 | 2 | 2 | $1.40 | $73.50 | $4.00 | $210.00 |
+| 2026-Q3 | 13 | 3 | 10 | $4.55 | $78.05 | $13.00 | $223.00 |
+| 2026-Q4 | 7 | 0 | 7 | $2.45 | $80.50 | $7.00 | $230.00 |
 
 **定義:** **スワップ系**＝そのリバランスで「前回は保有15に無かった銘柄」への新規買い、または「今回の15から外れた銘柄」の売却に伴う注文。**リウェイト系**＝継続保有銘柄のウェイト調整注文。
 
@@ -666,33 +662,31 @@
 
 | 銘柄 | 寄与（%ポイント） | 寄与（$・$3,200ベース） | 半導体 |
 |---|---:|---:|---|
-| GOOGL | +9.37pt | +$300 | — |
-| AAPL | +7.86pt | +$251 | — |
-| AVGO | +2.25pt | +$72 | 半導体 |
-| AMZN | +1.64pt | +$52 | — |
-| LLY | +1.31pt | +$42 | — |
-| XOM | +1.07pt | +$34 | — |
-| TSLA | +1.01pt | +$32 | — |
-| MSFT | +0.84pt | +$27 | — |
-| JNJ | +0.77pt | +$25 | — |
-| AMD | +0.57pt | +$18 | 半導体 |
-| WMT | +0.36pt | +$12 | — |
-| MU | +0.16pt | +$5 | 半導体 |
-| NVDA | +0.13pt | +$4 | 半導体 |
-| META | +0.12pt | +$4 | — |
-| PG | -0.08pt | $-3 | — |
-| ABBV | -0.09pt | $-3 | — |
-| COST | -0.25pt | $-8 | — |
-| LRCX | -0.26pt | $-8 | 半導体 |
-| AMAT | -0.39pt | $-12 | 半導体 |
-| NFLX | -0.73pt | $-23 | — |
+| GOOGL | +8.31pt | +$266 | — |
+| NVDA | +7.60pt | +$243 | 半導体 |
+| AAPL | +6.87pt | +$220 | — |
+| AVGO | +2.07pt | +$66 | 半導体 |
+| AMZN | +1.57pt | +$50 | — |
+| LLY | +1.19pt | +$38 | — |
+| XOM | +0.88pt | +$28 | — |
+| TSLA | +0.87pt | +$28 | — |
+| MSFT | +0.79pt | +$25 | — |
+| AMD | +0.46pt | +$15 | 半導体 |
+| JNJ | +0.46pt | +$15 | — |
+| WMT | +0.27pt | +$9 | — |
+| META | +0.17pt | +$5 | — |
+| MU | +0.12pt | +$4 | 半導体 |
+| COST | -0.23pt | $-7 | — |
+| PLTR | -0.32pt | $-10 | — |
+| NFLX | -0.63pt | $-20 | — |
+| ORCL | -0.66pt | $-21 | — |
 
-- 期間ポートリターン: **26.03%**（単純リプレイ・差分リバランス近似）
-- 同期間 SPY: **26.30%** → ギャップ **-0.27pt**
-- 半導体サブ業種の寄与合計: **2.47pt**（全寄与の **10%**）
-- 上位1/3/5銘柄の寄与シェア: **38% / 78% / 90%**
-- 上位1銘柄を除いた場合の期間リターン（寄与差し引き）: **16.67%**
-- 上位3銘柄を除いた場合: **6.55%**
+- 期間ポートリターン: **32.06%**（単純リプレイ・差分リバランス近似）
+- 同期間 SPY: **26.30%** → ギャップ **5.76pt**
+- 半導体サブ業種の寄与合計: **10.26pt**（全寄与の **34%**）
+- 上位1/3/5銘柄の寄与シェア: **28% / 76% / 89%**
+- 上位1銘柄を除いた場合の期間リターン（寄与差し引き）: **23.75%**
+- 上位3銘柄を除いた場合: **9.28%**
 
 **解釈（ギャップの単純分解）:** 本構成は金融セクターとテーマ株を持たないため SPY より大型金融・一部超大型のウェイトが薄い。期間中は半導体・大型テックの寄与がポート側のドライバーとなり、除外セクターが SPY にあって本ポートに無い分がギャップの主因となり得る（厳密な要因分析ではない）。
 
@@ -706,44 +700,44 @@
 ### S&P 構成員の時価総額上位40のうち、保有15外
 
 **eligibleだが上位15外**
-  - PLTR（S&P時価総額順 20位・約457B USD）
-  - CSCO（S&P時価総額順 21位・約429B USD）
-  - LRCX（S&P時価総額順 22位・約426B USD）
-  - AMAT（S&P時価総額順 23位・約420B USD）
-  - ORCL（S&P時価総額順 24位・約417B USD）
-  - CVX（S&P時価総額順 25位・約409B USD）
-  - COST（S&P時価総額順 26位・約406B USD）
-  - CAT（S&P時価総額順 27位・約380B USD）
-  - KO（S&P時価総額順 29位・約370B USD）
-  - MRK（S&P時価総額順 30位・約355B USD）
-  - DELL（S&P時価総額順 31位・約347B USD）
-  - PG（S&P時価総額順 32位・約335B USD）
-  - UNH（S&P時価総額順 33位・約328B USD）
-  - PANW（S&P時価総額順 34位・約324B USD）
-  - GE（S&P時価総額順 35位・約324B USD）
-  - PM（S&P時価総額順 37位・約293B USD）
-  - NFLX（S&P時価総額順 38位・約283B USD）
-  - HD（S&P時価総額順 39位・約282B USD）
+  - PLTR（S&P時価総額順 21位・約457B USD）
+  - CSCO（S&P時価総額順 22位・約427B USD）
+  - LRCX（S&P時価総額順 23位・約426B USD）
+  - AMAT（S&P時価総額順 24位・約420B USD）
+  - ORCL（S&P時価総額順 25位・約417B USD）
+  - CVX（S&P時価総額順 26位・約409B USD）
+  - COST（S&P時価総額順 27位・約406B USD）
+  - CAT（S&P時価総額順 28位・約380B USD）
+  - KO（S&P時価総額順 30位・約370B USD）
+  - MRK（S&P時価総額順 31位・約355B USD）
+  - DELL（S&P時価総額順 32位・約347B USD）
+  - PG（S&P時価総額順 33位・約335B USD）
+  - UNH（S&P時価総額順 34位・約328B USD）
+  - PANW（S&P時価総額順 35位・約324B USD）
+  - GE（S&P時価総額順 36位・約324B USD）
+  - PM（S&P時価総額順 38位・約291B USD）
+  - NFLX（S&P時価総額順 39位・約283B USD）
+  - HD（S&P時価総額順 40位・約282B USD）
 
 **株クラス重複で除外**
-  - GOOG（S&P時価総額順 3位・約4096B USD）
+  - GOOG（S&P時価総額順 4位・約4096B USD）
 
 **赤字（TTM・filed PIT）**
-  - INTC（S&P時価総額順 16位・約605B USD）
-  - CRWD（S&P時価総額順 40位・約272B USD）
+  - INTC（S&P時価総額順 18位・約605B USD）
 
 **金融セクター除外**
-  - JPM（S&P時価総額順 12位・約886B USD）
-  - MA（S&P時価総額順 18位・約488B USD）
-  - BAC（S&P時価総額順 28位・約376B USD）
-  - MS（S&P時価総額順 36位・約295B USD）
+  - JPM（S&P時価総額順 13位・約886B USD）
+  - V（S&P時価総額順 16位・約675B USD）
+  - MA（S&P時価総額順 19位・約488B USD）
+  - BAC（S&P時価総額順 29位・約376B USD）
+  - MS（S&P時価総額順 37位・約295B USD）
 
 ### eligible プールの16～25位（惜しくも15入りしなかった銘柄）
 
 | eligible順位 | ティッカー | 時価総額（約・B USD） |
 |---:|---|---:|
 | 16 | PLTR | 457 |
-| 17 | CSCO | 429 |
+| 17 | CSCO | 427 |
 | 18 | LRCX | 426 |
 | 19 | AMAT | 420 |
 | 20 | ORCL | 417 |
@@ -761,16 +755,16 @@
 
 | 年 | plain_15__mcap | SPY | 差 |
 |---|---:|---:|---:|
-| 2017 | 24.0% | 21.7% | 2.3pt |
-| 2018 | 0.6% | -4.6% | 5.2pt |
-| 2019 | 34.2% | 31.2% | 2.9pt |
-| 2020 | 33.7% | 18.3% | 15.3pt |
-| 2021 | 34.6% | 28.7% | 5.8pt |
-| 2022 | -31.3% | -18.2% | -13.1pt |
-| 2023 | 52.9% | 26.2% | 26.7pt |
-| 2024 | 42.4% | 24.9% | 17.6pt |
-| 2025 | 18.5% | 17.7% | 0.8pt |
-| 2026 | 6.3% | 13.7% | -7.4pt |
+| 2017 | 16.4% | 21.7% | -5.3pt |
+| 2018 | -3.4% | -4.6% | 1.2pt |
+| 2019 | 38.4% | 31.2% | 7.1pt |
+| 2020 | 37.6% | 18.3% | 19.3pt |
+| 2021 | 32.4% | 28.7% | 3.7pt |
+| 2022 | -30.4% | -18.2% | -12.3pt |
+| 2023 | 51.0% | 26.2% | 24.8pt |
+| 2024 | 45.4% | 24.9% | 20.5pt |
+| 2025 | 22.8% | 17.7% | 5.1pt |
+| 2026 | 10.9% | 13.7% | -2.9pt |
 
 ### 最大ドローダウン（2016-01-01–2026-10-02）
 
@@ -778,11 +772,11 @@
 |---|---|---|
 | ピーク日 | 2022-01-03 | 2020-02-19 |
 | ボトム日 | 2023-01-05 | 2020-03-23 |
-| 深さ | -34.6% | -33.7% |
+| 深さ | -33.6% | -33.7% |
 | 回復 | 2023-11-14 | 2020-08-10 |
 | 回復営業日数 | 216 | 97 |
 
-**OOS 期間のみの MaxDD:** 採用 **-34.6%**（ピーク 2022-01-03 → ボトム 2023-01-05） vs SPY **-24.5%** — 事前登録合格②は **不合格**。
+**OOS 期間のみの MaxDD:** 採用 **-33.6%**（ピーク 2022-01-03 → ボトム 2023-01-05） vs SPY **-24.5%** — 事前登録合格②は **不合格**。
 
 上表の全期間最大 DD は主に **2022–2023 の株式調整**（ピーク **2022-01-03**、ボトム **2023-01-05**、回復 **2023-11-14**）に由来する。
 
@@ -796,8 +790,8 @@
 
 | | USD建て | 円建て（日次 USD/JPY で換算） |
 |---|---:|---:|
-| 期間リターン | 7.63% | 4.09% |
-| 最大DD | -3.08%（ピーク 2026-08-04 → ボトム 2026-08-20） | -4.97%（ピーク 2026-08-10 → ボトム 2026-09-09） |
+| 期間リターン | 9.46% | 5.86% |
+| 最大DD | -3.06%（ピーク 2026-08-07 → ボトム 2026-08-24） | -4.33%（ピーク 2026-08-10 → ボトム 2026-09-09） |
 
 **ベンチマーク（同じ USD 初期額）**
 
@@ -851,7 +845,7 @@
 |---|---|
 | **当日以前の終値が無い銘柄は除外** | `hasPrice` / `filterEligibleCandidates` `round19-saka.ts:537` |
 | **別途出来高・流動性フィルタは無し** | 価格存在のみ |
-| 時価総額 `mcap = 終値 × 株数`（PIT） | 株数 `pit-shares.ts` / `sharesOutstandingAsOf`；詳細レポートの `buildCtx` で stale 株数繰越 |
+| 時価総額 `mcap`（PIT） | `pit-mcap.ts`：調整後終値 `c` × EDGAR 株数（ファクト `end` 以降の **Yahoo split で forward 補正**、過大株数は 120 日前比で deflate） |
 | `mcap ≤ 0` は **plain 選定で上位15に入らない** | `pickHoldings` `round19-saka.ts:555-559`（`.filter((r) => r.m > 0)`） |
 
 ### 5. 株クラス重複（同一 CIK）
@@ -911,16 +905,16 @@
 
 | リバランス日 | ρ中央値 | ρ平均 | ρ(ポート,SPY) 1y | β vs SPY 1y | ρ(ポート,SPY) 全期間 | β vs SPY 全期間 |
 |---|---:|---:|---:|---:|---:|---:|
-| 2026-01-02 | 0.267 | 0.273 | 0.939 | 1.203 | — | — |
-| 2026-04-01 | 0.193 | 0.257 | 0.945 | 1.109 | 0.917 | 1.152 |
-| 2026-07-01 | 0.112 | 0.130 | 0.899 | 1.353 | 0.904 | 1.233 |
-| 2026-10-01 | 0.091 | 0.085 | 0.896 | 1.260 | 0.905 | 1.212 |
+| 2026-01-02 | 0.267 | 0.273 | 0.932 | 1.305 | — | — |
+| 2026-04-01 | 0.207 | 0.265 | 0.949 | 1.237 | 0.889 | 1.264 |
+| 2026-07-01 | 0.127 | 0.125 | 0.907 | 1.400 | 0.886 | 1.313 |
+| 2026-10-01 | 0.091 | 0.085 | 0.912 | 1.359 | 0.885 | 1.308 |
 
 ### 全リバランス平均（44 四半期）
 
 | | ρ中央値 | ρ平均 | ρ(ポート,SPY) 1y | β vs SPY 1y | ρ(ポート,SPY) 全期間 | β vs SPY 全期間 |
 |---|---:|---:|---:|---:|---:|---:|
-| 平均 | 0.311 | 0.327 | 0.900 | 1.128 | 0.893 | 1.076 |
+| 平均 | 0.321 | 0.332 | 0.902 | 1.175 | 0.889 | 1.118 |
 
 
 ---
@@ -940,7 +934,7 @@
 | `09acebc` | 2026/10/5 7:32:51 JST | feat(pit): resolve 745 CIKs, price aliases, coverage push; rerun Corrected v1 |
 | `e2a2aec` | 2026/10/5 8:26:41 JST | Fix META shares and XOM CIK; add PIT checks and live-window detail |
 | `216dfc6` | 2026/10/5 8:42:38 JST | docs(round19): add criteria, correlation, and prereg evidence to v1 detail report |
-| `cc6ffaa` | 2026/10/5 11:02:00 JST | fix(round19): HOLX shares tag, CIK overrides in buildCtx, report N=20 labels |
+| `a6bd739` | 2026/10/5 12:13:51 JST | test(pit-mcap): assert no split-window mcap jumps on NVDA |
 
 ### 事前登録と OOS 結果の時間順
 
@@ -955,7 +949,7 @@
 4. **半導体 30% キャップ**は追補 `6e3ad93` で **結果コミット前**に文書化（`applySemiCap` は `487152e` からコードに存在）。
 5. **テーマリスト**（quantum 等）は `themes.ts` の watchlist 系コミットと同日の研究フロー。**Saka バックテスト専用の独立 prereg ではない**（ただし `isExcludedTheme` が参照するリストはコードで固定）。
 6. **本レポートの採用構成**はデータ修正後の **再選定結果**を記載。OOS 順位・CAGR は **データ版に依存**する。
-7. **STOP-SHIP 修正**（`216dfc6` 以降、`cc6ffaa` 付近）: PIT mcap（`mcapC`）、ATVI/CERN エイリアス、GOOGL レガシー facts、**HOLX `CommonStockSharesIssued` 300B 誤株数**（`pit-shares.ts`）、**XOM CIK override を `buildCtx` 全体に適用**、MaxDD ピーク日、USD/JPY など。**本レポートは再生成版であり、採用構成 ID はまた変わる可能性がある**。
+7. **STOP-SHIP 修正**（`216dfc6` 以降、`a6bd739` 付近）: PIT mcap（`mcapC`）、ATVI/CERN エイリアス、GOOGL レガシー facts、**HOLX `CommonStockSharesIssued` 300B 誤株数**（`pit-shares.ts`）、**XOM CIK override を `buildCtx` 全体に適用**、MaxDD ピーク日、USD/JPY など。**本レポートは再生成版であり、採用構成 ID はまた変わる可能性がある**。
 
 **結論:** 「2016–2020 のみでルールを決め、2021+ は一度だけ評価」は **手順として事前登録されている**が、**データ修正と再実行により採用構成は初回結果（`plain_15__equal`）と異なる**。OOS を **設計に使った**というより、**公開後にデータを直し IS をやり直した**のが正確。
 
