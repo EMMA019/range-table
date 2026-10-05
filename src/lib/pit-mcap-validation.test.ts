@@ -4,8 +4,8 @@ import { describe, it } from "node:test";
 import { buildPitCikMapForTickers } from "./pit-cik";
 import { loadPitBars, loadPitCikOverrides, PIT_CACHE } from "./pit-dataset";
 import { buildPitFactsIndex, loadMergedPitFacts } from "./pit-facts-index";
+import { pitMarketCapForTicker } from "./pit-mcap";
 import { mcapCloseOnOrBefore } from "./pit-mcap-price";
-import { sharesOutstandingAsOf } from "./pit-shares";
 import { filterEligibleCandidates, isSemiSubIndustry, profitabilityStatus, tradingDaysFromBars } from "./round19-saka";
 import { loadSp500PitFiles, membersOnDate } from "./sp500-pit";
 
@@ -20,20 +20,6 @@ const REF_B = {
   "2026-10-01": { AAPL: [3400, 4600], MSFT: [3400, 4600], GOOGL: [2800, 4000], AMZN: [2200, 3200] },
 } as const;
 
-function pitMcap(
-  ticker: string,
-  date: string,
-  cik: number | null,
-  factsIndex: Map<number, string>,
-  factsJson: (t: string) => unknown | undefined,
-): number {
-  const bars = loadPitBars(ticker, PIT_CACHE);
-  const px = mcapCloseOnOrBefore(bars, date);
-  const f = factsJson(ticker);
-  const sh = f ? sharesOutstandingAsOf(f, date) : null;
-  if (!px || !sh) return 0;
-  return px * sh;
-}
 
 describe("pit mcap validation", { skip: !fs.existsSync(PIT_CACHE) }, () => {
   it("mega-caps rank in eligible top 10 and within reference bands", async () => {
@@ -72,15 +58,8 @@ describe("pit mcap validation", { skip: !fs.existsSync(PIT_CACHE) }, () => {
           if (!g) return null;
           return { sector: g.sector, subIndustry: g.subIndustry, semiBucket: isSemiSubIndustry(g.subIndustry) };
         },
-        mcap: (t: string, d: string) => {
-          const px = mcapCloseOnOrBefore(barsBy.get(t) ?? [], d);
-          const f = factFor(t);
-          let sh = f ? sharesOutstandingAsOf(f, d) : null;
-          if (sh != null && sh > 0) lastSh.set(t, sh);
-          else sh = lastSh.get(t) ?? null;
-          if (!px || !sh) return 0;
-          return px * sh;
-        },
+        mcap: (t: string, d: string) =>
+          pitMarketCapForTicker(t, barsBy.get(t) ?? [], factFor(t), d, PIT_CACHE),
         sharesLookup: () => ({ shares: 0, stale: true }),
         profitable: (t: string, d: string) => profitabilityStatus(factFor(t), d) === "profitable",
         hasPrice: (t: string, d: string) => mcapCloseOnOrBefore(barsBy.get(t) ?? [], d) != null,

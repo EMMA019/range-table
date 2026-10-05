@@ -45,7 +45,9 @@ import {
 } from "../src/lib/round19-saka";
 import { buildPitCikMapForTickers } from "../src/lib/pit-cik";
 import { buildPitFactsIndex, loadMergedPitFacts, pitFactsPathForTicker } from "../src/lib/pit-facts-index";
+import { pitMarketCapForTicker } from "../src/lib/pit-mcap";
 import { mcapCloseOnOrBefore } from "../src/lib/pit-mcap-price";
+import { loadPitSplits } from "../src/lib/pit-splits";
 import { loadPitBars, loadPitCikOverrides, PIT_CACHE } from "../src/lib/pit-dataset";
 import { dedupeShareClassesByCik } from "../src/lib/pit-share-class";
 import {
@@ -148,9 +150,11 @@ function buildCtx() {
       return st;
     };
     const barsBy = new Map<string, Bar[]>();
+    const splitsBy = new Map<string, ReturnType<typeof loadPitSplits>>();
     for (const t of tickers) {
       const bars = loadBars(t);
       if (bars.length) barsBy.set(t, bars);
+      splitsBy.set(t, loadPitSplits(t, PIT_CACHE));
     }
     const spyBars = loadBars("SPY");
     const calendar = tradingDaysFromBars(spyBars);
@@ -172,15 +176,8 @@ function buildCtx() {
         if (!g) return null;
         return { sector: g.sector, subIndustry: g.subIndustry, semiBucket: isSemiSubIndustry(g.subIndustry) };
       },
-      mcap: (t, date) => {
-        const p = mcapPrice(t, date);
-        const f = factForTicker(t);
-        let sh: number | null = f ? sharesOutstandingAsOf(f, date) : null;
-        if (sh != null && sh > 0) lastKnownShares.set(t, sh);
-        else sh = lastKnownShares.get(t) ?? null;
-        if (p == null || !sh || sh <= 0) return 0;
-        return p * sh;
-      },
+      mcap: (t, date) =>
+        pitMarketCapForTicker(t, barsBy.get(t) ?? [], factForTicker(t), date, PIT_CACHE),
       sharesLookup: (t, date) => {
         const f = factForTicker(t);
         let sh: number | null = f ? sharesOutstandingAsOf(f, date) : null;
@@ -734,7 +731,7 @@ function buildSectionACriteria(adopted: SakaConfig): string {
 |---|---|
 | **当日以前の終値が無い銘柄は除外** | \`hasPrice\` / \`filterEligibleCandidates\` \`round19-saka.ts:537\` |
 | **別途出来高・流動性フィルタは無し** | 価格存在のみ |
-| 時価総額 \`mcap = 終値 × 株数\`（PIT） | 株数 \`pit-shares.ts\` / \`sharesOutstandingAsOf\`；詳細レポートの \`buildCtx\` で stale 株数繰越 |
+| 時価総額 \`mcap\`（PIT） | \`pit-mcap.ts\`：調整後終値 \`c\` × EDGAR 株数（ファクト \`end\` 以降の **Yahoo split で forward 補正**、過大株数は 120 日前比で deflate） |
 | \`mcap ≤ 0\` は **plain 選定で上位${pickN}に入らない** | \`pickHoldings\` \`round19-saka.ts:555-559\`（\`.filter((r) => r.m > 0)\`） |
 
 ### 5. 株クラス重複（同一 CIK）
@@ -1164,7 +1161,8 @@ ${lines.join("\n")}
 | \`e2380b8\` | \`plain_15__equal\` | filed PIT 黒字・初回 corrected v1 PIT データ |
 | \`216dfc6\` | \`plain_15__mcap_cap5\` | 詳細レポート初版（mcap 順位バグ残存） |
 | \`fe6c787\` | \`plain_20__mcap_cap10\` | mcapC・ATVI/CERN 修正後 IS 再採用 |
-| \`${stopShipHash.slice(0, 7)}\` | \`${adopted.id}\` | HOLX 株数・XOM CIK 一貫・本稿 |
+| \`cc6ffaa\` | \`plain_15__mcap\` | HOLX 株数・XOM CIK 一貫 |
+| \`${stopShipHash.slice(0, 7)}\` | \`${adopted.id}\` | **株価×株数スプリット整合**（Yahoo splits + forward 株数） |
 `;
 
   const md = `# Round 19 Corrected v1 — 採用構成の詳細レポート

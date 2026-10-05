@@ -4,8 +4,8 @@ import { describe, it } from "node:test";
 import { buildPitCikMapForTickers } from "./pit-cik";
 import { loadPitBars, loadPitCikOverrides, PIT_CACHE } from "./pit-dataset";
 import { buildPitFactsIndex, loadMergedPitFacts } from "./pit-facts-index";
+import { pitMarketCapForTicker } from "./pit-mcap";
 import { mcapCloseOnOrBefore } from "./pit-mcap-price";
-import { sharesOutstandingAsOf } from "./pit-shares";
 import {
   filterEligibleCandidates,
   isSemiSubIndustry,
@@ -45,15 +45,7 @@ function buildMcapCtx(
       if (!g) return null;
       return { sector: g.sector, subIndustry: g.subIndustry, semiBucket: isSemiSubIndustry(g.subIndustry) };
     },
-    mcap: (t, d) => {
-      const px = mcapCloseOnOrBefore(barsBy.get(t) ?? [], d);
-      const f = factFor(t);
-      let sh = f ? sharesOutstandingAsOf(f, d) : null;
-      if (sh != null && sh > 0) lastSh.set(t, sh);
-      else sh = lastSh.get(t) ?? null;
-      if (!px || !sh) return 0;
-      return px * sh;
-    },
+    mcap: (t, d) => pitMarketCapForTicker(t, barsBy.get(t) ?? [], factFor(t), d, PIT_CACHE),
     sharesLookup: () => ({ shares: 0, stale: true }),
     profitable: (t, d) => profitabilityStatus(factFor(t), d) === "profitable",
     hasPrice: (t, d) => mcapCloseOnOrBefore(barsBy.get(t) ?? [], d) != null,

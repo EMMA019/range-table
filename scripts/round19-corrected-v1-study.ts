@@ -46,7 +46,9 @@ import { loadPitBars, loadPitCikOverrides, PIT_CACHE, pitPaths } from "../src/li
 import { buildPitFactsIndex, loadMergedPitFacts, pitFactsPathForTicker } from "../src/lib/pit-facts-index";
 import { buildPitCikMapForTickers } from "../src/lib/pit-cik";
 import { loadSp500PitFiles, membersOnDate, uniqueTickersInRange } from "../src/lib/sp500-pit";
+import { pitMarketCapForTicker } from "../src/lib/pit-mcap";
 import { mcapCloseOnOrBefore } from "../src/lib/pit-mcap-price";
+import { loadPitSplits } from "../src/lib/pit-splits";
 import type { Bar } from "../src/lib/types";
 
 const CACHE_V1 = path.join(process.cwd(), "data", ".cache", "round19");
@@ -161,15 +163,8 @@ async function main() {
       if (!g) return null;
       return { sector: g.sector, subIndustry: g.subIndustry, semiBucket: isSemiSubIndustry(g.subIndustry) };
     },
-    mcap: (t, date) => {
-      const p = mcapCloseOnOrBefore(barsBy.get(t) ?? [], date);
-      const f = factForTicker(t);
-      let sh: number | null = f ? sharesOutstandingAsOf(f, date) : null;
-      if (sh != null && sh > 0) lastKnownShares.set(t, sh);
-      else sh = lastKnownShares.get(t) ?? null;
-      if (p == null || !sh || sh <= 0) return 0;
-      return p * sh;
-    },
+    mcap: (t, date) =>
+      pitMarketCapForTicker(t, barsBy.get(t) ?? [], factForTicker(t), date, PIT_CACHE),
     sharesLookup: (t, date) => {
       const f = factForTicker(t);
       let sh: number | null = f ? sharesOutstandingAsOf(f, date) : null;

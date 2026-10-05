@@ -48,9 +48,48 @@ function sharesFromTags(
   return bestVal;
 }
 
+export type SharesPitPoint = { shares: number; factEnd: string };
+
+function sharesPitPoint(json: unknown, asOf: string, tags: Array<[string, string]>): SharesPitPoint | null {
+  if (!json || typeof json !== "object" || !("facts" in json)) return null;
+  const facts = (json as { facts: Record<string, Record<string, { units?: Record<string, Array<{ end?: string; val?: number }>> }>> })
+    .facts;
+  let bestEnd = "";
+  let bestPri = tags.length;
+  let bestVal: number | null = null;
+  for (let pri = 0; pri < tags.length; pri += 1) {
+    const [ns, tag] = tags[pri];
+    const block = facts[ns]?.[tag]?.units?.shares;
+    if (!block) continue;
+    for (const p of block) {
+      if (
+        !p.end ||
+        p.end > asOf ||
+        !Number.isFinite(p.val) ||
+        (p.val ?? 0) <= 0 ||
+        (p.val ?? 0) > MAX_REASONABLE_SHARES
+      ) {
+        continue;
+      }
+      if (p.end > bestEnd || (p.end === bestEnd && pri < bestPri)) {
+        bestEnd = p.end;
+        bestPri = pri;
+        bestVal = p.val!;
+      }
+    }
+  }
+  if (bestVal == null || !bestEnd) return null;
+  return { shares: bestVal, factEnd: bestEnd };
+}
+
 /** Latest shares with period end <= asOf; prefers dei/gaap outstanding over weighted-average fallbacks. */
 export function sharesOutstandingAsOf(json: unknown, asOf: string): number | null {
-  return sharesFromTags(json, asOf, SHARE_TAGS);
+  return sharesPitPoint(json, asOf, SHARE_TAGS)?.shares ?? null;
+}
+
+/** Shares + fact period end (for split forward-adjustment). */
+export function sharesOutstandingPit(json: unknown, asOf: string): SharesPitPoint | null {
+  return sharesPitPoint(json, asOf, SHARE_TAGS);
 }
 
 /** Pre-fix behavior: outstanding tags only (no weighted-average fallback). */

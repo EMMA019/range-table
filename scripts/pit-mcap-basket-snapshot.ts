@@ -6,8 +6,8 @@ import fs from "node:fs";
 import { buildPitCikMapForTickers } from "../src/lib/pit-cik";
 import { loadPitBars, loadPitCikOverrides, PIT_CACHE } from "../src/lib/pit-dataset";
 import { buildPitFactsIndex, loadMergedPitFacts } from "../src/lib/pit-facts-index";
+import { pitMarketCapForTicker } from "../src/lib/pit-mcap";
 import { mcapCloseOnOrBefore } from "../src/lib/pit-mcap-price";
-import { sharesOutstandingAsOf } from "../src/lib/pit-shares";
 import {
   filterEligibleCandidates,
   isSemiSubIndustry,
@@ -47,15 +47,8 @@ async function snapshot(date: string) {
       if (!g) return null;
       return { sector: g.sector, subIndustry: g.subIndustry, semiBucket: isSemiSubIndustry(g.subIndustry) };
     },
-    mcap: (t: string, d: string) => {
-      const px = mcapCloseOnOrBefore(barsBy.get(t) ?? [], d);
-      const f = factFor(t);
-      let sh = f ? sharesOutstandingAsOf(f, d) : null;
-      if (sh != null && sh > 0) lastSh.set(t, sh);
-      else sh = lastSh.get(t) ?? null;
-      if (!px || !sh) return 0;
-      return px * sh;
-    },
+    mcap: (t: string, d: string) =>
+      pitMarketCapForTicker(t, barsBy.get(t) ?? [], factFor(t), d, PIT_CACHE),
     sharesLookup: () => ({ shares: 0, stale: true }),
     profitable: (t: string, d: string) => profitabilityStatus(factFor(t), d) === "profitable",
     hasPrice: (t: string, d: string) => mcapCloseOnOrBefore(barsBy.get(t) ?? [], d) != null,
