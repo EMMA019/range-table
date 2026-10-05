@@ -99,7 +99,13 @@ IBKR の CSV（アクティビティ・ステートメントの日本語版・�
 
 ## チーム注目
 
-`data/team_picks.json` は配列。空のときは「チームの推奨は朝に更新されます」と出る。中身を足すと `/picks` のカードと `/api/picks` に載る。ウォッチリストに無いティッカーだけ、同じ同時数で日足を取る。
+`data/team_picks.json` は配列。空のときは「チームの推奨は朝に更新されます」と出る。中身を足すと `/picks` のカードと `/api/picks` に載る。ウォッチリストに無いティッカーだけ、同じ同時数で日足を取る。**数値ライン**（entry/review・`as_of`）は平日 GitHub Actions（`.github/workflows/team-picks.yml`）が `scripts/refresh-team-picks.ts` で日次更新する。手動: `npx tsx scripts/refresh-team-picks.ts`。
+
+## 監視ユニバース（指数）
+
+S&P 500 + Nasdaq-100 の和集合は `data/monitor_index.json`（`scripts/refresh-monitor-index.ts` で更新）。詳細は [`docs/MONITOR_UNIVERSE_ja.md`](docs/MONITOR_UNIVERSE_ja.md)。表 UI は watchlist のまま；アラート／日足キャッシュのカバーだけ広げる。
+
+## チーム注目（JSON 形）
 
 ```json
 {

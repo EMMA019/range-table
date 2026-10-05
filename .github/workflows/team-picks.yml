@@ -1,0 +1,38 @@
+name: Refresh team picks
+
+on:
+  workflow_dispatch:
+  schedule:
+    # After US cash close (same window as paper forward test).
+    - cron: "45 22 * * 1-5"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: team-picks-refresh
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npx tsx scripts/refresh-team-picks.ts
+      - name: Commit team picks
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/team_picks.json
+          if git diff --cached --quiet; then
+            echo "team_picks unchanged"
+          else
+            git commit -m "chore: refresh team picks lines (daily)"
+            git push
+          fi

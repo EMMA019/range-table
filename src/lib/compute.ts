@@ -18,6 +18,15 @@ function round4(n: number): number {
   return Math.round(n * 10000) / 10000;
 }
 
+function windowHighLow(bars: Bar[], n: number): { low: number; high: number } | null {
+  if (bars.length < n) return null;
+  const slice = bars.slice(-n);
+  return {
+    low: Math.min(...slice.map((bar) => bar.l)),
+    high: Math.max(...slice.map((bar) => bar.h)),
+  };
+}
+
 /**
  * 14-day ATR as the simple average of the last 14 true ranges.
  * (The team's morning sheet matches this, not Wilder smoothing.)
@@ -78,6 +87,8 @@ export function computeQuote(bars: Bar[]): QuoteResult {
   }
 
   const guides = entryGuides(low20, high20);
+  const r5 = windowHighLow(bars, 5);
+  const r10 = windowHighLow(bars, 10);
   const close = round4(last.c);
   const box = round4(boxPct);
   const atrRounded = round4(atr);
@@ -93,6 +104,10 @@ export function computeQuote(bars: Bar[]): QuoteResult {
       low20: round4(low20),
       high20: round4(high20),
       priorHigh20: round4(priorHigh20),
+      low5: r5 ? round4(r5.low) : null,
+      high5: r5 ? round4(r5.high) : null,
+      low10: r10 ? round4(r10.low) : null,
+      high10: r10 ? round4(r10.high) : null,
       boxPct: box,
       atr14: atrRounded,
       shares10: ten.shares10,

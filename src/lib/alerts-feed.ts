@@ -5,6 +5,7 @@ import { profitabilityFromCache } from "./profit-cache";
 import { cachedEpsSnapshots, ensureSeries } from "./market";
 import { isStale, oldestOkAt } from "./price-cache";
 import { loadWatchlist } from "./watchlist";
+import { indexMonitorTickers } from "./monitor-universe";
 import {
   alertSlot,
   countAlerts,
@@ -63,6 +64,22 @@ export async function getAlertsPayload(query: AlertsQuery, now = new Date()): Pr
         profitability: profitabilityFromCache(ticker.ticker, epsSnap),
       });
     }
+  }
+
+  for (const ticker of indexMonitorTickers(list)) {
+    const entry = cache.series[ticker];
+    const epsSnap = eps[ticker] ?? null;
+    candidates.push({
+      ticker,
+      watchOnly: true,
+      earnings: null,
+      earningsUnknown: true,
+      bars: entry?.bars,
+      stale: isStale(entry),
+      semi: false,
+      sectorId: "index",
+      profitability: profitabilityFromCache(ticker, epsSnap),
+    });
   }
 
   const items: AlertItem[] = [
