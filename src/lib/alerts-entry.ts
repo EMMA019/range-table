@@ -189,7 +189,8 @@ export function entryAlerts(
   const out: AlertItem[] = [];
   const spyBars = options.spyBars ?? [];
   for (const candidate of candidates) {
-    if (candidate.watchOnly || isIgnoredTicker(candidate.ticker) || !candidate.bars) continue;
+    if (isIgnoredTicker(candidate.ticker) || !candidate.bars) continue;
+    if (candidate.watchOnly && candidate.sectorId !== "index") continue;
     const bars = finalBars(candidate.bars, now);
     const computed = computeQuote(bars);
     if (!computed.ok) continue;

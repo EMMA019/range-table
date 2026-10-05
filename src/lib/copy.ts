@@ -95,7 +95,7 @@ export const CHIPS = [
 
 export type ChipKey = (typeof CHIPS)[number]["key"];
 
-/** Dashboard list scope (URL ?u=). Default watchlist-only; index adds S&P500+NDX100 monitor names. */
+/** Dashboard list scope (URL ?u=). Default **すべて** on open (`?u=all`); ウォッチリスト is `?u=watch`. */
 export const UNIVERSE_SCOPES = [
   { id: "watch", label: "ウォッチリスト" },
   { id: "index", label: "指数監視のみ" },

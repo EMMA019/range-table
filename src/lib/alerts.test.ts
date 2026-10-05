@@ -100,6 +100,10 @@ describe("entry alerts", () => {
     const early = bandBars().slice(0, -1);
     assert.equal(entryAlerts([candidate({ bars: early })], TODAY, AFTER_CLOSE).length, 0);
     assert.equal(entryAlerts([candidate({ watchOnly: true })], TODAY, AFTER_CLOSE).length, 0);
+    assert.equal(
+      entryAlerts([candidate({ watchOnly: true, sectorId: "index", earningsUnknown: true, earnings: null })], TODAY, AFTER_CLOSE).length,
+      1,
+    );
     assert.equal(entryAlerts([candidate({ ticker: "ONDS" })], TODAY, AFTER_CLOSE).length, 0);
     assert.equal(entryAlerts([candidate({ bars: undefined })], TODAY, AFTER_CLOSE).length, 0);
     assert.equal(
