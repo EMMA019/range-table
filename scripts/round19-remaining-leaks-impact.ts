@@ -32,8 +32,7 @@ import type { Bar } from "../src/lib/types";
 
 const OUT_MD = path.join(process.cwd(), "docs", "ROUND19_REMAINING_LEAKS_IMPACT_ja.md");
 const AUDIT_MD = path.join(process.cwd(), "docs", "ROUND19_MCAP_LEAK_AUDIT_ja.md");
-const CONFIG = SAKA_CONFIGS.find((c) => c.id === "plain_15__mcap");
-if (!CONFIG) throw new Error("plain_15__mcap missing");
+const CONFIG = SAKA_CONFIGS.find((c) => c.id === "plain_15__mcap")!;
 
 type LeakRow = { date: string; ticker: string; kind: string };
 

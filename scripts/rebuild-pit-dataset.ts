@@ -72,8 +72,12 @@ async function main() {
   let overrides: Record<string, number> = { ...overrideFile.cik };
   if (eftsSearch && fs.existsSync(paths.overrides)) {
     const cacheOnly = JSON.parse(fs.readFileSync(paths.overrides, "utf8")) as Record<string, number> | { cik: Record<string, number> };
-    if (cacheOnly && typeof cacheOnly === "object" && "cik" in cacheOnly) overrides = { ...overrides, ...cacheOnly.cik };
-    else overrides = { ...overrides, ...(cacheOnly as Record<string, number>) };
+    if (cacheOnly && typeof cacheOnly === "object" && "cik" in cacheOnly) {
+      const wrapped = cacheOnly as { cik: Record<string, number> };
+      overrides = { ...overrides, ...wrapped.cik };
+    } else if (cacheOnly && typeof cacheOnly === "object" && !Array.isArray(cacheOnly)) {
+      overrides = { ...overrides, ...(cacheOnly as Record<string, number>) };
+    }
   }
 
   const cikRes = await buildPitCikMapForTickers(PIT_CACHE, gics, pitTickers, overrides);

@@ -35,6 +35,7 @@ import {
   rebalanceDates,
   selectSakaConfig,
   simulateSaka,
+  type SakaSimOptions,
   targetWeights,
   tradingDaysFromBars,
   ttmNetIncomePitAudit,
@@ -237,7 +238,7 @@ async function main() {
   };
   const simOptsFull = { rebalance: "legacy_full_liquidate" as const };
 
-  const runConfig = (config: SakaConfig, commission: number, simOpts = simOptsDelta) => {
+  const runConfig = (config: SakaConfig, commission: number, simOpts: SakaSimOptions = simOptsDelta) => {
     const { curve, ordersPerYear, turnoverPerRebal } = simulateSaka(
       config,
       calendar,

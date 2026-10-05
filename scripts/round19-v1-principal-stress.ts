@@ -42,12 +42,10 @@ const COMMISSION = 0.35;
 const PRINCIPAL = SAKA_INITIAL_CASH;
 const MATERIAL = 0.01;
 const MIN_SESSIONS = 252;
-const CONFIG = SAKA_CONFIGS.find((c) => c.id === "plain_15__mcap");
+const CONFIG = SAKA_CONFIGS.find((c) => c.id === "plain_15__mcap")!;
 const CALLOUT_MONTHS = ["2021-09", "2021-10", "2021-11", "2021-12", "2022-01"];
 const FIXED_MONTHS = ["2016-01", "2021-01"];
 const WATCH = ["AAPL", "MSFT", "AMZN", "GOOGL", "NVDA", "META", "FB"];
-
-if (!CONFIG) throw new Error("plain_15__mcap missing from SAKA_CONFIGS");
 
 function closeOnOrBefore(bars: Bar[], date: string): number | null {
   let lo = 0;

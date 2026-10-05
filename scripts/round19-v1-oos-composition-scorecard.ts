@@ -498,10 +498,10 @@ async function main() {
     profitable: (t, d) => {
       const k = `${t}|${d}`;
       const hit = profitCache.get(k);
-      if (hit) return hit;
+      if (hit) return hit === "profitable";
       const st = profitabilityStatus(factFor(t), d);
       profitCache.set(k, st);
-      return st;
+      return st === "profitable";
     },
     hasPrice: (t, d) => mcapCloseOnOrBefore(barsBy.get(t) ?? [], d) != null,
     cikOf: (t) => cikMap.get(t) ?? null,

@@ -23,8 +23,7 @@ import { loadSp500PitFiles, membersOnDate } from "../src/lib/sp500-pit";
 import type { Bar } from "../src/lib/types";
 
 const date = process.argv[2] ?? "2026-10-01";
-const CONFIG = SAKA_CONFIGS.find((c) => c.id === "plain_15__mcap");
-if (!CONFIG) throw new Error("plain_15__mcap missing");
+const CONFIG = SAKA_CONFIGS.find((c) => c.id === "plain_15__mcap")!;
 
 async function main() {
   const { intervals, gics } = await loadSp500PitFiles(PIT_CACHE);

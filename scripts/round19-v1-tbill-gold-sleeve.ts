@@ -43,8 +43,7 @@ const DIV_GOLD_RESULTS = "docs/ROUND19_V1_DIV_GOLD_SLEEVE_RESULTS_ja.md";
 const COMMISSION = 0.35;
 const PRINCIPAL = SAKA_INITIAL_CASH;
 const MATERIAL = 0.01;
-const BASELINE = SAKA_CONFIGS.find((c) => c.id === "plain_15__mcap");
-if (!BASELINE) throw new Error("plain_15__mcap missing");
+const BASELINE = SAKA_CONFIGS.find((c) => c.id === "plain_15__mcap")!;
 
 const MCAP_N = 11;
 

@@ -20,7 +20,6 @@ import {
   filterEligibleCandidates,
   isSemiSubIndustry,
   metricsFromCurve,
-  pearson,
   pickHoldings,
   profitabilityStatus,
   rebalanceDates,
@@ -47,8 +46,7 @@ const PREREG = "docs/ROUND19_V1_DIV_GOLD_SLEEVE_PREREG_ja.md";
 const COMMISSION = 0.35;
 const PRINCIPAL = SAKA_INITIAL_CASH;
 const MATERIAL = 0.01;
-const BASELINE = SAKA_CONFIGS.find((c) => c.id === "plain_15__mcap");
-if (!BASELINE) throw new Error("plain_15__mcap missing");
+const BASELINE = SAKA_CONFIGS.find((c) => c.id === "plain_15__mcap")!;
 
 const MCAP_N = 11;
 const DIV_N = 4;

@@ -446,7 +446,7 @@ async function main() {
     sharesLookup: () => ({ shares: 0, stale: true }),
     profitable: (t, d) => {
       const k = `${t}|${d}`;
-      if (profitCache.has(k)) return profitCache.get(k)!;
+      if (profitCache.has(k)) return profitCache.get(k)! === "profitable";
       const st = profitabilityStatus(factFor(t), d);
       profitCache.set(k, st);
       return st === "profitable";

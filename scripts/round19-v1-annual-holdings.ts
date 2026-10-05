@@ -32,8 +32,7 @@ import { loadSp500PitFiles, membersOnDate, uniqueTickersInRange } from "../src/l
 import type { Bar } from "../src/lib/types";
 
 const OUT_MD = path.join(process.cwd(), "docs", "ROUND19_V1_ANNUAL_HOLDINGS_ja.md");
-const CONFIG = SAKA_CONFIGS.find((c) => c.id === "plain_15__mcap");
-if (!CONFIG) throw new Error("plain_15__mcap missing");
+const CONFIG = SAKA_CONFIGS.find((c) => c.id === "plain_15__mcap")!;
 
 /** AI-tilt: GICS semi sub-industry OR explicit hyperscaler / AI software / AI infra (union, no double-count in sum). */
 const AI_PLATFORM_INFRA = new Set([
