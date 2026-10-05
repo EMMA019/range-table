@@ -34,4 +34,4 @@
 | plain AI / 年次 | [`ROUND19_V1_ANNUAL_HOLDINGS_ja.md`](ROUND19_V1_ANNUAL_HOLDINGS_ja.md) |
 | ライブ窓 | [`ROUND19_LIVE_WINDOW_2026-07-30_ja.md`](ROUND19_LIVE_WINDOW_2026-07-30_ja.md) |
 
-**HEAD（合成 doc）:** `3316876`（数値は上記固定引用 · 再計算なし）。
+**HEAD（合成 doc）:** `0819b18`（数値は上記固定引用 · 再計算なし）。
