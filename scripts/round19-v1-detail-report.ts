@@ -518,7 +518,17 @@ function equityFromShares(
   return eq;
 }
 
-function fxCloseOnDate(fxBars: Bar[], date: string): number | null {
+const FX_OVERRIDES_PATH = path.join(process.cwd(), "data", "pit_fx_overrides.json");
+
+function loadFxOverrides(): Record<string, number> {
+  if (!fs.existsSync(FX_OVERRIDES_PATH)) return {};
+  const raw = JSON.parse(fs.readFileSync(FX_OVERRIDES_PATH, "utf8")) as { USDJPY?: Record<string, number> };
+  return raw.USDJPY ?? {};
+}
+
+function fxCloseOnDate(fxBars: Bar[], date: string, overrides = loadFxOverrides()): number | null {
+  const o = overrides[date];
+  if (o != null && o > 0) return o;
   const exact = fxBars.find((b) => b.date === date);
   if (exact) {
     const px = exact.mcapC ?? exact.c;
@@ -542,9 +552,9 @@ async function loadUsdjpyBars(): Promise<Bar[]> {
   }
 }
 
-function jpyCurve(usdCurve: SakaEquityPoint[], fxBars: Bar[]): SakaEquityPoint[] {
+function jpyCurve(usdCurve: SakaEquityPoint[], fxBars: Bar[], overrides = loadFxOverrides()): SakaEquityPoint[] {
   return usdCurve.map((p) => {
-    const fx = closeOnOrBefore(fxBars, p.date);
+    const fx = fxCloseOnDate(fxBars, p.date, overrides) ?? closeOnOrBefore(fxBars, p.date);
     return { date: p.date, equity: fx != null ? p.equity * fx : p.equity };
   });
 }
