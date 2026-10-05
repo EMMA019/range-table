@@ -24,8 +24,10 @@ export type ProfitabilityStatus = "profitable" | "loss" | "unknown";
 export function profitabilityStatus(facts: unknown | undefined, date: string): ProfitabilityStatus {
   if (!facts) return "unknown";
   const ni = ttmNetIncomeAsOf(facts, date);
-  if (ni == null) return "unknown";
-  return ni > 0 ? "profitable" : "loss";
+  if (ni != null) return ni > 0 ? "profitable" : "loss";
+  const fy = latestFyNetIncomeAsOf(facts, date);
+  if (fy != null) return fy > 0 ? "profitable" : "loss";
+  return "unknown";
 }
 
 export type SakaPickMethod = "corrdiverse" | "volprune" | "plain";
@@ -247,7 +249,7 @@ export function correlationMatrixByIndex(inputs: CorrInputs): Map<string, Map<st
 }
 
 /** Median of upper-triangle pairwise correlations in a pool (diagnostics). */
-export function medianPairwiseCorr(tickers: string[], corr: Map<string, Map<string, number>>): number | null {
+function pairwiseCorrValues(tickers: string[], corr: Map<string, Map<string, number>>): number[] {
   const vals: number[] = [];
   for (let i = 0; i < tickers.length; i += 1) {
     for (let j = i + 1; j < tickers.length; j += 1) {
@@ -255,10 +257,22 @@ export function medianPairwiseCorr(tickers: string[], corr: Map<string, Map<stri
       if (r != null && Number.isFinite(r)) vals.push(r);
     }
   }
+  return vals;
+}
+
+/** Median of upper-triangle pairwise correlations in a pool (diagnostics). */
+export function medianPairwiseCorr(tickers: string[], corr: Map<string, Map<string, number>>): number | null {
+  const vals = pairwiseCorrValues(tickers, corr);
   if (!vals.length) return null;
   vals.sort((a, b) => a - b);
   const mid = Math.floor(vals.length / 2);
   return vals.length % 2 ? vals[mid] : (vals[mid - 1] + vals[mid]) / 2;
+}
+
+export function meanPairwiseCorr(tickers: string[], corr: Map<string, Map<string, number>>): number | null {
+  const vals = pairwiseCorrValues(tickers, corr);
+  if (!vals.length) return null;
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
 }
 
 export function pairCorrelation(
@@ -638,6 +652,52 @@ function equityOnOrBefore(curve: SakaEquityPoint[], date: string): number | null
   return best;
 }
 
+export type DrawdownDetail = {
+  peakDate: string;
+  troughDate: string;
+  maxDd: number;
+  recoveryDate: string | null;
+  recoveryDays: number | null;
+  peakAtTrough: number;
+};
+
+/** Max drawdown on a curve; peak date is the running-max **at the trough**, not a later recovery high. */
+export function drawdownFromCurve(curve: SakaEquityPoint[], from: string, to: string): DrawdownDetail {
+  const slice = curve.filter((p) => p.date >= from && p.date <= to);
+  let peak = slice[0]?.equity ?? 0;
+  let peakDate = slice[0]?.date ?? from;
+  let maxDd = 0;
+  let troughDate = peakDate;
+  let peakAtTrough = peak;
+  let peakDateAtMaxDd = peakDate;
+  for (const p of slice) {
+    if (p.equity > peak) {
+      peak = p.equity;
+      peakDate = p.date;
+    }
+    const dd = peak > 0 ? (p.equity - peak) / peak : 0;
+    if (dd < maxDd) {
+      maxDd = dd;
+      troughDate = p.date;
+      peakAtTrough = peak;
+      peakDateAtMaxDd = peakDate;
+    }
+  }
+  let recoveryDate: string | null = null;
+  const ti = slice.findIndex((p) => p.date === troughDate);
+  if (ti >= 0) {
+    for (let i = ti + 1; i < slice.length; i += 1) {
+      if (slice[i].equity >= peakAtTrough) {
+        recoveryDate = slice[i].date;
+        break;
+      }
+    }
+  }
+  const recoveryDays =
+    recoveryDate != null && ti >= 0 ? slice.findIndex((p) => p.date === recoveryDate) - ti : null;
+  return { peakDate: peakDateAtMaxDd, troughDate, maxDd, recoveryDate, recoveryDays, peakAtTrough };
+}
+
 export function metricsFromCurve(
   curve: SakaEquityPoint[],
   calendar: string[],
@@ -888,10 +948,42 @@ export function sharesOutstandingAsOf(json: unknown, asOf: string): number | nul
   return pitSharesOutstandingAsOf(json, asOf);
 }
 
+function quarterPointScore(p: FactPoint & { frame?: string; start?: string }): number {
+  let score = 0;
+  if (p.frame && /^CY\d{4}Q[1-4]$/i.test(p.frame)) score += 10;
+  if (p.start && p.end) {
+    const d0 = Date.parse(`${p.start}T12:00:00Z`);
+    const d1 = Date.parse(`${p.end}T12:00:00Z`);
+    const days = (d1 - d0) / 86_400_000;
+    if (days > 50 && days < 120) score += 5;
+    if (days > 300) score -= 5;
+  }
+  if (p.form === "10-Q") score += 1;
+  return score;
+}
+
 function factFiledOnOrBefore(p: FactPoint, asOf: string): boolean {
   const filed = p.filed?.trim();
   if (filed && /^\d{4}-\d{2}-\d{2}$/.test(filed)) return filed <= asOf;
   return p.end <= asOf;
+}
+
+function latestFyNetIncomeAsOf(json: unknown, asOf: string): number | null {
+  if (!json || typeof json !== "object" || !("facts" in json)) return null;
+  const facts = (json as { facts: Record<string, Record<string, { units?: Record<string, FactPoint[]> }>> }).facts;
+  const tags = ["NetIncomeLoss", "NetIncomeLossAvailableToCommonStockholdersBasic", "ProfitLoss"];
+  const namespaces = ["us-gaap", "us-gaap", "ifrs-full"];
+  let best: FactPoint | null = null;
+  for (let i = 0; i < tags.length; i += 1) {
+    const block = facts[namespaces[i]]?.[tags[i]]?.units?.USD;
+    if (!block) continue;
+    for (const p of block) {
+      if (!factFiledOnOrBefore(p, asOf) || p.end > asOf || !Number.isFinite(p.val)) continue;
+      if (p.form !== "10-K" && p.form !== "20-F" && p.form !== "40-F") continue;
+      if (!best || p.end > best.end) best = p;
+    }
+  }
+  return best?.val ?? null;
 }
 
 export type TtmPitAudit = {
@@ -914,27 +1006,20 @@ export function ttmNetIncomePitAudit(json: unknown, asOf: string): TtmPitAudit {
   for (let i = 0; i < tags.length; i += 1) {
     const block = facts[namespaces[i]]?.[tags[i]]?.units?.USD;
     if (!block) continue;
-    const quarterly = block
-      .filter(
-        (p) =>
-          factFiledOnOrBefore(p, asOf) &&
-          p.end <= asOf &&
-          p.fp &&
-          /^Q[1-4]$/i.test(p.fp) &&
-          p.form !== "10-K" &&
-          p.form !== "20-F" &&
-          p.form !== "40-F" &&
-          Number.isFinite(p.val),
-      )
-      .sort((a, b) => b.end.localeCompare(a.end));
-    const seen = new Set<string>();
-    const uniq: FactPoint[] = [];
-    for (const point of quarterly) {
-      if (seen.has(point.end)) continue;
-      seen.add(point.end);
-      uniq.push(point);
-      if (uniq.length >= 4) break;
+    const candidates = block.filter(
+      (p) =>
+        factFiledOnOrBefore(p, asOf) &&
+        p.end <= asOf &&
+        Number.isFinite(p.val) &&
+        p.fp &&
+        (/^Q[1-4]$/i.test(p.fp) || (p.form === "10-K" && /^FY|Q4$/i.test(p.fp))),
+    );
+    const byEnd = new Map<string, FactPoint>();
+    for (const p of candidates) {
+      const prev = byEnd.get(p.end);
+      if (!prev || quarterPointScore(p) > quarterPointScore(prev)) byEnd.set(p.end, p);
     }
+    const uniq = [...byEnd.values()].sort((a, b) => b.end.localeCompare(a.end)).slice(0, 4);
     if (uniq.length >= 4) {
       const sum = uniq.reduce((t, p) => t + p.val, 0);
       return {

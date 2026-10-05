@@ -14,6 +14,7 @@ import {
   SAKA_END,
   SAKA_INITIAL_CASH,
   SAKA_IS_END,
+  SAKA_OOS_START,
   SAKA_REBAL_MIN_TRADE_USD,
   SAKA_REBAL_REL_DRIFT,
   SAKA_START,
@@ -24,8 +25,11 @@ import {
   isExcludedTheme,
   isFinancialSector,
   isSemiSubIndustry,
+  drawdownFromCurve,
+  meanPairwiseCorr,
   medianPairwiseCorr,
   pickHoldings,
+  selectSakaConfig,
   profitabilityStatus,
   rebalanceDates,
   sharesOutstandingAsOf,
@@ -40,7 +44,8 @@ import {
   metricsFromCurve,
 } from "../src/lib/round19-saka";
 import { buildPitCikMapForTickers } from "../src/lib/pit-cik";
-import { buildPitFactsIndex, pitFactsPathForTicker } from "../src/lib/pit-facts-index";
+import { buildPitFactsIndex, loadMergedPitFacts, pitFactsPathForTicker } from "../src/lib/pit-facts-index";
+import { mcapCloseOnOrBefore } from "../src/lib/pit-mcap-price";
 import { loadPitBars, loadPitCikMap, loadPitCikOverrides, PIT_CACHE } from "../src/lib/pit-dataset";
 import { dedupeShareClassesByCik } from "../src/lib/pit-share-class";
 import {
@@ -127,10 +132,8 @@ function buildCtx() {
     const factByTicker = new Map<string, unknown | undefined>();
     const factForTicker = (t: string): unknown | undefined => {
       if (factByTicker.has(t)) return factByTicker.get(t);
-      let json: unknown | undefined;
-      const pitPath = pitFactsPathForTicker(t, cikMapBuilt.get(t), factsIndex, PIT_CACHE);
-      if (pitPath) json = JSON.parse(fs.readFileSync(pitPath, "utf8"));
-      else {
+      let json: unknown | undefined = loadMergedPitFacts(t, cikMapBuilt.get(t), factsIndex, PIT_CACHE);
+      if (!json) {
         for (const dir of [path.join(CACHE, "facts"), path.join(CACHE_V1, "facts")]) {
           const f = path.join(dir, `${t}.json`);
           if (!fs.existsSync(f)) continue;
@@ -164,6 +167,7 @@ function buildCtx() {
       closeHistory.set(t, m);
     }
     const price = (ticker: string, date: string) => closeOnOrBefore(barsBy.get(ticker) ?? [], date);
+    const mcapPrice = (ticker: string, date: string) => mcapCloseOnOrBefore(barsBy.get(ticker) ?? [], date);
     const membersOn = (date: string) => membersOnDate(intervals, date);
     const lastKnownShares = new Map<string, number>();
     const ctx: SakaCandidateContext = {
@@ -175,7 +179,7 @@ function buildCtx() {
         return { sector: g.sector, subIndustry: g.subIndustry, semiBucket: isSemiSubIndustry(g.subIndustry) };
       },
       mcap: (t, date) => {
-        const p = price(t, date);
+        const p = mcapPrice(t, date);
         const f = factForTicker(t);
         let sh: number | null = f ? sharesOutstandingAsOf(f, date) : null;
         if (sh != null && sh > 0) lastKnownShares.set(t, sh);
@@ -192,7 +196,7 @@ function buildCtx() {
         return { shares: 0, stale: true };
       },
       profitable: (t, date) => profitOf(t, date) === "profitable",
-      hasPrice: (t, date) => price(t, date) != null,
+      hasPrice: (t, date) => mcapPrice(t, date) != null,
       cikOf: (t) => cikMapBuilt.get(t) ?? null,
     };
     const semiOf = (t: string) => ctx.gicsOf(t)?.semiBucket ?? false;
@@ -438,40 +442,6 @@ function getPrevRebalDate(rows: RebalRow[]): string {
   return rows.length ? rows[rows.length - 1].date : SAKA_START;
 }
 
-function drawdownDetail(curve: SakaEquityPoint[], from: string, to: string) {
-  const slice = curve.filter((p) => p.date >= from && p.date <= to);
-  let peak = slice[0]?.equity ?? 0;
-  let peakDate = slice[0]?.date ?? from;
-  let maxDd = 0;
-  let troughDate = peakDate;
-  let peakAtTrough = peak;
-  for (const p of slice) {
-    if (p.equity > peak) {
-      peak = p.equity;
-      peakDate = p.date;
-    }
-    const dd = peak > 0 ? (p.equity - peak) / peak : 0;
-    if (dd < maxDd) {
-      maxDd = dd;
-      troughDate = p.date;
-      peakAtTrough = peak;
-    }
-  }
-  let recoveryDate: string | null = null;
-  const ti = slice.findIndex((p) => p.date === troughDate);
-  if (ti >= 0) {
-    for (let i = ti + 1; i < slice.length; i += 1) {
-      if (slice[i].equity >= peakAtTrough) {
-        recoveryDate = slice[i].date;
-        break;
-      }
-    }
-  }
-  const recoveryDays =
-    recoveryDate != null && ti >= 0 ? slice.findIndex((p) => p.date === recoveryDate) - ti : null;
-  return { peakDate, troughDate, maxDd, recoveryDate, recoveryDays, peakAtTrough };
-}
-
 function attributionFromSnapshots(
   env: Awaited<ReturnType<typeof buildCtx>>,
   dailySnaps: Array<{ date: string; shares: Record<string, number>; cash: number }>,
@@ -548,11 +518,20 @@ function equityFromShares(
   return eq;
 }
 
+function fxCloseOnDate(fxBars: Bar[], date: string): number | null {
+  const exact = fxBars.find((b) => b.date === date);
+  if (exact) {
+    const px = exact.mcapC ?? exact.c;
+    return px > 0 ? px : null;
+  }
+  return closeOnOrBefore(fxBars, date);
+}
+
 async function loadUsdjpyBars(): Promise<Bar[]> {
   const cache = path.join(PIT_CACHE, "prices", "JPY-X.json");
   if (fs.existsSync(cache)) return JSON.parse(fs.readFileSync(cache, "utf8")) as Bar[];
   try {
-    const { bars } = await fetchDailyBars("JPY=X", { range: "2y", keep: 600, totalReturn: false });
+    const { bars } = await fetchDailyBars("JPY=X", { range: "5y", keep: 1500, totalReturn: false, applySplitAdjustment: false });
     if (bars.length) {
       fs.mkdirSync(path.dirname(cache), { recursive: true });
       fs.writeFileSync(cache, JSON.stringify(bars));
@@ -652,6 +631,7 @@ function dailyPortSpyLogReturns(
 type CorrRow = {
   date: string;
   medPair: number | null;
+  meanPair: number | null;
   corr1y: number | null;
   beta1y: number | null;
   corrFull: number | null;
@@ -668,10 +648,12 @@ function correlationAtRebalance(
   const closeHistory = env.closeHistory ?? ctx.closeHistory;
   const spyCloses = new Map(spyBars.map((b) => [b.date, b.c]));
   if (!closeHistory) {
-    return { date, medPair: null, corr1y: null, beta1y: null, corrFull: null, betaFull: null };
+    return { date, medPair: null, meanPair: null, corr1y: null, beta1y: null, corrFull: null, betaFull: null };
   }
   const inputs = holdings.length >= 2 ? buildCorrInputs(holdings, calendar, closeHistory, date) : null;
-  const medPair = inputs ? medianPairwiseCorr(holdings, correlationMatrix(inputs)) : null;
+  const corrMat = inputs ? correlationMatrix(inputs) : null;
+  const medPair = corrMat ? medianPairwiseCorr(holdings, corrMat) : null;
+  const meanPair = corrMat ? meanPairwiseCorr(holdings, corrMat) : null;
   const endIdx = tradingDayIndex(calendar, date);
   const start1y = calendar[Math.max(1, endIdx - SAKA_CORR_LOOKBACK + 1)];
   const startFull = calendar[Math.max(1, tradingDayIndex(calendar, SAKA_START))];
@@ -682,6 +664,7 @@ function correlationAtRebalance(
   return {
     date,
     medPair,
+    meanPair,
     corr1y: b1?.r ?? null,
     beta1y: b1?.beta ?? null,
     corrFull: bF?.r ?? null,
@@ -697,6 +680,7 @@ function avgCorrRows(rows: CorrRow[]): CorrRow {
   return {
     date: "（全リバランス平均）",
     medPair: mean("medPair"),
+    meanPair: mean("meanPair"),
     corr1y: mean("corr1y"),
     beta1y: mean("beta1y"),
     corrFull: mean("corrFull"),
@@ -788,7 +772,7 @@ function buildSectionACriteria(adoptedId: string): string {
 `;
 }
 
-function buildSectionCPrereg(): string {
+function buildSectionCPrereg(stopShipHash: string): string {
   const commits = [
     "ad777dc",
     "6e3ad93",
@@ -797,7 +781,9 @@ function buildSectionCPrereg(): string {
     "e2380b8",
     "09acebc",
     "e2a2aec",
-  ];
+    "216dfc6",
+    stopShipHash,
+  ].filter(Boolean);
   const lines: string[] = [];
   for (const h of commits) {
     try {
@@ -830,8 +816,9 @@ ${lines.join("\n")}
 4. **半導体 30% キャップ**は追補 \`6e3ad93\` で **結果コミット前**に文書化（\`applySemiCap\` は \`487152e\` からコードに存在）。
 5. **テーマリスト**（quantum 等）は \`themes.ts\` の watchlist 系コミットと同日の研究フロー。**Saka バックテスト専用の独立 prereg ではない**（ただし \`isExcludedTheme\` が参照するリストはコードで固定）。
 6. **本レポートの採用構成**はデータ修正後の **再選定結果**を記載。OOS 順位・CAGR は **データ版に依存**する。
+7. **STOP-SHIP 修正**（\`216dfc6\` 詳細レポート初版の後、\`${stopShipHash.slice(0, 7)}\` 付近）: PIT 時価総額の **分割調整済み終値バグ**、ATVI→MSFT CIK/価格エイリアス、CERN→ORCL 価格エイリアス削除、GOOGL レガシー facts マージ、MaxDD ピーク日、ライブ窓 USD/JPY 日付など。**本レポートは再生成版であり、採用構成 ID はまた変わる可能性がある**。
 
-**結論:** 「2016–2020 のみでルールを決め、2021+ は一度だけ評価」は **手順として事前登録されている**が、**データ修正と再実行により採用 \`plain_15__mcap_cap5\` は初回結果（\`plain_15__equal\`）と異なる**。OOS を **設計に使った**というより、**公開後にデータを直し IS をやり直した**のが正確。
+**結論:** 「2016–2020 のみでルールを決め、2021+ は一度だけ評価」は **手順として事前登録されている**が、**データ修正と再実行により採用構成は初回結果（\`plain_15__equal\`）と異なる**。OOS を **設計に使った**というより、**公開後にデータを直し IS をやり直した**のが正確。
 `;
 }
 
@@ -854,27 +841,64 @@ async function main() {
       .map((b) => ({ date: b.date, equity: SAKA_INITIAL_CASH * (b.c / p0) }));
   })();
   const spyIs = metricsFromCurve(spyBench, calendar, SAKA_START, SAKA_IS_END);
+  const spyOos = metricsFromCurve(
+    spyBench.filter((p) => p.date >= SAKA_OOS_START),
+    calendar,
+    SAKA_OOS_START,
+    SAKA_END,
+  );
 
-  /** Corrected v1 rerun adoption (see ROUND19_AUDIT_ja.md / round19-corrected-v1-study.ts). */
-  const adopted = SAKA_CONFIGS.find((c) => c.id === "plain_15__mcap_cap5") ?? SAKA_CONFIGS[0];
-  const adoptedIs = simulateSaka(adopted, calendar, membersOn, ctx, semiOf, price, COMMISSION, SAKA_START, SAKA_END, {
-    rebalance: "delta",
+  const simOptsDelta = {
+    rebalance: "delta" as const,
     minTradeUsd: SAKA_REBAL_MIN_TRADE_USD,
     relDrift: SAKA_REBAL_REL_DRIFT,
-  });
-  const adoptedIsMetrics = metricsFromCurve(adoptedIs.curve, calendar, SAKA_START, SAKA_IS_END);
-  const adoptedPassesIs = adoptedIsMetrics.maxDrawdown > spyIs.maxDrawdown;
-  console.error(`[v1-detail] adopted ${adopted.id} (IS DD rule: ${adoptedPassesIs ? "pass" : "check"})`);
+  };
+  const runConfigIs = (config: SakaConfig) => {
+    const { curve, turnoverPerRebal } = simulateSaka(
+      config,
+      calendar,
+      membersOn,
+      ctx,
+      semiOf,
+      price,
+      COMMISSION,
+      SAKA_START,
+      SAKA_END,
+      simOptsDelta,
+    );
+    return {
+      is: metricsFromCurve(curve, calendar, SAKA_START, SAKA_IS_END),
+      oos: metricsFromCurve(curve, calendar, SAKA_OOS_START, SAKA_END),
+      turnoverPerRebal,
+    };
+  };
+  const isRows: Array<{ config: SakaConfig; is: ReturnType<typeof metricsFromCurve>; turnover: number }> = [];
+  for (let i = 0; i < SAKA_CONFIGS.length; i += 1) {
+    const config = SAKA_CONFIGS[i];
+    console.error(`[v1-detail] IS adoption sim ${i + 1}/${SAKA_CONFIGS.length} ${config.id}`);
+    const r = runConfigIs(config);
+    isRows.push({ config, is: r.is, turnover: r.turnoverPerRebal });
+  }
+  const chosen = selectSakaConfig(
+    isRows.map((r) => ({ config: r.config, is: r.is, turnover: r.turnover })),
+    spyIs.maxDrawdown,
+  );
+  const adopted = chosen ?? isRows[0].config;
+  const adoptedMetrics = runConfigIs(adopted);
+  const adoptedPassesIs = adoptedMetrics.is.maxDrawdown > spyIs.maxDrawdown;
+  console.error(
+    `[v1-detail] adopted ${adopted.id} IS CAGR=${(adoptedMetrics.is.cagr * 100).toFixed(2)}% DD=${(adoptedMetrics.is.maxDrawdown * 100).toFixed(2)}% (rule: ${adoptedPassesIs ? "pass" : "fail"})`,
+  );
 
   const sim = simulateInstrumented(adopted, env);
   const attrSnaps = sim.dailySnaps.filter((s) => s.date >= ATTR_FROM && s.date <= ATTR_TO);
   const attr = attributionFromSnapshots(env, attrSnaps);
-  const ddPort = drawdownDetail(sim.curve, SAKA_START, SAKA_END);
-  const ddSpy = drawdownDetail(spyBench, SAKA_START, SAKA_END);
+  const ddPort = drawdownFromCurve(sim.curve, SAKA_START, SAKA_END);
+  const ddSpy = drawdownFromCurve(spyBench, SAKA_START, SAKA_END);
 
   const fxBars = await loadUsdjpyBars();
-  const entryFx = closeOnOrBefore(fxBars, LIVE_ENTRY);
-  const endFx = closeOnOrBefore(fxBars, LIVE_END);
+  const entryFx = fxCloseOnDate(fxBars, LIVE_ENTRY);
+  const endFx = fxCloseOnDate(fxBars, LIVE_END);
   const initialUsdLive = entryFx != null && entryFx > 0 ? LIVE_JPY_START / entryFx : null;
   let liveSection = "（USD/JPY または価格データ不足のため未計算）";
   if (initialUsdLive != null) {
@@ -888,8 +912,8 @@ async function main() {
     const liveJpy = jpyCurve(liveSim.curve, fxBars);
     const retUsd = periodReturn(liveSim.curve, LIVE_ENTRY, LIVE_END);
     const retJpy = periodReturn(liveJpy, LIVE_ENTRY, LIVE_END);
-    const ddUsd = drawdownDetail(liveSim.curve, LIVE_ENTRY, LIVE_END);
-    const ddJpy = drawdownDetail(liveJpy, LIVE_ENTRY, LIVE_END);
+    const ddUsd = drawdownFromCurve(liveSim.curve, LIVE_ENTRY, LIVE_END);
+    const ddJpy = drawdownFromCurve(liveJpy, LIVE_ENTRY, LIVE_END);
     const benchTickers = ["SPY", "QQQ", "SOXX"] as const;
     const benchRows: string[] = [];
     for (const sym of benchTickers) {
@@ -1060,7 +1084,7 @@ ${remLines || ""}
     rows
       .map(
         (row) =>
-          `| ${row.date} | ${fmtR(row.medPair)} | ${fmtR(row.corr1y)} | ${fmtR(row.beta1y)} | ${fmtR(row.corrFull)} | ${fmtR(row.betaFull)} |`,
+          `| ${row.date} | ${fmtR(row.medPair)} | ${fmtR(row.meanPair)} | ${fmtR(row.corr1y)} | ${fmtR(row.beta1y)} | ${fmtR(row.corrFull)} | ${fmtR(row.betaFull)} |`,
       )
       .join("\n");
   const sectionA = buildSectionACriteria(adopted.id);
@@ -1075,17 +1099,18 @@ ${remLines || ""}
 
 ### 直近4リバランス
 
-| リバランス日 | 保有間ρ 中央値 | ρ(ポート,SPY) 1y | β vs SPY 1y | ρ(ポート,SPY) 全期間 | β vs SPY 全期間 |
-|---|---:|---:|---:|---:|---:|
+| リバランス日 | ρ中央値 | ρ平均 | ρ(ポート,SPY) 1y | β vs SPY 1y | ρ(ポート,SPY) 全期間 | β vs SPY 全期間 |
+|---|---:|---:|---:|---:|---:|---:|
 ${corrTable(corrLatest4)}
 
 ### 全リバランス平均（${corrByRebal.length} 四半期）
 
-| | 保有間ρ 中央値 | ρ(ポート,SPY) 1y | β vs SPY 1y | ρ(ポート,SPY) 全期間 | β vs SPY 全期間 |
-|---|---:|---:|---:|---:|---:|
-| 平均 | ${fmtR(corrAvg.medPair)} | ${fmtR(corrAvg.corr1y)} | ${fmtR(corrAvg.beta1y)} | ${fmtR(corrAvg.corrFull)} | ${fmtR(corrAvg.betaFull)} |
+| | ρ中央値 | ρ平均 | ρ(ポート,SPY) 1y | β vs SPY 1y | ρ(ポート,SPY) 全期間 | β vs SPY 全期間 |
+|---|---:|---:|---:|---:|---:|---:|
+| 平均 | ${fmtR(corrAvg.medPair)} | ${fmtR(corrAvg.meanPair)} | ${fmtR(corrAvg.corr1y)} | ${fmtR(corrAvg.beta1y)} | ${fmtR(corrAvg.corrFull)} | ${fmtR(corrAvg.betaFull)} |
 `;
-  const sectionC = buildSectionCPrereg();
+  const stopShipHash = execSync("git rev-parse HEAD", { encoding: "utf8" }).trim();
+  const sectionC = buildSectionCPrereg(stopShipHash);
 
   let attrMd = "（計算不可）";
   if (attr) {
@@ -1123,9 +1148,16 @@ ${lines.join("\n")}
   const md = `# Round 19 Corrected v1 — 採用構成の詳細レポート
 
 **対象:** Corrected v1 再実行（事前登録 \`6e3ad93\`・差分リバランス・PIT データ）  
-**採用構成 ID:** \`${adopted.id}\`（IS 期間の採用規則 \`selectSakaConfig\` により選定。事前想定の \`plain_15__equal\` ではなく、**時価総額ウェイト＋単銘柄5%キャップ**の \`${adopted.id}\` が選ばれた。）  
+**採用構成 ID:** \`${adopted.id}\`（IS 2016–2020 を \`selectSakaConfig\` で再計算した直近の選定結果。**STOP-SHIP データ修正後も採用 ID は再び変わる可能性がある** — 本稿は確定版ではない。）  
 **初期資金:** $${SAKA_INITIAL_CASH}　**手数料（主計算）:** $${COMMISSION}/注文  
 **データ:** \`data/.cache/pit/\`（\`docs/DATA_PIT_ja.md\`）
+
+### ヘッドライン（採用構成 vs SPY・差分リバランス $${COMMISSION}/注文）
+
+| 期間 | 採用 CAGR | SPY CAGR | 採用 MaxDD | SPY MaxDD |
+|---|---:|---:|---:|---:|
+| IS (${SAKA_START.slice(0, 4)}–${SAKA_IS_END.slice(0, 4)}) | ${(adoptedMetrics.is.cagr * 100).toFixed(2)}% | ${(spyIs.cagr * 100).toFixed(2)}% | ${(adoptedMetrics.is.maxDrawdown * 100).toFixed(2)}% | ${(spyIs.maxDrawdown * 100).toFixed(2)}% |
+| OOS (${SAKA_OOS_START.slice(0, 4)}–${SAKA_END.slice(0, 4)}) | ${(adoptedMetrics.oos.cagr * 100).toFixed(2)}% | ${(spyOos.cagr * 100).toFixed(2)}% | ${(adoptedMetrics.oos.maxDrawdown * 100).toFixed(2)}% | ${(spyOos.maxDrawdown * 100).toFixed(2)}% |
 
 ---
 

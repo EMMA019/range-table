@@ -18,11 +18,29 @@ const chartAgent = new https.Agent({
   maxFreeSockets: 1,
 });
 
-type YahooSplit = {
+export type YahooSplit = {
   date?: number;
   numerator?: number;
   denominator?: number;
 };
+
+/** Multiply split-adjusted historical close to nominal (then-current) share price. */
+export function splitUnadjustFactor(barUnix: number, splits: YahooSplit[]): number {
+  let f = 1;
+  for (const split of splits) {
+    if (
+      typeof split.date === "number" &&
+      barUnix < split.date &&
+      typeof split.numerator === "number" &&
+      typeof split.denominator === "number" &&
+      split.numerator > 0 &&
+      split.denominator > 0
+    ) {
+      f *= split.numerator / split.denominator;
+    }
+  }
+  return f;
+}
 
 type YahooResult = {
   meta?: {
@@ -135,6 +153,8 @@ export function dropPartialBar(
 export type ParseChartOptions = {
   /** Use Yahoo adjclose (split + dividend adjusted) for bar close; skips manual split adjustment. */
   useTotalReturn?: boolean;
+  /** When false, keep Yahoo nominal closes (no backward split adjustment). For PIT mcap. */
+  applySplitAdjustment?: boolean;
 };
 
 export function parseChart(
@@ -182,11 +202,13 @@ export function parseChart(
   raw.sort((a, b) => a.t - b.t);
 
   const splits = Object.values(result.events?.splits ?? {});
-  const adjusted = options.useTotalReturn ? raw : applySplits(raw, splits);
+  const doSplitAdj = options.applySplitAdjustment ?? !options.useTotalReturn;
+  const adjusted = options.useTotalReturn ? raw : doSplitAdj ? applySplits(raw, splits) : raw;
   const { bars: completed, dropped } = dropPartialBar(adjusted, result.meta, nowSec);
 
   const byDate = new Map<string, Bar>();
   for (const bar of completed) {
+    const mcapC = round4(bar.c * splitUnadjustFactor(bar.t, splits));
     byDate.set(bar.date, {
       date: bar.date,
       o: round4(bar.o),
@@ -194,6 +216,7 @@ export function parseChart(
       l: round4(bar.l),
       c: round4(bar.c),
       v: Math.round(bar.v),
+      mcapC,
     });
   }
 
@@ -286,6 +309,8 @@ export type FetchBarsOptions = {
   keep?: number;
   /** Split + dividend adjusted closes (Yahoo adjclose). */
   totalReturn?: boolean;
+  /** @default !totalReturn — set false to keep nominal historical closes (mcap). */
+  applySplitAdjustment?: boolean;
 };
 
 /**
@@ -296,6 +321,7 @@ export async function fetchDailyBars(symbol: string, options: FetchBarsOptions =
   const range = options.range ?? "6mo";
   const keep = options.keep ?? CHART_SESSIONS;
   const totalReturn = options.totalReturn ?? false;
+  const applySplitAdjustment = options.applySplitAdjustment ?? !totalReturn;
   const maxBytes = range === "6mo" ? 256_000 : 2_000_000;
   let lastError: Error | null = null;
   for (let i = 0; i < ATTEMPTS.length; i++) {
@@ -303,7 +329,10 @@ export async function fetchDailyBars(symbol: string, options: FetchBarsOptions =
     try {
       const result = await fetchHost(ATTEMPTS[i], symbol, range, maxBytes, totalReturn);
       yahooGate.ok();
-      return parseChart(result, Date.now() / 1000, keep, { useTotalReturn: totalReturn });
+      return parseChart(result, Date.now() / 1000, keep, {
+        useTotalReturn: totalReturn,
+        applySplitAdjustment,
+      });
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
       if (NOT_FOUND_RE.test(lastError.message)) break;

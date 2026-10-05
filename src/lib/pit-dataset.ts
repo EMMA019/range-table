@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { PIT_TICKER_ALIASES } from "./pit-cik";
 import type { Bar } from "./types";
 
 export const PIT_CACHE = path.join(process.cwd(), "data", ".cache", "pit");
@@ -104,9 +105,18 @@ export function loadPitBars(ticker: string, root = PIT_CACHE): Bar[] {
     return JSON.parse(fs.readFileSync(p, "utf8")) as Bar[];
   };
   const direct = read(sym);
+  const pitAlias = PIT_TICKER_ALIASES[key]?.replace(/\./g, "-");
+  if (pitAlias && pitAlias !== sym) {
+    const viaPit = read(pitAlias);
+    if (viaPit.length > direct.length) return viaPit;
+  }
   if (direct.length) return direct;
+  if (pitAlias && pitAlias !== sym) {
+    const viaPit = read(pitAlias);
+    if (viaPit.length) return viaPit;
+  }
   const alias = pitPriceTicker(key).replace(/\./g, "-");
-  if (alias !== sym) {
+  if (alias !== sym && alias !== pitAlias) {
     const viaAlias = read(alias);
     if (viaAlias.length) return viaAlias;
   }

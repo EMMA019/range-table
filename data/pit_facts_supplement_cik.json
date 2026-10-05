@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "note": "Pre-reorg SEC companyfacts CIKs merged into primary ticker facts for PIT profitability/shares",
+  "cik": {
+    "GOOGL": 1288776,
+    "GOOG": 1288776
+  }
+}

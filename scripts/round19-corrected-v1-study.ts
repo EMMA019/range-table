@@ -43,9 +43,10 @@ import {
   type SakaConfig,
 } from "../src/lib/round19-saka";
 import { loadPitBars, loadPitCikMap, loadPitCikOverrides, PIT_CACHE, pitPaths } from "../src/lib/pit-dataset";
-import { buildPitFactsIndex, pitFactsPathForTicker } from "../src/lib/pit-facts-index";
+import { buildPitFactsIndex, loadMergedPitFacts, pitFactsPathForTicker } from "../src/lib/pit-facts-index";
 import { buildPitCikMapForTickers } from "../src/lib/pit-cik";
 import { loadSp500PitFiles, membersOnDate, uniqueTickersInRange } from "../src/lib/sp500-pit";
+import { mcapCloseOnOrBefore } from "../src/lib/pit-mcap-price";
 import type { Bar } from "../src/lib/types";
 
 const CACHE_V1 = path.join(process.cwd(), "data", ".cache", "round19");
@@ -110,10 +111,8 @@ async function main() {
   const factByTicker = new Map<string, unknown | undefined>();
   const factForTicker = (t: string): unknown | undefined => {
     if (factByTicker.has(t)) return factByTicker.get(t);
-    let json: unknown | undefined;
-    const pitPath = pitFactsPathForTicker(t, cikMapBuilt.get(t), factsIndex, PIT_CACHE);
-    if (pitPath) json = JSON.parse(fs.readFileSync(pitPath, "utf8"));
-    else {
+    let json: unknown | undefined = loadMergedPitFacts(t, cikMapBuilt.get(t), factsIndex, PIT_CACHE);
+    if (!json) {
       for (const dir of [path.join(CACHE, "facts"), path.join(CACHE_V1, "facts")]) {
         const f = path.join(dir, `${t}.json`);
         if (!fs.existsSync(f)) continue;
@@ -169,7 +168,7 @@ async function main() {
       return { sector: g.sector, subIndustry: g.subIndustry, semiBucket: isSemiSubIndustry(g.subIndustry) };
     },
     mcap: (t, date) => {
-      const p = price(t, date);
+      const p = mcapCloseOnOrBefore(barsBy.get(t) ?? [], date);
       const f = factForTicker(t);
       let sh: number | null = f ? sharesOutstandingAsOf(f, date) : null;
       if (sh != null && sh > 0) lastKnownShares.set(t, sh);
@@ -186,7 +185,7 @@ async function main() {
       return { shares: 0, stale: true };
     },
     profitable: (t, date) => profitOf(t, date) === "profitable",
-    hasPrice: (t, date) => price(t, date) != null,
+    hasPrice: (t, date) => mcapCloseOnOrBefore(barsBy.get(t) ?? [], date) != null,
     cikOf: (t) => cikMapBuilt.get(t) ?? null,
   };
 
