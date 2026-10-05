@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "note": "Manual PIT FX fixes when Yahoo chart date/close disagrees with independent spot check (e.g. JPY=X 2026-07-30)",
+  "USDJPY": {
+    "2026-07-30": 163.3
+  }
+}

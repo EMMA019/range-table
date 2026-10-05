@@ -1,0 +1,1089 @@
+import { themeOf } from "./themes";
+import { pearson } from "./corr";
+import { dedupeShareClassesByCik } from "./pit-share-class";
+import { sharesOutstandingAsOf as pitSharesOutstandingAsOf } from "./pit-shares";
+import type { Bar } from "./types";
+
+export const SAKA_START = "2016-01-01";
+export const SAKA_IS_END = "2020-12-31";
+export const SAKA_OOS_START = "2021-01-01";
+export const SAKA_END = "2026-10-02";
+export const SAKA_INITIAL_CASH = 3200;
+export const SAKA_CORR_LOOKBACK = 252;
+export const SAKA_CORR_MIN_OBS = 126;
+export const SAKA_CORR_PAIR_MAX = 0.7;
+export const SAKA_INV_VOL_WINDOW = 60;
+export const SAKA_SEMI_CAP = 0.3;
+/** Delta rebalance: skip trimming/extending a continuing name unless |Δ$| ≥ this or relative drift ≥ SAKA_REBAL_REL_DRIFT. */
+export const SAKA_REBAL_MIN_TRADE_USD = 25;
+export const SAKA_REBAL_REL_DRIFT = 0.2;
+export const SAKA_CAL_YEARS = [2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026] as const;
+
+export type ProfitabilityStatus = "profitable" | "loss" | "unknown";
+
+export function profitabilityStatus(facts: unknown | undefined, date: string): ProfitabilityStatus {
+  if (!facts) return "unknown";
+  const ni = ttmNetIncomeAsOf(facts, date);
+  if (ni != null) return ni > 0 ? "profitable" : "loss";
+  const fy = latestFyNetIncomeAsOf(facts, date);
+  if (fy != null) return fy > 0 ? "profitable" : "loss";
+  return "unknown";
+}
+
+export type SakaPickMethod = "corrdiverse" | "volprune" | "plain";
+
+export type SakaWeightScheme = "mcap" | "mcap_cap10" | "mcap_cap5" | "equal" | "invvol";
+
+export type SakaConfig = {
+  id: string;
+  pick: SakaPickMethod;
+  n: 15 | 20;
+  weight: SakaWeightScheme;
+};
+
+const PICK_METHODS: SakaPickMethod[] = ["corrdiverse", "volprune", "plain"];
+const WEIGHT_SCHEMES: SakaWeightScheme[] = ["mcap", "mcap_cap10", "mcap_cap5", "equal", "invvol"];
+
+export const SAKA_CONFIGS: SakaConfig[] = PICK_METHODS.flatMap((pick) =>
+  ([15, 20] as const).flatMap((n) =>
+    WEIGHT_SCHEMES.map((weight) => ({
+      id: `${pick}_${n}__${weight}`,
+      pick,
+      n,
+      weight,
+    })),
+  ),
+);
+
+export type SakaEquityPoint = { date: string; equity: number };
+
+export type SakaMetrics = {
+  cagr: number;
+  maxDrawdown: number;
+  recoveryDays: number | null;
+  calendarYears: Record<string, number>;
+  positiveYearShare: number;
+};
+
+export type SakaGicsInfo = { sector: string; subIndustry: string; semiBucket: boolean };
+
+export function isSemiSubIndustry(subIndustry: string): boolean {
+  const s = subIndustry.toLowerCase();
+  return s.includes("semiconductor");
+}
+
+export function isExcludedTheme(ticker: string): boolean {
+  if (ticker === "ONDS") return true;
+  const t = themeOf(ticker);
+  return t === "quantum" || t === "space" || t === "crypto" || t === "solar" || t === "nuclear";
+}
+
+export function isFinancialSector(sector: string): boolean {
+  return sector === "Financials";
+}
+
+export function tradingDaysFromBars(bars: Bar[]): string[] {
+  return bars.map((b) => b.date);
+}
+
+function tradingDayIndex(calendar: string[], date: string): number {
+  let lo = 0;
+  let hi = calendar.length - 1;
+  let ans = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (calendar[mid] <= date) {
+      ans = mid;
+      lo = mid + 1;
+    } else hi = mid - 1;
+  }
+  return ans;
+}
+
+function closeOnOrBefore(bars: Bar[], date: string): number | null {
+  let lo = 0;
+  let hi = bars.length - 1;
+  let best: number | null = null;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (bars[mid].date <= date) {
+      best = bars[mid].c;
+      lo = mid + 1;
+    } else hi = mid - 1;
+  }
+  return best;
+}
+
+export type LogReturnSeries = { dates: string[]; rets: number[] };
+
+export function trailingLogReturnSeries(
+  calendar: string[],
+  closes: Map<string, number>,
+  date: string,
+  lookback = SAKA_CORR_LOOKBACK,
+): LogReturnSeries | null {
+  const endIdx = tradingDayIndex(calendar, date);
+  if (endIdx < lookback - 1) return null;
+  const dates: string[] = [];
+  const rets: number[] = [];
+  for (let i = endIdx - lookback + 1; i <= endIdx; i += 1) {
+    const p0 = closes.get(calendar[i - 1]);
+    const p1 = closes.get(calendar[i]);
+    if (p0 == null || p1 == null || p0 <= 0 || p1 <= 0) return null;
+    dates.push(calendar[i]);
+    rets.push(Math.log(p1 / p0));
+  }
+  return dates.length === lookback ? { dates, rets } : null;
+}
+
+export function trailingLogReturns(
+  calendar: string[],
+  closes: Map<string, number>,
+  date: string,
+  lookback = SAKA_CORR_LOOKBACK,
+): number[] | null {
+  const s = trailingLogReturnSeries(calendar, closes, date, lookback);
+  return s ? s.rets : null;
+}
+
+function pearsonOnAlignedSeries(a: LogReturnSeries, b: LogReturnSeries): number | null {
+  const byDate = new Map<string, number>();
+  for (let i = 0; i < b.dates.length; i += 1) byDate.set(b.dates[i], b.rets[i]);
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (let i = 0; i < a.dates.length; i += 1) {
+    const y = byDate.get(a.dates[i]);
+    if (y === undefined) continue;
+    xs.push(a.rets[i]);
+    ys.push(y);
+  }
+  if (xs.length < SAKA_CORR_MIN_OBS) return null;
+  return pearson(xs, ys);
+}
+
+export function hasCorrHistoryAtDate(
+  calendar: string[],
+  closes: Map<string, number>,
+  date: string,
+): boolean {
+  const rets = trailingLogReturns(calendar, closes, date);
+  return rets != null && rets.length >= SAKA_CORR_MIN_OBS;
+}
+
+function annualizedVol(rets: number[]): number {
+  const mean = rets.reduce((a, b) => a + b, 0) / rets.length;
+  const var_ = rets.reduce((a, r) => a + (r - mean) ** 2, 0) / rets.length;
+  return Math.sqrt(var_) * Math.sqrt(252);
+}
+
+type CorrInputs = {
+  tickers: string[];
+  returns: Map<string, number[]>;
+  series: Map<string, LogReturnSeries>;
+  vol: Map<string, number>;
+};
+
+export function buildCorrInputs(
+  tickers: string[],
+  calendar: string[],
+  closeHistory: Map<string, Map<string, number>>,
+  date: string,
+): CorrInputs | null {
+  const returns = new Map<string, number[]>();
+  const series = new Map<string, LogReturnSeries>();
+  const vol = new Map<string, number>();
+  const ok: string[] = [];
+  for (const t of tickers) {
+    const hist = closeHistory.get(t);
+    if (!hist) continue;
+    const s = trailingLogReturnSeries(calendar, hist, date);
+    if (!s || s.rets.length < SAKA_CORR_MIN_OBS) continue;
+    returns.set(t, s.rets);
+    series.set(t, s);
+    vol.set(t, annualizedVol(s.rets));
+    ok.push(t);
+  }
+  if (ok.length < 2) return null;
+  ok.sort((a, b) => a.localeCompare(b));
+  return { tickers: ok, returns, series, vol };
+}
+
+export function correlationMatrix(inputs: CorrInputs): Map<string, Map<string, number>> {
+  const { tickers, series } = inputs;
+  const out = new Map<string, Map<string, number>>();
+  for (const a of tickers) {
+    const row = new Map<string, number>();
+    const sa = series.get(a)!;
+    for (const b of tickers) {
+      if (a === b) {
+        row.set(b, 1);
+        continue;
+      }
+      const sb = series.get(b)!;
+      row.set(b, pearsonOnAlignedSeries(sa, sb) ?? 0);
+    }
+    out.set(a, row);
+  }
+  return out;
+}
+
+/** Pre-fix audit comparison: Pearson on equal-length return arrays by index (misaligned calendar days). */
+export function correlationMatrixByIndex(inputs: CorrInputs): Map<string, Map<string, number>> {
+  const { tickers, returns } = inputs;
+  const out = new Map<string, Map<string, number>>();
+  for (const a of tickers) {
+    const row = new Map<string, number>();
+    const ra = returns.get(a)!;
+    for (const b of tickers) {
+      if (a === b) {
+        row.set(b, 1);
+        continue;
+      }
+      const rb = returns.get(b)!;
+      const n = Math.min(ra.length, rb.length);
+      row.set(b, pearson(ra.slice(0, n), rb.slice(0, n)) ?? 0);
+    }
+    out.set(a, row);
+  }
+  return out;
+}
+
+/** Median of upper-triangle pairwise correlations in a pool (diagnostics). */
+function pairwiseCorrValues(tickers: string[], corr: Map<string, Map<string, number>>): number[] {
+  const vals: number[] = [];
+  for (let i = 0; i < tickers.length; i += 1) {
+    for (let j = i + 1; j < tickers.length; j += 1) {
+      const r = corr.get(tickers[i])?.get(tickers[j]);
+      if (r != null && Number.isFinite(r)) vals.push(r);
+    }
+  }
+  return vals;
+}
+
+/** Median of upper-triangle pairwise correlations in a pool (diagnostics). */
+export function medianPairwiseCorr(tickers: string[], corr: Map<string, Map<string, number>>): number | null {
+  const vals = pairwiseCorrValues(tickers, corr);
+  if (!vals.length) return null;
+  vals.sort((a, b) => a - b);
+  const mid = Math.floor(vals.length / 2);
+  return vals.length % 2 ? vals[mid] : (vals[mid - 1] + vals[mid]) / 2;
+}
+
+export function meanPairwiseCorr(tickers: string[], corr: Map<string, Map<string, number>>): number | null {
+  const vals = pairwiseCorrValues(tickers, corr);
+  if (!vals.length) return null;
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
+}
+
+export function pairCorrelation(
+  a: string,
+  b: string,
+  calendar: string[],
+  closeHistory: Map<string, Map<string, number>>,
+  date: string,
+): number | null {
+  const ha = closeHistory.get(a);
+  const hb = closeHistory.get(b);
+  if (!ha || !hb) return null;
+  const sa = trailingLogReturnSeries(calendar, ha, date);
+  const sb = trailingLogReturnSeries(calendar, hb, date);
+  if (!sa || !sb) return null;
+  return pearsonOnAlignedSeries(sa, sb);
+}
+
+export function avgCorr(ticker: string, universe: string[], corr: Map<string, Map<string, number>>): number {
+  let sum = 0;
+  let n = 0;
+  for (const o of universe) {
+    if (o === ticker) continue;
+    sum += corr.get(ticker)?.get(o) ?? 0;
+    n += 1;
+  }
+  return n > 0 ? sum / n : Infinity;
+}
+
+function pruneHighCorr(tickers: string[], corr: Map<string, Map<string, number>>, vol: Map<string, number>): string[] {
+  let pool = [...tickers].sort((a, b) => a.localeCompare(b));
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (let i = 0; i < pool.length; i += 1) {
+      for (let j = i + 1; j < pool.length; j += 1) {
+        const a = pool[i];
+        const b = pool[j];
+        if ((corr.get(a)?.get(b) ?? 0) <= SAKA_CORR_PAIR_MAX) continue;
+        const va = vol.get(a) ?? Infinity;
+        const vb = vol.get(b) ?? Infinity;
+        let drop: string;
+        if (va > vb) drop = a;
+        else if (vb > va) drop = b;
+        else drop = a.localeCompare(b) > 0 ? a : b;
+        pool = pool.filter((t) => t !== drop);
+        changed = true;
+        break;
+      }
+      if (changed) break;
+    }
+  }
+  return pool;
+}
+
+function pickCorrGreedy(pool: string[], corr: Map<string, Map<string, number>>, slots: number): string[] {
+  const universe = [...pool].sort((a, b) => a.localeCompare(b));
+  const order = [...universe].sort((a, b) => {
+    const aa = avgCorr(a, universe, corr);
+    const bb = avgCorr(b, universe, corr);
+    if (aa !== bb) return aa - bb;
+    return a.localeCompare(b);
+  });
+  const chosen: string[] = [];
+  for (const c of order) {
+    if (chosen.length >= slots) break;
+    let ok = true;
+    for (const s of chosen) {
+      if ((corr.get(c)?.get(s) ?? 0) > SAKA_CORR_PAIR_MAX) {
+        ok = false;
+        break;
+      }
+    }
+    if (ok) chosen.push(c);
+  }
+  return chosen;
+}
+
+export type CorrPickTrace = {
+  pickOrder: number;
+  ticker: string;
+  avgCorrToPool: number;
+  avgCorrToChosen: number;
+  maxRhoToChosen: number;
+  skippedDueToRho: boolean;
+};
+
+/** Same logic as pickCorrGreedy with per-step diagnostics (for audits). */
+export function pickCorrGreedyTraced(
+  pool: string[],
+  corr: Map<string, Map<string, number>>,
+  slots: number,
+): { holdings: string[]; trace: CorrPickTrace[]; attemptLog: CorrPickTrace[] } {
+  const universe = [...pool].sort((a, b) => a.localeCompare(b));
+  const order = [...universe].sort((a, b) => {
+    const aa = avgCorr(a, universe, corr);
+    const bb = avgCorr(b, universe, corr);
+    if (aa !== bb) return aa - bb;
+    return a.localeCompare(b);
+  });
+  const chosen: string[] = [];
+  const trace: CorrPickTrace[] = [];
+  const attemptLog: CorrPickTrace[] = [];
+  for (const c of order) {
+    if (chosen.length >= slots) break;
+    const avgPool = avgCorr(c, universe, corr);
+    const avgChosen = chosen.length ? avgCorr(c, chosen, corr) : 0;
+    let maxRho = 0;
+    let ok = true;
+    for (const s of chosen) {
+      const r = corr.get(c)?.get(s) ?? 0;
+      if (r > maxRho) maxRho = r;
+      if (r > SAKA_CORR_PAIR_MAX) ok = false;
+    }
+    const row: CorrPickTrace = {
+      pickOrder: ok ? chosen.length + 1 : 0,
+      ticker: c,
+      avgCorrToPool: avgPool,
+      avgCorrToChosen: avgChosen,
+      maxRhoToChosen: maxRho,
+      skippedDueToRho: !ok,
+    };
+    attemptLog.push(row);
+    if (ok) {
+      chosen.push(c);
+      trace.push({ ...row, pickOrder: chosen.length });
+    }
+  }
+  return { holdings: chosen, trace, attemptLog };
+}
+
+function invVolWeight(calendar: string[], closes: Map<string, number>, date: string): number | null {
+  const idx = tradingDayIndex(calendar, date);
+  if (idx < SAKA_INV_VOL_WINDOW) return null;
+  const rets: number[] = [];
+  for (let i = idx - SAKA_INV_VOL_WINDOW + 1; i <= idx; i += 1) {
+    const p0 = closes.get(calendar[i - 1]);
+    const p1 = closes.get(calendar[i]);
+    if (p0 == null || p1 == null || p0 <= 0) return null;
+    rets.push(Math.log(p1 / p0));
+  }
+  const vol = annualizedVol(rets);
+  return vol > 0 ? 1 / vol : null;
+}
+
+export function applySingleNameCap(weights: Record<string, number>, cap: number): Record<string, number> {
+  const w = { ...weights };
+  let sum = Object.values(w).reduce((a, b) => a + b, 0);
+  if (sum <= 0) return w;
+  for (const k of Object.keys(w)) w[k] /= sum;
+  for (let iter = 0; iter < 64; iter += 1) {
+    let excess = 0;
+    const free: string[] = [];
+    for (const [t, wt] of Object.entries(w)) {
+      if (wt > cap + 1e-9) {
+        excess += wt - cap;
+        w[t] = cap;
+      } else free.push(t);
+    }
+    if (excess <= 1e-9) break;
+    const freeSum = free.reduce((a, t) => a + w[t], 0);
+    if (freeSum <= 1e-9) break;
+    for (const t of free) w[t] += excess * (w[t] / freeSum);
+  }
+  sum = Object.values(w).reduce((a, b) => a + b, 0);
+  if (sum > 0) for (const k of Object.keys(w)) w[k] /= sum;
+  return w;
+}
+
+export function applySemiCap(weights: Record<string, number>, semiOf: (t: string) => boolean): Record<string, number> {
+  const w = { ...weights };
+  const sum = Object.values(w).reduce((a, b) => a + b, 0);
+  if (sum <= 0) return w;
+  for (const k of Object.keys(w)) w[k] /= sum;
+  const semiSum = Object.entries(w).filter(([t]) => semiOf(t)).reduce((a, [, v]) => a + v, 0);
+  if (semiSum <= SAKA_SEMI_CAP) return w;
+  const scale = SAKA_SEMI_CAP / semiSum;
+  for (const t of Object.keys(w)) {
+    if (semiOf(t)) w[t] *= scale;
+  }
+  const nonSemi = Object.entries(w).filter(([t]) => !semiOf(t));
+  const slack = 1 - Object.values(w).reduce((a, b) => a + b, 0);
+  const nonSum = nonSemi.reduce((a, [, v]) => a + v, 0);
+  if (slack > 0 && nonSum > 0) {
+    for (const [t, v] of nonSemi) w[t] = v + (v / nonSum) * slack;
+  }
+  return w;
+}
+
+export type SharesLookup = (ticker: string, date: string) => { shares: number; stale: boolean };
+
+export type SakaCandidateContext = {
+  calendar: string[];
+  closeHistory: Map<string, Map<string, number>>;
+  gicsOf: (t: string) => SakaGicsInfo | null;
+  mcap: (t: string, date: string) => number;
+  sharesLookup: SharesLookup;
+  profitable: (t: string, date: string) => boolean;
+  hasPrice: (t: string, date: string) => boolean;
+  /** When set, eligible list keeps one ticker per CIK (share-class dedup). */
+  cikOf?: (t: string) => number | null;
+};
+
+export type EligibilityFunnelCounts = {
+  pit: number;
+  afterTheme: number;
+  afterFinancial: number;
+  noPrice: number;
+  afterPrice: number;
+  profitable: number;
+  loss: number;
+  unknownProfit: number;
+  afterProfitCheck: number;
+  shareClassDeduped: number;
+  eligible: number;
+};
+
+export function eligibilityFunnelCounts(
+  members: string[],
+  date: string,
+  ctx: SakaCandidateContext,
+  profitOf: (t: string, date: string) => ProfitabilityStatus,
+): EligibilityFunnelCounts {
+  let afterTheme = 0;
+  let afterFinancial = 0;
+  let noPrice = 0;
+  let afterPrice = 0;
+  let profitable = 0;
+  let loss = 0;
+  let unknownProfit = 0;
+  const profitableList: string[] = [];
+  for (const t of members) {
+    if (isExcludedTheme(t)) continue;
+    afterTheme += 1;
+    const g = ctx.gicsOf(t);
+    if (g && isFinancialSector(g.sector)) continue;
+    afterFinancial += 1;
+    if (!ctx.hasPrice(t, date)) {
+      noPrice += 1;
+      continue;
+    }
+    afterPrice += 1;
+    const st = profitOf(t, date);
+    if (st === "unknown") unknownProfit += 1;
+    else if (st === "loss") loss += 1;
+    else profitable += 1;
+    if (st !== "profitable") continue;
+    profitableList.push(t);
+  }
+  const afterProfitCheck = profitableList.length;
+  const deduped =
+    ctx.cikOf != null
+      ? dedupeShareClassesByCik(profitableList, ctx.cikOf, (t) => ctx.mcap(t, date))
+      : profitableList;
+  return {
+    pit: members.length,
+    afterTheme,
+    afterFinancial,
+    noPrice,
+    afterPrice,
+    profitable,
+    loss,
+    unknownProfit,
+    afterProfitCheck,
+    shareClassDeduped: afterProfitCheck - deduped.length,
+    eligible: deduped.length,
+  };
+}
+
+export function filterEligibleCandidates(members: string[], date: string, ctx: SakaCandidateContext): string[] {
+  const out: string[] = [];
+  for (const t of members) {
+    if (isExcludedTheme(t)) continue;
+    const g = ctx.gicsOf(t);
+    if (g && isFinancialSector(g.sector)) continue;
+    if (!ctx.hasPrice(t, date)) continue;
+    if (!ctx.profitable(t, date)) continue;
+    out.push(t);
+  }
+  const sorted = out.sort((a, b) => a.localeCompare(b));
+  if (!ctx.cikOf) return sorted;
+  return dedupeShareClassesByCik(sorted, ctx.cikOf, (t) => ctx.mcap(t, date));
+}
+
+export function pickHoldings(config: SakaConfig, eligible: string[], date: string, ctx: SakaCandidateContext): string[] {
+  if (config.pick === "corrdiverse" || config.pick === "volprune") {
+    const inputs = buildCorrInputs(eligible, ctx.calendar, ctx.closeHistory, date);
+    if (!inputs) return [];
+    const corr = correlationMatrix(inputs);
+    let pool = inputs.tickers;
+    if (config.pick === "volprune") pool = pruneHighCorr(pool, corr, inputs.vol);
+    return pickCorrGreedy(pool, corr, config.n);
+  }
+  const scored = eligible
+    .map((t) => ({ t, m: ctx.mcap(t, date) }))
+    .filter((r) => r.m > 0)
+    .sort((a, b) => b.m - a.m || a.t.localeCompare(b.t));
+  return scored.slice(0, config.n).map((r) => r.t);
+}
+
+export function targetWeights(
+  config: SakaConfig,
+  holdings: string[],
+  date: string,
+  ctx: SakaCandidateContext,
+  semiOf: (t: string) => boolean,
+): Record<string, number> {
+  if (!holdings.length) return {};
+  const raw: Record<string, number> = {};
+  if (config.weight === "invvol") {
+    let sum = 0;
+    for (const t of holdings) {
+      const hist = ctx.closeHistory.get(t);
+      if (!hist) continue;
+      const iv = invVolWeight(ctx.calendar, hist, date);
+      if (iv == null) continue;
+      raw[t] = iv;
+      sum += iv;
+    }
+    if (sum > 0) for (const t of Object.keys(raw)) raw[t] /= sum;
+  } else if (config.weight === "equal") {
+    for (const t of holdings) raw[t] = 1 / holdings.length;
+  } else {
+    let sum = 0;
+    for (const t of holdings) {
+      const m = ctx.mcap(t, date);
+      if (m > 0) {
+        raw[t] = m;
+        sum += m;
+      }
+    }
+    if (sum > 0) for (const t of Object.keys(raw)) raw[t] /= sum;
+  }
+  let w = raw;
+  if (config.weight === "mcap_cap10") w = applySingleNameCap(w, 0.1);
+  if (config.weight === "mcap_cap5") w = applySingleNameCap(w, 0.05);
+  return applySemiCap(w, semiOf);
+}
+
+export function rebalanceDates(calendar: string[], from: string, to: string): string[] {
+  const dates = calendar.filter((d) => d >= from && d <= to);
+  const out: string[] = [];
+  let lastKey = "";
+  for (const d of dates) {
+    const [y, m] = d.split("-").map(Number);
+    const key = `${y}-Q${Math.floor((m - 1) / 3) + 1}`;
+    if (key !== lastKey) {
+      out.push(d);
+      lastKey = key;
+    }
+  }
+  return out;
+}
+
+/** Calendar-year return: prior year last session close → this year last session close on equity curve. */
+export function calendarYearReturn(curve: SakaEquityPoint[], calendar: string[], year: number, endCap: string): number | null {
+  const yEnd = year === 2026 ? endCap : `${year}-12-31`;
+  const prevYear = year - 1;
+  const yStartAnchor = `${prevYear}-12-31`;
+  const idxStart = tradingDayIndex(calendar, yStartAnchor);
+  const idxEnd = tradingDayIndex(calendar, yEnd);
+  if (idxStart < 0 || idxEnd < 0) return null;
+  const d0 = calendar[idxStart];
+  const d1 = calendar[idxEnd];
+  const e0 = equityOnOrBefore(curve, d0);
+  const e1 = equityOnOrBefore(curve, d1);
+  if (e0 == null || e1 == null || e0 <= 0) return null;
+  return e1 / e0 - 1;
+}
+
+function equityOnOrBefore(curve: SakaEquityPoint[], date: string): number | null {
+  let best: number | null = null;
+  for (const p of curve) {
+    if (p.date <= date) best = p.equity;
+    else break;
+  }
+  return best;
+}
+
+export type DrawdownDetail = {
+  peakDate: string;
+  troughDate: string;
+  maxDd: number;
+  recoveryDate: string | null;
+  recoveryDays: number | null;
+  peakAtTrough: number;
+};
+
+/** Max drawdown on a curve; peak date is the running-max **at the trough**, not a later recovery high. */
+export function drawdownFromCurve(curve: SakaEquityPoint[], from: string, to: string): DrawdownDetail {
+  const slice = curve.filter((p) => p.date >= from && p.date <= to);
+  let peak = slice[0]?.equity ?? 0;
+  let peakDate = slice[0]?.date ?? from;
+  let maxDd = 0;
+  let troughDate = peakDate;
+  let peakAtTrough = peak;
+  let peakDateAtMaxDd = peakDate;
+  for (const p of slice) {
+    if (p.equity > peak) {
+      peak = p.equity;
+      peakDate = p.date;
+    }
+    const dd = peak > 0 ? (p.equity - peak) / peak : 0;
+    if (dd < maxDd) {
+      maxDd = dd;
+      troughDate = p.date;
+      peakAtTrough = peak;
+      peakDateAtMaxDd = peakDate;
+    }
+  }
+  let recoveryDate: string | null = null;
+  const ti = slice.findIndex((p) => p.date === troughDate);
+  if (ti >= 0) {
+    for (let i = ti + 1; i < slice.length; i += 1) {
+      if (slice[i].equity >= peakAtTrough) {
+        recoveryDate = slice[i].date;
+        break;
+      }
+    }
+  }
+  const recoveryDays =
+    recoveryDate != null && ti >= 0 ? slice.findIndex((p) => p.date === recoveryDate) - ti : null;
+  return { peakDate: peakDateAtMaxDd, troughDate, maxDd, recoveryDate, recoveryDays, peakAtTrough };
+}
+
+export function metricsFromCurve(
+  curve: SakaEquityPoint[],
+  calendar: string[],
+  from: string,
+  to: string,
+): SakaMetrics {
+  const slice = curve.filter((p) => p.date >= from && p.date <= to);
+  if (slice.length < 2) {
+    return { cagr: 0, maxDrawdown: 0, recoveryDays: null, calendarYears: {}, positiveYearShare: 0 };
+  }
+  const start = slice[0].equity;
+  const end = slice[slice.length - 1].equity;
+  const years = (Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) / (365.25 * 86_400_000);
+  const cagr = years > 0 && start > 0 ? (end / start) ** (1 / years) - 1 : 0;
+
+  let peak = slice[0].equity;
+  let maxDd = 0;
+  let troughDate = slice[0].date;
+  let peakAtMaxDd = peak;
+  for (const p of slice) {
+    if (p.equity > peak) peak = p.equity;
+    const dd = peak > 0 ? (p.equity - peak) / peak : 0;
+    if (dd < maxDd) {
+      maxDd = dd;
+      troughDate = p.date;
+      peakAtMaxDd = peak;
+    }
+  }
+  let recoveryDays: number | null = null;
+  const troughIdx = slice.findIndex((p) => p.date === troughDate);
+  if (troughIdx >= 0) {
+    const target = peakAtMaxDd;
+    for (let i = troughIdx + 1; i < slice.length; i += 1) {
+      if (slice[i].equity >= target) {
+        recoveryDays = i - troughIdx;
+        break;
+      }
+    }
+  }
+
+  const calendarYears: Record<string, number> = {};
+  let pos = 0;
+  let counted = 0;
+  for (const y of SAKA_CAL_YEARS) {
+    const r = calendarYearReturn(curve, calendar, y, to);
+    if (r == null) continue;
+    calendarYears[String(y)] = r;
+    counted += 1;
+    if (r > 0) pos += 1;
+  }
+  const positiveYearShare = counted > 0 ? pos / counted : 0;
+  return { cagr, maxDrawdown: maxDd, recoveryDays, calendarYears, positiveYearShare };
+}
+
+export function maxPairwiseCorr(holdings: string[], corr: Map<string, Map<string, number>>): number {
+  let max = -Infinity;
+  for (let i = 0; i < holdings.length; i += 1) {
+    for (let j = i + 1; j < holdings.length; j += 1) {
+      const r = corr.get(holdings[i])?.get(holdings[j]) ?? 0;
+      if (r > max) max = r;
+    }
+  }
+  return holdings.length < 2 ? 0 : max;
+}
+
+export function selectSakaConfig(
+  rows: Array<{ config: SakaConfig; is: SakaMetrics; turnover: number }>,
+  spyIsMaxDd: number,
+): SakaConfig | null {
+  const eligible = rows.filter((r) => r.is.maxDrawdown > spyIsMaxDd);
+  if (!eligible.length) return null;
+  eligible.sort((a, b) => {
+    if (b.is.cagr !== a.is.cagr) return b.is.cagr - a.is.cagr;
+    return a.turnover - b.turnover;
+  });
+  return eligible[0].config;
+}
+
+export type SakaSimResult = {
+  curve: SakaEquityPoint[];
+  ordersPerYear: Record<string, number>;
+  turnoverPerRebal: number;
+};
+
+export type SakaSimOptions = {
+  /** @default legacy_full_liquidate */
+  rebalance?: "legacy_full_liquidate" | "delta";
+  minTradeUsd?: number;
+  relDrift?: number;
+  /** @default SAKA_INITIAL_CASH */
+  initialCash?: number;
+  /** First session in range: invest using holdings/weights as of this rebalance date (PIT). */
+  bootstrapHoldingsDate?: string;
+  /** Map delisted ticker → successor on same CIK (rename continuity; no sell+rebuy). */
+  handoffSuccessor?: (fromTicker: string, pitDate: string) => string | null;
+};
+
+/** Move share count to successor ticker at same USD (used before delta trim/add). */
+export function applySameCikHandoffTransfers(
+  shares: Record<string, number>,
+  weights: Record<string, number>,
+  pitDate: string,
+  price: (ticker: string, date: string) => number | null,
+  lastPrice: Record<string, number>,
+  handoffSuccessor: (fromTicker: string, pitDate: string) => string | null,
+): void {
+  const targetSet = new Set(Object.keys(weights));
+  for (const t of [...Object.keys(shares)]) {
+    if (targetSet.has(t)) continue;
+    const to = handoffSuccessor(t, pitDate);
+    if (!to || !targetSet.has(to)) continue;
+    const sh = shares[t] ?? 0;
+    if (sh <= 0) continue;
+    const pFrom = price(t, pitDate) ?? lastPrice[t];
+    const pTo = price(to, pitDate) ?? lastPrice[to];
+    if (!pFrom || !pTo || pFrom <= 0 || pTo <= 0) continue;
+    const usd = sh * pFrom;
+    shares[to] = (shares[to] ?? 0) + usd / pTo;
+    delete shares[t];
+    lastPrice[to] = pTo;
+  }
+}
+
+export function simulateSaka(
+  config: SakaConfig,
+  calendar: string[],
+  membersOn: (date: string) => string[],
+  ctx: SakaCandidateContext,
+  semiOf: (t: string) => boolean,
+  price: (ticker: string, date: string) => number | null,
+  commission: number,
+  from: string,
+  to: string,
+  simOpts: SakaSimOptions = {},
+): SakaSimResult {
+  const rebalanceMode = simOpts.rebalance ?? "legacy_full_liquidate";
+  const minTradeUsd = simOpts.minTradeUsd ?? SAKA_REBAL_MIN_TRADE_USD;
+  const relDrift = simOpts.relDrift ?? SAKA_REBAL_REL_DRIFT;
+  const handoffSuccessor = simOpts.handoffSuccessor;
+  const rebal = new Set(rebalanceDates(calendar, from, to));
+  let cash = simOpts.initialCash ?? SAKA_INITIAL_CASH;
+  const bootstrapHoldingsDate = simOpts.bootstrapHoldingsDate;
+  let bootstrapped = !bootstrapHoldingsDate;
+  const shares: Record<string, number> = {};
+  const lastPrice: Record<string, number> = {};
+  const curve: SakaEquityPoint[] = [];
+  const ordersPerYear: Record<string, number> = {};
+  let turnoverSum = 0;
+  let rebalCount = 0;
+  let prevWeights: Record<string, number> = {};
+
+  const markOrders = (date: string, n: number) => {
+    const y = date.slice(0, 4);
+    ordersPerYear[y] = (ordersPerYear[y] ?? 0) + n;
+  };
+
+  const equityOn = (date: string) => {
+    let eq = cash;
+    for (const [t, sh] of Object.entries(shares)) {
+      const p = price(t, date) ?? lastPrice[t] ?? 0;
+      eq += sh * p;
+    }
+    return eq;
+  };
+
+  for (const date of calendar) {
+    if (date < from) continue;
+    if (date > to) break;
+
+    for (const t of Object.keys(shares)) {
+      const p = price(t, date);
+      if (p != null) lastPrice[t] = p;
+    }
+
+    const scheduledRebal = rebal.has(date);
+    const bootstrapToday = !bootstrapped && bootstrapHoldingsDate != null;
+    if (scheduledRebal || bootstrapToday) {
+      const pitDate = scheduledRebal ? date : bootstrapHoldingsDate!;
+      if (bootstrapToday) bootstrapped = true;
+      const eligible = filterEligibleCandidates(membersOn(pitDate), pitDate, ctx);
+      const holdings = pickHoldings(config, eligible, pitDate, ctx);
+      const weights = targetWeights(config, holdings, pitDate, ctx, semiOf);
+      const tickersUnion = new Set([...Object.keys(prevWeights), ...Object.keys(weights)]);
+      let to = 0;
+      for (const t of tickersUnion) to += Math.abs((weights[t] ?? 0) - (prevWeights[t] ?? 0));
+      turnoverSum += to / 2;
+      rebalCount += 1;
+      prevWeights = { ...weights };
+
+      if (handoffSuccessor) {
+        applySameCikHandoffTransfers(shares, weights, pitDate, price, lastPrice, handoffSuccessor);
+      }
+
+      if (rebalanceMode === "legacy_full_liquidate") {
+        markOrders(date, Object.keys(shares).length);
+        for (const t of Object.keys(shares)) {
+          const p = price(t, date) ?? lastPrice[t];
+          if (p && shares[t] > 0) cash += shares[t] * p - commission;
+          delete shares[t];
+        }
+        const tickers = Object.keys(weights);
+        const buyLegs = tickers.length;
+        const reserve = commission * buyLegs;
+        const investable = cash - reserve;
+        markOrders(date, buyLegs);
+        for (const t of tickers) {
+          const p = price(t, date);
+          if (!p || p <= 0) continue;
+          const targetUsd = investable * weights[t];
+          const sh = targetUsd / p;
+          const cost = targetUsd + commission;
+          if (cost > cash) continue;
+          cash -= cost;
+          shares[t] = sh;
+          lastPrice[t] = p;
+        }
+      } else {
+        const eq = equityOn(date);
+        const targetSet = new Set(Object.keys(weights));
+        for (const t of Object.keys(shares)) {
+          if (targetSet.has(t)) continue;
+          const p = price(t, date) ?? lastPrice[t];
+          if (p && shares[t] > 0) {
+            cash += shares[t] * p - commission;
+            markOrders(date, 1);
+          }
+          delete shares[t];
+        }
+        for (const t of Object.keys(weights)) {
+          const p = price(t, date);
+          if (!p || p <= 0) continue;
+          const targetUsd = eq * weights[t];
+          const curUsd = (shares[t] ?? 0) * p;
+          const delta = targetUsd - curUsd;
+          const had = (shares[t] ?? 0) > 0;
+          if (had) {
+            const rel = curUsd > 0 ? Math.abs(delta) / curUsd : 1;
+            if (Math.abs(delta) < minTradeUsd && rel < relDrift) continue;
+          }
+          if (delta < -minTradeUsd / 2) {
+            const sellUsd = Math.min(-delta, curUsd);
+            const sellSh = sellUsd / p;
+            if (sellSh > 0 && sellSh <= shares[t]) {
+              shares[t] -= sellSh;
+              cash += sellUsd - commission;
+              markOrders(date, 1);
+              if (shares[t] <= 1e-9) delete shares[t];
+            }
+          } else if (delta > minTradeUsd / 2) {
+            const buyUsd = delta;
+            const cost = buyUsd + commission;
+            if (cost <= cash) {
+              cash -= cost;
+              shares[t] = (shares[t] ?? 0) + buyUsd / p;
+              markOrders(date, 1);
+              lastPrice[t] = p;
+            }
+          } else if (!had && targetUsd >= minTradeUsd / 2) {
+            const cost = targetUsd + commission;
+            if (cost <= cash) {
+              cash -= cost;
+              shares[t] = targetUsd / p;
+              markOrders(date, 1);
+              lastPrice[t] = p;
+            }
+          }
+        }
+      }
+    }
+
+    curve.push({ date, equity: equityOn(date) });
+  }
+  return { curve, ordersPerYear, turnoverPerRebal: rebalCount > 0 ? turnoverSum / rebalCount : 0 };
+}
+
+type FactPoint = { end: string; val: number; fp?: string; form?: string; filed?: string };
+
+/** TTM net income using quarters with `end` <= asOf only (PIT). */
+/** Latest shares outstanding with period end <= asOf (PIT). */
+export function sharesOutstandingAsOf(json: unknown, asOf: string): number | null {
+  return pitSharesOutstandingAsOf(json, asOf);
+}
+
+function quarterPointScore(p: FactPoint & { frame?: string; start?: string }): number {
+  let score = 0;
+  if (p.frame && /^CY\d{4}Q[1-4]$/i.test(p.frame)) score += 10;
+  if (p.start && p.end) {
+    const d0 = Date.parse(`${p.start}T12:00:00Z`);
+    const d1 = Date.parse(`${p.end}T12:00:00Z`);
+    const days = (d1 - d0) / 86_400_000;
+    if (days > 50 && days < 120) score += 5;
+    if (days > 300) score -= 5;
+  }
+  if (p.form === "10-Q") score += 1;
+  return score;
+}
+
+function factFiledOnOrBefore(p: FactPoint, asOf: string): boolean {
+  const filed = p.filed?.trim();
+  if (filed && /^\d{4}-\d{2}-\d{2}$/.test(filed)) return filed <= asOf;
+  return p.end <= asOf;
+}
+
+function latestFyNetIncomeAsOf(json: unknown, asOf: string): number | null {
+  if (!json || typeof json !== "object" || !("facts" in json)) return null;
+  const facts = (json as { facts: Record<string, Record<string, { units?: Record<string, FactPoint[]> }>> }).facts;
+  const tags = ["NetIncomeLoss", "NetIncomeLossAvailableToCommonStockholdersBasic", "ProfitLoss"];
+  const namespaces = ["us-gaap", "us-gaap", "ifrs-full"];
+  let best: FactPoint | null = null;
+  for (let i = 0; i < tags.length; i += 1) {
+    const block = facts[namespaces[i]]?.[tags[i]]?.units?.USD;
+    if (!block) continue;
+    for (const p of block) {
+      if (!factFiledOnOrBefore(p, asOf) || p.end > asOf || !Number.isFinite(p.val)) continue;
+      if (p.form !== "10-K" && p.form !== "20-F" && p.form !== "40-F") continue;
+      if (!best || p.end > best.end) best = p;
+    }
+  }
+  return best?.val ?? null;
+}
+
+export type TtmPitAudit = {
+  asOf: string;
+  ttmNetIncome: number | null;
+  quarters: Array<{ end: string; filed: string | null; val: number; form?: string; fp?: string }>;
+};
+
+/** TTM net income using only facts **filed** on or before `asOf` (PIT). */
+export function ttmNetIncomeAsOf(json: unknown, asOf: string): number | null {
+  return ttmNetIncomePitAudit(json, asOf).ttmNetIncome;
+}
+
+export function ttmNetIncomePitAudit(json: unknown, asOf: string): TtmPitAudit {
+  const empty: TtmPitAudit = { asOf, ttmNetIncome: null, quarters: [] };
+  if (!json || typeof json !== "object" || !("facts" in json)) return empty;
+  const facts = (json as { facts: Record<string, Record<string, { units?: Record<string, FactPoint[]> }>> }).facts;
+  const tags = ["NetIncomeLoss", "NetIncomeLossAvailableToCommonStockholdersBasic", "ProfitLoss"];
+  const namespaces = ["us-gaap", "us-gaap", "ifrs-full"];
+  for (let i = 0; i < tags.length; i += 1) {
+    const block = facts[namespaces[i]]?.[tags[i]]?.units?.USD;
+    if (!block) continue;
+    const candidates = block.filter(
+      (p) =>
+        factFiledOnOrBefore(p, asOf) &&
+        p.end <= asOf &&
+        Number.isFinite(p.val) &&
+        p.fp &&
+        (/^Q[1-4]$/i.test(p.fp) || (p.form === "10-K" && /^FY|Q4$/i.test(p.fp))),
+    );
+    const byEnd = new Map<string, FactPoint>();
+    for (const p of candidates) {
+      const prev = byEnd.get(p.end);
+      if (!prev || quarterPointScore(p) > quarterPointScore(prev)) byEnd.set(p.end, p);
+    }
+    const uniq = [...byEnd.values()].sort((a, b) => b.end.localeCompare(a.end)).slice(0, 4);
+    if (uniq.length >= 4) {
+      const sum = uniq.reduce((t, p) => t + p.val, 0);
+      return {
+        asOf,
+        ttmNetIncome: Number.isFinite(sum) ? sum : null,
+        quarters: uniq.map((p) => ({
+          end: p.end,
+          filed: p.filed ?? null,
+          val: p.val,
+          form: p.form,
+          fp: p.fp,
+        })),
+      };
+    }
+  }
+  return empty;
+}
+
+export function feeDragSummary(
+  ordersPerYear: Record<string, number>,
+  curve: SakaEquityPoint[],
+  commission: number,
+): { byYear: Record<string, { orders: number; feesUsd: number; avgEquity: number; feePct: number }>; totalFees: number } {
+  const byYear: Record<string, { orders: number; feesUsd: number; avgEquity: number; feePct: number }> = {};
+  let totalFees = 0;
+  for (const [y, orders] of Object.entries(ordersPerYear)) {
+    const feesUsd = orders * commission;
+    totalFees += feesUsd;
+    const pts = curve.filter((p) => p.date.startsWith(y));
+    const avgEquity = pts.length ? pts.reduce((a, p) => a + p.equity, 0) / pts.length : SAKA_INITIAL_CASH;
+    byYear[y] = { orders, feesUsd, avgEquity, feePct: avgEquity > 0 ? feesUsd / avgEquity : 0 };
+  }
+  return { byYear, totalFees };
+}

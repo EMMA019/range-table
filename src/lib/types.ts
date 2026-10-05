@@ -34,6 +34,8 @@ export type Bar = {
   c: number;
   /** Share volume. Split-adjusted the same way as price when a raw split is applied. */
   v: number;
+  /** Nominal close for historical market-cap (not split-back-adjusted). */
+  mcapC?: number;
 };
 
 /** Where the latest close sits against the 15% and 25% lines of the 20-day box. */
