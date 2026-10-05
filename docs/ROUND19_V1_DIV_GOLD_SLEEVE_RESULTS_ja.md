@@ -70,3 +70,16 @@
 - 総リターンは PIT/Yahoo **adjclose 系**（配当込み調整）+ 金 ETF 実行時取得。
 - 元本ストレスは prereg どおり月初開始・四半期 PIT ブック固定。
 - ベースラインとの差分採否は prereg §7 Primary/Secondary。
+## 半導体レイヤー追試（additive）
+
+**追補 prereg:** [`ROUND19_V1_SEMI_LAYER_SOXX_ja.md`](ROUND19_V1_SEMI_LAYER_SOXX_ja.md) · **生成:** `scripts/round19-v1-semi-layer-soxx.ts` · **HEAD** `f151840`
+
+親 prereg §7 Primary **緩和なし**。既存 divGold_K1/K2 表は維持；以下は **additive** 追試のみ。
+
+| variant | Primary | 総リターン | 元本最深中央 | 材料割れ率 | AI 2026 |
+|---|:---:|---:|---:|---:|---:|
+| `divGold_K2_layerMix` | — | +513.4% | -4.9% | 78% | 64.8% |
+| `divGold_K2_soxxLow` | — | +477.4% | -4.9% | 78% | 63.4% |
+
+詳細（SOXX スクリーン表・相関行列・mcap 11 内訳）: [`ROUND19_V1_SEMI_LAYER_SOXX_ja.md`](ROUND19_V1_SEMI_LAYER_SOXX_ja.md)。
+
