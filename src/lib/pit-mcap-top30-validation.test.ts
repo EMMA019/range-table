@@ -7,6 +7,7 @@ import { buildPitFactsIndex, loadMergedPitFacts } from "./pit-facts-index";
 import { pitMarketCapForTicker } from "./pit-mcap";
 import {
   filterEligibleCandidates,
+  isFinancialSector,
   isSemiSubIndustry,
   profitabilityStatus,
   rebalanceDates,
@@ -14,6 +15,7 @@ import {
   SAKA_START,
   tradingDaysFromBars,
 } from "./round19-saka";
+import { dedupeShareClassesByCik } from "./pit-share-class";
 import { loadSp500PitFiles, membersOnDate } from "./sp500-pit";
 import { mcapCloseOnOrBefore } from "./pit-mcap-price";
 
@@ -62,7 +64,21 @@ describe("pit mcap top-30 coverage", { skip: !fs.existsSync(PIT_CACHE) }, () => 
         .map((t) => ({ t, m: ctx.mcap(t, date) }))
         .filter((r) => r.m > 0)
         .sort((a, b) => b.m - a.m);
-      const top30Sp = new Set(spRanked.slice(0, 30).map((r) => r.t));
+      const nonFinRanked = spRanked.filter((r) => {
+        const g = gics.get(r.t);
+        return !g || !isFinancialSector(g.sector);
+      });
+      const top30SpTickers = dedupeShareClassesByCik(
+        nonFinRanked.slice(0, 45).map((r) => r.t),
+        (t) => cikMap.get(t)?.cik ?? null,
+        (t) => ctx.mcap(t, date),
+      )
+        .map((t) => ({ t, m: ctx.mcap(t, date) }))
+        .filter((r) => r.m > 0)
+        .sort((a, b) => b.m - a.m || a.t.localeCompare(b.t))
+        .slice(0, 30)
+        .map((r) => r.t);
+      const top30Sp = new Set(top30SpTickers);
       const eligible = filterEligibleCandidates(members, date, ctx)
         .map((t) => ({ t, m: ctx.mcap(t, date) }))
         .filter((r) => r.m > 0)
@@ -70,7 +86,8 @@ describe("pit mcap top-30 coverage", { skip: !fs.existsSync(PIT_CACHE) }, () => 
       const top30El = new Set(eligible.slice(0, 30).map((r) => r.t));
       for (const t of top30Sp) {
         if (!top30El.has(t) && profitabilityStatus(factFor(t), date) === "profitable") {
-          mismatches.push(`${date} ${t} S&P#${spRanked.findIndex((r) => r.t === t) + 1} missing from eligible top-30`);
+          const rank = nonFinRanked.findIndex((r) => r.t === t) + 1;
+          mismatches.push(`${date} ${t} non-fin S&P#${rank} missing from eligible top-30`);
         }
       }
       const mega = MEGA_TOP10_DATES[date];

@@ -1,6 +1,6 @@
 import type { Bar } from "./types";
 
-/** Close for PIT market-cap (nominal / not split-back-adjusted). Falls back to `c`. */
+/** @deprecated Prefer `pitMarketCapAtDate` from `pit-mcap.ts` (split-aligned shares). */
 export function mcapCloseOnOrBefore(bars: Bar[], date: string): number | null {
   let lo = 0;
   let hi = bars.length - 1;
