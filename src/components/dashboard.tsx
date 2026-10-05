@@ -41,7 +41,7 @@ const UNIVERSE = new Set<string>(UNIVERSE_SCOPES.map((scope) => scope.id));
 
 function parseUniverse(raw: string | null): UniverseScopeId {
   if (raw && UNIVERSE.has(raw)) return raw as UniverseScopeId;
-  return "watch";
+  return "all";
 }
 
 const CHIP_PARAM: Record<ChipKey, string> = {
@@ -168,6 +168,11 @@ export function Dashboard() {
     },
     [pathname, router, sp],
   );
+
+  useEffect(() => {
+    if (sp.get("u")) return;
+    commit({ u: "all" }, "replace");
+  }, [commit, sp]);
 
   const openTicker = (symbol: string) => {
     openedHere.current = true;
@@ -323,7 +328,7 @@ export function Dashboard() {
               value={universe}
               onChange={(event) => {
                 const next = event.target.value as UniverseScopeId;
-                commit({ u: next === "watch" ? null : next }, "replace");
+                commit({ u: next }, "replace");
               }}
             >
               {UNIVERSE_SCOPES.map((scope) => {
