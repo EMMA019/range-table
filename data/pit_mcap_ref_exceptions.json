@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "note": "Tickers allowed to exceed Yahoo reference mcap band in pit-mcap-yahoo-ref.test.ts",
+  "exceptions": []
+}

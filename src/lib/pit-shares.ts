@@ -12,6 +12,7 @@ const STRICT_SHARE_TAGS = SHARE_TAGS.slice(0, 2);
 
 /** Reject bogus EDGAR points (authorized / mis-tagged issued counts). */
 const MAX_REASONABLE_SHARES = 20_000_000_000;
+const MIN_REASONABLE_SHARES = 100_000;
 
 function sharesFromTags(
   json: unknown,
@@ -34,6 +35,7 @@ function sharesFromTags(
         p.end > asOf ||
         !Number.isFinite(p.val) ||
         (p.val ?? 0) <= 0 ||
+        (p.val ?? 0) < MIN_REASONABLE_SHARES ||
         (p.val ?? 0) > MAX_REASONABLE_SHARES
       ) {
         continue;
@@ -67,6 +69,7 @@ function sharesPitPoint(json: unknown, asOf: string, tags: Array<[string, string
         p.end > asOf ||
         !Number.isFinite(p.val) ||
         (p.val ?? 0) <= 0 ||
+        (p.val ?? 0) < MIN_REASONABLE_SHARES ||
         (p.val ?? 0) > MAX_REASONABLE_SHARES
       ) {
         continue;

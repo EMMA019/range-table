@@ -270,12 +270,29 @@ type RebalRow = {
   fee100: number;
 };
 
-function simulateInstrumented(config: SakaConfig, env: Awaited<ReturnType<typeof buildCtx>>) {
+type InstrumentedSimOpts = {
+  from?: string;
+  to?: string;
+  initialCash?: number;
+  bootstrapHoldingsDate?: string;
+  recordRebalRows?: boolean;
+};
+
+function simulateInstrumented(
+  config: SakaConfig,
+  env: Awaited<ReturnType<typeof buildCtx>>,
+  simOpts: InstrumentedSimOpts = {},
+) {
   const { calendar, ctx, semiOf, price, membersOn, mcapRankEligible, exclusionCategory, inSp500, profitOf } = env;
   const minTradeUsd = SAKA_REBAL_MIN_TRADE_USD;
   const relDrift = SAKA_REBAL_REL_DRIFT;
-  const rebalSet = new Set(rebalanceDates(calendar, SAKA_START, SAKA_END));
-  let cash = SAKA_INITIAL_CASH;
+  const rangeFrom = simOpts.from ?? SAKA_START;
+  const rangeTo = simOpts.to ?? SAKA_END;
+  const recordRebalRows = simOpts.recordRebalRows ?? true;
+  const bootstrapHoldingsDate = simOpts.bootstrapHoldingsDate;
+  let bootstrapped = !bootstrapHoldingsDate;
+  const rebalSet = new Set(rebalanceDates(calendar, rangeFrom, rangeTo));
+  let cash = simOpts.initialCash ?? SAKA_INITIAL_CASH;
   const shares: Record<string, number> = {};
   const lastPrice: Record<string, number> = {};
   const curve: SakaEquityPoint[] = [];
@@ -295,28 +312,45 @@ function simulateInstrumented(config: SakaConfig, env: Awaited<ReturnType<typeof
   };
 
   for (const date of calendar) {
-    if (date < SAKA_START) continue;
-    if (date > SAKA_END) break;
+    if (date < rangeFrom) continue;
+    if (date > rangeTo) break;
     for (const t of Object.keys(shares)) {
       const p = price(t, date);
       if (p != null) lastPrice[t] = p;
     }
 
-    if (rebalSet.has(date)) {
-      const eligible = filterEligibleCandidates(membersOn(date), date, ctx);
-      const holdings = pickHoldings(config, eligible, date, ctx);
-      const weights = targetWeights(config, holdings, date, ctx, semiOf);
+    const scheduledRebal = rebalSet.has(date);
+    const bootstrapToday = !bootstrapped && bootstrapHoldingsDate != null;
+    if (scheduledRebal || bootstrapToday) {
+      if (bootstrapToday) bootstrapped = true;
+      const pitDate = scheduledRebal ? date : bootstrapHoldingsDate!;
+      const eligible = filterEligibleCandidates(membersOn(pitDate), pitDate, ctx);
+      const holdings = pickHoldings(config, eligible, pitDate, ctx);
+      const weights = targetWeights(config, holdings, pitDate, ctx, semiOf);
       const added = holdings.filter((t) => !prevHoldings.includes(t));
       const removed = prevHoldings.filter((t) => !holdings.includes(t));
       const swaps = added.length;
 
+      const rankChangeTxt = (t: string, d: string, dPrev: string | null) => {
+        const rNow = mcapRankEligible(t, d);
+        const rPrev = dPrev ? mcapRankEligible(t, dPrev) : null;
+        const fmt = (r: number | null, on: string) => {
+          if (r != null) return `${r}位`;
+          const cat = exclusionCategory(t, on, config.n);
+          return `not eligible: ${cat}`;
+        };
+        if (dPrev && (rPrev != null || rNow != null)) return `eligible順位 ${fmt(rPrev, dPrev)}→${fmt(rNow, d)}`;
+        if (rNow != null) return `eligible順位 ${rNow}位`;
+        return `not eligible: ${exclusionCategory(t, d, config.n)}`;
+      };
+
       const addReasons = added.map((t) => {
-        const rNow = mcapRankEligible(t, date);
-        const rPrev = mcapRankEligible(t, getPrevRebalDate(rebalRows));
-        const rankTxt =
-          rPrev != null && rNow != null ? `eligible順位 ${rPrev}位→${rNow}位` : rNow != null ? `eligible順位 ${rNow}位` : "eligible順位 —";
+        const rankTxt = rankChangeTxt(t, date, getPrevRebalDate(rebalRows));
         if (!inSp500(t, date)) return { t, reason: "S&P新規加入（稀）" };
-        if (rPrev == null && profitOf(t, date) === "profitable") {
+        if (mcapRankEligible(t, date) == null) {
+          return { t, reason: `${rankTxt}（上位${config.n}入り）` };
+        }
+        if (mcapRankEligible(t, getPrevRebalDate(rebalRows)) == null && profitOf(t, date) === "profitable") {
           return { t, reason: `新規eligible化＋${rankTxt}（上位${config.n}入り）` };
         }
         return { t, reason: `${rankTxt}（時価総額上位${config.n}入り）` };
@@ -326,10 +360,7 @@ function simulateInstrumented(config: SakaConfig, env: Awaited<ReturnType<typeof
         if (!inSp500(t, date)) return { t, reason: "S&P 500構成から除外" };
         const cat = exclusionCategory(t, date, config.n);
         if (cat !== "eligibleだが上位N外") return { t, reason: cat };
-        const rNow = mcapRankEligible(t, date);
-        const rPrev = mcapRankEligible(t, getPrevRebalDate(rebalRows));
-        const rankTxt =
-          rPrev != null && rNow != null ? `eligible順位 ${rPrev}位→${rNow ?? "—"}位` : rNow != null ? `eligible順位 ${rNow}位` : "eligible順位 —";
+        const rankTxt = rankChangeTxt(t, date, getPrevRebalDate(rebalRows));
         return { t, reason: `${rankTxt}（上位${config.n}から落ち）` };
       });
 
@@ -399,30 +430,30 @@ function simulateInstrumented(config: SakaConfig, env: Awaited<ReturnType<typeof
       feeByQuarter[q].reweight += reweightOrders;
       feeByQuarter[q].total += swapOrders + reweightOrders;
 
-      rebalRows.push({
-        date,
-        holdings: [...holdings],
-        added,
-        removed,
-        swaps,
-        addReasons,
-        removeReasons,
-        swapOrders,
-        reweightOrders,
-        fee035: (swapOrders + reweightOrders) * COMMISSION,
-        fee100: (swapOrders + reweightOrders) * 1,
-      });
+      if (recordRebalRows) {
+        rebalRows.push({
+          date,
+          holdings: [...holdings],
+          added,
+          removed,
+          swaps,
+          addReasons,
+          removeReasons,
+          swapOrders,
+          reweightOrders,
+          fee035: (swapOrders + reweightOrders) * COMMISSION,
+          fee100: (swapOrders + reweightOrders) * 1,
+        });
+      }
 
       prevHoldings = holdings;
       prevWeights = { ...weights };
     }
-    if (date >= ATTR_FROM && date <= SAKA_END) {
-      dailySnaps.push({
-        date,
-        shares: { ...shares },
-        cash,
-      });
-    }
+    dailySnaps.push({
+      date,
+      shares: { ...shares },
+      cash,
+    });
     curve.push({ date, equity: equityOn(date) });
   }
 
@@ -436,15 +467,18 @@ function getPrevRebalDate(rows: RebalRow[]): string {
 function attributionFromSnapshots(
   env: Awaited<ReturnType<typeof buildCtx>>,
   dailySnaps: Array<{ date: string; shares: Record<string, number>; cash: number }>,
+  windowFrom: string,
+  windowTo: string,
 ) {
   const { price, semiOf } = env;
-  const days = dailySnaps.map((s) => s.date);
-  if (days.length < 2) return null;
+  const relevant = dailySnaps.filter((s) => s.date >= windowFrom && s.date <= windowTo);
+  if (relevant.length < 2) return null;
   const contrib: Record<string, number> = {};
-  const portStart = equityFromShares(dailySnaps[0].shares, dailySnaps[0].cash, price, days[0]);
+  const days = relevant.map((s) => s.date);
+  const portStart = equityFromShares(relevant[0].shares, relevant[0].cash, price, days[0]);
   const portEnd = equityFromShares(
-    dailySnaps[dailySnaps.length - 1].shares,
-    dailySnaps[dailySnaps.length - 1].cash,
+    relevant[relevant.length - 1].shares,
+    relevant[relevant.length - 1].cash,
     price,
     days[days.length - 1],
   );
@@ -452,7 +486,7 @@ function attributionFromSnapshots(
   for (let i = 1; i < days.length; i += 1) {
     const prev = days[i - 1];
     const date = days[i];
-    const snap = dailySnaps[i - 1];
+    const snap = relevant[i - 1];
     const eq0 = equityFromShares(snap.shares, snap.cash, price, prev);
     if (eq0 <= 0) continue;
     for (const t of Object.keys(snap.shares)) {
@@ -466,32 +500,59 @@ function attributionFromSnapshots(
 
   const portRet = portStart > 0 ? portEnd / portStart - 1 : 0;
   const spy = env.spyBars;
-  const s0 = closeOnOrBefore(spy, ATTR_FROM);
-  const s1 = closeOnOrBefore(spy, ATTR_TO);
+  const s0 = closeOnOrBefore(spy, windowFrom);
+  const s1 = closeOnOrBefore(spy, windowTo);
   const spyRet = s0 && s1 && s0 > 0 ? s1 / s0 - 1 : 0;
 
   const entries = Object.entries(contrib).sort((a, b) => b[1] - a[1]);
+  const negEntries = [...entries].sort((a, b) => a[1] - b[1]);
   const totalContrib = entries.reduce((s, [, v]) => s + v, 0);
+  const negTotal = negEntries.filter(([, v]) => v < 0).reduce((s, [, v]) => s + v, 0);
   let semiC = 0;
   for (const [t, v] of entries) if (semiOf(t)) semiC += v;
+
+  const topNeg = negEntries.filter(([, v]) => v < 0);
+  const top1Neg = topNeg.slice(0, 1).reduce((s, [, v]) => s + v, 0);
+  const top3Neg = topNeg.slice(0, 3).reduce((s, [, v]) => s + v, 0);
+  const top5Neg = topNeg.slice(0, 5).reduce((s, [, v]) => s + v, 0);
 
   const top1 = entries.slice(0, 1).reduce((s, [, v]) => s + v, 0);
   const top3 = entries.slice(0, 3).reduce((s, [, v]) => s + v, 0);
   const top5 = entries.slice(0, 5).reduce((s, [, v]) => s + v, 0);
 
+  const bySector = new Map<string, number>();
+  for (const [t, v] of entries) {
+    const sec = env.ctx.gicsOf(t)?.sector ?? "不明";
+    bySector.set(sec, (bySector.get(sec) ?? 0) + v);
+  }
+  const sectorRows = [...bySector.entries()].sort((a, b) => a[1] - b[1]);
+
   return {
+    windowFrom,
+    windowTo,
     portRet,
     spyRet,
     gap: portRet - spyRet,
     entries,
+    negEntries: topNeg,
     totalContrib,
+    negTotal,
     semiC,
     semiShare: totalContrib !== 0 ? semiC / totalContrib : 0,
+    semiShareOfNeg: negTotal !== 0 ? semiC / negTotal : 0,
     top1Share: totalContrib !== 0 ? top1 / totalContrib : 0,
     top3Share: totalContrib !== 0 ? top3 / totalContrib : 0,
     top5Share: totalContrib !== 0 ? top5 / totalContrib : 0,
+    top1NegShare: negTotal !== 0 ? top1Neg / negTotal : 0,
+    top3NegShare: negTotal !== 0 ? top3Neg / negTotal : 0,
+    top5NegShare: negTotal !== 0 ? top5Neg / negTotal : 0,
     portRetExTop1: portRet - top1,
     portRetExTop3: portRet - top3,
+    portRetExTop5: portRet - top5,
+    portRetExTopNeg1: portRet - (topNeg[0]?.[1] ?? 0),
+    portRetExTopNeg3: portRet - top3Neg,
+    portRetExTopNeg5: portRet - top5Neg,
+    sectorRows,
   };
 }
 
@@ -819,9 +880,9 @@ ${lines.join("\n")}
 4. **半導体 30% キャップ**は追補 \`6e3ad93\` で **結果コミット前**に文書化（\`applySemiCap\` は \`487152e\` からコードに存在）。
 5. **テーマリスト**（quantum 等）は \`themes.ts\` の watchlist 系コミットと同日の研究フロー。**Saka バックテスト専用の独立 prereg ではない**（ただし \`isExcludedTheme\` が参照するリストはコードで固定）。
 6. **本レポートの採用構成**はデータ修正後の **再選定結果**を記載。OOS 順位・CAGR は **データ版に依存**する。
-7. **STOP-SHIP 修正**（\`216dfc6\` 以降、\`${stopShipHash.slice(0, 7)}\` 付近）: PIT mcap（\`mcapC\`）、ATVI/CERN エイリアス、GOOGL レガシー facts、**HOLX \`CommonStockSharesIssued\` 300B 誤株数**（\`pit-shares.ts\`）、**XOM CIK override を \`buildCtx\` 全体に適用**、MaxDD ピーク日、USD/JPY など。**本レポートは再生成版であり、採用構成 ID はまた変わる可能性がある**。
+7. **STOP-SHIP / 確定版データ修正**（\`${stopShipHash.slice(0, 7)}\`）: NVDA/GOOGL/SMCI/ISRG 等の **リバランス近傍スプリット**、Yahoo 参照クロスチェック、リバランス監査 0 失敗。**ルール文字列は IS 期間で固定したつもりでも、OOS を見た後のデータ修正で IS 再計算が走るため「IS だけで完全凍結」とは言えない**（採用 ID は今回 \`plain_15__mcap\` で維持）。
 
-**結論:** 「2016–2020 のみでルールを決め、2021+ は一度だけ評価」は **手順として事前登録されている**が、**データ修正と再実行により採用構成は初回結果（\`plain_15__equal\`）と異なる**。OOS を **設計に使った**というより、**公開後にデータを直し IS をやり直した**のが正確。
+**結論:** 「2016–2020 のみでルールを決め、2021+ は一度だけ評価」は **手順として事前登録されている**が、**データ修正と再実行により採用構成は初回結果（\`plain_15__equal\`）と異なる**。OOS を **設計に使った**というより、**公開後にデータを直し IS をやり直した**のが正確。確定版は **データゲート合格後**のスナップショット。
 `;
 }
 
@@ -830,6 +891,123 @@ function benchCurve(bars: Bar[], from: string, to: string, initialUsd: number): 
   if (slice.length < 2) return [];
   const p0 = slice[0].c;
   return slice.map((b) => ({ date: b.date, equity: initialUsd * (b.c / p0) }));
+}
+
+function calendarYearWindow(calendar: string[], year: number, endCap: string): { from: string; to: string } | null {
+  const yEnd = year === 2026 ? endCap : `${year}-12-31`;
+  const yStartAnchor = `${year - 1}-12-31`;
+  const idxStart = tradingDayIndex(calendar, yStartAnchor);
+  const idxEnd = tradingDayIndex(calendar, yEnd);
+  if (idxStart < 0 || idxEnd < 0) return null;
+  return { from: calendar[idxStart], to: calendar[idxEnd] };
+}
+
+function tradingDaysBetween(calendar: string[], d1: string, d2: string): number | null {
+  const i1 = tradingDayIndex(calendar, d1);
+  const i2 = tradingDayIndex(calendar, d2);
+  if (i1 < 0 || i2 < 0) return null;
+  return Math.abs(i2 - i1);
+}
+
+function nearestRebalOnOrBefore(rows: RebalRow[], date: string): RebalRow | null {
+  let best: RebalRow | null = null;
+  for (const r of rows) {
+    if (r.date <= date) best = r;
+    else break;
+  }
+  return best;
+}
+
+type AttrPack = NonNullable<ReturnType<typeof attributionFromSnapshots>>;
+
+function formatAttrTable(
+  attr: AttrPack,
+  env: Awaited<ReturnType<typeof buildCtx>>,
+  baseUsd: number,
+  negativeOnly: boolean,
+  limit = 12,
+) {
+  const semiOf = env.semiOf;
+  const rows = (negativeOnly ? attr.negEntries : attr.entries).slice(0, limit);
+  return rows
+    .map(([t, c]) => {
+      const ppt = c * 100;
+      const usd = c * baseUsd;
+      const sec = env.ctx.gicsOf(t)?.sector ?? "—";
+      return `| ${t} | ${ppt >= 0 ? "+" : ""}${ppt.toFixed(2)}pt | ${usd >= 0 ? "+" : ""}$${usd.toFixed(0)} | ${semiOf(t) ? "半導体" : "—"} | ${sec} |`;
+    })
+    .join("\n");
+}
+
+function buildDrawdownWindowMd(
+  title: string,
+  dd: ReturnType<typeof drawdownFromCurve>,
+  ddSpy: ReturnType<typeof drawdownFromCurve> | null,
+  attr: AttrPack | null,
+  env: Awaited<ReturnType<typeof buildCtx>>,
+  rebalRows: RebalRow[],
+  calendar: string[],
+  baseUsd: number,
+  extraFacts?: string,
+): string {
+  const peakToTroughDays = tradingDaysBetween(calendar, dd.peakDate, dd.troughDate);
+  const troughToRecoveryDays =
+    dd.recoveryDate != null ? tradingDaysBetween(calendar, dd.troughDate, dd.recoveryDate) : null;
+  const peakRebal = nearestRebalOnOrBefore(rebalRows, dd.peakDate);
+  const troughRebal = nearestRebalOnOrBefore(rebalRows, dd.troughDate);
+
+  let attrBlock = "（日次スナップショット不足のため未計算）";
+  if (attr) {
+    const sectorLines = attr.sectorRows
+      .filter(([, v]) => v < 0)
+      .slice(0, 8)
+      .map(([s, v]) => `- **${s}**: ${(v * 100).toFixed(2)}pt`)
+      .join("\n");
+    attrBlock = `
+**事実 — 寄与（ウェイト×日次リターン、手数料除く）** ${attr.windowFrom} ～ ${attr.windowTo}
+
+| 銘柄 | 寄与 | $（${baseUsd.toLocaleString()} ベース） | 半導体 | GICSセクター |
+|---|---:|---:|---|---|
+${formatAttrTable(attr, env, baseUsd, true)}
+
+- 窓のポートリターン: **${(attr.portRet * 100).toFixed(2)}%**；同期間 SPY: **${(attr.spyRet * 100).toFixed(2)}%**（ギャップ **${(attr.gap * 100).toFixed(2)}pt**）
+- 半導体サブ業種の寄与合計: **${(attr.semiC * 100).toFixed(2)}pt**（マイナス寄与合計に占める比率 **${(attr.semiShareOfNeg * 100).toFixed(0)}%**）
+- マイナス寄与の集中度（上位1/3/5銘柄シェア）: **${(attr.top1NegShare * 100).toFixed(0)}% / ${(attr.top3NegShare * 100).toFixed(0)}% / ${(attr.top5NegShare * 100).toFixed(0)}%**
+- カウンターファクト（マイナス寄与上位銘柄を除いた窓リターン・単純）: 上位1除く **${(attr.portRetExTopNeg1 * 100).toFixed(2)}%**、上位3除く **${(attr.portRetExTopNeg3 * 100).toFixed(2)}%**、上位5除く **${(attr.portRetExTopNeg5 * 100).toFixed(2)}%**
+
+**事実 — セクター寄与（マイナス寄与のみ抜粋）**
+
+${sectorLines || "—"}
+
+**解釈（単純アトリビューション・因果証明ではない）:** 本ポートは金融セクターとテーマ株を持たないため、SPY が持つ大型金融・ディフェンシブのウェイトが薄い。同期間でテック／半導体のマイナス寄与が大きい場合、SPY より深い DD や暦年負けが出やすい。逆に SPY 側にあって本ポートに無いセクターが相対的に下支えした場合、ギャップはそちらに帰着し得る。
+`;
+  }
+
+  return `
+### ${title}
+
+**事実 — ドローダウン形状**
+
+| | 採用構成${ddSpy ? " | SPY（同じ評価窓）" : ""} |
+|---|---${ddSpy ? "|---" : ""}|
+| ピーク日 | ${dd.peakDate}${ddSpy ? ` | ${ddSpy.peakDate}` : ""} |
+| ボトム日 | ${dd.troughDate}${ddSpy ? ` | ${ddSpy.troughDate}` : ""} |
+| 深さ | ${(dd.maxDd * 100).toFixed(2)}%${ddSpy ? ` | ${(ddSpy.maxDd * 100).toFixed(2)}%` : ""} |
+| 回復日 | ${dd.recoveryDate ?? "未回復"}${ddSpy ? ` | ${ddSpy.recoveryDate ?? "未回復"}` : ""} |
+| ピーク→ボトム（営業日） | ${peakToTroughDays ?? "—"}${ddSpy ? ` | ${tradingDaysBetween(calendar, ddSpy.peakDate, ddSpy.troughDate) ?? "—"}` : ""} |
+| ボトム→回復（営業日） | ${troughToRecoveryDays ?? "—"}${ddSpy ? ` | ${ddSpy.recoveryDays ?? "—"}` : ""} |
+
+${extraFacts ?? ""}
+
+**事実 — バスケット（直近リバランス日 ≦ ピーク / ボトム）**
+
+| | 日付 | 保有${rebalRows[0]?.holdings.length ?? 15} |
+|---|---|---|
+| ピーク付近 | ${peakRebal?.date ?? "—"} | ${peakRebal?.holdings.join(", ") ?? "—"} |
+| ボトム付近 | ${troughRebal?.date ?? "—"} | ${troughRebal?.holdings.join(", ") ?? "—"} |
+
+${attrBlock}
+`;
 }
 
 async function main() {
@@ -894,29 +1072,81 @@ async function main() {
   );
 
   const sim = simulateInstrumented(adopted, env);
-  const attrSnaps = sim.dailySnaps.filter((s) => s.date >= ATTR_FROM && s.date <= ATTR_TO);
-  const attr = attributionFromSnapshots(env, attrSnaps);
+  const attr = attributionFromSnapshots(env, sim.dailySnaps, ATTR_FROM, ATTR_TO);
   const ddPort = drawdownFromCurve(sim.curve, SAKA_START, SAKA_END);
   const ddSpy = drawdownFromCurve(spyBench, SAKA_START, SAKA_END);
+  const ddOosDetail = drawdownFromCurve(sim.curve, SAKA_OOS_START, SAKA_END);
+  const ddSpyOos = drawdownFromCurve(spyBench, SAKA_OOS_START, SAKA_END);
+  const attrOosDd =
+    ddOosDetail.peakDate && ddOosDetail.troughDate
+      ? attributionFromSnapshots(env, sim.dailySnaps, ddOosDetail.peakDate, ddOosDetail.troughDate)
+      : null;
+  const cal2022 = calendarYearWindow(calendar, 2022, SAKA_END);
+  const attrCal2022 = cal2022 ? attributionFromSnapshots(env, sim.dailySnaps, cal2022.from, cal2022.to) : null;
+  const cal2022Saka = cal2022 ? periodReturn(sim.curve, cal2022.from, cal2022.to) : null;
+  const cal2022Spy = cal2022 ? periodReturn(spyBench, cal2022.from, cal2022.to) : null;
+
+  const drawdownAnalysisMd = `
+## 落ち込み分析（事実 vs 解釈）
+
+Emma 依頼の DD 深掘り。**事実**はシミュレーション・価格から機械集計、**解釈**は単純アトリビューション（因果の証明ではない）。
+
+### C1. OOS 期間の最大ドローダウン（${SAKA_OOS_START} 以降・深さ ${(ddOosDetail.maxDd * 100).toFixed(1)}%）
+
+${buildDrawdownWindowMd(
+  "OOS MaxDD 局面（ピーク→ボトム）",
+  ddOosDetail,
+  ddSpyOos,
+  attrOosDd,
+  env,
+  sim.rebalRows,
+  calendar,
+  SAKA_INITIAL_CASH,
+)}
+
+${cal2022 && attrCal2022
+  ? buildDrawdownWindowMd(
+      `暦年 2022（${cal2022.from} ～ ${cal2022.to}・ポート ${cal2022Saka != null ? `${(cal2022Saka * 100).toFixed(1)}%` : "—"} vs SPY ${cal2022Spy != null ? `${(cal2022Spy * 100).toFixed(1)}%` : "—"}）`,
+      drawdownFromCurve(sim.curve, cal2022.from, cal2022.to),
+      drawdownFromCurve(spyBench, cal2022.from, cal2022.to),
+      attrCal2022,
+      env,
+      sim.rebalRows,
+      calendar,
+      SAKA_INITIAL_CASH,
+    )
+  : "（2022 暦年窓を算出できず）"}
+
+### C2. ライブ窓 ${LIVE_ENTRY} ～ ${LIVE_END} のドローダウン
+
+（下記ライブ窓の USD/JPY 曲線に基づく — §(7) と同一シミュレーション）
+
+`;
 
   const fxBars = await loadUsdjpyBars();
   const entryFx = fxCloseOnDate(fxBars, LIVE_ENTRY);
   const endFx = fxCloseOnDate(fxBars, LIVE_END);
   const initialUsdLive = entryFx != null && entryFx > 0 ? LIVE_JPY_START / entryFx : null;
   let liveSection = "（USD/JPY または価格データ不足のため未計算）";
+  let liveDrawdownMd = "（ライブ窓未計算）";
   if (initialUsdLive != null) {
-    const liveSim = simulateSaka(adopted, calendar, membersOn, ctx, semiOf, price, COMMISSION, LIVE_ENTRY, LIVE_END, {
-      rebalance: "delta",
-      minTradeUsd: SAKA_REBAL_MIN_TRADE_USD,
-      relDrift: SAKA_REBAL_REL_DRIFT,
+    const liveSim = simulateInstrumented(adopted, env, {
+      from: LIVE_ENTRY,
+      to: LIVE_END,
       initialCash: initialUsdLive,
       bootstrapHoldingsDate: LIVE_BOOT_REBAL,
+      recordRebalRows: false,
     });
     const liveJpy = jpyCurve(liveSim.curve, fxBars);
     const retUsd = periodReturn(liveSim.curve, LIVE_ENTRY, LIVE_END);
     const retJpy = periodReturn(liveJpy, LIVE_ENTRY, LIVE_END);
     const ddUsd = drawdownFromCurve(liveSim.curve, LIVE_ENTRY, LIVE_END);
     const ddJpy = drawdownFromCurve(liveJpy, LIVE_ENTRY, LIVE_END);
+    const attrLiveUsd = attributionFromSnapshots(env, liveSim.dailySnaps, ddUsd.peakDate, ddUsd.troughDate);
+    const attrLiveJpy =
+      ddJpy.peakDate && ddJpy.troughDate
+        ? attributionFromSnapshots(env, liveSim.dailySnaps, ddJpy.peakDate, ddJpy.troughDate)
+        : null;
     const benchTickers = ["SPY", "QQQ", "SOXX"] as const;
     const benchRows: string[] = [];
     for (const sym of benchTickers) {
@@ -947,6 +1177,31 @@ ${benchRows.join("\n")}
 **Emma 実績（参考・計算基準未確認）:** 約 **+10.9%**、最大 DD 約 **-6%**。
 
 **修正前データでの暫定値（独立チェック時点・参考）:** Saka **+6.32%** USD / **+2.82%** 円、DD **-2.80%** USD / **-5.88%** 円；SPY +4.01/+0.59；QQQ +9.76/+6.15；SOXX +16.78/+12.94（USD/JPY 163.30→157.93）。
+`;
+    const spyLive = benchCurve(loadBars("SPY"), LIVE_ENTRY, LIVE_END, initialUsdLive);
+    const ddSpyLive = drawdownFromCurve(spyLive, LIVE_ENTRY, LIVE_END);
+    liveDrawdownMd = `
+${buildDrawdownWindowMd(
+  "ライブ窓 USD MaxDD",
+  ddUsd,
+  ddSpyLive,
+  attrLiveUsd,
+  env,
+  sim.rebalRows,
+  calendar,
+  initialUsdLive,
+  `**事実:** 期間リターン USD **${retUsd != null ? `${(retUsd * 100).toFixed(2)}%` : "—"}**、円建て **${retJpy != null ? `${(retJpy * 100).toFixed(2)}%` : "—"}**（USD/JPY ${entryFx!.toFixed(2)}→${endFx?.toFixed(2) ?? "—"}）。`,
+)}
+${buildDrawdownWindowMd(
+  "ライブ窓 円建て MaxDD（日次 USD 資産×USD/JPY）",
+  ddJpy,
+  null,
+  attrLiveJpy,
+  env,
+  sim.rebalRows,
+  calendar,
+  LIVE_JPY_START,
+)}
 `;
   }
 
@@ -1155,7 +1410,7 @@ ${lines.join("\n")}
   const passDdOos = adoptedMetrics.oos.maxDrawdown > spyOos.maxDrawdown;
   const passYears = adoptedMetrics.oos.positiveYearShare >= 0.7;
   const passTag = (ok: boolean) => (ok ? "**合格**" : "**不合格**");
-  const ddOosDetail = drawdownFromCurve(sim.curve, SAKA_OOS_START, SAKA_END);
+  const isrg2021Oct = sim.rebalRows.find((r) => r.date === "2021-10-01")?.holdings.includes("ISRG") ?? false;
   const configVersionTable = `
 | データ版 (git) | 採用構成 ID | 備考 |
 |---|---|---|
@@ -1163,15 +1418,24 @@ ${lines.join("\n")}
 | \`216dfc6\` | \`plain_15__mcap_cap5\` | 詳細レポート初版（mcap 順位バグ残存） |
 | \`fe6c787\` | \`plain_20__mcap_cap10\` | mcapC・ATVI/CERN 修正後 IS 再採用 |
 | \`cc6ffaa\` | \`plain_15__mcap\` | HOLX 株数・XOM CIK 一貫 |
-| \`${stopShipHash.slice(0, 7)}\` | \`${adopted.id}\` | **株価×株数スプリット整合**（Yahoo splits + forward 株数） |
+| \`cc6ffaa\`～\`d35d888\` | \`plain_15__mcap\` | NVDA/GOOGL/SMCI スプリット整合・OOS リバランス監査 |
+| \`${stopShipHash.slice(0, 7)}\` | \`${adopted.id}\` | **確定版:** ISRG 2021-10 3:1 ガード + 全リバランス Yahoo mcap クロスチェック（\`PIT_YAHOO_REF_TEST\`）。採用 ID **${adopted.id === "plain_15__mcap" ? "変更なし" : "IS 再選定で変更"}** — ISRG 過大 mcap 修正により 2021-10 バスケットから ISRG 外れ、eligible 順位が再計算されたが IS 勝者は同一。 |
 `;
 
-  const md = `# Round 19 Corrected v1 — 採用構成の詳細レポート
+  const md = `# Round 19 Corrected v1 — 採用構成の詳細レポート（確定版）
 
-**対象:** Corrected v1 再実行（事前登録 \`6e3ad93\`・差分リバランス・PIT データ）  
-**採用構成 ID:** \`${adopted.id}\`（IS 2016–2020 を \`selectSakaConfig\` で再計算した直近の選定結果。**STOP-SHIP データ修正後も採用 ID は再び変わる可能性がある** — 本稿は確定版ではない。）  
+**対象:** Corrected v1（事前登録 \`6e3ad93\`・差分リバランス・PIT データ）  
+**採用構成 ID:** \`${adopted.id}\`（IS 2016–2020 を \`selectSakaConfig\` で再計算）  
 **初期資金:** $${SAKA_INITIAL_CASH}　**手数料（主計算）:** $${COMMISSION}/注文  
-**データ:** \`data/.cache/pit/\`（\`docs/DATA_PIT_ja.md\`）
+**データ:** \`data/.cache/pit/\`（\`docs/DATA_PIT_ja.md\`）　**生成コミット:** \`${stopShipHash.slice(0, 7)}\`
+
+### 事前登録合格基準（OOS・$${COMMISSION}・\`ROUND19_PREREG_ja.md\`）— 先に判定
+
+| # | 基準 | 採用 | SPY/参照 | 判定 |
+|---|---|---:|---:|---|
+| 1 | OOS CAGR ≥ 10% | ${(adoptedMetrics.oos.cagr * 100).toFixed(1)}% | — | ${passTag(passCagr)} |
+| 2 | OOS MaxDD **が SPY より浅い** | ${(adoptedMetrics.oos.maxDrawdown * 100).toFixed(1)}% | ${(spyOos.maxDrawdown * 100).toFixed(1)}% | ${passTag(passDdOos)} |
+| 3 | 暦年プラス比率 ≥ 70%（OOS 暦年） | ${(adoptedMetrics.oos.positiveYearShare * 100).toFixed(0)}% | — | ${passTag(passYears)} |
 
 ### ヘッドライン（採用構成 vs SPY・差分リバランス $${COMMISSION}/注文）
 
@@ -1180,17 +1444,9 @@ ${lines.join("\n")}
 | IS (${SAKA_START.slice(0, 4)}–${SAKA_IS_END.slice(0, 4)}) | ${(adoptedMetrics.is.cagr * 100).toFixed(2)}% | ${(spyIs.cagr * 100).toFixed(2)}% | ${(adoptedMetrics.is.maxDrawdown * 100).toFixed(2)}% | ${(spyIs.maxDrawdown * 100).toFixed(2)}% |
 | OOS (${SAKA_OOS_START.slice(0, 4)}–${SAKA_END.slice(0, 4)}) | ${(adoptedMetrics.oos.cagr * 100).toFixed(2)}% | ${(spyOos.cagr * 100).toFixed(2)}% | ${(adoptedMetrics.oos.maxDrawdown * 100).toFixed(2)}% | ${(spyOos.maxDrawdown * 100).toFixed(2)}% |
 
-**OOS 最大ドローダウン（重要）:** 採用構成の OOS MaxDD **${(adoptedMetrics.oos.maxDrawdown * 100).toFixed(1)}%** は SPY **${(spyOos.maxDrawdown * 100).toFixed(1)}%** より**深い（悪化）**。Emma 事前登録の合格基準②「OOS DD < SPY」は **${passDdOos ? "満たす" : "満たさない"}**。
+**データ品質ゲート（確定版前条件）:** 全リバランス監査（S&P #40 フロア + \`detectMcapJump\`）**0 失敗**（\`pit-mcap-rebalance-audit.test.ts\`）。全保有銘柄の PIT mcap vs Yahoo 参照 **0 失敗**（\`PIT_YAHOO_REF_TEST=1\`・\`pit-mcap-yahoo-ref.test.ts\`）。2021-10-01 バスケットに **ISRG ${isrg2021Oct ? "含む" : "不含"}**（3:1 前過大 mcap 修正後）。
 
-全期間の最大 DD 局面（採用曲線）: ピーク **${ddPort.peakDate}** → ボトム **${ddPort.troughDate}**（深さ ${(ddPort.maxDd * 100).toFixed(1)}%）→ 回復 **${ddPort.recoveryDate ?? "未回復"}**。
-
-### 事前登録合格基準（OOS・$${COMMISSION}・\`ROUND19_PREREG_ja.md\`）
-
-| # | 基準 | 採用 | SPY/参照 | 判定 |
-|---|---|---:|---:|---|
-| 1 | OOS CAGR ≥ 10% | ${(adoptedMetrics.oos.cagr * 100).toFixed(1)}% | — | ${passTag(passCagr)} |
-| 2 | OOS MaxDD **が SPY より浅い** | ${(adoptedMetrics.oos.maxDrawdown * 100).toFixed(1)}% | ${(spyOos.maxDrawdown * 100).toFixed(1)}% | ${passTag(passDdOos)} |
-| 3 | 暦年プラス比率 ≥ 70%（OOS 暦年） | ${(adoptedMetrics.oos.positiveYearShare * 100).toFixed(0)}% | — | ${passTag(passYears)} |
+全期間の最大 DD 局面（採用曲線）: ピーク **${ddPort.peakDate}** → ボトム **${ddPort.troughDate}**（深さ ${(ddPort.maxDd * 100).toFixed(1)}%）→ 回復 **${ddPort.recoveryDate ?? "未回復"}**。OOS MaxDD **${(ddOosDetail.maxDd * 100).toFixed(1)}%**（${ddOosDetail.peakDate}→${ddOosDetail.troughDate}）vs SPY OOS **${(ddSpyOos.maxDd * 100).toFixed(1)}%**。
 
 ### 採用構成のデータ版別変遷
 
@@ -1295,7 +1551,12 @@ ${yearRows.join("\n")}
 
 **OOS 期間のみの MaxDD:** 採用 **${(ddOosDetail.maxDd * 100).toFixed(1)}%**（ピーク ${ddOosDetail.peakDate} → ボトム ${ddOosDetail.troughDate}） vs SPY **${(drawdownFromCurve(spyBench, SAKA_OOS_START, SAKA_END).maxDd * 100).toFixed(1)}%** — 事前登録合格②は ${passTag(passDdOos)}。
 
-上表の全期間最大 DD は主に **2022–2023 の株式調整**（ピーク **${ddPort.peakDate}**、ボトム **${ddPort.troughDate}**、回復 **${ddPort.recoveryDate ?? "—"}**）に由来する。
+上表の全期間最大 DD は主に **2022–2023 の株式調整**（ピーク **${ddPort.peakDate}**、ボトム **${ddPort.troughDate}**、回復 **${ddPort.recoveryDate ?? "—"}**）に由来する。深掘りは **落ち込み分析**。
+
+---
+
+${drawdownAnalysisMd}
+${liveDrawdownMd}
 
 ---
 
@@ -1325,11 +1586,11 @@ ${sectionC}
 
 ## 解釈（全体）
 
-- **${adopted.id}** は mega-cap 寄りだが **5%キャップ** により単一超大株依存を抑える設計。
+- **${adopted.id}** は eligible 時価総額上位 ${pickN} の **mcap 比例ウェイト**（単一銘柄キャップなし）＋ **半導体サブ業種 30% 上限**。
 - Corrected v1 のデータ拡充で eligible が増え、四半期漏斗の「価格なし」は後年ほぼ解消（詳細は \`ROUND19_AUDIT_ja.md\`）。
-- v2（ウォークフォワード主評価）は **DRAFT のみ**・本レポートの対象外。
+- v2（ウォークフォワード主評価）は **DRAFT のみ・未実行**・本レポートの対象外。
 
-*生成: \`npx tsx scripts/round19-v1-detail-report.ts\`*
+*生成: \`npx tsx scripts/round19-v1-detail-report.ts\`（確定版ゲート: split/audit/Yahoo ref テスト合格後）*
 `;
 
   fs.writeFileSync(OUT_MD, md);
