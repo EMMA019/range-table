@@ -3,7 +3,7 @@
 **対象:** Corrected v1（事前登録 `6e3ad93`・差分リバランス・PIT データ）  
 **採用構成 ID:** `plain_15__mcap`（IS 2016–2020 を `selectSakaConfig` で再計算）  
 **初期資金:** $3200　**手数料（主計算）:** $0.35/注文  
-**データ:** `data/.cache/pit/`（`docs/DATA_PIT_ja.md`）　**確定版コミット:** `5a2824b`
+**データ:** `data/.cache/pit/`（`docs/DATA_PIT_ja.md`）　**確定版コミット:** `a6d2aed`
 
 ### 事前登録合格基準（OOS・$0.35・`ROUND19_PREREG_ja.md`）— 先に判定
 
