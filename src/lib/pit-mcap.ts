@@ -105,6 +105,17 @@ export function pitMarketCapAtDate(
   const upcoming = upcomingSplitInflate(bar.date, asOf, sp);
   if (
     mAdj > 1e9 &&
+    upcoming > 1.5 &&
+    pfAll < 5 &&
+    pfToAsOf < 1.01 &&
+    mNomRaw > mAdj * 2.2 &&
+    mNomRaw / mAdj < upcoming * 1.05 &&
+    mNomRaw <= mAdj * (upcoming * 1.25)
+  ) {
+    return mAdj;
+  }
+  if (
+    mAdj > 1e9 &&
     mAdj < 200e9 &&
     mNomRaw > mAdj * 4 &&
     upcoming > 1.5 &&
