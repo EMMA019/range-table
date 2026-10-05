@@ -11,7 +11,6 @@ import {
   SAKA_CORR_MIN_OBS,
   SAKA_END,
   SAKA_INITIAL_CASH,
-  SAKA_OOS_START,
   SAKA_REBAL_MIN_TRADE_USD,
   SAKA_REBAL_REL_DRIFT,
   SAKA_START,
@@ -57,7 +56,6 @@ const W_MCAP = 0.75;
 const W_DIV = 0.2;
 const W_GOLD = 0.05;
 const DIV_MIN_MCAP = 30e9;
-const MEGA_TRIPLE = new Set(["GOOGL", "MSFT", "META"]);
 const SEMI_QUAD = ["NVDA", "AVGO", "AMD", "MU"] as const;
 
 const AI_PLATFORM_INFRA = new Set([
@@ -202,15 +200,6 @@ function trailingDivYield(
     if (t > start && t <= end) sum += e.amount;
   }
   return sum / price;
-}
-
-function megaTechCount(picked: string[]): number {
-  const s = new Set<string>();
-  for (const t of picked) {
-    const n = normalizeMega(t);
-    if (n === "GOOGL" || n === "MSFT" || n === "META") s.add(n);
-  }
-  return s.size;
 }
 
 function wouldExceedMega(picked: string[], t: string, megaMax: number): boolean {

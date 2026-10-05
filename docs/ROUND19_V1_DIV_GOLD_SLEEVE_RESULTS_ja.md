@@ -1,7 +1,7 @@
 # Round 19 v1 mcap75 + 高配当20 + 金5 構成実験 — 結果
 
 **Prereg:** [`docs/ROUND19_V1_DIV_GOLD_SLEEVE_PREREG_ja.md`](ROUND19_V1_DIV_GOLD_SLEEVE_PREREG_ja.md)（結果探索前コミット `2fbf0ee`）
-**生成:** `scripts/round19-v1-div-gold-sleeve.ts` · **HEAD** `2fbf0ee`
+**生成:** `scripts/round19-v1-div-gold-sleeve.ts` · **HEAD** `0b4a958`
 **金 ETF:** Yahoo adjclose (runtime) (`GLD`)
 
 ## サマリー（vs ベースライン `plain_15__mcap`）
