@@ -7,7 +7,6 @@ import { formatPe, PE_SOURCE_NOTE } from "@/lib/pe";
 import {
   SEMI_CAP_BADGE,
   earningsBadge,
-  formatAtr,
   formatBox,
   formatCorrExact,
   formatDev,
@@ -29,6 +28,7 @@ import type { ChartPayload, TickerRow } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { TickerMetaLine } from "@/components/ticker-meta-line";
 import { atTop, continuedBreakout, continuedBreakoutText, volumeSurge, volumeThin, zoneOf } from "@/lib/view";
+import { Atr14Value } from "./atr14-value";
 import { BoxBar } from "./box-bar";
 import { EntryBadge } from "./entry-badge";
 import { Shares10 } from "./shares10";
@@ -186,7 +186,7 @@ export function DetailPanel({
                   label="ATR(14)"
                   value={
                     <>
-                      {formatAtr(row.quote.atr14)}
+                      <Atr14Value atr14={row.quote.atr14} close={row.quote.close} />
                       {" · "}
                       <Shares10 shares={row.quote.shares10} cost={row.quote.cost10} />
                     </>

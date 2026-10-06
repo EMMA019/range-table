@@ -9,7 +9,6 @@ import {
   earningsBadge,
   formatAge,
   formatDev,
-  formatAtr,
   formatCompactShares,
   formatCorr,
   formatEarnings,
@@ -29,6 +28,7 @@ import { isIgnoredTicker } from "@/lib/holdings";
 import { applyView, atTop, continuedBreakout, continuedBreakoutText, sectorsOf, volumeSurge, volumeThin, withDividers, zoneOf, type ViewFilters } from "@/lib/view";
 import { BoxBar } from "./box-bar";
 import { EntryBadge } from "./entry-badge";
+import { Atr14Value } from "./atr14-value";
 import { Shares10 } from "./shares10";
 import { DetailPanel } from "./detail-panel";
 import { Glossary } from "./glossary";
@@ -686,7 +686,7 @@ function TickerCard({
               )}
             </span>
             <span>
-              ATR(14) <b className="font-mono font-medium text-ink tabular-nums">{formatAtr(quote.atr14)}</b>
+              ATR(14) <Atr14Value atr14={quote.atr14} close={quote.close} />
               {" · "}
               <b className="font-mono font-medium text-ink tabular-nums">
                 <Shares10 shares={quote.shares10} cost={quote.cost10} />

@@ -4,7 +4,7 @@ import { computeQuote } from "./compute";
 import { EARNINGS_HOLD_DAYS } from "./constants";
 import { EARNINGS_UNKNOWN_PROMINENT } from "./constants";
 import { classifyEarnings } from "./earnings";
-import { SEMI_CAP_BADGE, formatDollar, formatRs, formatEarningsForAlert } from "./format";
+import { SEMI_CAP_BADGE, formatAtrAlertFragment, formatDollar, formatRs, formatEarningsForAlert } from "./format";
 import { isIgnoredTicker } from "./holdings";
 import { LOSS_UNKNOWN_TAG } from "./constants";
 import { lossUnknown, type Profitability } from "./loss-filter";
@@ -138,7 +138,7 @@ function entryAlertForLine(
     kind: "entry_in_ok",
     priority: candidate.earningsUnknown || !candidate.earnings ? "low" : "high",
     ticker: candidate.ticker,
-    title: `${candidate.ticker}${metaTag ? ` ${metaTag}` : ""} ${slot}回目（${line}%線・箱${box}%${reboundTag}${lossTag}・ATR ${pct.toFixed(1)}%）${earningsTitle}${semiCap ? `・${SEMI_CAP_BADGE}` : ""}`,
+    title: `${candidate.ticker}${metaTag ? ` ${metaTag}` : ""} ${slot}回目（${line}%線・箱${box}%${reboundTag}${lossTag}・${formatAtrAlertFragment(quote.atr14, quote.close)}）${earningsTitle}${semiCap ? `・${SEMI_CAP_BADGE}` : ""}`,
     body: [
       metaTag || null,
       `終値 ${formatDollar(quote.close)}（${quote.closeDate}）/ 25%線 ${formatDollar(quote.line25)}・35%線 ${formatDollar(quote.line35)}`,
