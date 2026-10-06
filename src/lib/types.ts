@@ -88,6 +88,21 @@ export type Quote = {
   reboundDays: number | null;
   /** in_ok inside 15–25% after a rebound, early below that, chase above 25% through 50%, late above 50%. */
   entrySignal: EntrySignal;
+  /** Sessions since the last bar in the 20-day window that printed low20 / high20. */
+  low20DaysAgo: number;
+  high20DaysAgo: number;
+  /** Falling-knife guard — see detectDowntrend in downtrend.ts. */
+  downtrend: {
+    active: boolean;
+    reason: string | null;
+    lowDaysAgo: number;
+    highDaysAgo: number;
+  };
+  /** Monitoring label (見送り / 待ち / 候補). Not a buy recommendation. */
+  verdict: {
+    state: "見送り" | "待ち" | "候補";
+    reason: string;
+  };
 };
 
 export type EarningsView = {
@@ -240,6 +255,10 @@ export type PickQuote = {
   line25: number;
   reboundDays: number | null;
   entrySignal: EntrySignal;
+  low20DaysAgo: number;
+  high20DaysAgo: number;
+  downtrend: Quote["downtrend"];
+  verdict: Quote["verdict"];
 };
 
 export type PickCard = {

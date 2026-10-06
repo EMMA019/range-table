@@ -2,11 +2,12 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { pastResult } from "@/lib/backtest-view";
-import { BASIS, CORP_ACTION_BADGE, CORR_NOTE, TOP_BREAKOUT_NOTE, VOLUME_NOTE } from "@/lib/copy";
+import { BASIS, CORP_ACTION_BADGE, CORR_NOTE, DOWNTREND_BADGE, TOP_BREAKOUT_NOTE, VOLUME_NOTE } from "@/lib/copy";
 import { formatPe, PE_SOURCE_NOTE } from "@/lib/pe";
 import {
   SEMI_CAP_BADGE,
   earningsBadge,
+  formatBoxExtremeAge,
   formatBox,
   formatCorrExact,
   formatDev,
@@ -161,8 +162,16 @@ export function DetailPanel({
                   basis={BASIS.rs}
                   tone={row.rs20 == null ? undefined : row.rs20 > 0 ? "sage" : row.rs20 < 0 ? "rust" : undefined}
                 />
-                <Stat label="20日安値" value={formatPx(row.quote.low20)} basis={BASIS.low20} />
-                <Stat label="20日高値" value={formatPx(row.quote.high20)} basis={BASIS.high20} />
+                <Stat
+                  label="20日安値"
+                  value={`${formatPx(row.quote.low20)}${formatBoxExtremeAge(row.quote.low20DaysAgo)}`}
+                  basis={BASIS.low20}
+                />
+                <Stat
+                  label="20日高値"
+                  value={`${formatPx(row.quote.high20)}${formatBoxExtremeAge(row.quote.high20DaysAgo)}`}
+                  basis={BASIS.high20}
+                />
                 <Stat
                   label="5日レンジ"
                   value={

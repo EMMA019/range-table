@@ -46,6 +46,7 @@ export const TOP_BREAKOUT_NOTE =
   "上抜け=終値が当日を除く直前20本の高値超え。天井と決めつけて売る前に確認する目安。買いサインではありません。";
 
 export const CORP_ACTION_BADGE = "⚠ 分割/スピンオフ疑い（箱は参考外）";
+export const DOWNTREND_BADGE = "↘ 下げトレンド（高値・安値切り下げ）";
 
 /** Tag shared by the old S&P jab list, so those names still filter as one group. */
 export const JAB_TAG = "安定ジャブ";
@@ -94,6 +95,7 @@ export const CHIPS = [
   { key: "atrMin", label: `ATR ≥${ATR_MIN_PCT}%` },
   { key: "rebound", label: "反発待ち圏" },
   { key: "inOk", label: "IN OK!" },
+  { key: "candidateVerdict", label: "候補のみ" },
   { key: "hideWatch", label: "監視のみを隠す" },
 ] as const;
 

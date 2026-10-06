@@ -2,6 +2,8 @@ import { BOX_BOTTOM_MAX, BOX_REBOUND_MAX, BOX_TOP_MIN, ATR_MIN_PCT, CORR_LOW_MAX
 import { TAG_SECTORS, type SortId } from "./copy";
 import { boxShown } from "./format";
 import { boxMetricsUnreliable } from "./compute";
+import { quoteDowntrendActive } from "./downtrend";
+import { isCandidateVerdict } from "./verdict";
 import type { Quote, TickerRow } from "./types";
 
 export type ViewFilters = {
@@ -16,6 +18,7 @@ export type ViewFilters = {
   atrMin: boolean;
   rebound: boolean;
   inOk: boolean;
+  candidateVerdict: boolean;
   hideWatch: boolean;
   sort: SortId;
   q: string;
@@ -96,10 +99,13 @@ export function applyView(rows: TickerRow[], filters: ViewFilters): TickerRow[] 
     if (filters.earnings && !row.earnings?.warn) return false;
     if (filters.lowCorr && !lowBasketCorr(row)) return false;
     if (filters.atrMin && !(row.quote && meetsAtrMinPct(row.quote))) return false;
-    if (filters.rebound && !(row.quote && !boxMetricsUnreliable(row.quote) && waitingRebound(row.quote))) return false;
+    if (filters.rebound && !(row.quote && !boxMetricsUnreliable(row.quote) && waitingRebound(row.quote) && !quoteDowntrendActive(row.quote)))
+      return false;
     if (filters.inOk) {
-      if (!row.quote || boxMetricsUnreliable(row.quote) || row.quote.entrySignal !== "in_ok") return false;
+      if (!row.quote || boxMetricsUnreliable(row.quote) || row.quote.entrySignal !== "in_ok" || quoteDowntrendActive(row.quote))
+        return false;
     }
+    if (filters.candidateVerdict && !isCandidateVerdict(row.quote)) return false;
     if (query) {
       const hay =
         `${row.ticker} ${row.name} ${row.sector} ${row.industry ?? ""} ${row.description} ${row.notes} ${row.groupName} ${row.sectorLabel ?? ""} ${row.tags.join(" ")}`.toLowerCase();

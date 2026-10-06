@@ -40,6 +40,10 @@ function quote(close: number): PickQuote {
     line25: 102.5,
     reboundDays: null,
     entrySignal: "early",
+    low20DaysAgo: 5,
+    high20DaysAgo: 8,
+    downtrend: { active: false, reason: null, lowDaysAgo: 5, highDaysAgo: 8 },
+    verdict: { state: "待ち", reason: "エントリー条件外" },
   };
 }
 

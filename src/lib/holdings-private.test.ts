@@ -37,6 +37,10 @@ function quote(partial: Partial<Quote> = {}): Quote {
     line35: 100.5,
     reboundDays: 2,
     entrySignal: "in_ok",
+    low20DaysAgo: 5,
+    high20DaysAgo: 8,
+    downtrend: { active: false, reason: null, lowDaysAgo: 5, highDaysAgo: 8 },
+    verdict: { state: "候補", reason: "テスト" },
     ...partial,
   };
 }

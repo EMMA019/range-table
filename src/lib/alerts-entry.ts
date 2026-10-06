@@ -205,6 +205,7 @@ export function entryAlerts(
     if (!computed.ok) continue;
     const quote = computed.quote;
     if (quote.corpActionWarning) continue;
+    if (quote.downtrend.active) continue;
     const mq = morningQuoteFrom(quote);
     const lines = morningBuyLines(mq);
     if (lines.length === 0) continue;
