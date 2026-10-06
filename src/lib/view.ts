@@ -1,4 +1,4 @@
-import { BOX_BOTTOM_MAX, BOX_REBOUND_MAX, BOX_TOP_MIN, CORR_LOW_MAX, VOLUME_CONFIRM_RATIO, VOLUME_SURGE_RATIO, VOLUME_THIN_RATIO } from "./constants";
+import { BOX_BOTTOM_MAX, BOX_REBOUND_MAX, BOX_TOP_MIN, ATR_MIN_PCT, CORR_LOW_MAX, VOLUME_CONFIRM_RATIO, VOLUME_SURGE_RATIO, VOLUME_THIN_RATIO } from "./constants";
 import { TAG_SECTORS, type SortId } from "./copy";
 import { boxShown } from "./format";
 import type { Quote, TickerRow } from "./types";
@@ -12,6 +12,7 @@ export type ViewFilters = {
   surge: boolean;
   earnings: boolean;
   lowCorr: boolean;
+  atrMin: boolean;
   rebound: boolean;
   inOk: boolean;
   hideWatch: boolean;
@@ -51,6 +52,18 @@ export function lowBasketCorr(row: TickerRow): boolean {
   return Math.round(row.corrBasket * 100) / 100 <= CORR_LOW_MAX;
 }
 
+/** ATR(14) ÷ close × 100. Null when either value is missing or non-positive. */
+export function atrPctOfClose(quote: Quote): number | null {
+  if (!Number.isFinite(quote.close) || quote.close <= 0) return null;
+  if (!Number.isFinite(quote.atr14) || quote.atr14 <= 0) return null;
+  return (quote.atr14 / quote.close) * 100;
+}
+
+export function meetsAtrMinPct(quote: Quote, minPct = ATR_MIN_PCT): boolean {
+  const pct = atrPctOfClose(quote);
+  return pct != null && pct >= minPct;
+}
+
 const CONTINUED_LABEL = "上抜け継続？（売り急ぎ注意）";
 
 export function continuedBreakoutText(quote: Quote): string {
@@ -81,6 +94,7 @@ export function applyView(rows: TickerRow[], filters: ViewFilters): TickerRow[] 
     if (filters.surge && !(row.quote && volumeSurge(row.quote))) return false;
     if (filters.earnings && !row.earnings?.warn) return false;
     if (filters.lowCorr && !lowBasketCorr(row)) return false;
+    if (filters.atrMin && !(row.quote && meetsAtrMinPct(row.quote))) return false;
     if (filters.rebound && !(row.quote && waitingRebound(row.quote))) return false;
     if (filters.inOk && row.quote?.entrySignal !== "in_ok") return false;
     if (query) {

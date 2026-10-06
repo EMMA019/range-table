@@ -1,4 +1,5 @@
 import {
+  ATR_MIN_PCT,
   BOX_BOTTOM_MAX,
   BOX_TOP_MIN,
   CORR_LOW_MAX,
@@ -88,6 +89,7 @@ export const CHIPS = [
   { key: "surge", label: "出来高急増" },
   { key: "earnings", label: `決算 ≤${EARNINGS_WARN_DAYS}営業日` },
   { key: "lowCorr", label: `低相関 ≤${CORR_LOW_MAX}` },
+  { key: "atrMin", label: `ATR ≥${ATR_MIN_PCT}%` },
   { key: "rebound", label: "反発待ち圏" },
   { key: "inOk", label: "IN OK!" },
   { key: "hideWatch", label: "監視のみを隠す" },

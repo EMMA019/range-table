@@ -52,6 +52,7 @@ const CHIP_PARAM: Record<ChipKey, string> = {
   surge: "surge",
   earnings: "earn",
   lowCorr: "lowcorr",
+  atrMin: "atrmin",
   rebound: "rebound",
   inOk: "inok",
   hideWatch: "hideWatch",
@@ -115,6 +116,7 @@ export function Dashboard() {
       surge: sp.get("surge") === "1",
       earnings: sp.get("earn") === "1",
       lowCorr: sp.get("lowcorr") === "1",
+      atrMin: sp.get("atrmin") === "1",
       rebound: sp.get("rebound") === "1",
       inOk: sp.get("inok") === "1",
       hideWatch: sp.get("hideWatch") === "1",
@@ -212,6 +214,7 @@ export function Dashboard() {
     filters.surge ||
     filters.earnings ||
     filters.lowCorr ||
+    filters.atrMin ||
     filters.rebound ||
     filters.inOk ||
     filters.hideWatch ||
@@ -234,6 +237,7 @@ export function Dashboard() {
         surge: null,
         earn: null,
         lowcorr: null,
+        atrmin: null,
         rebound: null,
         inok: null,
         hideWatch: null,
