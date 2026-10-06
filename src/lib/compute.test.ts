@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { atr14, classifyEntrySignal, computeQuote, entryGuides, maSlopePct, reboundDays, sharesForMove, volumeStats } from "./compute";
+import { atr14, boxMetricsUnreliable, classifyEntrySignal, computeQuote, entryGuides, maSlopePct, reboundDays, sharesForMove, volumeStats } from "./compute";
 import { BASIS } from "./copy";
 import { ENTRY_SIGNAL_LABEL, entrySignalLabel, formatShares10, guideLineText, reboundText, formatCompactShares, formatVolumeRatio, sharesCostWarn, slopeLabel } from "./format";
 import type { Bar } from "./types";
@@ -195,6 +195,25 @@ describe("computeQuote", () => {
     assert.equal(quote.ok, true);
     if (!quote.ok) return;
     assert.equal(quote.quote.maSlopePct, slope);
+  });
+
+  it("detects a spin-off style drop inside the 20-day window", () => {
+    const bars = flat(21, 85);
+    bars[20] = bar("2026-10-01", 84, 86, 11, 12);
+    const result = computeQuote(bars);
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.ok(result.quote.corpActionWarning);
+    assert.equal(result.quote.corpActionWarning?.date, "2026-10-01");
+    assert.ok((result.quote.corpActionWarning?.pctMove ?? 0) <= -40);
+    assert.equal(boxMetricsUnreliable(result.quote), true);
+  });
+
+  it("ignores a smooth series without a discontinuity", () => {
+    const result = computeQuote(flat(21, 50));
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.quote.corpActionWarning, null);
   });
 
   it("compares the latest volume with the prior 20 sessions", () => {

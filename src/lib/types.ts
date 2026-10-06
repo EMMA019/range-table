@@ -62,6 +62,8 @@ export type Quote = {
   cost10: number | null;
   brokeHigh: boolean;
   gapWarning: boolean;
+  /** Recent one-day discontinuity (spin-off etc.) that makes the 20-day box unreliable. */
+  corpActionWarning: { date: string; pctMove: number } | null;
   /** Percent change of the 20-day average versus 5 trading days earlier. Null until 25 closes exist. */
   maSlopePct: number | null;
   /** Latest completed bar's share volume. Null when that bar has no volume. */

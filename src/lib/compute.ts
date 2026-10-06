@@ -4,6 +4,8 @@ import {
   BOX_LATE_MIN,
   BOX_WINDOW,
   CHART_SESSIONS,
+  CORP_ACTION_DROP_PCT,
+  CORP_ACTION_JUMP_PCT,
   GAP_THRESHOLD,
   MA_SLOPE_LOOKBACK,
   REBOUND_SESSIONS,
@@ -56,6 +58,28 @@ export function hasLargeGap(bars: Bar[]): boolean {
     if (Math.abs(bars[i].c / prev - 1) >= GAP_THRESHOLD) return true;
   }
   return false;
+}
+
+/**
+ * Flags a probable corporate-action discontinuity on split-adjusted closes (spin-offs stay visible).
+ * Returns the most recent qualifying session within the current 20-day box window.
+ */
+export function detectCorpActionWarning(bars: Bar[]): { date: string; pctMove: number } | null {
+  const start = Math.max(1, bars.length - BOX_WINDOW);
+  let hit: { date: string; pctMove: number } | null = null;
+  for (let i = start; i < bars.length; i++) {
+    const prev = bars[i - 1].c;
+    if (!(prev > 0)) continue;
+    const pctMove = round4((bars[i].c / prev - 1) * 100);
+    if (pctMove <= -CORP_ACTION_DROP_PCT || pctMove >= CORP_ACTION_JUMP_PCT) {
+      hit = { date: bars[i].date, pctMove };
+    }
+  }
+  return hit;
+}
+
+export function boxMetricsUnreliable(quote: Quote): boolean {
+  return quote.corpActionWarning != null;
 }
 
 /**
@@ -114,6 +138,7 @@ export function computeQuote(bars: Bar[]): QuoteResult {
       cost10: ten.cost10,
       brokeHigh: last.c > priorHigh20,
       gapWarning: hasLargeGap(bars),
+      corpActionWarning: detectCorpActionWarning(bars),
       maSlopePct: maSlopePct(bars),
       ...volumeStats(bars),
       line15: guides.line15,

@@ -94,6 +94,10 @@ export const ATR_COST_WARN = 450;
 /** A one-day close move at least this large flags a possible split or spinoff. */
 export const GAP_THRESHOLD = 0.35;
 
+/** Close-to-close move within the 20-day box window that invalidates box metrics (split-adjusted bars). */
+export const CORP_ACTION_DROP_PCT = 40;
+export const CORP_ACTION_JUMP_PCT = 60;
+
 /** Parallel Yahoo chart reads. Kept small so a cold start does not spike the 512MB instance. */
 export const FETCH_CONCURRENCY = 5;
 

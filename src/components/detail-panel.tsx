@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { pastResult } from "@/lib/backtest-view";
-import { BASIS, CORR_NOTE, TOP_BREAKOUT_NOTE, VOLUME_NOTE } from "@/lib/copy";
+import { BASIS, CORP_ACTION_BADGE, CORR_NOTE, TOP_BREAKOUT_NOTE, VOLUME_NOTE } from "@/lib/copy";
 import { formatPe, PE_SOURCE_NOTE } from "@/lib/pe";
 import {
   SEMI_CAP_BADGE,
@@ -125,6 +125,7 @@ export function DetailPanel({
                   <Pill tone="rust">{SEMI_CAP_BADGE}</Pill>
                 )}
                 {row.quote.gapWarning && <Pill tone="rust">価格が飛んでいる</Pill>}
+              {row.quote.corpActionWarning && <Pill tone="rust">{CORP_ACTION_BADGE}</Pill>}
               </div>
               <div className="mt-4 grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
                 <Stat label="20日線" value={formatPx(row.quote.ma20)} basis={BASIS.ma20} />
@@ -216,6 +217,13 @@ export function DetailPanel({
               {row.quote.gapWarning && (
                 <p className="mt-3 text-xs leading-relaxed text-rust">
                   直近20本のあいだに、終値が前日終値から35%以上動いた日がある。分割やスピンオフの直後は箱をそのまま信じない。
+                </p>
+              )}
+              {row.quote.corpActionWarning && (
+                <p className="mt-3 text-xs leading-relaxed text-rust">
+                  {CORP_ACTION_BADGE}（{row.quote.corpActionWarning.date} · 前日比{" "}
+                  {row.quote.corpActionWarning.pctMove > 0 ? "+" : ""}
+                  {row.quote.corpActionWarning.pctMove.toFixed(1)}%）。箱・IN OK・反発・底/天井フィルタと箱ラインアラートの対象外。
                 </p>
               )}
               <PeBlock row={row} />

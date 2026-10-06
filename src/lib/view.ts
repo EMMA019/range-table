@@ -1,6 +1,7 @@
 import { BOX_BOTTOM_MAX, BOX_REBOUND_MAX, BOX_TOP_MIN, ATR_MIN_PCT, CORR_LOW_MAX, VOLUME_CONFIRM_RATIO, VOLUME_SURGE_RATIO, VOLUME_THIN_RATIO } from "./constants";
 import { TAG_SECTORS, type SortId } from "./copy";
 import { boxShown } from "./format";
+import { boxMetricsUnreliable } from "./compute";
 import type { Quote, TickerRow } from "./types";
 
 export type ViewFilters = {
@@ -84,10 +85,10 @@ export function applyView(rows: TickerRow[], filters: ViewFilters): TickerRow[] 
     } else if (filters.sector !== "all" && row.sectorId !== filters.sector) return false;
     if (filters.hideWatch && row.watchOnly) return false;
     if (filters.bottom) {
-      if (!row.quote || boxShown(row.quote.boxPct) > BOX_BOTTOM_MAX) return false;
+      if (!row.quote || boxMetricsUnreliable(row.quote) || boxShown(row.quote.boxPct) > BOX_BOTTOM_MAX) return false;
     }
     if (filters.top) {
-      if (!row.quote || boxShown(row.quote.boxPct) < BOX_TOP_MIN) return false;
+      if (!row.quote || boxMetricsUnreliable(row.quote) || boxShown(row.quote.boxPct) < BOX_TOP_MIN) return false;
     }
     if (filters.breakout && !row.quote?.brokeHigh) return false;
     if (filters.continued && !(row.quote && continuedBreakout(row.quote))) return false;
@@ -95,8 +96,10 @@ export function applyView(rows: TickerRow[], filters: ViewFilters): TickerRow[] 
     if (filters.earnings && !row.earnings?.warn) return false;
     if (filters.lowCorr && !lowBasketCorr(row)) return false;
     if (filters.atrMin && !(row.quote && meetsAtrMinPct(row.quote))) return false;
-    if (filters.rebound && !(row.quote && waitingRebound(row.quote))) return false;
-    if (filters.inOk && row.quote?.entrySignal !== "in_ok") return false;
+    if (filters.rebound && !(row.quote && !boxMetricsUnreliable(row.quote) && waitingRebound(row.quote))) return false;
+    if (filters.inOk) {
+      if (!row.quote || boxMetricsUnreliable(row.quote) || row.quote.entrySignal !== "in_ok") return false;
+    }
     if (query) {
       const hay = `${row.ticker} ${row.description} ${row.notes} ${row.sector} ${row.sectorLabel ?? ""} ${row.tags.join(" ")}`.toLowerCase();
       if (!hay.includes(query)) return false;
