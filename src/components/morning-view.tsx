@@ -34,6 +34,7 @@ import {
 } from "@/lib/paper-ledger";
 import type { MarketPayload, TickerRow } from "@/lib/types";
 import { TickerMetaLine } from "@/components/ticker-meta-line";
+import { Atr14Value } from "@/components/atr14-value";
 import { cn } from "@/lib/utils";
 import { SiteNav } from "./site-nav";
 import { ThemeToggle } from "./theme-toggle";
@@ -278,6 +279,15 @@ export function MorningView() {
                   <p className="mt-1 text-[11px] text-muted">
                     {row.groupName} · 箱 {row.quote ? row.quote.boxPct.toFixed(1) : "—"}%
                   </p>
+                  {row.quote && (
+                    <p className="mt-1 text-[11px] text-muted">
+                      ATR(14) <Atr14Value atr14={row.quote.atr14} close={row.quote.close} />
+                      {" · "}
+                      <span className="font-mono font-medium tabular-nums text-ink">
+                        {row.quote.shares10 ?? "—"}株 / {row.quote.cost10 == null ? "—" : formatDollar(row.quote.cost10)}
+                      </span>
+                    </p>
+                  )}
                   <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[12px]">
                     <dt className="text-muted">入り</dt>
                     <dd className="text-right font-mono tabular-nums">{line}%線 {row.quote ? formatPx(entryPrice(row.quote, line)) : "—"}</dd>

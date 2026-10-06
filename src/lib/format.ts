@@ -144,9 +144,33 @@ export function formatCorrExact(n: number | null): string {
   return `${sign}${Math.abs(shown).toFixed(4)}`;
 }
 
+/** ATR(14) ÷ close × 100. Null when inputs are missing or non-positive. */
+export function atrPctOfPrice(
+  atr14: number | null | undefined,
+  close: number | null | undefined,
+): number | null {
+  if (atr14 == null || close == null || !Number.isFinite(atr14) || !Number.isFinite(close)) return null;
+  if (atr14 <= 0 || close <= 0) return null;
+  return (atr14 / close) * 100;
+}
+
 export function formatAtr(n: number): string {
   if (!Number.isFinite(n)) return "—";
   return n.toFixed(2);
+}
+
+/** Card copy: $0.62 (2.9%). */
+export function formatAtrWithPct(atr14: number, close: number): string {
+  if (!Number.isFinite(atr14)) return "—";
+  const dollars = formatDollar(atr14);
+  const pct = atrPctOfPrice(atr14, close);
+  if (pct == null) return dollars;
+  return `${dollars} (${pct.toFixed(1)}%)`;
+}
+
+/** Entry alert titles: ATR $0.62 (2.9%). */
+export function formatAtrAlertFragment(atr14: number, close: number): string {
+  return `ATR ${formatAtrWithPct(atr14, close)}`;
 }
 
 /** $423, or $423.50 when there are cents. */

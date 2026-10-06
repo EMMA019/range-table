@@ -1,6 +1,7 @@
 import { BoxBar } from "@/components/box-bar";
 import { EntryBadge } from "@/components/entry-badge";
 import { Shares10 } from "@/components/shares10";
+import { Atr14Value } from "@/components/atr14-value";
 import {
   PICK_DISTANCE_NOTE,
   PICK_ENTRY_BADGE,
@@ -8,7 +9,6 @@ import {
 } from "@/lib/copy";
 import {
   earningsBadge,
-  formatAtr,
   formatDev,
   formatEarnings,
   formatPx,
@@ -83,7 +83,7 @@ function PickCardView({ pick }: { pick: PickCard }) {
             対SPY <b className="font-mono font-medium tabular-nums text-ink">{formatRs(pick.rs20)}</b>
           </p>
           <p className="text-[11px] text-muted">
-            ATR(14) <b className="font-mono font-medium text-ink tabular-nums">{formatAtr(quote.atr14)}</b>
+            ATR(14) <Atr14Value atr14={quote.atr14} close={quote.close} />
             {" · "}
             <b className="font-mono font-medium text-ink tabular-nums">
               <Shares10 shares={quote.shares10} cost={quote.cost10} />

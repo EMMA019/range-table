@@ -58,6 +58,7 @@ describe("entry alerts", () => {
     assert.equal(item.facts.reboundDays, 2);
     assert.match(item.title, /^AAA 1回目（25%線/);
     assert.match(item.title, /反発あり/);
+    assert.match(item.title, /ATR \$[\d.,]+ \(\d+\.\d%\)/);
     assert.match(item.body, /決算まであと\d+営業日/);
     assert.match(item.body, /対SPY/);
     assert.match(item.body, /25%線/);

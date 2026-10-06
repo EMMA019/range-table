@@ -12,6 +12,7 @@ import {
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { TickerMetaLine } from "@/components/ticker-meta-line";
+import { Atr14Value } from "@/components/atr14-value";
 
 function pct(n: number | null, digits = 1): string {
   return n == null ? "—" : `${n >= 0 ? "" : "−"}${Math.abs(n).toFixed(digits)}%`;
@@ -104,6 +105,11 @@ export function HoldingCards({ view }: { view: HoldingsView }) {
               <p className="text-muted">
                 1ATR <span className="font-mono text-ink">{row.dollarsPerAtr == null ? "—" : formatDollar(row.dollarsPerAtr)}</span>
               </p>
+              {row.atr14 != null && row.close != null && (
+                <p className="col-span-2 text-[11px] text-muted">
+                  ATR(14) <Atr14Value atr14={row.atr14} close={row.close} />
+                </p>
+              )}
               <p className="col-span-2 text-muted">
                 見直しライン{" "}
                 {row.reviewLine == null ? (
