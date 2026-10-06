@@ -43,6 +43,7 @@ import type {
   EarningsInput,
 } from "./types";
 import { loadWatchlist } from "./watchlist";
+import { enrichTickerMeta } from "./ticker-meta";
 import {
   indexMonitorTickers,
   loadMonitorIndex,
@@ -474,10 +475,14 @@ function buildPayload(
       const enrich = cachedEarningsEnrich(ticker.ticker);
       const earningsInput = resolveEarningsInput(ticker.earnings, epsSnap, enrich);
       const profitability = profitabilityFromCache(ticker.ticker, epsSnap);
+      const meta = enrichTickerMeta(ticker.ticker);
       rows.push({
         ticker: ticker.ticker,
+        name: meta.name,
+        sector: meta.sector,
+        industry: meta.industry,
         sectorId: group.id,
-        sector: group.name,
+        groupName: group.name,
         sectorLabel: ticker.sectorLabel,
         description: ticker.description,
         notes: ticker.notes,
@@ -587,16 +592,20 @@ function buildIndexMonitorRows(
     if (!built.quote) failCount += 1;
     const pair = corr.get(ticker);
     const epsSnap = eps[ticker] ?? null;
-    const sector =
+    const indexLabel =
       sp500.has(ticker) && ndx.has(ticker)
         ? "S&P500 · NDX100"
         : sp500.has(ticker)
           ? "S&P500"
           : "Nasdaq-100";
+    const meta = enrichTickerMeta(ticker);
     rows.push({
       ticker,
+      name: meta.name,
+      sector: meta.sector,
+      industry: meta.industry,
       sectorId: "index",
-      sector,
+      groupName: indexLabel,
       sectorLabel: "指数監視",
       description: indexTickerDescription(ticker),
       notes: "",

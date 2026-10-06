@@ -5,8 +5,11 @@ import { applyView, continuedBreakoutText, sectorsOf, volumeSurge, volumeThin, w
 
 function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow {
   return {
+    name: partial.ticker,
+    sector: "情報技術",
+    industry: null,
     sectorId: "semi",
-    sector: "半導体",
+    groupName: "半導体",
     description: partial.ticker,
     notes: "",
     tags: [],
@@ -236,8 +239,8 @@ describe("applyView", () => {
       row({ ticker: "HIGH", corrBasket: 0.305, corrSoxx: 0.2 }),
       row({ ticker: "NEG", corrBasket: -0.2, corrSoxx: 0.4 }),
       row({ ticker: "NONE", corrBasket: null, corrSoxx: null }),
-      row({ ticker: "JAB", sectorId: "financials", sector: "金融", tags: ["安定ジャブ"], corrBasket: 0.8 }),
-      row({ ticker: "SOFT", sectorId: "software", sector: "IT・ソフト", tags: ["安定ジャブ"], corrBasket: 0.8 }),
+      row({ ticker: "JAB", sectorId: "financials", groupName: "金融", tags: ["安定ジャブ"], corrBasket: 0.8 }),
+      row({ ticker: "SOFT", sectorId: "software", groupName: "IT・ソフト", tags: ["安定ジャブ"], corrBasket: 0.8 }),
     ];
     assert.deepEqual(
       applyView(names, { ...filters, lowCorr: true }).map((item) => item.ticker),
@@ -257,7 +260,7 @@ describe("applyView", () => {
     );
     const withIbkr = [
       ...names,
-      row({ ticker: "HELD", sectorId: "semi", sector: "半導体", tags: ["IBKR元リスト"], corrBasket: 0.9 }),
+      row({ ticker: "HELD", sectorId: "semi", groupName: "半導体", tags: ["IBKR元リスト"], corrBasket: 0.9 }),
     ];
     assert.deepEqual(
       applyView(withIbkr, { ...filters, sector: "ibkr" }).map((item) => item.ticker),

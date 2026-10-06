@@ -24,6 +24,7 @@ import {
 } from "@/lib/format";
 import type { MarketPayload, TickerRow } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { TickerMetaLine } from "@/components/ticker-meta-line";
 import { isIgnoredTicker } from "@/lib/holdings";
 import { applyView, atTop, continuedBreakout, continuedBreakoutText, sectorsOf, volumeSurge, volumeThin, withDividers, zoneOf, type ViewFilters } from "@/lib/view";
 import { BoxBar } from "./box-bar";
@@ -611,10 +612,11 @@ function TickerCard({
           <div className="flex flex-wrap items-baseline gap-x-2">
             <span className="font-mono text-base font-medium tracking-wide">{row.ticker}</span>
             <span className="text-[11px] text-muted">
-              {row.sector}
+              {row.groupName}
               {row.sectorLabel ? ` · ${row.sectorLabel}` : ""}
             </span>
           </div>
+          <TickerMetaLine name={row.name} sector={row.sector} industry={row.industry} className="mt-0.5" />
           {(quote || badges.length > 0) && (
             <div className="mt-1 flex flex-wrap gap-1">
               {quote && <EntryBadge signal={quote.entrySignal} />}

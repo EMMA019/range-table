@@ -1,0 +1,3580 @@
+{
+  "generatedAt": "2026-10-06T10:33:02.728Z",
+  "tickers": {
+    "A": {
+      "name": "Agilent Technologies",
+      "sector": "ヘルスケア",
+      "industry": "Life Sciences Tools & Services"
+    },
+    "AABA": {
+      "name": "Altaba Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "AAOI": {
+      "name": "光トランシーバー",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "AAPL": {
+      "name": "Apple Inc.",
+      "sector": "情報技術",
+      "industry": "Technology Hardware, Storage & Peripherals"
+    },
+    "ABBV": {
+      "name": "AbbVie",
+      "sector": "ヘルスケア",
+      "industry": "Biotechnology"
+    },
+    "ABC": {
+      "name": "AmerisourceBergen",
+      "sector": "",
+      "industry": ""
+    },
+    "ABMD": {
+      "name": "Abiomed Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "ABNB": {
+      "name": "Airbnb",
+      "sector": "一般消費財",
+      "industry": "Hotels, Resorts & Cruise Lines"
+    },
+    "ABT": {
+      "name": "Abbott Laboratories",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Equipment"
+    },
+    "ACGL": {
+      "name": "Arch Capital Group",
+      "sector": "金融",
+      "industry": "Property & Casualty Insurance"
+    },
+    "ACN": {
+      "name": "Accenture",
+      "sector": "情報技術",
+      "industry": "IT Consulting & Other Services"
+    },
+    "ADBE": {
+      "name": "Adobe Inc.",
+      "sector": "情報技術",
+      "industry": "Application Software"
+    },
+    "ADI": {
+      "name": "Analog Devices",
+      "sector": "情報技術",
+      "industry": "Semiconductors"
+    },
+    "ADM": {
+      "name": "Archer Daniels Midland",
+      "sector": "生活必需品",
+      "industry": "Agricultural Products & Services"
+    },
+    "ADP": {
+      "name": "Automatic Data Processing",
+      "sector": "インダストリアル",
+      "industry": "Human Resource & Employment Services"
+    },
+    "ADS": {
+      "name": "Alliance Data Systems",
+      "sector": "",
+      "industry": ""
+    },
+    "ADSK": {
+      "name": "Autodesk",
+      "sector": "情報技術",
+      "industry": "Application Software"
+    },
+    "AEE": {
+      "name": "Ameren",
+      "sector": "公益",
+      "industry": "Multi-Utilities"
+    },
+    "AEHR": {
+      "name": "SiC",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "AEP": {
+      "name": "American Electric Power",
+      "sector": "公益",
+      "industry": "Electric Utilities"
+    },
+    "AES": {
+      "name": "AES Corporation",
+      "sector": "公益",
+      "industry": "Independent Power Producers & Energy Traders"
+    },
+    "AET": {
+      "name": "Aetna Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "AFL": {
+      "name": "Aflac",
+      "sector": "金融",
+      "industry": "Life & Health Insurance"
+    },
+    "AGN": {
+      "name": "Allergan plc",
+      "sector": "",
+      "industry": ""
+    },
+    "AIG": {
+      "name": "American International Group",
+      "sector": "金融",
+      "industry": "Multi-line Insurance"
+    },
+    "AIZ": {
+      "name": "Assurant",
+      "sector": "金融",
+      "industry": "Multi-line Insurance"
+    },
+    "AJG": {
+      "name": "Arthur J. Gallagher & Co.",
+      "sector": "金融",
+      "industry": "Insurance Brokers"
+    },
+    "AKAM": {
+      "name": "Akamai Technologies",
+      "sector": "情報技術",
+      "industry": "Internet Services & Infrastructure"
+    },
+    "ALAB": {
+      "name": "Astera Labs",
+      "sector": "情報技術",
+      "industry": "Semiconductors"
+    },
+    "ALB": {
+      "name": "Albemarle Corporation",
+      "sector": "素材",
+      "industry": "Specialty Chemicals"
+    },
+    "ALGN": {
+      "name": "Align Technology",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Supplies"
+    },
+    "ALL": {
+      "name": "Allstate",
+      "sector": "金融",
+      "industry": "Property & Casualty Insurance"
+    },
+    "ALLE": {
+      "name": "Allegion",
+      "sector": "インダストリアル",
+      "industry": "Building Products"
+    },
+    "ALNY": {
+      "name": "Alnylam Pharmaceuticals",
+      "sector": "ヘルスケア",
+      "industry": "Biotechnology"
+    },
+    "ALXN": {
+      "name": "Alexion Pharmaceuticals",
+      "sector": "",
+      "industry": ""
+    },
+    "AMAT": {
+      "name": "Applied Materials",
+      "sector": "情報技術",
+      "industry": "Semiconductor Materials & Equipment"
+    },
+    "AMCR": {
+      "name": "Amcor",
+      "sector": "素材",
+      "industry": "Paper & Plastic Packaging Products & Materials"
+    },
+    "AMD": {
+      "name": "Advanced Micro Devices",
+      "sector": "情報技術",
+      "industry": "Semiconductors"
+    },
+    "AME": {
+      "name": "Ametek",
+      "sector": "インダストリアル",
+      "industry": "Electrical Components & Equipment"
+    },
+    "AMGN": {
+      "name": "Amgen",
+      "sector": "ヘルスケア",
+      "industry": "Biotechnology"
+    },
+    "AMKR": {
+      "name": "後工程",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "AMP": {
+      "name": "Ameriprise Financial",
+      "sector": "金融",
+      "industry": "Asset Management & Custody Banks"
+    },
+    "AMT": {
+      "name": "American Tower",
+      "sector": "不動産",
+      "industry": "Telecom Tower REITs"
+    },
+    "AMZN": {
+      "name": "Amazon",
+      "sector": "一般消費財",
+      "industry": "Broadline Retail"
+    },
+    "ANDV": {
+      "name": "Andeavor",
+      "sector": "",
+      "industry": ""
+    },
+    "ANET": {
+      "name": "Arista Networks",
+      "sector": "情報技術",
+      "industry": "Communications Equipment"
+    },
+    "ANSS": {
+      "name": "ANSYS Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "ANTM": {
+      "name": "Anthem Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "AON": {
+      "name": "Aon plc",
+      "sector": "金融",
+      "industry": "Insurance Brokers"
+    },
+    "AOS": {
+      "name": "A. O. Smith",
+      "sector": "インダストリアル",
+      "industry": "Building Products"
+    },
+    "APA": {
+      "name": "APA Corporation",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Exploration & Production"
+    },
+    "APD": {
+      "name": "Air Products",
+      "sector": "素材",
+      "industry": "Industrial Gases"
+    },
+    "APH": {
+      "name": "Amphenol",
+      "sector": "情報技術",
+      "industry": "Electronic Components"
+    },
+    "APLD": {
+      "name": "AI向けデータセンター開発",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "APO": {
+      "name": "Apollo Global Management",
+      "sector": "金融",
+      "industry": "Asset Management & Custody Banks"
+    },
+    "APP": {
+      "name": "AppLovin",
+      "sector": "コミュニケーション",
+      "industry": "Advertising"
+    },
+    "APTV": {
+      "name": "Aptiv",
+      "sector": "一般消費財",
+      "industry": "Automotive Parts & Equipment"
+    },
+    "ARE": {
+      "name": "Alexandria Real Estate Equities",
+      "sector": "不動産",
+      "industry": "Office REITs"
+    },
+    "ARES": {
+      "name": "Ares Management",
+      "sector": "金融",
+      "industry": "Asset Management & Custody Banks"
+    },
+    "ARG": {
+      "name": "Airgas Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "ARM": {
+      "name": "Arm Holdings",
+      "sector": "情報技術",
+      "industry": "Semiconductors"
+    },
+    "ASML": {
+      "name": "ASML Holding (ADR)",
+      "sector": "情報技術",
+      "industry": "半導体装置"
+    },
+    "ASTS": {
+      "name": "衛星から直接スマホ通信",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "ASX": {
+      "name": "後工程受託の最大手",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "ATO": {
+      "name": "Atmos Energy",
+      "sector": "公益",
+      "industry": "Gas Utilities"
+    },
+    "AVB": {
+      "name": "AvalonBay Communities",
+      "sector": "",
+      "industry": ""
+    },
+    "AVGO": {
+      "name": "Broadcom",
+      "sector": "情報技術",
+      "industry": "Semiconductors"
+    },
+    "AVY": {
+      "name": "Avery Dennison",
+      "sector": "素材",
+      "industry": "Paper & Plastic Packaging Products & Materials"
+    },
+    "AWK": {
+      "name": "American Water Works",
+      "sector": "公益",
+      "industry": "Water Utilities"
+    },
+    "AXON": {
+      "name": "Axon Enterprise",
+      "sector": "インダストリアル",
+      "industry": "Aerospace & Defense"
+    },
+    "AXP": {
+      "name": "American Express",
+      "sector": "金融",
+      "industry": "Consumer Finance"
+    },
+    "AZN": {
+      "name": "AstraZeneca (ADR)",
+      "sector": "ヘルスケア",
+      "industry": "医薬品"
+    },
+    "AZO": {
+      "name": "AutoZone",
+      "sector": "一般消費財",
+      "industry": "Automotive Retail"
+    },
+    "BA": {
+      "name": "Boeing",
+      "sector": "インダストリアル",
+      "industry": "Aerospace & Defense"
+    },
+    "BABA": {
+      "name": "Alibaba Group (ADR)",
+      "sector": "一般消費財",
+      "industry": "インターネット小売"
+    },
+    "BAC": {
+      "name": "Bank of America",
+      "sector": "金融",
+      "industry": "Diversified Banks"
+    },
+    "BALL": {
+      "name": "Ball Corporation",
+      "sector": "素材",
+      "industry": "Metal, Glass & Plastic Containers"
+    },
+    "BAX": {
+      "name": "Baxter International",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Equipment"
+    },
+    "BBBY": {
+      "name": "Bed Bath Beyond",
+      "sector": "",
+      "industry": ""
+    },
+    "BBY": {
+      "name": "Best Buy",
+      "sector": "一般消費財",
+      "industry": "Computer & Electronics Retail"
+    },
+    "BCR": {
+      "name": "C R Bard Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "BDX": {
+      "name": "Becton Dickinson",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Equipment"
+    },
+    "BE": {
+      "name": "Bloom Energy",
+      "sector": "インダストリアル",
+      "industry": "Electrical Components & Equipment"
+    },
+    "BEN": {
+      "name": "Franklin Resources",
+      "sector": "金融",
+      "industry": "Asset Management & Custody Banks"
+    },
+    "BF-B": {
+      "name": "Brown–Forman",
+      "sector": "生活必需品",
+      "industry": "Distillers & Vintners"
+    },
+    "BG": {
+      "name": "Bunge Global",
+      "sector": "生活必需品",
+      "industry": "Agricultural Products & Services"
+    },
+    "BHP": {
+      "name": "BHP Group (ADR)",
+      "sector": "素材",
+      "industry": "金属・鉱業"
+    },
+    "BIDU": {
+      "name": "Baidu (ADR)",
+      "sector": "コミュニケーション",
+      "industry": "インタラクティブ・メディア"
+    },
+    "BIIB": {
+      "name": "Biogen",
+      "sector": "ヘルスケア",
+      "industry": "Biotechnology"
+    },
+    "BK": {
+      "name": "Bank of New York Mellon",
+      "sector": "",
+      "industry": ""
+    },
+    "BKNG": {
+      "name": "Booking Holdings",
+      "sector": "一般消費財",
+      "industry": "Hotels, Resorts & Cruise Lines"
+    },
+    "BKR": {
+      "name": "Baker Hughes",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Equipment & Services"
+    },
+    "BLDR": {
+      "name": "Builders FirstSource",
+      "sector": "インダストリアル",
+      "industry": "Building Products"
+    },
+    "BLK": {
+      "name": "BlackRock",
+      "sector": "金融",
+      "industry": "Asset Management & Custody Banks"
+    },
+    "BLL": {
+      "name": "Ball Corp",
+      "sector": "",
+      "industry": ""
+    },
+    "BMY": {
+      "name": "Bristol Myers Squibb",
+      "sector": "ヘルスケア",
+      "industry": "Pharmaceuticals"
+    },
+    "BNY": {
+      "name": "BNY Mellon",
+      "sector": "金融",
+      "industry": "Asset Management & Custody Banks"
+    },
+    "BP": {
+      "name": "BP (ADR)",
+      "sector": "エネルギー",
+      "industry": "統合石油・ガス"
+    },
+    "BR": {
+      "name": "Broadridge Financial Solutions",
+      "sector": "インダストリアル",
+      "industry": "Data Processing & Outsourced Services"
+    },
+    "BRCM": {
+      "name": "Broadcom Corp",
+      "sector": "",
+      "industry": ""
+    },
+    "BRK-B": {
+      "name": "Berkshire Hathaway",
+      "sector": "金融",
+      "industry": "Multi-Sector Holdings"
+    },
+    "BRO": {
+      "name": "Brown & Brown",
+      "sector": "金融",
+      "industry": "Insurance Brokers"
+    },
+    "BSX": {
+      "name": "Boston Scientific",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Equipment"
+    },
+    "BX": {
+      "name": "Blackstone Inc.",
+      "sector": "金融",
+      "industry": "Asset Management & Custody Banks"
+    },
+    "BXLT": {
+      "name": "Baxalta Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "BXP": {
+      "name": "BXP, Inc.",
+      "sector": "不動産",
+      "industry": "Office REITs"
+    },
+    "C": {
+      "name": "Citigroup",
+      "sector": "金融",
+      "industry": "Diversified Banks"
+    },
+    "CA": {
+      "name": "CA Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "CAH": {
+      "name": "Cardinal Health",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Distributors"
+    },
+    "CAM": {
+      "name": "Cameron International",
+      "sector": "",
+      "industry": ""
+    },
+    "CAMT": {
+      "name": "HBM",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "CARR": {
+      "name": "Carrier Global",
+      "sector": "インダストリアル",
+      "industry": "Building Products"
+    },
+    "CASY": {
+      "name": "Casey's",
+      "sector": "生活必需品",
+      "industry": "Food Retail"
+    },
+    "CAT": {
+      "name": "Caterpillar Inc.",
+      "sector": "インダストリアル",
+      "industry": "Construction Machinery & Heavy Transportation Equipment"
+    },
+    "CB": {
+      "name": "Chubb Limited",
+      "sector": "金融",
+      "industry": "Property & Casualty Insurance"
+    },
+    "CBOE": {
+      "name": "Cboe Global Markets",
+      "sector": "金融",
+      "industry": "Financial Exchanges & Data"
+    },
+    "CBRE": {
+      "name": "CBRE Group",
+      "sector": "不動産",
+      "industry": "Real Estate Services"
+    },
+    "CBS": {
+      "name": "CBS Corp",
+      "sector": "",
+      "industry": ""
+    },
+    "CCE": {
+      "name": "Coca-Cola European Partners",
+      "sector": "",
+      "industry": ""
+    },
+    "CCEP": {
+      "name": "Coca-Cola Europacific Partners",
+      "sector": "生活必需品",
+      "industry": "Soft Drinks"
+    },
+    "CCI": {
+      "name": "Crown Castle",
+      "sector": "不動産",
+      "industry": "Telecom Tower REITs"
+    },
+    "CCJ": {
+      "name": "ウラン大手",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "CCL": {
+      "name": "Carnival Corporation",
+      "sector": "一般消費財",
+      "industry": "Hotels, Resorts & Cruise Lines"
+    },
+    "CDAY": {
+      "name": "Ceridian HCM",
+      "sector": "",
+      "industry": ""
+    },
+    "CDNS": {
+      "name": "Cadence Design Systems",
+      "sector": "情報技術",
+      "industry": "Application Software"
+    },
+    "CDW": {
+      "name": "CDW Corporation",
+      "sector": "情報技術",
+      "industry": "Technology Distributors"
+    },
+    "CEG": {
+      "name": "Constellation Energy",
+      "sector": "公益",
+      "industry": "Electric Utilities"
+    },
+    "CELG": {
+      "name": "Celgene Corp",
+      "sector": "",
+      "industry": ""
+    },
+    "CF": {
+      "name": "CF Industries",
+      "sector": "素材",
+      "industry": "Fertilizers & Agricultural Chemicals"
+    },
+    "CFG": {
+      "name": "Citizens Financial Group",
+      "sector": "金融",
+      "industry": "Regional Banks"
+    },
+    "CHD": {
+      "name": "Church & Dwight",
+      "sector": "生活必需品",
+      "industry": "Household Products"
+    },
+    "CHK": {
+      "name": "Chesapeake Energy",
+      "sector": "",
+      "industry": ""
+    },
+    "CHRW": {
+      "name": "C.H. Robinson",
+      "sector": "インダストリアル",
+      "industry": "Air Freight & Logistics"
+    },
+    "CHTR": {
+      "name": "Charter Communications",
+      "sector": "コミュニケーション",
+      "industry": "Cable & Satellite"
+    },
+    "CI": {
+      "name": "Cigna",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Services"
+    },
+    "CIEN": {
+      "name": "Ciena",
+      "sector": "情報技術",
+      "industry": "Communications Equipment"
+    },
+    "CIFR": {
+      "name": "マイニング設備をAIデータセンターに転用",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "CINF": {
+      "name": "Cincinnati Financial",
+      "sector": "金融",
+      "industry": "Property & Casualty Insurance"
+    },
+    "CL": {
+      "name": "Colgate-Palmolive",
+      "sector": "生活必需品",
+      "industry": "Household Products"
+    },
+    "CLS": {
+      "name": "AIサーバー",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "CLX": {
+      "name": "Clorox",
+      "sector": "生活必需品",
+      "industry": "Household Products"
+    },
+    "CMA": {
+      "name": "Comerica Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "CMCSA": {
+      "name": "Comcast",
+      "sector": "コミュニケーション",
+      "industry": "Cable & Satellite"
+    },
+    "CME": {
+      "name": "CME Group",
+      "sector": "金融",
+      "industry": "Financial Exchanges & Data"
+    },
+    "CMG": {
+      "name": "Chipotle Mexican Grill",
+      "sector": "一般消費財",
+      "industry": "Restaurants"
+    },
+    "CMI": {
+      "name": "Cummins",
+      "sector": "インダストリアル",
+      "industry": "Construction Machinery & Heavy Transportation Equipment"
+    },
+    "CMS": {
+      "name": "CMS Energy",
+      "sector": "公益",
+      "industry": "Multi-Utilities"
+    },
+    "CNC": {
+      "name": "Centene Corporation",
+      "sector": "ヘルスケア",
+      "industry": "Managed Health Care"
+    },
+    "CNP": {
+      "name": "CenterPoint Energy",
+      "sector": "公益",
+      "industry": "Multi-Utilities"
+    },
+    "COF": {
+      "name": "Capital One",
+      "sector": "金融",
+      "industry": "Consumer Finance"
+    },
+    "COG": {
+      "name": "Cabot Oil Gas",
+      "sector": "",
+      "industry": ""
+    },
+    "COHR": {
+      "name": "Coherent Corp.",
+      "sector": "情報技術",
+      "industry": "Electronic Components"
+    },
+    "COIN": {
+      "name": "Coinbase",
+      "sector": "金融",
+      "industry": "Financial Exchanges & Data"
+    },
+    "COL": {
+      "name": "Rockwell Collins",
+      "sector": "",
+      "industry": ""
+    },
+    "COO": {
+      "name": "Cooper Companies (The)",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Supplies"
+    },
+    "COP": {
+      "name": "ConocoPhillips",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Exploration & Production"
+    },
+    "COR": {
+      "name": "Cencora",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Distributors"
+    },
+    "CORZ": {
+      "name": "CoreWeave向けデータセンター",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "COST": {
+      "name": "Costco",
+      "sector": "生活必需品",
+      "industry": "Consumer Staples Merchandise Retail"
+    },
+    "CPAY": {
+      "name": "Corpay",
+      "sector": "金融",
+      "industry": "Transaction & Payment Processing Services"
+    },
+    "CPGX": {
+      "name": "Columbia Pipeline Group",
+      "sector": "",
+      "industry": ""
+    },
+    "CPRT": {
+      "name": "Copart",
+      "sector": "インダストリアル",
+      "industry": "Diversified Support Services"
+    },
+    "CPT": {
+      "name": "Camden Property Trust",
+      "sector": "不動産",
+      "industry": "Multi-Family Residential REITs"
+    },
+    "CRDO": {
+      "name": "AI向け高速接続",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "CRH": {
+      "name": "CRH plc",
+      "sector": "素材",
+      "industry": "Construction Materials"
+    },
+    "CRL": {
+      "name": "Charles River Laboratories",
+      "sector": "ヘルスケア",
+      "industry": "Life Sciences Tools & Services"
+    },
+    "CRM": {
+      "name": "Salesforce",
+      "sector": "情報技術",
+      "industry": "Application Software"
+    },
+    "CRWD": {
+      "name": "CrowdStrike",
+      "sector": "情報技術",
+      "industry": "Systems Software"
+    },
+    "CRWV": {
+      "name": "CoreWeave",
+      "sector": "情報技術",
+      "industry": "Technology Hardware, Storage & Peripherals"
+    },
+    "CSCO": {
+      "name": "Cisco",
+      "sector": "情報技術",
+      "industry": "Communications Equipment"
+    },
+    "CSGP": {
+      "name": "CoStar Group",
+      "sector": "不動産",
+      "industry": "Real Estate Services"
+    },
+    "CSRA": {
+      "name": "CSRA Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "CSX": {
+      "name": "CSX Corporation",
+      "sector": "インダストリアル",
+      "industry": "Rail Transportation"
+    },
+    "CTAS": {
+      "name": "Cintas",
+      "sector": "インダストリアル",
+      "industry": "Diversified Support Services"
+    },
+    "CTSH": {
+      "name": "Cognizant",
+      "sector": "情報技術",
+      "industry": "IT Consulting & Other Services"
+    },
+    "CTVA": {
+      "name": "Corteva",
+      "sector": "素材",
+      "industry": "農業化学"
+    },
+    "CTXS": {
+      "name": "Citrix Systems",
+      "sector": "",
+      "industry": ""
+    },
+    "CVC": {
+      "name": "Cablevision Systems",
+      "sector": "",
+      "industry": ""
+    },
+    "CVNA": {
+      "name": "Carvana",
+      "sector": "一般消費財",
+      "industry": "Automotive Retail"
+    },
+    "CVS": {
+      "name": "CVS Health",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Services"
+    },
+    "CVX": {
+      "name": "Chevron Corporation",
+      "sector": "エネルギー",
+      "industry": "Integrated Oil & Gas"
+    },
+    "CXO": {
+      "name": "Concho Resources",
+      "sector": "",
+      "industry": ""
+    },
+    "D": {
+      "name": "Dominion Energy",
+      "sector": "公益",
+      "industry": "Multi-Utilities"
+    },
+    "DAL": {
+      "name": "Delta Air Lines",
+      "sector": "インダストリアル",
+      "industry": "Passenger Airlines"
+    },
+    "DASH": {
+      "name": "DoorDash",
+      "sector": "一般消費財",
+      "industry": "Specialized Consumer Services"
+    },
+    "DD": {
+      "name": "DuPont",
+      "sector": "インダストリアル",
+      "industry": "Industrial Conglomerates"
+    },
+    "DDOG": {
+      "name": "Datadog",
+      "sector": "情報技術",
+      "industry": "Application Software"
+    },
+    "DE": {
+      "name": "Deere & Company",
+      "sector": "インダストリアル",
+      "industry": "Agricultural & Farm Machinery"
+    },
+    "DECK": {
+      "name": "Deckers Brands",
+      "sector": "一般消費財",
+      "industry": "Footwear"
+    },
+    "DELL": {
+      "name": "Dell Technologies",
+      "sector": "情報技術",
+      "industry": "Technology Hardware, Storage & Peripherals"
+    },
+    "DEO": {
+      "name": "Diageo (ADR)",
+      "sector": "生活必需品",
+      "industry": "酒類"
+    },
+    "DFS": {
+      "name": "Discover Financial",
+      "sector": "",
+      "industry": ""
+    },
+    "DG": {
+      "name": "Dollar General",
+      "sector": "生活必需品",
+      "industry": "Consumer Staples Merchandise Retail"
+    },
+    "DGX": {
+      "name": "Quest Diagnostics",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Services"
+    },
+    "DHI": {
+      "name": "D. R. Horton",
+      "sector": "一般消費財",
+      "industry": "Homebuilding"
+    },
+    "DHR": {
+      "name": "Danaher Corporation",
+      "sector": "ヘルスケア",
+      "industry": "Life Sciences Tools & Services"
+    },
+    "DIS": {
+      "name": "Walt Disney Company (The)",
+      "sector": "コミュニケーション",
+      "industry": "Movies & Entertainment"
+    },
+    "DISH": {
+      "name": "DISH Network",
+      "sector": "",
+      "industry": ""
+    },
+    "DLR": {
+      "name": "Digital Realty",
+      "sector": "不動産",
+      "industry": "Data Center REITs"
+    },
+    "DLTR": {
+      "name": "Dollar Tree",
+      "sector": "生活必需品",
+      "industry": "Consumer Staples Merchandise Retail"
+    },
+    "DNB": {
+      "name": "Dun Bradstreet",
+      "sector": "",
+      "industry": ""
+    },
+    "DO": {
+      "name": "Diamond Offshore Drilling",
+      "sector": "",
+      "industry": ""
+    },
+    "DOC": {
+      "name": "Healthpeak Properties",
+      "sector": "不動産",
+      "industry": "Health Care REITs"
+    },
+    "DOV": {
+      "name": "Dover Corporation",
+      "sector": "インダストリアル",
+      "industry": "Industrial Machinery & Supplies & Components"
+    },
+    "DOW": {
+      "name": "Dow Inc.",
+      "sector": "素材",
+      "industry": "Commodity Chemicals"
+    },
+    "DPZ": {
+      "name": "Domino's",
+      "sector": "一般消費財",
+      "industry": "Restaurants"
+    },
+    "DRE": {
+      "name": "Duke Realty",
+      "sector": "",
+      "industry": ""
+    },
+    "DRI": {
+      "name": "Darden Restaurants",
+      "sector": "一般消費財",
+      "industry": "Restaurants"
+    },
+    "DTE": {
+      "name": "DTE Energy",
+      "sector": "公益",
+      "industry": "Multi-Utilities"
+    },
+    "DUK": {
+      "name": "Duke Energy",
+      "sector": "公益",
+      "industry": "Electric Utilities"
+    },
+    "DVA": {
+      "name": "DaVita",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Services"
+    },
+    "DVN": {
+      "name": "Devon Energy",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Exploration & Production"
+    },
+    "DWDP": {
+      "name": "DowDuPont Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "DXCM": {
+      "name": "Dexcom",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Equipment"
+    },
+    "EA": {
+      "name": "Electronic Arts",
+      "sector": "",
+      "industry": ""
+    },
+    "EBAY": {
+      "name": "eBay Inc.",
+      "sector": "一般消費財",
+      "industry": "Broadline Retail"
+    },
+    "ECHO": {
+      "name": "EchoStar",
+      "sector": "コミュニケーション",
+      "industry": "Wireless Telecommunication Services"
+    },
+    "ECL": {
+      "name": "Ecolab",
+      "sector": "素材",
+      "industry": "Specialty Chemicals"
+    },
+    "ED": {
+      "name": "Consolidated Edison",
+      "sector": "公益",
+      "industry": "Multi-Utilities"
+    },
+    "EFX": {
+      "name": "Equifax",
+      "sector": "インダストリアル",
+      "industry": "Research & Consulting Services"
+    },
+    "EG": {
+      "name": "Everest Group",
+      "sector": "金融",
+      "industry": "Reinsurance"
+    },
+    "EIX": {
+      "name": "Edison International",
+      "sector": "公益",
+      "industry": "Electric Utilities"
+    },
+    "EL": {
+      "name": "Estée Lauder Companies (The)",
+      "sector": "生活必需品",
+      "industry": "Personal Care Products"
+    },
+    "ELV": {
+      "name": "Elevance Health",
+      "sector": "ヘルスケア",
+      "industry": "Managed Health Care"
+    },
+    "EMC": {
+      "name": "EMC Corp",
+      "sector": "",
+      "industry": ""
+    },
+    "EME": {
+      "name": "Emcor",
+      "sector": "インダストリアル",
+      "industry": "Construction & Engineering"
+    },
+    "EMR": {
+      "name": "Emerson Electric",
+      "sector": "インダストリアル",
+      "industry": "Electrical Components & Equipment"
+    },
+    "ENDP": {
+      "name": "Endo International",
+      "sector": "",
+      "industry": ""
+    },
+    "ENTG": {
+      "name": "先端プロセス向けの材料",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "EOG": {
+      "name": "EOG Resources",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Exploration & Production"
+    },
+    "EQIX": {
+      "name": "Equinix",
+      "sector": "不動産",
+      "industry": "Data Center REITs"
+    },
+    "EQR": {
+      "name": "Equity Residential",
+      "sector": "",
+      "industry": ""
+    },
+    "EQT": {
+      "name": "EQT Corporation",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Exploration & Production"
+    },
+    "ERIE": {
+      "name": "Erie Indemnity",
+      "sector": "金融",
+      "industry": "Insurance Brokers"
+    },
+    "ES": {
+      "name": "Eversource Energy",
+      "sector": "公益",
+      "industry": "Electric Utilities"
+    },
+    "ESRX": {
+      "name": "Express Scripts",
+      "sector": "",
+      "industry": ""
+    },
+    "ESS": {
+      "name": "Essex Property Trust",
+      "sector": "不動産",
+      "industry": "Multi-Family Residential REITs"
+    },
+    "ESV": {
+      "name": "Ensco plc",
+      "sector": "",
+      "industry": ""
+    },
+    "ETFC": {
+      "name": "E TRADE Financial",
+      "sector": "",
+      "industry": ""
+    },
+    "ETN": {
+      "name": "Eaton Corporation",
+      "sector": "インダストリアル",
+      "industry": "Electrical Components & Equipment"
+    },
+    "ETR": {
+      "name": "Entergy",
+      "sector": "公益",
+      "industry": "Electric Utilities"
+    },
+    "EVHC": {
+      "name": "Envision Healthcare",
+      "sector": "",
+      "industry": ""
+    },
+    "EVRG": {
+      "name": "Evergy",
+      "sector": "公益",
+      "industry": "Electric Utilities"
+    },
+    "EW": {
+      "name": "Edwards Lifesciences",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Equipment"
+    },
+    "EXC": {
+      "name": "Exelon",
+      "sector": "公益",
+      "industry": "Electric Utilities"
+    },
+    "EXE": {
+      "name": "Expand Energy",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Exploration & Production"
+    },
+    "EXPD": {
+      "name": "Expeditors International",
+      "sector": "インダストリアル",
+      "industry": "Air Freight & Logistics"
+    },
+    "EXPE": {
+      "name": "Expedia Group",
+      "sector": "一般消費財",
+      "industry": "Hotels, Resorts & Cruise Lines"
+    },
+    "EXR": {
+      "name": "Extra Space Storage",
+      "sector": "不動産",
+      "industry": "Self-Storage REITs"
+    },
+    "F": {
+      "name": "Ford Motor Company",
+      "sector": "一般消費財",
+      "industry": "Automobile Manufacturers"
+    },
+    "FANG": {
+      "name": "Diamondback Energy",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Exploration & Production"
+    },
+    "FAST": {
+      "name": "Fastenal",
+      "sector": "インダストリアル",
+      "industry": "Trading Companies & Distributors"
+    },
+    "FB": {
+      "name": "Meta Platforms (旧FB)",
+      "sector": "コミュニケーション",
+      "industry": "インタラクティブ・メディア"
+    },
+    "FBHS": {
+      "name": "Fortune Brands Home Security",
+      "sector": "",
+      "industry": ""
+    },
+    "FCX": {
+      "name": "Freeport-McMoRan",
+      "sector": "素材",
+      "industry": "Copper"
+    },
+    "FDS": {
+      "name": "FactSet",
+      "sector": "金融",
+      "industry": "Financial Exchanges & Data"
+    },
+    "FDX": {
+      "name": "FedEx",
+      "sector": "インダストリアル",
+      "industry": "Air Freight & Logistics"
+    },
+    "FDXF": {
+      "name": "FedEx Freight",
+      "sector": "インダストリアル",
+      "industry": "Cargo Ground Transportation"
+    },
+    "FE": {
+      "name": "FirstEnergy",
+      "sector": "公益",
+      "industry": "Electric Utilities"
+    },
+    "FER": {
+      "name": "Ferrovial",
+      "sector": "インダストリアル",
+      "industry": "Construction & Engineering"
+    },
+    "FERG": {
+      "name": "Ferguson Enterprises",
+      "sector": "インダストリアル",
+      "industry": "Trading Companies & Distributors"
+    },
+    "FFIV": {
+      "name": "F5, Inc.",
+      "sector": "情報技術",
+      "industry": "Communications Equipment"
+    },
+    "FI": {
+      "name": "Fiserv Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "FICO": {
+      "name": "Fair Isaac",
+      "sector": "情報技術",
+      "industry": "Application Software"
+    },
+    "FIS": {
+      "name": "Fidelity National Information Services",
+      "sector": "金融",
+      "industry": "Transaction & Payment Processing Services"
+    },
+    "FISV": {
+      "name": "Fiserv",
+      "sector": "金融",
+      "industry": "Transaction & Payment Processing Services"
+    },
+    "FITB": {
+      "name": "Fifth Third Bancorp",
+      "sector": "金融",
+      "industry": "Regional Banks"
+    },
+    "FIX": {
+      "name": "Comfort Systems USA",
+      "sector": "インダストリアル",
+      "industry": "Construction & Engineering"
+    },
+    "FL": {
+      "name": "Foot Locker Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "FLEX": {
+      "name": "Flex Ltd.",
+      "sector": "情報技術",
+      "industry": "Electronic Manufacturing Services"
+    },
+    "FLIR": {
+      "name": "FLIR Systems",
+      "sector": "",
+      "industry": ""
+    },
+    "FLNC": {
+      "name": "蓄電システム",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "FLY": {
+      "name": "ロケット",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "FN": {
+      "name": "光部品の受託製造",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "FORM": {
+      "name": "プローブカード",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "FOX": {
+      "name": "Fox Corporation (Class B)",
+      "sector": "コミュニケーション",
+      "industry": "Broadcasting"
+    },
+    "FOXA": {
+      "name": "Fox Corporation (Class A)",
+      "sector": "コミュニケーション",
+      "industry": "Broadcasting"
+    },
+    "FRC": {
+      "name": "First Republic Bank",
+      "sector": "",
+      "industry": ""
+    },
+    "FRT": {
+      "name": "Federal Realty Investment Trust",
+      "sector": "不動産",
+      "industry": "Retail REITs"
+    },
+    "FSLR": {
+      "name": "First Solar",
+      "sector": "情報技術",
+      "industry": "Semiconductors"
+    },
+    "FTNT": {
+      "name": "Fortinet",
+      "sector": "情報技術",
+      "industry": "Systems Software"
+    },
+    "FTV": {
+      "name": "Fortive",
+      "sector": "インダストリアル",
+      "industry": "Industrial Machinery & Supplies & Components"
+    },
+    "GAS": {
+      "name": "AGL Resources",
+      "sector": "",
+      "industry": ""
+    },
+    "GD": {
+      "name": "General Dynamics",
+      "sector": "インダストリアル",
+      "industry": "Aerospace & Defense"
+    },
+    "GDDY": {
+      "name": "GoDaddy",
+      "sector": "情報技術",
+      "industry": "Internet Services & Infrastructure"
+    },
+    "GE": {
+      "name": "GE Aerospace",
+      "sector": "インダストリアル",
+      "industry": "Aerospace & Defense"
+    },
+    "GEHC": {
+      "name": "GE HealthCare",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Equipment"
+    },
+    "GEN": {
+      "name": "Gen Digital",
+      "sector": "情報技術",
+      "industry": "Systems Software"
+    },
+    "GEV": {
+      "name": "GE Vernova",
+      "sector": "インダストリアル",
+      "industry": "Heavy Electrical Equipment"
+    },
+    "GFS": {
+      "name": "受託製造",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "GGP": {
+      "name": "General Growth Properties",
+      "sector": "",
+      "industry": ""
+    },
+    "GILD": {
+      "name": "Gilead Sciences",
+      "sector": "ヘルスケア",
+      "industry": "Biotechnology"
+    },
+    "GIS": {
+      "name": "General Mills",
+      "sector": "生活必需品",
+      "industry": "Packaged Foods & Meats"
+    },
+    "GL": {
+      "name": "Globe Life",
+      "sector": "金融",
+      "industry": "Life & Health Insurance"
+    },
+    "GLW": {
+      "name": "Corning Inc.",
+      "sector": "情報技術",
+      "industry": "Electronic Components"
+    },
+    "GM": {
+      "name": "General Motors",
+      "sector": "一般消費財",
+      "industry": "Automobile Manufacturers"
+    },
+    "GMCR": {
+      "name": "Keurig Green Mountain",
+      "sector": "",
+      "industry": ""
+    },
+    "GNRC": {
+      "name": "Generac",
+      "sector": "インダストリアル",
+      "industry": "Heavy Electrical Equipment"
+    },
+    "GOOG": {
+      "name": "Alphabet Inc. (Class C)",
+      "sector": "コミュニケーション",
+      "industry": "Interactive Media & Services"
+    },
+    "GOOGL": {
+      "name": "Alphabet Inc. (Class A)",
+      "sector": "コミュニケーション",
+      "industry": "Interactive Media & Services"
+    },
+    "GPC": {
+      "name": "Genuine Parts Company",
+      "sector": "一般消費財",
+      "industry": "Distributors"
+    },
+    "GPN": {
+      "name": "Global Payments",
+      "sector": "金融",
+      "industry": "Transaction & Payment Processing Services"
+    },
+    "GPS": {
+      "name": "Gap Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "GRMN": {
+      "name": "Garmin",
+      "sector": "一般消費財",
+      "industry": "Consumer Electronics"
+    },
+    "GS": {
+      "name": "Goldman Sachs",
+      "sector": "金融",
+      "industry": "Investment Banking & Brokerage"
+    },
+    "GSK": {
+      "name": "GSK (ADR)",
+      "sector": "ヘルスケア",
+      "industry": "医薬品"
+    },
+    "GWW": {
+      "name": "W. W. Grainger",
+      "sector": "インダストリアル",
+      "industry": "Industrial Machinery & Supplies & Components"
+    },
+    "HAL": {
+      "name": "Halliburton",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Equipment & Services"
+    },
+    "HAR": {
+      "name": "Harman International",
+      "sector": "",
+      "industry": ""
+    },
+    "HAS": {
+      "name": "Hasbro",
+      "sector": "一般消費財",
+      "industry": "Leisure Products"
+    },
+    "HBAN": {
+      "name": "Huntington Bancshares",
+      "sector": "金融",
+      "industry": "Regional Banks"
+    },
+    "HBI": {
+      "name": "Hanesbrands Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "HCA": {
+      "name": "HCA Healthcare",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Facilities"
+    },
+    "HCP": {
+      "name": "Healthpeak Properties",
+      "sector": "",
+      "industry": ""
+    },
+    "HD": {
+      "name": "Home Depot (The)",
+      "sector": "一般消費財",
+      "industry": "Home Improvement Retail"
+    },
+    "HES": {
+      "name": "Hess Corp",
+      "sector": "",
+      "industry": ""
+    },
+    "HFC": {
+      "name": "HollyFrontier Corp",
+      "sector": "",
+      "industry": ""
+    },
+    "HIG": {
+      "name": "Hartford (The)",
+      "sector": "金融",
+      "industry": "Property & Casualty Insurance"
+    },
+    "HII": {
+      "name": "Huntington Ingalls Industries",
+      "sector": "インダストリアル",
+      "industry": "Aerospace & Defense"
+    },
+    "HLT": {
+      "name": "Hilton Worldwide",
+      "sector": "一般消費財",
+      "industry": "Hotels, Resorts & Cruise Lines"
+    },
+    "HMC": {
+      "name": "ホンダ (ADR)",
+      "sector": "一般消費財",
+      "industry": "自動車"
+    },
+    "HOLX": {
+      "name": "Hologic Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "HON": {
+      "name": "Honeywell Technologies",
+      "sector": "インダストリアル",
+      "industry": "Industrial Conglomerates"
+    },
+    "HONA": {
+      "name": "Honeywell Aerospace",
+      "sector": "インダストリアル",
+      "industry": "Aerospace & Defense"
+    },
+    "HOOD": {
+      "name": "Robinhood Markets",
+      "sector": "金融",
+      "industry": "Investment Banking & Brokerage"
+    },
+    "HOT": {
+      "name": "Starwood Hotels",
+      "sector": "",
+      "industry": ""
+    },
+    "HPE": {
+      "name": "Hewlett Packard Enterprise",
+      "sector": "情報技術",
+      "industry": "Technology Hardware, Storage & Peripherals"
+    },
+    "HPQ": {
+      "name": "HP Inc.",
+      "sector": "情報技術",
+      "industry": "Technology Hardware, Storage & Peripherals"
+    },
+    "HRL": {
+      "name": "Hormel Foods",
+      "sector": "生活必需品",
+      "industry": "Packaged Foods & Meats"
+    },
+    "HRS": {
+      "name": "Harris Corp",
+      "sector": "",
+      "industry": ""
+    },
+    "HSIC": {
+      "name": "Henry Schein",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Distributors"
+    },
+    "HST": {
+      "name": "Host Hotels & Resorts",
+      "sector": "不動産",
+      "industry": "Hotel & Resort REITs"
+    },
+    "HSY": {
+      "name": "Hershey Company (The)",
+      "sector": "生活必需品",
+      "industry": "Packaged Foods & Meats"
+    },
+    "HUBB": {
+      "name": "Hubbell Incorporated",
+      "sector": "インダストリアル",
+      "industry": "Industrial Machinery & Supplies & Components"
+    },
+    "HUM": {
+      "name": "Humana",
+      "sector": "ヘルスケア",
+      "industry": "Managed Health Care"
+    },
+    "HWM": {
+      "name": "Howmet Aerospace",
+      "sector": "インダストリアル",
+      "industry": "Aerospace & Defense"
+    },
+    "IBKR": {
+      "name": "Interactive Brokers",
+      "sector": "金融",
+      "industry": "Investment Banking & Brokerage"
+    },
+    "IBM": {
+      "name": "IBM",
+      "sector": "情報技術",
+      "industry": "IT Consulting & Other Services"
+    },
+    "ICE": {
+      "name": "Intercontinental Exchange",
+      "sector": "金融",
+      "industry": "Financial Exchanges & Data"
+    },
+    "IDXX": {
+      "name": "Idexx Laboratories",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Equipment"
+    },
+    "IEX": {
+      "name": "IDEX Corporation",
+      "sector": "インダストリアル",
+      "industry": "Industrial Machinery & Supplies & Components"
+    },
+    "IFF": {
+      "name": "International Flavors & Fragrances",
+      "sector": "素材",
+      "industry": "Specialty Chemicals"
+    },
+    "ILMN": {
+      "name": "Illumina, Inc.",
+      "sector": "ヘルスケア",
+      "industry": "Life Sciences Tools & Services"
+    },
+    "INCY": {
+      "name": "Incyte",
+      "sector": "ヘルスケア",
+      "industry": "Biotechnology"
+    },
+    "INFO": {
+      "name": "IHS Markit Ltd",
+      "sector": "",
+      "industry": ""
+    },
+    "INTC": {
+      "name": "Intel",
+      "sector": "情報技術",
+      "industry": "Semiconductors"
+    },
+    "INTU": {
+      "name": "Intuit",
+      "sector": "情報技術",
+      "industry": "Application Software"
+    },
+    "INVH": {
+      "name": "Invitation Homes",
+      "sector": "不動産",
+      "industry": "Single-Family Residential REITs"
+    },
+    "IP": {
+      "name": "International Paper",
+      "sector": "素材",
+      "industry": "Paper & Plastic Packaging Products & Materials"
+    },
+    "IPG": {
+      "name": "Interpublic Group",
+      "sector": "",
+      "industry": ""
+    },
+    "IQV": {
+      "name": "IQVIA",
+      "sector": "ヘルスケア",
+      "industry": "Life Sciences Tools & Services"
+    },
+    "IR": {
+      "name": "Ingersoll Rand",
+      "sector": "インダストリアル",
+      "industry": "Industrial Machinery & Supplies & Components"
+    },
+    "IRDM": {
+      "name": "衛星通信",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "IREN": {
+      "name": "マイニング設備をAIクラウドへ転換",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "IRM": {
+      "name": "Iron Mountain",
+      "sector": "不動産",
+      "industry": "Other Specialized REITs"
+    },
+    "ISRG": {
+      "name": "Intuitive Surgical",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Equipment"
+    },
+    "IT": {
+      "name": "Gartner",
+      "sector": "情報技術",
+      "industry": "IT Consulting & Other Services"
+    },
+    "ITW": {
+      "name": "Illinois Tool Works",
+      "sector": "インダストリアル",
+      "industry": "Industrial Machinery & Supplies & Components"
+    },
+    "IVZ": {
+      "name": "Invesco",
+      "sector": "金融",
+      "industry": "Asset Management & Custody Banks"
+    },
+    "J": {
+      "name": "Jacobs Solutions",
+      "sector": "インダストリアル",
+      "industry": "Construction & Engineering"
+    },
+    "JBHT": {
+      "name": "J.B. Hunt",
+      "sector": "インダストリアル",
+      "industry": "Cargo Ground Transportation"
+    },
+    "JBL": {
+      "name": "Jabil",
+      "sector": "情報技術",
+      "industry": "Electronic Manufacturing Services"
+    },
+    "JCI": {
+      "name": "Johnson Controls",
+      "sector": "インダストリアル",
+      "industry": "Building Products"
+    },
+    "JD": {
+      "name": "JD.com (ADR)",
+      "sector": "一般消費財",
+      "industry": "インターネット小売"
+    },
+    "JEC": {
+      "name": "Jacobs Engineering",
+      "sector": "",
+      "industry": ""
+    },
+    "JKHY": {
+      "name": "Jack Henry & Associates",
+      "sector": "金融",
+      "industry": "Transaction & Payment Processing Services"
+    },
+    "JNJ": {
+      "name": "Johnson & Johnson",
+      "sector": "ヘルスケア",
+      "industry": "Pharmaceuticals"
+    },
+    "JNPR": {
+      "name": "Juniper Networks",
+      "sector": "",
+      "industry": ""
+    },
+    "JPM": {
+      "name": "JPMorgan Chase",
+      "sector": "金融",
+      "industry": "Diversified Banks"
+    },
+    "JPY=X": {
+      "name": "米ドル/円",
+      "sector": "為替",
+      "industry": "FX"
+    },
+    "JWN": {
+      "name": "Nordstrom Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "K": {
+      "name": "Kellogg Co",
+      "sector": "",
+      "industry": ""
+    },
+    "KDP": {
+      "name": "Keurig Dr Pepper",
+      "sector": "生活必需品",
+      "industry": "Soft Drinks & Non-alcoholic Beverages"
+    },
+    "KEY": {
+      "name": "KeyCorp",
+      "sector": "金融",
+      "industry": "Regional Banks"
+    },
+    "KEYS": {
+      "name": "Keysight Technologies",
+      "sector": "情報技術",
+      "industry": "Electronic Equipment & Instruments"
+    },
+    "KHC": {
+      "name": "Kraft Heinz",
+      "sector": "生活必需品",
+      "industry": "Packaged Foods & Meats"
+    },
+    "KIM": {
+      "name": "Kimco Realty",
+      "sector": "不動産",
+      "industry": "Retail REITs"
+    },
+    "KKR": {
+      "name": "KKR & Co.",
+      "sector": "金融",
+      "industry": "Asset Management & Custody Banks"
+    },
+    "KLAC": {
+      "name": "KLA Corporation",
+      "sector": "情報技術",
+      "industry": "Semiconductor Materials & Equipment"
+    },
+    "KMB": {
+      "name": "Kimberly-Clark",
+      "sector": "生活必需品",
+      "industry": "Household Products"
+    },
+    "KMI": {
+      "name": "Kinder Morgan",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Storage & Transportation"
+    },
+    "KO": {
+      "name": "Coca-Cola Company (The)",
+      "sector": "生活必需品",
+      "industry": "Soft Drinks & Non-alcoholic Beverages"
+    },
+    "KORS": {
+      "name": "Michael Kors",
+      "sector": "",
+      "industry": ""
+    },
+    "KR": {
+      "name": "Kroger",
+      "sector": "生活必需品",
+      "industry": "Food Retail"
+    },
+    "KSU": {
+      "name": "Kansas City Southern",
+      "sector": "",
+      "industry": ""
+    },
+    "KVUE": {
+      "name": "Kenvue",
+      "sector": "生活必需品",
+      "industry": "Personal Care Products"
+    },
+    "L": {
+      "name": "Loews Corporation",
+      "sector": "金融",
+      "industry": "Multi-line Insurance"
+    },
+    "LDOS": {
+      "name": "Leidos",
+      "sector": "インダストリアル",
+      "industry": "Diversified Support Services"
+    },
+    "LEG": {
+      "name": "Leggett Platt",
+      "sector": "",
+      "industry": ""
+    },
+    "LEN": {
+      "name": "Lennar",
+      "sector": "一般消費財",
+      "industry": "Homebuilding"
+    },
+    "LEU": {
+      "name": "濃縮ウラン",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "LH": {
+      "name": "Labcorp",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Services"
+    },
+    "LHX": {
+      "name": "L3Harris",
+      "sector": "インダストリアル",
+      "industry": "Aerospace & Defense"
+    },
+    "LI": {
+      "name": "Li Auto (ADR)",
+      "sector": "一般消費財",
+      "industry": "自動車"
+    },
+    "LII": {
+      "name": "Lennox International",
+      "sector": "インダストリアル",
+      "industry": "Building Products"
+    },
+    "LIN": {
+      "name": "Linde plc",
+      "sector": "素材",
+      "industry": "Industrial Gases"
+    },
+    "LITE": {
+      "name": "Lumentum",
+      "sector": "情報技術",
+      "industry": "Communications Equipment"
+    },
+    "LLL": {
+      "name": "L3 Technologies",
+      "sector": "",
+      "industry": ""
+    },
+    "LLTC": {
+      "name": "Linear Technology",
+      "sector": "",
+      "industry": ""
+    },
+    "LLY": {
+      "name": "Lilly (Eli)",
+      "sector": "ヘルスケア",
+      "industry": "Pharmaceuticals"
+    },
+    "LM": {
+      "name": "Legg Mason",
+      "sector": "",
+      "industry": ""
+    },
+    "LMT": {
+      "name": "Lockheed Martin",
+      "sector": "インダストリアル",
+      "industry": "Aerospace & Defense"
+    },
+    "LNT": {
+      "name": "Alliant Energy",
+      "sector": "公益",
+      "industry": "Electric Utilities"
+    },
+    "LOW": {
+      "name": "Lowe's",
+      "sector": "一般消費財",
+      "industry": "Home Improvement Retail"
+    },
+    "LRCX": {
+      "name": "Lam Research",
+      "sector": "情報技術",
+      "industry": "Semiconductor Materials & Equipment"
+    },
+    "LSCC": {
+      "name": "低消費電力FPGA",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "LULU": {
+      "name": "Lululemon Athletica",
+      "sector": "一般消費財",
+      "industry": "Apparel, Accessories & Luxury Goods"
+    },
+    "LUNR": {
+      "name": "月着陸",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "LUV": {
+      "name": "Southwest Airlines",
+      "sector": "インダストリアル",
+      "industry": "Passenger Airlines"
+    },
+    "LVLT": {
+      "name": "Level 3 Communications",
+      "sector": "",
+      "industry": ""
+    },
+    "LVS": {
+      "name": "Las Vegas Sands",
+      "sector": "一般消費財",
+      "industry": "Casinos & Gaming"
+    },
+    "LYB": {
+      "name": "LyondellBasell",
+      "sector": "素材",
+      "industry": "Specialty Chemicals"
+    },
+    "LYV": {
+      "name": "Live Nation Entertainment",
+      "sector": "コミュニケーション",
+      "industry": "Movies & Entertainment"
+    },
+    "MA": {
+      "name": "Mastercard",
+      "sector": "金融",
+      "industry": "Transaction & Payment Processing Services"
+    },
+    "MAA": {
+      "name": "Mid-America Apartment Communities",
+      "sector": "不動産",
+      "industry": "Multi-Family Residential REITs"
+    },
+    "MAR": {
+      "name": "Marriott International",
+      "sector": "一般消費財",
+      "industry": "Hotels, Resorts & Cruise Lines"
+    },
+    "MAS": {
+      "name": "Masco",
+      "sector": "インダストリアル",
+      "industry": "Building Products"
+    },
+    "MCD": {
+      "name": "McDonald's",
+      "sector": "一般消費財",
+      "industry": "Restaurants"
+    },
+    "MCHP": {
+      "name": "Microchip Technology",
+      "sector": "情報技術",
+      "industry": "Semiconductors"
+    },
+    "MCK": {
+      "name": "McKesson Corporation",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Distributors"
+    },
+    "MCO": {
+      "name": "Moody's Corporation",
+      "sector": "金融",
+      "industry": "Financial Exchanges & Data"
+    },
+    "MDLZ": {
+      "name": "Mondelez International",
+      "sector": "生活必需品",
+      "industry": "Packaged Foods & Meats"
+    },
+    "MDT": {
+      "name": "Medtronic",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Equipment"
+    },
+    "MELI": {
+      "name": "MercadoLibre",
+      "sector": "一般消費財",
+      "industry": "Broadline Retail"
+    },
+    "MET": {
+      "name": "MetLife",
+      "sector": "金融",
+      "industry": "Life & Health Insurance"
+    },
+    "META": {
+      "name": "Meta Platforms",
+      "sector": "コミュニケーション",
+      "industry": "インタラクティブ・メディア"
+    },
+    "MGM": {
+      "name": "MGM Resorts",
+      "sector": "一般消費財",
+      "industry": "Casinos & Gaming"
+    },
+    "MJN": {
+      "name": "Mead Johnson Nutrition",
+      "sector": "",
+      "industry": ""
+    },
+    "MKC": {
+      "name": "McCormick & Company",
+      "sector": "生活必需品",
+      "industry": "Packaged Foods & Meats"
+    },
+    "MLM": {
+      "name": "Martin Marietta Materials",
+      "sector": "素材",
+      "industry": "Construction Materials"
+    },
+    "MMC": {
+      "name": "Marsh McLennan",
+      "sector": "",
+      "industry": ""
+    },
+    "MMM": {
+      "name": "3M",
+      "sector": "インダストリアル",
+      "industry": "Industrial Conglomerates"
+    },
+    "MNK": {
+      "name": "Mallinckrodt plc",
+      "sector": "",
+      "industry": ""
+    },
+    "MNST": {
+      "name": "Monster Beverage",
+      "sector": "生活必需品",
+      "industry": "Soft Drinks & Non-alcoholic Beverages"
+    },
+    "MO": {
+      "name": "Altria",
+      "sector": "生活必需品",
+      "industry": "Tobacco"
+    },
+    "MOD": {
+      "name": "データセンター向け冷却",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "MON": {
+      "name": "Monsanto Co",
+      "sector": "",
+      "industry": ""
+    },
+    "MOS": {
+      "name": "Mosaic Company (The)",
+      "sector": "素材",
+      "industry": "Fertilizers & Agricultural Chemicals"
+    },
+    "MPC": {
+      "name": "Marathon Petroleum",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Refining & Marketing"
+    },
+    "MPWR": {
+      "name": "Monolithic Power Systems",
+      "sector": "情報技術",
+      "industry": "Semiconductors"
+    },
+    "MRK": {
+      "name": "Merck & Co.",
+      "sector": "ヘルスケア",
+      "industry": "Pharmaceuticals"
+    },
+    "MRNA": {
+      "name": "Moderna",
+      "sector": "ヘルスケア",
+      "industry": "Biotechnology"
+    },
+    "MRO": {
+      "name": "Marathon Oil",
+      "sector": "",
+      "industry": ""
+    },
+    "MRSH": {
+      "name": "Marsh McLennan",
+      "sector": "金融",
+      "industry": "Insurance Brokers"
+    },
+    "MRVL": {
+      "name": "Marvell Technology",
+      "sector": "情報技術",
+      "industry": "Semiconductors"
+    },
+    "MS": {
+      "name": "Morgan Stanley",
+      "sector": "金融",
+      "industry": "Investment Banking & Brokerage"
+    },
+    "MSCI": {
+      "name": "MSCI",
+      "sector": "金融",
+      "industry": "Financial Exchanges & Data"
+    },
+    "MSFT": {
+      "name": "Microsoft",
+      "sector": "情報技術",
+      "industry": "Systems Software"
+    },
+    "MSI": {
+      "name": "Motorola Solutions",
+      "sector": "情報技術",
+      "industry": "Communications Equipment"
+    },
+    "MSTR": {
+      "name": "Strategy (MicroStrategy)",
+      "sector": "情報技術",
+      "industry": "Application Software"
+    },
+    "MTB": {
+      "name": "M&T Bank",
+      "sector": "金融",
+      "industry": "Regional Banks"
+    },
+    "MTD": {
+      "name": "Mettler Toledo",
+      "sector": "ヘルスケア",
+      "industry": "Life Sciences Tools & Services"
+    },
+    "MTSI": {
+      "name": "光通信",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "MU": {
+      "name": "Micron Technology",
+      "sector": "情報技術",
+      "industry": "Semiconductors"
+    },
+    "MYL": {
+      "name": "Mylan NV",
+      "sector": "",
+      "industry": ""
+    },
+    "NBIS": {
+      "name": "Nebius Group",
+      "sector": "情報技術",
+      "industry": "Internet Services & Infrastructure"
+    },
+    "NBL": {
+      "name": "Noble Energy",
+      "sector": "",
+      "industry": ""
+    },
+    "NCLH": {
+      "name": "Norwegian Cruise Line Holdings",
+      "sector": "一般消費財",
+      "industry": "Hotels, Resorts & Cruise Lines"
+    },
+    "NDAQ": {
+      "name": "Nasdaq, Inc.",
+      "sector": "金融",
+      "industry": "Financial Exchanges & Data"
+    },
+    "NDSN": {
+      "name": "Nordson Corporation",
+      "sector": "インダストリアル",
+      "industry": "Industrial Machinery & Supplies & Components"
+    },
+    "NEE": {
+      "name": "NextEra Energy",
+      "sector": "公益",
+      "industry": "Multi-Utilities"
+    },
+    "NEM": {
+      "name": "Newmont",
+      "sector": "素材",
+      "industry": "Gold"
+    },
+    "NFLX": {
+      "name": "Netflix",
+      "sector": "コミュニケーション",
+      "industry": "Movies & Entertainment"
+    },
+    "NFX": {
+      "name": "Newfield Exploration",
+      "sector": "",
+      "industry": ""
+    },
+    "NI": {
+      "name": "NiSource",
+      "sector": "公益",
+      "industry": "Multi-Utilities"
+    },
+    "NIO": {
+      "name": "NIO (ADR)",
+      "sector": "一般消費財",
+      "industry": "自動車"
+    },
+    "NKE": {
+      "name": "Nike, Inc.",
+      "sector": "一般消費財",
+      "industry": "Apparel, Accessories & Luxury Goods"
+    },
+    "NLOK": {
+      "name": "NortonLifeLock",
+      "sector": "",
+      "industry": ""
+    },
+    "NLSN": {
+      "name": "Nielsen Holdings",
+      "sector": "",
+      "industry": ""
+    },
+    "NOC": {
+      "name": "Northrop Grumman",
+      "sector": "インダストリアル",
+      "industry": "Aerospace & Defense"
+    },
+    "NOK": {
+      "name": "Infinera買収で光伝送",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "NOW": {
+      "name": "ServiceNow",
+      "sector": "情報技術",
+      "industry": "Systems Software"
+    },
+    "NRG": {
+      "name": "NRG Energy",
+      "sector": "公益",
+      "industry": "Independent Power Producers & Energy Traders"
+    },
+    "NSC": {
+      "name": "Norfolk Southern",
+      "sector": "インダストリアル",
+      "industry": "Rail Transportation"
+    },
+    "NTAP": {
+      "name": "NetApp",
+      "sector": "情報技術",
+      "industry": "Technology Hardware, Storage & Peripherals"
+    },
+    "NTES": {
+      "name": "NetEase (ADR)",
+      "sector": "コミュニケーション",
+      "industry": "インタラクティブ・メディア"
+    },
+    "NTRS": {
+      "name": "Northern Trust",
+      "sector": "金融",
+      "industry": "Asset Management & Custody Banks"
+    },
+    "NUE": {
+      "name": "Nucor",
+      "sector": "素材",
+      "industry": "Steel"
+    },
+    "NVDA": {
+      "name": "Nvidia",
+      "sector": "情報技術",
+      "industry": "Semiconductors"
+    },
+    "NVMI": {
+      "name": "計測装置",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "NVR": {
+      "name": "NVR, Inc.",
+      "sector": "一般消費財",
+      "industry": "Homebuilding"
+    },
+    "NVTS": {
+      "name": "GaN",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "NWS": {
+      "name": "News Corp (Class B)",
+      "sector": "コミュニケーション",
+      "industry": "Publishing"
+    },
+    "NWSA": {
+      "name": "News Corp (Class A)",
+      "sector": "コミュニケーション",
+      "industry": "Publishing"
+    },
+    "NXPI": {
+      "name": "NXP Semiconductors",
+      "sector": "情報技術",
+      "industry": "Semiconductors"
+    },
+    "O": {
+      "name": "Realty Income",
+      "sector": "不動産",
+      "industry": "Retail REITs"
+    },
+    "ODFL": {
+      "name": "Old Dominion",
+      "sector": "インダストリアル",
+      "industry": "Cargo Ground Transportation"
+    },
+    "OKE": {
+      "name": "Oneok",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Storage & Transportation"
+    },
+    "OKLO": {
+      "name": "小型炉",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "OMC": {
+      "name": "Omnicom Group",
+      "sector": "コミュニケーション",
+      "industry": "Advertising"
+    },
+    "ON": {
+      "name": "ON Semiconductor",
+      "sector": "情報技術",
+      "industry": "Semiconductors"
+    },
+    "ONDS": {
+      "name": "ドローン",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "ONTO": {
+      "name": "先端パッケージの検査",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "ORCL": {
+      "name": "Oracle Corporation",
+      "sector": "情報技術",
+      "industry": "Application Software"
+    },
+    "ORLY": {
+      "name": "O'Reilly Automotive",
+      "sector": "一般消費財",
+      "industry": "Automotive Retail"
+    },
+    "OTIS": {
+      "name": "Otis Worldwide",
+      "sector": "インダストリアル",
+      "industry": "Industrial Machinery & Supplies & Components"
+    },
+    "OXY": {
+      "name": "Occidental Petroleum",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Exploration & Production"
+    },
+    "P": {
+      "name": "Everpure",
+      "sector": "情報技術",
+      "industry": "Technology Hardware, Storage & Peripherals"
+    },
+    "PANW": {
+      "name": "Palo Alto Networks",
+      "sector": "情報技術",
+      "industry": "Systems Software"
+    },
+    "PAYX": {
+      "name": "Paychex",
+      "sector": "インダストリアル",
+      "industry": "Human Resource & Employment Services"
+    },
+    "PBCT": {
+      "name": "People's United Financial",
+      "sector": "",
+      "industry": ""
+    },
+    "PCAR": {
+      "name": "Paccar",
+      "sector": "インダストリアル",
+      "industry": "Construction Machinery & Heavy Transportation Equipment"
+    },
+    "PCG": {
+      "name": "PG&E Corporation",
+      "sector": "公益",
+      "industry": "Multi-Utilities"
+    },
+    "PCL": {
+      "name": "Plum Creek Timber",
+      "sector": "",
+      "industry": ""
+    },
+    "PCP": {
+      "name": "Precision Castparts",
+      "sector": "",
+      "industry": ""
+    },
+    "PDCO": {
+      "name": "Patterson Companies",
+      "sector": "",
+      "industry": ""
+    },
+    "PDD": {
+      "name": "PDD Holdings (ADR)",
+      "sector": "一般消費財",
+      "industry": "インターネット小売"
+    },
+    "PEAK": {
+      "name": "Healthpeak Properties",
+      "sector": "",
+      "industry": ""
+    },
+    "PEG": {
+      "name": "Public Service Enterprise Group",
+      "sector": "公益",
+      "industry": "Electric Utilities"
+    },
+    "PEP": {
+      "name": "PepsiCo",
+      "sector": "生活必需品",
+      "industry": "Soft Drinks & Non-alcoholic Beverages"
+    },
+    "PFE": {
+      "name": "Pfizer",
+      "sector": "ヘルスケア",
+      "industry": "Pharmaceuticals"
+    },
+    "PFG": {
+      "name": "Principal Financial Group",
+      "sector": "金融",
+      "industry": "Life & Health Insurance"
+    },
+    "PG": {
+      "name": "Procter & Gamble",
+      "sector": "生活必需品",
+      "industry": "Personal Care Products"
+    },
+    "PGR": {
+      "name": "Progressive Corporation",
+      "sector": "金融",
+      "industry": "Property & Casualty Insurance"
+    },
+    "PH": {
+      "name": "Parker Hannifin",
+      "sector": "インダストリアル",
+      "industry": "Industrial Machinery & Supplies & Components"
+    },
+    "PHM": {
+      "name": "PulteGroup",
+      "sector": "一般消費財",
+      "industry": "Homebuilding"
+    },
+    "PKG": {
+      "name": "Packaging Corporation of America",
+      "sector": "素材",
+      "industry": "Paper & Plastic Packaging Products & Materials"
+    },
+    "PL": {
+      "name": "地球観測衛星データ",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "PLD": {
+      "name": "Prologis",
+      "sector": "不動産",
+      "industry": "Industrial REITs"
+    },
+    "PLTR": {
+      "name": "Palantir Technologies",
+      "sector": "情報技術",
+      "industry": "Application Software"
+    },
+    "PM": {
+      "name": "Philip Morris International",
+      "sector": "生活必需品",
+      "industry": "Tobacco"
+    },
+    "PNC": {
+      "name": "PNC Financial Services",
+      "sector": "金融",
+      "industry": "Diversified Banks"
+    },
+    "PNR": {
+      "name": "Pentair",
+      "sector": "インダストリアル",
+      "industry": "Industrial Machinery & Supplies & Components"
+    },
+    "PNW": {
+      "name": "Pinnacle West Capital",
+      "sector": "公益",
+      "industry": "Multi-Utilities"
+    },
+    "PODD": {
+      "name": "Insulet Corporation",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Equipment"
+    },
+    "POET": {
+      "name": "光インターポーザー",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "POWI": {
+      "name": "パワー半導体",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "POWL": {
+      "name": "配電盤",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "PPG": {
+      "name": "PPG Industries",
+      "sector": "素材",
+      "industry": "Specialty Chemicals"
+    },
+    "PPL": {
+      "name": "PPL Corporation",
+      "sector": "公益",
+      "industry": "Electric Utilities"
+    },
+    "PRU": {
+      "name": "Prudential Financial",
+      "sector": "金融",
+      "industry": "Life & Health Insurance"
+    },
+    "PSA": {
+      "name": "Public Storage",
+      "sector": "不動産",
+      "industry": "Self-Storage REITs"
+    },
+    "PSKY": {
+      "name": "Paramount Skydance Corporation",
+      "sector": "コミュニケーション",
+      "industry": "Movies & Entertainment"
+    },
+    "PSX": {
+      "name": "Phillips 66",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Refining & Marketing"
+    },
+    "PTC": {
+      "name": "PTC Inc.",
+      "sector": "情報技術",
+      "industry": "Application Software"
+    },
+    "PWR": {
+      "name": "Quanta Services",
+      "sector": "インダストリアル",
+      "industry": "Construction & Engineering"
+    },
+    "PX": {
+      "name": "Praxair Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "PXD": {
+      "name": "Pioneer Natural Resources",
+      "sector": "",
+      "industry": ""
+    },
+    "PYPL": {
+      "name": "PayPal",
+      "sector": "金融",
+      "industry": "Transaction & Payment Processing Services"
+    },
+    "Q": {
+      "name": "Qnity Electronics",
+      "sector": "情報技術",
+      "industry": "Semiconductor Materials & Equipment"
+    },
+    "QCOM": {
+      "name": "Qualcomm",
+      "sector": "情報技術",
+      "industry": "Semiconductors"
+    },
+    "QQQ": {
+      "name": "Invesco QQQ Trust",
+      "sector": "指数・ETF",
+      "industry": "Nasdaq-100"
+    },
+    "RAI": {
+      "name": "Reynolds American",
+      "sector": "",
+      "industry": ""
+    },
+    "RCL": {
+      "name": "Royal Caribbean Group",
+      "sector": "一般消費財",
+      "industry": "Hotels, Resorts & Cruise Lines"
+    },
+    "RDDT": {
+      "name": "Reddit",
+      "sector": "コミュニケーション",
+      "industry": "Interactive Media & Services"
+    },
+    "RDW": {
+      "name": "宇宙機の部品",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "REG": {
+      "name": "Regency Centers",
+      "sector": "不動産",
+      "industry": "Retail REITs"
+    },
+    "REGN": {
+      "name": "Regeneron Pharmaceuticals",
+      "sector": "ヘルスケア",
+      "industry": "Biotechnology"
+    },
+    "RF": {
+      "name": "Regions Financial Corporation",
+      "sector": "金融",
+      "industry": "Regional Banks"
+    },
+    "RHT": {
+      "name": "Red Hat Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "RIO": {
+      "name": "Rio Tinto (ADR)",
+      "sector": "素材",
+      "industry": "金属・鉱業"
+    },
+    "RJF": {
+      "name": "Raymond James Financial",
+      "sector": "金融",
+      "industry": "Investment Banking & Brokerage"
+    },
+    "RKLB": {
+      "name": "Rocket Lab",
+      "sector": "インダストリアル",
+      "industry": "Aerospace & Defense"
+    },
+    "RL": {
+      "name": "Ralph Lauren Corporation",
+      "sector": "一般消費財",
+      "industry": "Apparel, Accessories & Luxury Goods"
+    },
+    "RMBS": {
+      "name": "メモリインターフェースIP",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "RMD": {
+      "name": "ResMed|",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Equipment"
+    },
+    "ROK": {
+      "name": "Rockwell Automation",
+      "sector": "インダストリアル",
+      "industry": "Electrical Components & Equipment"
+    },
+    "ROL": {
+      "name": "Rollins, Inc.",
+      "sector": "インダストリアル",
+      "industry": "Environmental & Facilities Services"
+    },
+    "ROP": {
+      "name": "Roper Technologies",
+      "sector": "情報技術",
+      "industry": "Electronic Equipment & Instruments"
+    },
+    "ROST": {
+      "name": "Ross Stores",
+      "sector": "一般消費財",
+      "industry": "Apparel Retail"
+    },
+    "RSG": {
+      "name": "Republic Services",
+      "sector": "インダストリアル",
+      "industry": "Environmental & Facilities Services"
+    },
+    "RTX": {
+      "name": "RTX Corporation",
+      "sector": "インダストリアル",
+      "industry": "Aerospace & Defense"
+    },
+    "RVTY": {
+      "name": "Revvity",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Equipment"
+    },
+    "SAP": {
+      "name": "SAP (ADR)",
+      "sector": "情報技術",
+      "industry": "アプリケーション・ソフトウェア"
+    },
+    "SATS": {
+      "name": "EchoStar Corp",
+      "sector": "",
+      "industry": ""
+    },
+    "SBAC": {
+      "name": "SBA Communications",
+      "sector": "不動産",
+      "industry": "Telecom Tower REITs"
+    },
+    "SBNY": {
+      "name": "Signature Bank",
+      "sector": "",
+      "industry": ""
+    },
+    "SBUX": {
+      "name": "Starbucks",
+      "sector": "一般消費財",
+      "industry": "Restaurants"
+    },
+    "SCG": {
+      "name": "SCANA Corp",
+      "sector": "",
+      "industry": ""
+    },
+    "SCHW": {
+      "name": "Charles Schwab Corporation",
+      "sector": "金融",
+      "industry": "Investment Banking & Brokerage"
+    },
+    "SEE": {
+      "name": "Sealed Air Corp",
+      "sector": "",
+      "industry": ""
+    },
+    "SGOV": {
+      "name": "iShares 0-3 Month Treasury Bond ETF",
+      "sector": "指数・ETF",
+      "industry": "超短期国債"
+    },
+    "SHEL": {
+      "name": "Shell (ADR)",
+      "sector": "エネルギー",
+      "industry": "統合石油・ガス"
+    },
+    "SHOP": {
+      "name": "Shopify",
+      "sector": "情報技術",
+      "industry": "Internet Services & Infrastructure"
+    },
+    "SHW": {
+      "name": "Sherwin-Williams",
+      "sector": "素材",
+      "industry": "Specialty Chemicals"
+    },
+    "SHY": {
+      "name": "iShares 1-3 Year Treasury Bond ETF",
+      "sector": "指数・ETF",
+      "industry": "短期国債"
+    },
+    "SITM": {
+      "name": "MEMSタイミング",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "SIVB": {
+      "name": "SVB Financial",
+      "sector": "",
+      "industry": ""
+    },
+    "SJM": {
+      "name": "J.M. Smucker Company (The)",
+      "sector": "生活必需品",
+      "industry": "Packaged Foods & Meats"
+    },
+    "SLB": {
+      "name": "Schlumberger",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Equipment & Services"
+    },
+    "SMCI": {
+      "name": "Supermicro",
+      "sector": "情報技術",
+      "industry": "Technology Hardware, Storage & Peripherals"
+    },
+    "SMR": {
+      "name": "小型モジュール炉",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "SNA": {
+      "name": "Snap-on",
+      "sector": "インダストリアル",
+      "industry": "Industrial Machinery & Supplies & Components"
+    },
+    "SNDK": {
+      "name": "Sandisk",
+      "sector": "情報技術",
+      "industry": "Technology Hardware, Storage & Peripherals"
+    },
+    "SNI": {
+      "name": "Scripps Networks Interactive",
+      "sector": "",
+      "industry": ""
+    },
+    "SNPS": {
+      "name": "Synopsys",
+      "sector": "情報技術",
+      "industry": "Application Software"
+    },
+    "SNY": {
+      "name": "Sanofi (ADR)",
+      "sector": "ヘルスケア",
+      "industry": "医薬品"
+    },
+    "SO": {
+      "name": "Southern Company",
+      "sector": "公益",
+      "industry": "Electric Utilities"
+    },
+    "SOLV": {
+      "name": "Solventum",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Technology"
+    },
+    "SONY": {
+      "name": "ソニーグループ",
+      "sector": "一般消費財",
+      "industry": "コンシューマー・エレクトロニクス"
+    },
+    "SOXX": {
+      "name": "iShares Semiconductor ETF",
+      "sector": "指数・ETF",
+      "industry": "半導体"
+    },
+    "SPCX": {
+      "name": "SPAC and New Issue ETF",
+      "sector": "指数・ETF",
+      "industry": "ETF"
+    },
+    "SPG": {
+      "name": "Simon Property Group",
+      "sector": "不動産",
+      "industry": "Retail REITs"
+    },
+    "SPGI": {
+      "name": "S&P Global",
+      "sector": "金融",
+      "industry": "Financial Exchanges & Data"
+    },
+    "SPLS": {
+      "name": "Staples Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "SPY": {
+      "name": "SPDR S&P 500 ETF Trust",
+      "sector": "指数・ETF",
+      "industry": "米国大型株"
+    },
+    "SRCL": {
+      "name": "Stericycle Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "SRE": {
+      "name": "Sempra",
+      "sector": "公益",
+      "industry": "Multi-Utilities"
+    },
+    "STE": {
+      "name": "Steris",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Equipment"
+    },
+    "STJ": {
+      "name": "St Jude Medical",
+      "sector": "",
+      "industry": ""
+    },
+    "STLD": {
+      "name": "Steel Dynamics",
+      "sector": "素材",
+      "industry": "Steel"
+    },
+    "STM": {
+      "name": "車載",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "STT": {
+      "name": "State Street Corporation",
+      "sector": "金融",
+      "industry": "Asset Management & Custody Banks"
+    },
+    "STX": {
+      "name": "Seagate Technology",
+      "sector": "情報技術",
+      "industry": "Technology Hardware, Storage & Peripherals"
+    },
+    "STZ": {
+      "name": "Constellation Brands",
+      "sector": "生活必需品",
+      "industry": "Distillers & Vintners"
+    },
+    "SW": {
+      "name": "Smurfit Westrock",
+      "sector": "素材",
+      "industry": "Paper & Plastic Packaging Products & Materials"
+    },
+    "SWK": {
+      "name": "Stanley Black & Decker",
+      "sector": "インダストリアル",
+      "industry": "Industrial Machinery & Supplies & Components"
+    },
+    "SWKS": {
+      "name": "Skyworks Solutions",
+      "sector": "情報技術",
+      "industry": "Semiconductors"
+    },
+    "SWN": {
+      "name": "Southwestern Energy",
+      "sector": "",
+      "industry": ""
+    },
+    "SYF": {
+      "name": "Synchrony Financial",
+      "sector": "金融",
+      "industry": "Consumer Finance"
+    },
+    "SYK": {
+      "name": "Stryker Corporation",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Equipment"
+    },
+    "SYMC": {
+      "name": "Symantec Corp",
+      "sector": "",
+      "industry": ""
+    },
+    "SYY": {
+      "name": "Sysco",
+      "sector": "生活必需品",
+      "industry": "Food Distributors"
+    },
+    "T": {
+      "name": "AT&T",
+      "sector": "コミュニケーション",
+      "industry": "Integrated Telecommunication Services"
+    },
+    "TAP": {
+      "name": "Molson Coors Beverage",
+      "sector": "生活必需品",
+      "industry": "Brewers"
+    },
+    "TDG": {
+      "name": "TransDigm Group",
+      "sector": "インダストリアル",
+      "industry": "Aerospace & Defense"
+    },
+    "TDY": {
+      "name": "Teledyne Technologies",
+      "sector": "情報技術",
+      "industry": "Electronic Equipment & Instruments"
+    },
+    "TECH": {
+      "name": "Bio-Techne",
+      "sector": "ヘルスケア",
+      "industry": "Life Sciences Tools & Services"
+    },
+    "TEL": {
+      "name": "TE Connectivity",
+      "sector": "情報技術",
+      "industry": "Electronic Manufacturing Services"
+    },
+    "TER": {
+      "name": "Teradyne",
+      "sector": "情報技術",
+      "industry": "Semiconductor Materials & Equipment"
+    },
+    "TFC": {
+      "name": "Truist Financial",
+      "sector": "金融",
+      "industry": "Diversified Banks"
+    },
+    "TGNA": {
+      "name": "Tegna Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "TGT": {
+      "name": "Target Corporation",
+      "sector": "生活必需品",
+      "industry": "Consumer Staples Merchandise Retail"
+    },
+    "TIF": {
+      "name": "Tiffany Co",
+      "sector": "",
+      "industry": ""
+    },
+    "TJX": {
+      "name": "TJX Companies",
+      "sector": "一般消費財",
+      "industry": "Apparel Retail"
+    },
+    "TKO": {
+      "name": "TKO Group Holdings",
+      "sector": "コミュニケーション",
+      "industry": "Movies & Entertainment"
+    },
+    "TLN": {
+      "name": "原子力",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "TM": {
+      "name": "トヨタ自動車 (ADR)",
+      "sector": "一般消費財",
+      "industry": "自動車"
+    },
+    "TMK": {
+      "name": "Torchmark Corp",
+      "sector": "",
+      "industry": ""
+    },
+    "TMO": {
+      "name": "Thermo Fisher Scientific",
+      "sector": "ヘルスケア",
+      "industry": "Life Sciences Tools & Services"
+    },
+    "TMUS": {
+      "name": "T-Mobile US",
+      "sector": "コミュニケーション",
+      "industry": "Wireless Telecommunication Services"
+    },
+    "TPL": {
+      "name": "Texas Pacific Land Corporation",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Exploration & Production"
+    },
+    "TPR": {
+      "name": "Tapestry, Inc.",
+      "sector": "一般消費財",
+      "industry": "Apparel, Accessories & Luxury Goods"
+    },
+    "TRGP": {
+      "name": "Targa Resources",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Storage & Transportation"
+    },
+    "TRI": {
+      "name": "Thomson Reuters",
+      "sector": "インダストリアル",
+      "industry": "Research & Consulting Services"
+    },
+    "TRMB": {
+      "name": "Trimble Inc.",
+      "sector": "情報技術",
+      "industry": "Application Software"
+    },
+    "TROW": {
+      "name": "T. Rowe Price",
+      "sector": "金融",
+      "industry": "Asset Management & Custody Banks"
+    },
+    "TRV": {
+      "name": "Travelers Companies (The)",
+      "sector": "金融",
+      "industry": "Property & Casualty Insurance"
+    },
+    "TSCO": {
+      "name": "Tractor Supply",
+      "sector": "一般消費財",
+      "industry": "Other Specialty Retail"
+    },
+    "TSLA": {
+      "name": "Tesla, Inc.",
+      "sector": "一般消費財",
+      "industry": "Automobile Manufacturers"
+    },
+    "TSM": {
+      "name": "台湾セミコンダクター (ADR)",
+      "sector": "情報技術",
+      "industry": "半導体"
+    },
+    "TSN": {
+      "name": "Tyson Foods",
+      "sector": "生活必需品",
+      "industry": "Packaged Foods & Meats"
+    },
+    "TSS": {
+      "name": "Total System Services",
+      "sector": "",
+      "industry": ""
+    },
+    "TT": {
+      "name": "Trane Technologies",
+      "sector": "インダストリアル",
+      "industry": "Building Products"
+    },
+    "TTD": {
+      "name": "The Trade Desk",
+      "sector": "コミュニケーション",
+      "industry": "Advertising"
+    },
+    "TTWO": {
+      "name": "Take-Two Interactive",
+      "sector": "コミュニケーション",
+      "industry": "Interactive Home Entertainment"
+    },
+    "TWC": {
+      "name": "Time Warner Cable",
+      "sector": "",
+      "industry": ""
+    },
+    "TWTR": {
+      "name": "Twitter Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "TWX": {
+      "name": "Time Warner Inc",
+      "sector": "",
+      "industry": ""
+    },
+    "TXN": {
+      "name": "Texas Instruments",
+      "sector": "情報技術",
+      "industry": "Semiconductors"
+    },
+    "TXT": {
+      "name": "Textron",
+      "sector": "インダストリアル",
+      "industry": "Aerospace & Defense"
+    },
+    "TYL": {
+      "name": "Tyler Technologies",
+      "sector": "情報技術",
+      "industry": "Application Software"
+    },
+    "UAL": {
+      "name": "United Airlines Holdings",
+      "sector": "インダストリアル",
+      "industry": "Passenger Airlines"
+    },
+    "UBER": {
+      "name": "Uber",
+      "sector": "インダストリアル",
+      "industry": "Passenger Ground Transportation"
+    },
+    "UDR": {
+      "name": "UDR, Inc.",
+      "sector": "不動産",
+      "industry": "Multi-Family Residential REITs"
+    },
+    "UHS": {
+      "name": "Universal Health Services",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Facilities"
+    },
+    "UL": {
+      "name": "Unilever (ADR)",
+      "sector": "生活必需品",
+      "industry": "日用品"
+    },
+    "ULTA": {
+      "name": "Ulta Beauty",
+      "sector": "一般消費財",
+      "industry": "Other Specialty Retail"
+    },
+    "UNH": {
+      "name": "UnitedHealth Group",
+      "sector": "ヘルスケア",
+      "industry": "Managed Health Care"
+    },
+    "UNP": {
+      "name": "Union Pacific Corporation",
+      "sector": "インダストリアル",
+      "industry": "Rail Transportation"
+    },
+    "UPS": {
+      "name": "United Parcel Service",
+      "sector": "インダストリアル",
+      "industry": "Air Freight & Logistics"
+    },
+    "URI": {
+      "name": "United Rentals",
+      "sector": "インダストリアル",
+      "industry": "Trading Companies & Distributors"
+    },
+    "USB": {
+      "name": "U.S. Bancorp",
+      "sector": "金融",
+      "industry": "Diversified Banks"
+    },
+    "V": {
+      "name": "Visa Inc.",
+      "sector": "金融",
+      "industry": "Transaction & Payment Processing Services"
+    },
+    "VEEV": {
+      "name": "Veeva Systems",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Technology"
+    },
+    "VIAV": {
+      "name": "光通信の測定器",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "VICI": {
+      "name": "Vici Properties",
+      "sector": "不動産",
+      "industry": "Hotel & Resort REITs"
+    },
+    "VLO": {
+      "name": "Valero Energy",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Refining & Marketing"
+    },
+    "VLTO": {
+      "name": "Veralto",
+      "sector": "インダストリアル",
+      "industry": "Environmental & Facilities Services"
+    },
+    "VMC": {
+      "name": "Vulcan Materials Company",
+      "sector": "素材",
+      "industry": "Construction Materials"
+    },
+    "VMRK": {
+      "name": "Vivmark Residential",
+      "sector": "不動産",
+      "industry": "Multi-Family Residential REITs"
+    },
+    "VRSK": {
+      "name": "Verisk Analytics",
+      "sector": "インダストリアル",
+      "industry": "Research & Consulting Services"
+    },
+    "VRSN": {
+      "name": "Verisign",
+      "sector": "情報技術",
+      "industry": "Internet Services & Infrastructure"
+    },
+    "VRT": {
+      "name": "Vertiv",
+      "sector": "インダストリアル",
+      "industry": "Electrical Components & Equipment"
+    },
+    "VRTX": {
+      "name": "Vertex Pharmaceuticals",
+      "sector": "ヘルスケア",
+      "industry": "Biotechnology"
+    },
+    "VSAT": {
+      "name": "衛星通信",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "VST": {
+      "name": "Vistra Corp.",
+      "sector": "公益",
+      "industry": "Electric Utilities"
+    },
+    "VTR": {
+      "name": "Ventas",
+      "sector": "不動産",
+      "industry": "Health Care REITs"
+    },
+    "VTRS": {
+      "name": "Viatris",
+      "sector": "ヘルスケア",
+      "industry": "Pharmaceuticals"
+    },
+    "VZ": {
+      "name": "Verizon",
+      "sector": "コミュニケーション",
+      "industry": "Integrated Telecommunication Services"
+    },
+    "WAB": {
+      "name": "Wabtec",
+      "sector": "インダストリアル",
+      "industry": "Construction Machinery & Heavy Transportation Equipment"
+    },
+    "WAT": {
+      "name": "Waters Corporation",
+      "sector": "ヘルスケア",
+      "industry": "Life Sciences Tools & Services"
+    },
+    "WBA": {
+      "name": "Walgreens Boots Alliance",
+      "sector": "",
+      "industry": ""
+    },
+    "WBD": {
+      "name": "Warner Bros. Discovery",
+      "sector": "コミュニケーション",
+      "industry": "Broadcasting"
+    },
+    "WCG": {
+      "name": "WellCare Health Plans",
+      "sector": "",
+      "industry": ""
+    },
+    "WDAY": {
+      "name": "Workday, Inc.",
+      "sector": "情報技術",
+      "industry": "Application Software"
+    },
+    "WDC": {
+      "name": "Western Digital",
+      "sector": "情報技術",
+      "industry": "Technology Hardware, Storage & Peripherals"
+    },
+    "WEC": {
+      "name": "WEC Energy Group",
+      "sector": "公益",
+      "industry": "Electric Utilities"
+    },
+    "WELL": {
+      "name": "Welltower",
+      "sector": "不動産",
+      "industry": "Health Care REITs"
+    },
+    "WFC": {
+      "name": "Wells Fargo",
+      "sector": "金融",
+      "industry": "Diversified Banks"
+    },
+    "WFM": {
+      "name": "Whole Foods Market",
+      "sector": "",
+      "industry": ""
+    },
+    "WLTW": {
+      "name": "Willis Towers Watson",
+      "sector": "",
+      "industry": ""
+    },
+    "WM": {
+      "name": "Waste Management",
+      "sector": "インダストリアル",
+      "industry": "Environmental & Facilities Services"
+    },
+    "WMB": {
+      "name": "Williams Companies",
+      "sector": "エネルギー",
+      "industry": "Oil & Gas Storage & Transportation"
+    },
+    "WMT": {
+      "name": "Walmart",
+      "sector": "生活必需品",
+      "industry": "Consumer Staples Merchandise Retail"
+    },
+    "WRB": {
+      "name": "W. R. Berkley Corporation",
+      "sector": "金融",
+      "industry": "Property & Casualty Insurance"
+    },
+    "WRK": {
+      "name": "WestRock Co",
+      "sector": "",
+      "industry": ""
+    },
+    "WSM": {
+      "name": "Williams-Sonoma, Inc.",
+      "sector": "一般消費財",
+      "industry": "Homefurnishing Retail"
+    },
+    "WST": {
+      "name": "West Pharmaceutical Services",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Supplies"
+    },
+    "WTW": {
+      "name": "Willis Towers Watson",
+      "sector": "金融",
+      "industry": "Insurance Brokers"
+    },
+    "WULF": {
+      "name": "マイニングからAIホスティングへ",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "WY": {
+      "name": "Weyerhaeuser",
+      "sector": "不動産",
+      "industry": "Timber REITs"
+    },
+    "WYND": {
+      "name": "Wyndham Worldwide",
+      "sector": "",
+      "industry": ""
+    },
+    "WYNN": {
+      "name": "Wynn Resorts",
+      "sector": "一般消費財",
+      "industry": "Casinos & Gaming"
+    },
+    "XEC": {
+      "name": "Cimarex Energy",
+      "sector": "",
+      "industry": ""
+    },
+    "XEL": {
+      "name": "Xcel Energy",
+      "sector": "公益",
+      "industry": "Multi-Utilities"
+    },
+    "XL": {
+      "name": "XL Group Ltd",
+      "sector": "",
+      "industry": ""
+    },
+    "XOM": {
+      "name": "ExxonMobil",
+      "sector": "エネルギー",
+      "industry": "Integrated Oil & Gas"
+    },
+    "XPEV": {
+      "name": "XPeng (ADR)",
+      "sector": "一般消費財",
+      "industry": "自動車"
+    },
+    "XYL": {
+      "name": "Xylem Inc.",
+      "sector": "インダストリアル",
+      "industry": "Industrial Machinery & Supplies & Components"
+    },
+    "XYZ": {
+      "name": "Block, Inc.",
+      "sector": "金融",
+      "industry": "Transaction & Payment Processing Services"
+    },
+    "YUM": {
+      "name": "Yum! Brands",
+      "sector": "一般消費財",
+      "industry": "Restaurants"
+    },
+    "ZBH": {
+      "name": "Zimmer Biomet",
+      "sector": "ヘルスケア",
+      "industry": "Health Care Equipment"
+    },
+    "ZBRA": {
+      "name": "Zebra Technologies",
+      "sector": "情報技術",
+      "industry": "Electronic Equipment & Instruments"
+    },
+    "ZTS": {
+      "name": "Zoetis",
+      "sector": "ヘルスケア",
+      "industry": "Pharmaceuticals"
+    }
+  }
+}
