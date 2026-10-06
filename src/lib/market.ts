@@ -22,6 +22,7 @@ import {
   warmNasdaqEarningsCalendar,
 } from "./earnings-enrich";
 import { classifyEarnings } from "./earnings";
+import { attachVerdict } from "./verdict";
 import { fetchTtmIncomeForTicker } from "./edgar-companyfacts";
 import { profitabilityFromCache } from "./profit-cache";
 import { holdingsSource } from "./holdings";
@@ -475,7 +476,9 @@ function buildPayload(
       const enrich = cachedEarningsEnrich(ticker.ticker);
       const earningsInput = resolveEarningsInput(ticker.earnings, epsSnap, enrich);
       const profitability = profitabilityFromCache(ticker.ticker, epsSnap);
+      const earningsView = classifyEarnings(today, earningsInput);
       const meta = enrichTickerMeta(ticker.ticker);
+      const quote = built.quote ? attachVerdict(built.quote, earningsView) : null;
       rows.push({
         ticker: ticker.ticker,
         name: meta.name,
@@ -488,7 +491,7 @@ function buildPayload(
         notes: ticker.notes,
         tags: ticker.tags,
         watchOnly: ticker.watchOnly,
-        earnings: classifyEarnings(today, earningsInput),
+        earnings: earningsView,
         earningsUnknown: earningsDateUnknown(ticker.earnings, epsSnap, enrich),
         profitability,
         corrBasket: pair?.basket ?? null,
@@ -496,7 +499,7 @@ function buildPayload(
         rs20: built.quote && entry?.bars ? rs20(entry.bars, spyBars) : null,
         semi: semis.has(ticker.ticker),
         semiFull,
-        quote: built.quote,
+        quote,
         pe: peView(built.quote?.close, eps[ticker.ticker] ?? null),
         error: built.error,
         errorDetail: built.errorDetail,
@@ -619,7 +622,7 @@ function buildIndexMonitorRows(
       rs20: built.quote && entry?.bars ? rs20(entry.bars, spyBars) : null,
       semi: false,
       semiFull: false,
-      quote: built.quote,
+      quote: built.quote ? attachVerdict(built.quote, null) : null,
       pe: peView(built.quote?.close, epsSnap),
       error: built.error,
       errorDetail: built.errorDetail,
@@ -645,6 +648,10 @@ function toPickQuote(quote: Quote | null): PickQuote | null {
     line25: quote.line25,
     reboundDays: quote.reboundDays,
     entrySignal: quote.entrySignal,
+    low20DaysAgo: quote.low20DaysAgo,
+    high20DaysAgo: quote.high20DaysAgo,
+    downtrend: quote.downtrend,
+    verdict: quote.verdict,
   };
 }
 

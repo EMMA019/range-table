@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CHIPS, CORP_ACTION_BADGE, SORT_OPTIONS, UNIVERSE_SCOPES, type ChipKey, type SortId, type UniverseScopeId } from "@/lib/copy";
+import { CHIPS, CORP_ACTION_BADGE, DOWNTREND_BADGE, SORT_OPTIONS, UNIVERSE_SCOPES, type ChipKey, type SortId, type UniverseScopeId } from "@/lib/copy";
 import { formatPe } from "@/lib/pe";
 import {
   SEMI_CAP_BADGE,
   earningsBadge,
   formatAge,
+  formatBoxExtremeAge,
   formatDev,
   formatCompactShares,
   formatCorr,
@@ -27,6 +28,7 @@ import { TickerMetaLine } from "@/components/ticker-meta-line";
 import { isIgnoredTicker } from "@/lib/holdings";
 import { applyView, atTop, continuedBreakout, continuedBreakoutText, sectorsOf, volumeSurge, volumeThin, withDividers, zoneOf, type ViewFilters } from "@/lib/view";
 import { BoxBar } from "./box-bar";
+import { CardVerdict } from "./card-verdict";
 import { EntryBadge } from "./entry-badge";
 import { Atr14Value } from "./atr14-value";
 import { Shares10 } from "./shares10";
@@ -56,6 +58,7 @@ const CHIP_PARAM: Record<ChipKey, string> = {
   atrMin: "atrmin",
   rebound: "rebound",
   inOk: "inok",
+  candidateVerdict: "cand",
   hideWatch: "hideWatch",
 };
 
@@ -120,6 +123,7 @@ export function Dashboard() {
       atrMin: sp.get("atrmin") === "1",
       rebound: sp.get("rebound") === "1",
       inOk: sp.get("inok") === "1",
+      candidateVerdict: sp.get("cand") === "1",
       hideWatch: sp.get("hideWatch") === "1",
       sort: SORTS.has(sort ?? "") ? (sort as SortId) : "boxAsc",
       q: query,
@@ -218,6 +222,7 @@ export function Dashboard() {
     filters.atrMin ||
     filters.rebound ||
     filters.inOk ||
+    filters.candidateVerdict ||
     filters.hideWatch ||
     query.trim().length > 0;
 
@@ -241,6 +246,7 @@ export function Dashboard() {
         atrmin: null,
         rebound: null,
         inok: null,
+        cand: null,
         hideWatch: null,
         sort: null,
       },
@@ -584,6 +590,7 @@ function TickerCard({
     row.watchOnly ? "監視のみ" : null,
     quote?.gapWarning ? "価格が飛んでいる" : null,
     quote?.corpActionWarning ? CORP_ACTION_BADGE : null,
+    quote?.downtrend.active ? DOWNTREND_BADGE : null,
     row.tags.includes("高ボラ") ? "高ボラ" : null,
     row.pe.recovering ? "利益回復中" : null,
     quote && continuedBreakout(quote) ? continuedBreakoutText(quote) : null,
@@ -640,7 +647,8 @@ function TickerCard({
             </div>
           )}
         </div>
-        <div className="text-right">
+        <div className="shrink-0 text-right">
+          {quote && <CardVerdict verdict={quote.verdict} />}
           <div className="font-mono text-lg tabular-nums">{quote ? formatPx(quote.close) : "—"}</div>
           <div className="text-[11px] text-muted">{quote ? `終値 ${shortDate(quote.closeDate)}` : "終値"}</div>
         </div>
@@ -650,6 +658,9 @@ function TickerCard({
           <div className="mt-2">
             <div className="mb-1 text-[11px] text-muted">箱の位置</div>
             <BoxBar pct={quote.boxPct} />
+            {quote.downtrend.active && (
+              <p className="mt-1 text-[11px] font-medium leading-snug text-rust">{DOWNTREND_BADGE}</p>
+            )}
           </div>
           <p className="mt-2 text-[11px] text-muted">{formatEarnings(row.earnings)}</p>
           <p className="mt-1 text-[11px] leading-relaxed text-muted">{guideLineText(quote.line15, quote.line25)}</p>
@@ -706,10 +717,18 @@ function TickerCard({
               </b>
             </span>
             <span>
-              20日安値 <b className="font-mono font-medium text-ink tabular-nums">{formatPx(quote.low20)}</b>
+              20日安値{" "}
+              <b className="font-mono font-medium text-ink tabular-nums">
+                {formatPx(quote.low20)}
+                {formatBoxExtremeAge(quote.low20DaysAgo)}
+              </b>
             </span>
             <span>
-              20日高値 <b className="font-mono font-medium text-ink tabular-nums">{formatPx(quote.high20)}</b>
+              20日高値{" "}
+              <b className="font-mono font-medium text-ink tabular-nums">
+                {formatPx(quote.high20)}
+                {formatBoxExtremeAge(quote.high20DaysAgo)}
+              </b>
             </span>
           </div>
         </>

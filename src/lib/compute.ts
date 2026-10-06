@@ -10,6 +10,7 @@ import {
   MA_SLOPE_LOOKBACK,
   REBOUND_SESSIONS,
 } from "./constants";
+import { detectDowntrend, boxExtremeAges } from "./downtrend";
 import type { Bar, ChartBar, EntrySignal, Quote } from "./types";
 
 export type QuoteResult =
@@ -118,6 +119,8 @@ export function computeQuote(bars: Bar[]): QuoteResult {
   const atrRounded = round4(atr);
   const ten = sharesForMove(atrRounded, close);
   const days = reboundDays(bars);
+  const ages = boxExtremeAges(bars, low20, high20);
+  const downtrend = detectDowntrend(bars, maSlopePct(bars), low20, high20);
   return {
     ok: true,
     quote: {
@@ -152,6 +155,10 @@ export function computeQuote(bars: Bar[]): QuoteResult {
         line25: guides.line25,
         reboundDays: days,
       }),
+      low20DaysAgo: ages.lowDaysAgo,
+      high20DaysAgo: ages.highDaysAgo,
+      downtrend,
+      verdict: { state: "待ち", reason: "—" },
     },
   };
 }

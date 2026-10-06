@@ -12,6 +12,13 @@ export function formatPx(n: number): string {
   return px.format(n);
 }
 
+/** Parenthetical age of the 20-day box extreme: （今日） or （3営業日前）. */
+export function formatBoxExtremeAge(daysAgo: number | null | undefined): string {
+  if (daysAgo == null || !Number.isFinite(daysAgo) || daysAgo < 0) return "";
+  if (daysAgo === 0) return "（今日）";
+  return `（${Math.round(daysAgo)}営業日前）`;
+}
+
 /** One decimal, with an explicit sign. Matches the morning sheet's 乖離%. */
 export function devShown(pct: number): number {
   return Math.round(pct * 10) / 10;

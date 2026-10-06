@@ -44,6 +44,10 @@ function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow
       line35: 9.4,
       reboundDays: null,
       entrySignal: "chase",
+      low20DaysAgo: 0,
+      high20DaysAgo: 5,
+      downtrend: { active: false, reason: null, lowDaysAgo: 0, highDaysAgo: 5 },
+      verdict: { state: "待ち", reason: "—" },
     },
     pe: {
       trailingEps: null,
@@ -81,6 +85,7 @@ const filters = {
   atrMin: false,
   rebound: false,
   inOk: false,
+  candidateVerdict: false,
   hideWatch: false,
   sort: "boxAsc" as const,
   q: "",
