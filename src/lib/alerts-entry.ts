@@ -23,6 +23,7 @@ import {
 } from "./morning";
 import { roundRs, rs20 } from "./rs";
 import { compareEntryRs, jst, siteUrl, type AlertItem } from "./alerts";
+import { enrichTickerMeta } from "./ticker-meta";
 import type { Bar, EarningsInput, Quote } from "./types";
 
 export type EntryCandidate = {
@@ -125,13 +126,21 @@ function entryAlertForLine(
   const earningsTitle =
     candidate.earningsUnknown ? `・${EARNINGS_UNKNOWN_PROMINENT}` : earnings ? "" : `・${EARNINGS_UNKNOWN_PROMINENT}`;
 
+  const meta = enrichTickerMeta(candidate.ticker);
+  const metaParts = [
+    meta.name !== candidate.ticker ? meta.name : "",
+    meta.sector,
+  ].filter((part) => part.trim().length > 0);
+  const metaTag = metaParts.join(" · ");
+
   return {
     id: `entry:${candidate.ticker}:${line}:${streakStart}`,
     kind: "entry_in_ok",
     priority: candidate.earningsUnknown || !candidate.earnings ? "low" : "high",
     ticker: candidate.ticker,
-    title: `${candidate.ticker} ${slot}回目（${line}%線・箱${box}%${reboundTag}${lossTag}・ATR ${pct.toFixed(1)}%）${earningsTitle}${semiCap ? `・${SEMI_CAP_BADGE}` : ""}`,
+    title: `${candidate.ticker}${metaTag ? ` ${metaTag}` : ""} ${slot}回目（${line}%線・箱${box}%${reboundTag}${lossTag}・ATR ${pct.toFixed(1)}%）${earningsTitle}${semiCap ? `・${SEMI_CAP_BADGE}` : ""}`,
     body: [
+      metaTag || null,
       `終値 ${formatDollar(quote.close)}（${quote.closeDate}）/ 25%線 ${formatDollar(quote.line25)}・35%線 ${formatDollar(quote.line35)}`,
       `入り ${line}%線 ${formatDollar(entry)} / ${sizeText} / 損切り 箱の安値 ${formatDollar(quote.low20)}`,
       capNote,

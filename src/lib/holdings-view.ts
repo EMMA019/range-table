@@ -1,9 +1,13 @@
 import type { HoldingsConfig } from "./holdings";
 import { isIgnoredTicker } from "./holdings";
+import { enrichTickerMeta } from "./ticker-meta";
 import type { EarningsView, EntrySignal, Quote } from "./types";
 
 export type HoldingRow = {
   ticker: string;
+  name: string;
+  sector: string;
+  industry: string | null;
   shares: number;
   close: number | null;
   closeDate: string | null;
@@ -71,8 +75,12 @@ export function buildHoldingsView(input: {
     const atr = quote?.atr14 ?? null;
     const value = close != null ? holding.shares * close : null;
     const gap = close != null && holding.reviewLine != null ? close - holding.reviewLine : null;
+    const meta = enrichTickerMeta(holding.ticker);
     return {
       ticker: holding.ticker,
+      name: meta.name,
+      sector: meta.sector,
+      industry: meta.industry,
       shares: holding.shares,
       close,
       closeDate: quote?.closeDate ?? null,

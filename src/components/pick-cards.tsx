@@ -20,6 +20,7 @@ import {
 } from "@/lib/format";
 import type { PickCard } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { TickerMetaLine } from "@/components/ticker-meta-line";
 
 export function PickCards({ picks }: { picks: PickCard[] }) {
   return (
@@ -46,8 +47,8 @@ function PickCardView({ pick }: { pick: PickCard }) {
         <div className="min-w-0">
           <div className="flex items-baseline gap-2">
             <h2 className="font-mono text-base font-medium">{pick.ticker}</h2>
-            <span className="truncate text-sm text-muted">{pick.name}</span>
           </div>
+          <TickerMetaLine name={pick.name} sector={pick.sector} industry={pick.industry} className="mt-0.5" />
           {pick.genre && <p className="mt-0.5 text-[11px] text-muted">{pick.genre}</p>}
           {(quote || badges.length > 0) && (
             <div className="mt-1 flex flex-wrap gap-1">

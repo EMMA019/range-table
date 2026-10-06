@@ -11,6 +11,7 @@ import {
   shortDate,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { TickerMetaLine } from "@/components/ticker-meta-line";
 
 function pct(n: number | null, digits = 1): string {
   return n == null ? "—" : `${n >= 0 ? "" : "−"}${Math.abs(n).toFixed(digits)}%`;
@@ -67,8 +68,11 @@ export function HoldingCards({ view }: { view: HoldingsView }) {
     <ul className="space-y-2">
       {view.rows.map((row) => (
         <li key={row.ticker} className="rounded-2xl border border-line bg-elev px-3 py-3 shadow-[var(--shadow)]">
-          <div className="flex items-center gap-2">
-            <span className="text-base font-semibold">{row.ticker}</span>
+          <div className="flex items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <span className="text-base font-semibold">{row.ticker}</span>
+              <TickerMetaLine name={row.name} sector={row.sector} industry={row.industry} className="mt-0.5" />
+            </div>
             {row.entrySignal && (
               <span className={cn("rounded-full px-2 py-0.5 text-[10px]", entrySignalClass(row.entrySignal))}>{entrySignalLabel(row.entrySignal)}</span>
             )}

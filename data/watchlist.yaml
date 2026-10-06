@@ -575,6 +575,12 @@ groups:
         earnings:
           date: 2026-10-13
           status: estimated
+      - ticker: JNJ
+        description: 製薬・医療機器（Johnson & Johnson）
+        tags: [安定ジャブ]
+        earnings:
+          date: 2026-10-14
+          status: estimated
       - ticker: MRK
         description: 製薬大手（がん免疫薬）
         tags: [安定ジャブ]

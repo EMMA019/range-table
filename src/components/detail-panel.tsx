@@ -27,6 +27,7 @@ import {
 } from "@/lib/format";
 import type { ChartPayload, TickerRow } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { TickerMetaLine } from "@/components/ticker-meta-line";
 import { atTop, continuedBreakout, continuedBreakoutText, volumeSurge, volumeThin, zoneOf } from "@/lib/view";
 import { BoxBar } from "./box-bar";
 import { EntryBadge } from "./entry-badge";
@@ -51,7 +52,7 @@ export function DetailPanel({
         </Button>
         {row && (
           <span className="truncate text-sm text-muted">
-            {row.sector}
+            {row.groupName}
             {row.sectorLabel ? ` · ${row.sectorLabel}` : ""}
           </span>
         )}
@@ -76,6 +77,7 @@ export function DetailPanel({
                 <Pill key={tag}>{tag}</Pill>
               ))}
             </div>
+            <TickerMetaLine name={row.name} sector={row.sector} industry={row.industry} className="mt-1" />
             <p className="mt-2 text-sm leading-relaxed">{row.description}</p>
             {row.notes && <p className="mt-1 text-sm leading-relaxed text-muted">{row.notes}</p>}
             {row.watchOnly && (

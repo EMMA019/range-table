@@ -33,6 +33,7 @@ import {
   type PaperPosition,
 } from "@/lib/paper-ledger";
 import type { MarketPayload, TickerRow } from "@/lib/types";
+import { TickerMetaLine } from "@/components/ticker-meta-line";
 import { cn } from "@/lib/utils";
 import { SiteNav } from "./site-nav";
 import { ThemeToggle } from "./theme-toggle";
@@ -251,27 +252,32 @@ export function MorningView() {
               const taken = ledger?.positions.some((position) => position.ticker === row.ticker && position.line === line) ?? false;
               return (
                 <li key={`${row.ticker}-${line}`} className={cn("rounded-2xl border border-line bg-elev px-3 py-3", grey && "opacity-60")}>
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-base font-medium">{row.ticker}</span>
-                      <span className="rounded-full bg-chip px-2 py-0.5 text-[10px] text-ink">{slot === 1 ? "1回目" : "2回目"}</span>
-                      {rebound && <span className="rounded-full border border-line px-2 py-0.5 text-[10px] text-muted">反発あり</span>}
-                      {row.profitability.status === "unknown" && row.ticker !== "SPCX" && (
-                        <span className="rounded-full border border-rust px-2 py-0.5 text-[10px] text-rust">{LOSS_UNKNOWN_TAG}</span>
-                      )}
-                      {row.earningsUnknown && (
-                        <span className="rounded-full border border-rust px-2 py-0.5 text-[10px] text-rust">{EARNINGS_UNKNOWN_PROMINENT}</span>
-                      )}
-                      {row.earnings?.status === "estimated" && !row.earningsUnknown && (
-                        <span className="rounded-full border border-amber-600/60 px-2 py-0.5 text-[10px] text-amber-800">決算日・推定</span>
-                      )}
-                      {lot.flags.capBinding && (
-                        <span className="rounded-full bg-chip px-2 py-0.5 text-[10px] text-ink">$450上限</span>
-                      )}
-                    </span>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-base font-medium">{row.ticker}</span>
+                        <span className="rounded-full bg-chip px-2 py-0.5 text-[10px] text-ink">{slot === 1 ? "1回目" : "2回目"}</span>
+                        {rebound && <span className="rounded-full border border-line px-2 py-0.5 text-[10px] text-muted">反発あり</span>}
+                        {row.profitability.status === "unknown" && row.ticker !== "SPCX" && (
+                          <span className="rounded-full border border-rust px-2 py-0.5 text-[10px] text-rust">{LOSS_UNKNOWN_TAG}</span>
+                        )}
+                        {row.earningsUnknown && (
+                          <span className="rounded-full border border-rust px-2 py-0.5 text-[10px] text-rust">{EARNINGS_UNKNOWN_PROMINENT}</span>
+                        )}
+                        {row.earnings?.status === "estimated" && !row.earningsUnknown && (
+                          <span className="rounded-full border border-amber-600/60 px-2 py-0.5 text-[10px] text-amber-800">決算日・推定</span>
+                        )}
+                        {lot.flags.capBinding && (
+                          <span className="rounded-full bg-chip px-2 py-0.5 text-[10px] text-ink">$450上限</span>
+                        )}
+                      </div>
+                      <TickerMetaLine name={row.name} sector={row.sector} industry={row.industry} className="mt-0.5" />
+                    </div>
                     <span className="font-mono text-sm tabular-nums">{row.quote ? formatPx(row.quote.close) : "—"}</span>
                   </div>
-                  <p className="mt-1 text-[11px] text-muted">{row.sector} · 箱 {row.quote ? row.quote.boxPct.toFixed(1) : "—"}%</p>
+                  <p className="mt-1 text-[11px] text-muted">
+                    {row.groupName} · 箱 {row.quote ? row.quote.boxPct.toFixed(1) : "—"}%
+                  </p>
                   <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[12px]">
                     <dt className="text-muted">入り</dt>
                     <dd className="text-right font-mono tabular-nums">{line}%線 {row.quote ? formatPx(entryPrice(row.quote, line)) : "—"}</dd>

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-06T10:23:57.872Z",
+  "generatedAt": "2026-10-06T10:33:02.728Z",
   "tickers": {
     "A": {
       "name": "Agilent Technologies",
@@ -9,6 +9,11 @@
     "AABA": {
       "name": "Altaba Inc",
       "sector": "",
+      "industry": ""
+    },
+    "AAOI": {
+      "name": "光トランシーバー",
+      "sector": "情報技術",
       "industry": ""
     },
     "AAPL": {
@@ -85,6 +90,11 @@
       "name": "Ameren",
       "sector": "公益",
       "industry": "Multi-Utilities"
+    },
+    "AEHR": {
+      "name": "SiC",
+      "sector": "情報技術",
+      "industry": ""
     },
     "AEP": {
       "name": "American Electric Power",
@@ -191,6 +201,11 @@
       "sector": "ヘルスケア",
       "industry": "Biotechnology"
     },
+    "AMKR": {
+      "name": "後工程",
+      "sector": "情報技術",
+      "industry": ""
+    },
     "AMP": {
       "name": "Ameriprise Financial",
       "sector": "金融",
@@ -251,6 +266,11 @@
       "sector": "情報技術",
       "industry": "Electronic Components"
     },
+    "APLD": {
+      "name": "AI向けデータセンター開発",
+      "sector": "情報技術",
+      "industry": ""
+    },
     "APO": {
       "name": "Apollo Global Management",
       "sector": "金融",
@@ -290,6 +310,16 @@
       "name": "ASML Holding (ADR)",
       "sector": "情報技術",
       "industry": "半導体装置"
+    },
+    "ASTS": {
+      "name": "衛星から直接スマホ通信",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "ASX": {
+      "name": "後工程受託の最大手",
+      "sector": "情報技術",
+      "industry": ""
     },
     "ATO": {
       "name": "Atmos Energy",
@@ -521,6 +551,11 @@
       "sector": "",
       "industry": ""
     },
+    "CAMT": {
+      "name": "HBM",
+      "sector": "情報技術",
+      "industry": ""
+    },
     "CARR": {
       "name": "Carrier Global",
       "sector": "インダストリアル",
@@ -570,6 +605,11 @@
       "name": "Crown Castle",
       "sector": "不動産",
       "industry": "Telecom Tower REITs"
+    },
+    "CCJ": {
+      "name": "ウラン大手",
+      "sector": "インダストリアル",
+      "industry": ""
     },
     "CCL": {
       "name": "Carnival Corporation",
@@ -641,6 +681,11 @@
       "sector": "情報技術",
       "industry": "Communications Equipment"
     },
+    "CIFR": {
+      "name": "マイニング設備をAIデータセンターに転用",
+      "sector": "情報技術",
+      "industry": ""
+    },
     "CINF": {
       "name": "Cincinnati Financial",
       "sector": "金融",
@@ -650,6 +695,11 @@
       "name": "Colgate-Palmolive",
       "sector": "生活必需品",
       "industry": "Household Products"
+    },
+    "CLS": {
+      "name": "AIサーバー",
+      "sector": "情報技術",
+      "industry": ""
     },
     "CLX": {
       "name": "Clorox",
@@ -736,6 +786,11 @@
       "sector": "ヘルスケア",
       "industry": "Health Care Distributors"
     },
+    "CORZ": {
+      "name": "CoreWeave向けデータセンター",
+      "sector": "情報技術",
+      "industry": ""
+    },
     "COST": {
       "name": "Costco",
       "sector": "生活必需品",
@@ -760,6 +815,11 @@
       "name": "Camden Property Trust",
       "sector": "不動産",
       "industry": "Multi-Family Residential REITs"
+    },
+    "CRDO": {
+      "name": "AI向け高速接続",
+      "sector": "情報技術",
+      "industry": ""
     },
     "CRH": {
       "name": "CRH plc",
@@ -1081,6 +1141,11 @@
       "sector": "",
       "industry": ""
     },
+    "ENTG": {
+      "name": "先端プロセス向けの材料",
+      "sector": "情報技術",
+      "industry": ""
+    },
     "EOG": {
       "name": "EOG Resources",
       "sector": "エネルギー",
@@ -1291,6 +1356,26 @@
       "sector": "",
       "industry": ""
     },
+    "FLNC": {
+      "name": "蓄電システム",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "FLY": {
+      "name": "ロケット",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "FN": {
+      "name": "光部品の受託製造",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "FORM": {
+      "name": "プローブカード",
+      "sector": "情報技術",
+      "industry": ""
+    },
     "FOX": {
       "name": "Fox Corporation (Class B)",
       "sector": "コミュニケーション",
@@ -1360,6 +1445,11 @@
       "name": "GE Vernova",
       "sector": "インダストリアル",
       "industry": "Heavy Electrical Equipment"
+    },
+    "GFS": {
+      "name": "受託製造",
+      "sector": "情報技術",
+      "industry": ""
     },
     "GGP": {
       "name": "General Growth Properties",
@@ -1671,6 +1761,16 @@
       "sector": "インダストリアル",
       "industry": "Industrial Machinery & Supplies & Components"
     },
+    "IRDM": {
+      "name": "衛星通信",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "IREN": {
+      "name": "マイニング設備をAIクラウドへ転換",
+      "sector": "情報技術",
+      "industry": ""
+    },
     "IRM": {
       "name": "Iron Mountain",
       "sector": "不動産",
@@ -1851,6 +1951,11 @@
       "sector": "一般消費財",
       "industry": "Homebuilding"
     },
+    "LEU": {
+      "name": "濃縮ウラン",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
     "LH": {
       "name": "Labcorp",
       "sector": "ヘルスケア",
@@ -1921,10 +2026,20 @@
       "sector": "情報技術",
       "industry": "Semiconductor Materials & Equipment"
     },
+    "LSCC": {
+      "name": "低消費電力FPGA",
+      "sector": "情報技術",
+      "industry": ""
+    },
     "LULU": {
       "name": "Lululemon Athletica",
       "sector": "一般消費財",
       "industry": "Apparel, Accessories & Luxury Goods"
+    },
+    "LUNR": {
+      "name": "月着陸",
+      "sector": "インダストリアル",
+      "industry": ""
     },
     "LUV": {
       "name": "Southwest Airlines",
@@ -2061,6 +2176,11 @@
       "sector": "生活必需品",
       "industry": "Tobacco"
     },
+    "MOD": {
+      "name": "データセンター向け冷却",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
     "MON": {
       "name": "Monsanto Co",
       "sector": "",
@@ -2140,6 +2260,11 @@
       "name": "Mettler Toledo",
       "sector": "ヘルスケア",
       "industry": "Life Sciences Tools & Services"
+    },
+    "MTSI": {
+      "name": "光通信",
+      "sector": "情報技術",
+      "industry": ""
     },
     "MU": {
       "name": "Micron Technology",
@@ -2226,6 +2351,11 @@
       "sector": "インダストリアル",
       "industry": "Aerospace & Defense"
     },
+    "NOK": {
+      "name": "Infinera買収で光伝送",
+      "sector": "情報技術",
+      "industry": ""
+    },
     "NOW": {
       "name": "ServiceNow",
       "sector": "情報技術",
@@ -2266,10 +2396,20 @@
       "sector": "情報技術",
       "industry": "Semiconductors"
     },
+    "NVMI": {
+      "name": "計測装置",
+      "sector": "情報技術",
+      "industry": ""
+    },
     "NVR": {
       "name": "NVR, Inc.",
       "sector": "一般消費財",
       "industry": "Homebuilding"
+    },
+    "NVTS": {
+      "name": "GaN",
+      "sector": "情報技術",
+      "industry": ""
     },
     "NWS": {
       "name": "News Corp (Class B)",
@@ -2301,6 +2441,11 @@
       "sector": "エネルギー",
       "industry": "Oil & Gas Storage & Transportation"
     },
+    "OKLO": {
+      "name": "小型炉",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
     "OMC": {
       "name": "Omnicom Group",
       "sector": "コミュニケーション",
@@ -2310,6 +2455,16 @@
       "name": "ON Semiconductor",
       "sector": "情報技術",
       "industry": "Semiconductors"
+    },
+    "ONDS": {
+      "name": "ドローン",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
+    "ONTO": {
+      "name": "先端パッケージの検査",
+      "sector": "情報技術",
+      "industry": ""
     },
     "ORCL": {
       "name": "Oracle Corporation",
@@ -2431,6 +2586,11 @@
       "sector": "素材",
       "industry": "Paper & Plastic Packaging Products & Materials"
     },
+    "PL": {
+      "name": "地球観測衛星データ",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
     "PLD": {
       "name": "Prologis",
       "sector": "不動産",
@@ -2465,6 +2625,21 @@
       "name": "Insulet Corporation",
       "sector": "ヘルスケア",
       "industry": "Health Care Equipment"
+    },
+    "POET": {
+      "name": "光インターポーザー",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "POWI": {
+      "name": "パワー半導体",
+      "sector": "情報技術",
+      "industry": ""
+    },
+    "POWL": {
+      "name": "配電盤",
+      "sector": "インダストリアル",
+      "industry": ""
     },
     "PPG": {
       "name": "PPG Industries",
@@ -2551,6 +2726,11 @@
       "sector": "コミュニケーション",
       "industry": "Interactive Media & Services"
     },
+    "RDW": {
+      "name": "宇宙機の部品",
+      "sector": "インダストリアル",
+      "industry": ""
+    },
     "REG": {
       "name": "Regency Centers",
       "sector": "不動産",
@@ -2590,6 +2770,11 @@
       "name": "Ralph Lauren Corporation",
       "sector": "一般消費財",
       "industry": "Apparel, Accessories & Luxury Goods"
+    },
+    "RMBS": {
+      "name": "メモリインターフェースIP",
+      "sector": "情報技術",
+      "industry": ""
     },
     "RMD": {
       "name": "ResMed|",
@@ -2696,6 +2881,11 @@
       "sector": "指数・ETF",
       "industry": "短期国債"
     },
+    "SITM": {
+      "name": "MEMSタイミング",
+      "sector": "情報技術",
+      "industry": ""
+    },
     "SIVB": {
       "name": "SVB Financial",
       "sector": "",
@@ -2715,6 +2905,11 @@
       "name": "Supermicro",
       "sector": "情報技術",
       "industry": "Technology Hardware, Storage & Peripherals"
+    },
+    "SMR": {
+      "name": "小型モジュール炉",
+      "sector": "インダストリアル",
+      "industry": ""
     },
     "SNA": {
       "name": "Snap-on",
@@ -2810,6 +3005,11 @@
       "name": "Steel Dynamics",
       "sector": "素材",
       "industry": "Steel"
+    },
+    "STM": {
+      "name": "車載",
+      "sector": "情報技術",
+      "industry": ""
     },
     "STT": {
       "name": "State Street Corporation",
@@ -2930,6 +3130,11 @@
       "name": "TKO Group Holdings",
       "sector": "コミュニケーション",
       "industry": "Movies & Entertainment"
+    },
+    "TLN": {
+      "name": "原子力",
+      "sector": "インダストリアル",
+      "industry": ""
     },
     "TM": {
       "name": "トヨタ自動車 (ADR)",
@@ -3121,6 +3326,11 @@
       "sector": "ヘルスケア",
       "industry": "Health Care Technology"
     },
+    "VIAV": {
+      "name": "光通信の測定器",
+      "sector": "情報技術",
+      "industry": ""
+    },
     "VICI": {
       "name": "Vici Properties",
       "sector": "不動産",
@@ -3165,6 +3375,11 @@
       "name": "Vertex Pharmaceuticals",
       "sector": "ヘルスケア",
       "industry": "Biotechnology"
+    },
+    "VSAT": {
+      "name": "衛星通信",
+      "sector": "インダストリアル",
+      "industry": ""
     },
     "VST": {
       "name": "Vistra Corp.",
@@ -3285,6 +3500,11 @@
       "name": "Willis Towers Watson",
       "sector": "金融",
       "industry": "Insurance Brokers"
+    },
+    "WULF": {
+      "name": "マイニングからAIホスティングへ",
+      "sector": "情報技術",
+      "industry": ""
     },
     "WY": {
       "name": "Weyerhaeuser",

@@ -6,6 +6,8 @@ import fs from "fs";
 import path from "path";
 import { BENCHMARKS, FX_USDJPY } from "../src/lib/constants";
 import { parseCsvLine } from "../src/lib/sp500-pit";
+import { loadTeamPicks } from "../src/lib/picks";
+import { loadWatchlist } from "../src/lib/watchlist";
 
 const OUT = path.join(process.cwd(), "data", "ticker_meta.json");
 const PIT_NAMES = path.join(process.cwd(), "data", "pit_ticker_names.json");
@@ -51,6 +53,27 @@ function applyPatch(base: TickerMetaEntry, patch: Partial<TickerMetaEntry>): Tic
     sector: patch.sector?.trim() ? patch.sector.trim() : base.sector,
     industry: patch.industry?.trim() ? patch.industry.trim() : base.industry,
   };
+}
+
+function applyPatchFillGaps(base: TickerMetaEntry, patch: Partial<TickerMetaEntry>): TickerMetaEntry {
+  return {
+    name: base.name.trim() ? base.name : (patch.name?.trim() ?? ""),
+    sector: base.sector.trim() ? base.sector : (patch.sector?.trim() ?? ""),
+    industry: base.industry.trim() ? base.industry : (patch.industry?.trim() ?? ""),
+  };
+}
+
+function mergeLayersFillGaps(
+  base: Record<string, TickerMetaEntry>,
+  layer: Record<string, Partial<TickerMetaEntry>>,
+): Record<string, TickerMetaEntry> {
+  const out = { ...base };
+  for (const [key, patch] of Object.entries(layer)) {
+    const ticker = normTicker(key);
+    const cur = out[ticker] ?? emptyEntry();
+    out[ticker] = applyPatchFillGaps(cur, patch);
+  }
+  return out;
 }
 
 /** Layer 1 — static ETFs / benchmarks (lowest priority). */
@@ -124,6 +147,59 @@ const MANUAL_OVERRIDES: Record<string, TickerMetaEntry> = {
   TRI: { name: "Thomson Reuters", sector: "インダストリアル", industry: "Research & Consulting Services" },
   TTD: { name: "The Trade Desk", sector: "コミュニケーション", industry: "Advertising" },
 };
+
+/** Thematic watchlist group → coarse GICS sector (Japanese). */
+const GROUP_GICS_JA: Record<string, string> = {
+  semi: "情報技術",
+  equipment: "情報技術",
+  network: "情報技術",
+  server: "情報技術",
+  cloud: "情報技術",
+  power: "インダストリアル",
+  generation: "インダストリアル",
+  space: "インダストリアル",
+  financials: "金融",
+  health: "ヘルスケア",
+  industrials: "インダストリアル",
+  discretionary: "一般消費財",
+  staples: "生活必需品",
+  energy: "エネルギー",
+  communication: "コミュニケーション",
+  software: "情報技術",
+  materials: "素材",
+  utilities: "公益",
+  realestate: "不動産",
+};
+
+function shortDescriptionLabel(description: string, ticker: string): string {
+  const head = description.trim().split(/[（(。・]/)[0]?.trim();
+  return head && head.length > 1 ? head : ticker;
+}
+
+function watchlistFillLayer(): Record<string, Partial<TickerMetaEntry>> {
+  const list = loadWatchlist();
+  const out: Record<string, Partial<TickerMetaEntry>> = {};
+  for (const group of list.groups) {
+    const sector = GROUP_GICS_JA[group.id] ?? group.name;
+    for (const row of group.tickers) {
+      const key = normTicker(row.ticker);
+      out[key] = {
+        name: shortDescriptionLabel(row.description, key),
+        sector,
+      };
+    }
+  }
+  return out;
+}
+
+function teamPicksFillLayer(): Record<string, Partial<TickerMetaEntry>> {
+  const out: Record<string, Partial<TickerMetaEntry>> = {};
+  for (const pick of loadTeamPicks()) {
+    const key = normTicker(pick.ticker);
+    out[key] = { name: pick.name.trim(), sector: pick.genre.trim() || "情報技術" };
+  }
+  return out;
+}
 
 async function fetchText(url: string): Promise<string> {
   const res = await fetch(url, {
@@ -226,8 +302,10 @@ function mergeLayers(
 ): Record<string, TickerMetaEntry> {
   const tickers: Record<string, TickerMetaEntry> = {};
   for (const layer of layers) {
-    const entries =
-      layer instanceof Map ? [...layer.entries()] : Object.entries(layer).map(([k, v]) => [normTicker(k), v]);
+    const entries: Array<[string, Partial<TickerMetaEntry>]> =
+      layer instanceof Map
+        ? [...layer.entries()].map(([k, v]) => [normTicker(k), v])
+        : Object.entries(layer).map(([k, v]) => [normTicker(k), v]);
     for (const [ticker, patch] of entries) {
       const cur = tickers[ticker] ?? emptyEntry();
       tickers[ticker] = applyPatch(cur, patch);
@@ -251,6 +329,8 @@ export async function buildTickerMeta(): Promise<{
   const monitorUnion = loadMonitorUnion();
 
   let tickers = mergeLayers([staticLayer(), pitLayer, sp500]);
+  tickers = mergeLayersFillGaps(tickers, watchlistFillLayer());
+  tickers = mergeLayersFillGaps(tickers, teamPicksFillLayer());
   for (const t of monitorUnion) {
     if (!tickers[t]) tickers[t] = emptyEntry();
   }

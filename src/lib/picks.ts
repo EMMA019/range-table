@@ -3,6 +3,7 @@ import path from "path";
 import { PICK_WATCH_PRICE } from "./constants";
 import { classifyEarnings } from "./earnings";
 import type { PickCard, PickQuote, PickStatus, TeamPick } from "./types";
+import { enrichTickerMeta } from "./ticker-meta";
 
 const PICKS_PATH = path.join(process.cwd(), "data", "team_picks.json");
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -36,9 +37,12 @@ export function buildPickCard(
   const earnings = pick.earningsDate
     ? classifyEarnings(today, { date: pick.earningsDate, status: "confirmed" })
     : null;
+  const meta = enrichTickerMeta(pick.ticker);
   return {
     ticker: pick.ticker,
-    name: pick.name,
+    name: meta.name.trim() || pick.name,
+    sector: meta.sector,
+    industry: meta.industry,
     genre: pick.genre,
     thesisFacts: pick.thesisFacts,
     thesisHypothesis: pick.thesisHypothesis,

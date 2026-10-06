@@ -101,7 +101,8 @@ export function applyView(rows: TickerRow[], filters: ViewFilters): TickerRow[] 
       if (!row.quote || boxMetricsUnreliable(row.quote) || row.quote.entrySignal !== "in_ok") return false;
     }
     if (query) {
-      const hay = `${row.ticker} ${row.description} ${row.notes} ${row.sector} ${row.sectorLabel ?? ""} ${row.tags.join(" ")}`.toLowerCase();
+      const hay =
+        `${row.ticker} ${row.name} ${row.sector} ${row.industry ?? ""} ${row.description} ${row.notes} ${row.groupName} ${row.sectorLabel ?? ""} ${row.tags.join(" ")}`.toLowerCase();
       if (!hay.includes(query)) return false;
     }
     return true;
@@ -235,7 +236,7 @@ export function sectorsOf(rows: TickerRow[]): { id: string; name: string; count:
   for (const row of rows) {
     const found = out.find((sector) => sector.id === row.sectorId);
     if (found) found.count += 1;
-    else out.push({ id: row.sectorId, name: row.sector, count: 1 });
+    else out.push({ id: row.sectorId, name: row.groupName, count: 1 });
   }
   for (const item of TAG_SECTORS) {
     const count = rows.filter((row) => row.tags.includes(item.tag)).length;

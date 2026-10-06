@@ -131,8 +131,15 @@ export type PeView = {
 
 export type TickerRow = {
   ticker: string;
-  sectorId: string;
+  /** Short company name (e.g. Johnson & Johnson). */
+  name: string;
+  /** GICS sector label (Japanese). */
   sector: string;
+  /** GICS sub-industry when known. */
+  industry: string | null;
+  sectorId: string;
+  /** Watchlist group or index membership label (was `sector` before meta). */
+  groupName: string;
   description: string;
   notes: string;
   tags: string[];
@@ -238,6 +245,9 @@ export type PickQuote = {
 export type PickCard = {
   ticker: string;
   name: string;
+  /** GICS sector from ticker_meta.json. */
+  sector: string;
+  industry: string | null;
   genre: string;
   thesisFacts: string;
   thesisHypothesis: string;
