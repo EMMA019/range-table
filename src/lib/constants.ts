@@ -79,6 +79,9 @@ export const SEMI_SLOT_CAP = 2;
 /** Entry alerts need ATR(14) at least this percent of the close. */
 export const ALERT_MIN_ATR_PCT = 3;
 
+/** Dashboard quick filter: ATR(14) as a percent of the close. */
+export const ATR_MIN_PCT = 2;
+
 /** A team pick priced above this is marked 監視のみ even when its status is 候補. */
 export const PICK_WATCH_PRICE = 450;
 

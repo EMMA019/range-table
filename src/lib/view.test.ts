@@ -74,6 +74,7 @@ const filters = {
   surge: false,
   earnings: false,
   lowCorr: false,
+  atrMin: false,
   rebound: false,
   inOk: false,
   hideWatch: false,
@@ -271,6 +272,20 @@ describe("applyView", () => {
         ["financials", "金融", 1],
         ["software", "IT・ソフト", 1],
       ],
+    );
+  });
+
+  it("filters by minimum ATR percent of the close", () => {
+    const names = [
+      row({ ticker: "OK", quote: { ...row({ ticker: "OK" }).quote!, close: 100, atr14: 2 } }),
+      row({ ticker: "EDGE", quote: { ...row({ ticker: "EDGE" }).quote!, close: 100, atr14: 2.01 } }),
+      row({ ticker: "LOW", quote: { ...row({ ticker: "LOW" }).quote!, close: 100, atr14: 1.99 } }),
+      row({ ticker: "NOATR", quote: { ...row({ ticker: "NOATR" }).quote!, atr14: 0 } }),
+      row({ ticker: "FAIL", quote: null }),
+    ];
+    assert.deepEqual(
+      applyView(names, { ...filters, atrMin: true }).map((item) => item.ticker).sort(),
+      ["EDGE", "OK"],
     );
   });
 
