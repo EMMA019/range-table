@@ -7,8 +7,8 @@ describe("watchlist", () => {
   const tickers = list.groups.flatMap((group) => group.tickers);
 
   it("loads the grouped list without duplicate tickers", () => {
-    assert.equal(tickers.length, 187);
-    assert.equal(new Set(tickers.map((item) => item.ticker)).size, 187);
+    assert.equal(tickers.length, 188);
+    assert.equal(new Set(tickers.map((item) => item.ticker)).size, 188);
     assert.equal(list.groups[0]?.id, "semi");
     assert.equal(list.groups[0]?.name, "半導体");
     assert.equal(list.groups.at(-1)?.id, "realestate");
@@ -16,7 +16,7 @@ describe("watchlist", () => {
     assert.equal(list.groups.some((group) => group.id === "jab_sp500" || group.id === "ibkr"), false);
     assert.deepEqual(
       list.groups.map((group) => group.tickers.length),
-      [27, 10, 14, 10, 13, 9, 10, 9, 12, 11, 11, 10, 5, 9, 8, 7, 7, 2, 3],
+      [27, 10, 14, 10, 13, 9, 10, 9, 12, 12, 11, 10, 5, 9, 8, 7, 7, 2, 3],
     );
     for (const removed of ["QRVO", "HUT", "AMAT", "NVT", "DLR"]) {
       assert.equal(tickers.some((item) => item.ticker === removed), false);
@@ -41,7 +41,7 @@ describe("watchlist", () => {
   it("splits the S&P jab names into sectors and keeps the shared tag", () => {
     const groupOf = (ticker: string) => list.groups.find((group) => group.tickers.some((item) => item.ticker === ticker));
     const jab = tickers.filter((item) => item.tags.includes("安定ジャブ"));
-    assert.equal(jab.length, 83);
+    assert.equal(jab.length, 84);
     assert.equal(jab.every((item) => item.sectorLabel == null), true);
     assert.equal(tickers.filter((item) => !item.tags.includes("安定ジャブ")).length, 104);
     assert.deepEqual(
@@ -49,7 +49,7 @@ describe("watchlist", () => {
       [
         "AAPL", "ABNB", "ADM", "ADSK", "AMGN", "AMT", "APD", "BA", "BAC", "BKNG", "BSX", "C", "CDNS", "CHTR", "CI",
         "CMG", "COF", "COP", "CPRT", "CVX", "DAL", "DGX", "DHR", "DIS", "DRI", "DVN", "EIX", "EOG", "ETR", "EW", "F",
-        "FANG", "FCX", "FERG", "FTNT", "GE", "GEHC", "HON", "IBKR", "IFF", "ISRG", "KHC", "LYV", "MCO", "MDT", "MMM",
+        "FANG", "FCX", "FERG", "FTNT", "GE", "GEHC", "HON", "IBKR", "IFF", "ISRG", "JNJ", "KHC", "LYV", "MCO", "MDT", "MMM",
         "MO", "MOS", "MPC", "MRK", "MS", "MSCI", "NEM", "NFLX", "NKE", "NOW", "OXY", "PGR", "PM", "PYPL", "RCL", "RTX",
         "SBUX", "SCHW", "SHW", "SPGI", "STLD", "T", "TJX", "TMUS", "TSLA", "TTWO", "TYL", "UBER", "UNH", "VLO", "VMRK",
         "VRSK", "VZ", "WELL", "WFC", "WMT", "XOM",
