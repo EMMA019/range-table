@@ -6,13 +6,13 @@
     "thesis_facts": "残す。箱29%・保有相関0.06で分散効果大。反発未確認。決算は10/28推定。",
     "thesis_hypothesis": "",
     "entry_line": 335.51,
-    "entry_basis": "直近安値 $335.51（直近10営業日の最安値・2026-10-01、Yahoo日足、2026-10-01）",
+    "entry_basis": "直近安値 $335.51（直近10営業日の最安値・2026-10-01、Yahoo日足、2026-10-05）",
     "review_line": 327.74,
-    "review_basis": "20日安値 $327.74（2026-09-10、20日安値$327.74〜高値$364.17、Yahoo日足、2026-10-01）",
+    "review_basis": "20日安値 $327.74（基準日終値 2026-10-05、Yahoo日足、2026-10-05）",
     "earnings_date": "2026-10-28",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-02"
+    "as_of": "2026-10-05"
   },
   {
     "ticker": "AMZN",
@@ -21,13 +21,13 @@
     "thesis_facts": "残す。箱23%・相関0.24。反発未確認。決算は10/29推定。",
     "thesis_hypothesis": "",
     "entry_line": 244.73,
-    "entry_basis": "直近安値 $244.73（直近10営業日の最安値・2026-09-28、Yahoo日足、2026-10-01）",
-    "review_line": 238.88,
-    "review_basis": "20日安値$244.30−ATR14 $5.42 ＝ $238.88（入りとの差が1%以内のため。20日安値は2026-09-16、ATR14は基準日2026-10-01までの14営業日の真の値幅の単純平均、Yahoo日足、2026-10-01）",
+    "entry_basis": "直近安値 $244.73（直近10営業日の最安値・2026-09-28、Yahoo日足、2026-10-05）",
+    "review_line": 244.3,
+    "review_basis": "20日安値 $244.30（基準日終値 2026-10-05、Yahoo日足、2026-10-05）",
     "earnings_date": "2026-10-29",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-02"
+    "as_of": "2026-10-05"
   },
   {
     "ticker": "CEG",
@@ -36,13 +36,13 @@
     "thesis_facts": "残す。箱20%、10/1に1日反発。相関0.46。",
     "thesis_hypothesis": "",
     "entry_line": 247.2,
-    "entry_basis": "直近安値 $247.20（直近10営業日の最安値・2026-09-30、Yahoo日足、2026-10-01）",
-    "review_line": 236.92,
-    "review_basis": "20日安値$247.20−ATR14 $10.28 ＝ $236.92（入りとの差が1%以内のため。20日安値は2026-09-30、ATR14は基準日2026-10-01までの14営業日の真の値幅の単純平均、Yahoo日足、2026-10-01）",
+    "entry_basis": "直近安値 $247.20（直近10営業日の最安値・2026-09-30、Yahoo日足、2026-10-05）",
+    "review_line": 247.2,
+    "review_basis": "20日安値 $247.20（基準日終値 2026-10-05、Yahoo日足、2026-10-05）",
     "earnings_date": "2026-11-06",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-02"
+    "as_of": "2026-10-05"
   },
   {
     "ticker": "AKAM",
@@ -50,14 +50,14 @@
     "genre": "大手クラウド・ソフト",
     "thesis_facts": "残す。箱22%・反発未確認。Anthropic IPOの関係者（向きは不明）。",
     "thesis_hypothesis": "",
-    "entry_line": 102.61,
-    "entry_basis": "直近安値 $102.61（直近10営業日の最安値・2026-09-18、Yahoo日足、2026-10-01）",
+    "entry_line": 104,
+    "entry_basis": "直近安値 $104.00（直近10営業日の最安値・2026-10-01、Yahoo日足、2026-10-05）",
     "review_line": 100.77,
-    "review_basis": "20日安値 $100.77（2026-09-08、20日安値$100.77〜高値$128.46、Yahoo日足、2026-10-01）",
+    "review_basis": "20日安値 $100.77（基準日終値 2026-10-05、Yahoo日足、2026-10-05）",
     "earnings_date": "2026-11-05",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-02"
+    "as_of": "2026-10-05"
   },
   {
     "ticker": "VRSK",
@@ -65,14 +65,14 @@
     "genre": "保険データ分析",
     "thesis_facts": "新規。箱16.5%・2日続伸・保有相関−0.50。ソフト株安に巻き込まれる注意。",
     "thesis_hypothesis": "",
-    "entry_line": 163.29,
-    "entry_basis": "直近安値 $163.29（直近10営業日の最安値・2026-09-29、Yahoo日足、2026-10-01）",
-    "review_line": 158.1,
-    "review_basis": "20日安値$163.29−ATR14 $5.19 ＝ $158.10（入りとの差が1%以内のため。20日安値は2026-09-29、ATR14は基準日2026-10-01までの14営業日の真の値幅の単純平均、Yahoo日足、2026-10-01）",
+    "entry_line": 161.51,
+    "entry_basis": "直近安値 $161.51（直近10営業日の最安値・2026-10-05、Yahoo日足、2026-10-05）",
+    "review_line": 161.51,
+    "review_basis": "20日安値 $161.51（基準日終値 2026-10-05、Yahoo日足、2026-10-05）",
     "earnings_date": "2026-11-04",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-02"
+    "as_of": "2026-10-05"
   },
   {
     "ticker": "EOG",
@@ -81,13 +81,13 @@
     "thesis_facts": "新規。箱23.6%、10/1に1日反発、相関−0.35で業種が分散。",
     "thesis_hypothesis": "",
     "entry_line": 137.35,
-    "entry_basis": "直近安値 $137.35（直近10営業日の最安値・2026-09-30、Yahoo日足、2026-10-01）",
-    "review_line": 133.52,
-    "review_basis": "20日安値$137.35−ATR14 $3.83 ＝ $133.52（入りとの差が1%以内のため。20日安値は2026-09-30、ATR14は基準日2026-10-01までの14営業日の真の値幅の単純平均、Yahoo日足、2026-10-01）",
+    "entry_basis": "直近安値 $137.35（直近10営業日の最安値・2026-09-30、Yahoo日足、2026-10-05）",
+    "review_line": 137.35,
+    "review_basis": "20日安値 $137.35（基準日終値 2026-10-05、Yahoo日足、2026-10-05）",
     "earnings_date": "2026-11-05",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-02"
+    "as_of": "2026-10-05"
   },
   {
     "ticker": "MO",
@@ -95,14 +95,14 @@
     "genre": "米たばこ大手",
     "thesis_facts": "新規（反発待ち）。箱11.3%・相関−0.45。安値更新が止まるまで待つ。",
     "thesis_hypothesis": "",
-    "entry_line": 66.43,
-    "entry_basis": "直近安値 $66.43（直近10営業日の最安値・2026-10-01、Yahoo日足、2026-10-01）",
-    "review_line": 65.1,
-    "review_basis": "20日安値$66.43−ATR14 $1.33 ＝ $65.10（入りとの差が1%以内のため。20日安値は2026-10-01、ATR14は基準日2026-10-01までの14営業日の真の値幅の単純平均、Yahoo日足、2026-10-01）",
+    "entry_line": 65.78,
+    "entry_basis": "直近安値 $65.78（直近10営業日の最安値・2026-10-05、Yahoo日足、2026-10-05）",
+    "review_line": 65.78,
+    "review_basis": "20日安値 $65.78（基準日終値 2026-10-05、Yahoo日足、2026-10-05）",
     "earnings_date": "2026-10-29",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-02"
+    "as_of": "2026-10-05"
   },
   {
     "ticker": "GEHC",
@@ -110,14 +110,14 @@
     "genre": "医療機器（画像診断）",
     "thesis_facts": "新規（反発待ち）。箱11.8%・相関−0.44。安値更新が止まるまで待つ。",
     "thesis_hypothesis": "",
-    "entry_line": 63.71,
-    "entry_basis": "直近安値 $63.71（直近10営業日の最安値・2026-09-21、Yahoo日足、2026-10-01）",
-    "review_line": 62.99,
-    "review_basis": "20日安値 $62.99（2026-09-17、20日安値$62.99〜高値$71.36、Yahoo日足、2026-10-01）",
+    "entry_line": 63.37,
+    "entry_basis": "直近安値 $63.37（直近10営業日の最安値・2026-10-05、Yahoo日足、2026-10-05）",
+    "review_line": 63,
+    "review_basis": "20日安値 $62.99（基準日終値 2026-10-05、Yahoo日足、2026-10-05）",
     "earnings_date": "2026-11-04",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-02"
+    "as_of": "2026-10-05"
   },
   {
     "ticker": "MDT",
@@ -126,12 +126,12 @@
     "thesis_facts": "新規（反発待ち）。箱12.8%・相関−0.37。決算が一番遠い（11/17推定）。",
     "thesis_hypothesis": "",
     "entry_line": 85.22,
-    "entry_basis": "直近安値 $85.22（直近10営業日の最安値・2026-10-01、Yahoo日足、2026-10-01）",
-    "review_line": 83.29,
-    "review_basis": "20日安値$85.22−ATR14 $1.93 ＝ $83.29（入りとの差が1%以内のため。20日安値は2026-10-01、ATR14は基準日2026-10-01までの14営業日の真の値幅の単純平均、Yahoo日足、2026-10-01）",
+    "entry_basis": "直近安値 $85.22（直近10営業日の最安値・2026-10-01、Yahoo日足、2026-10-05）",
+    "review_line": 85.22,
+    "review_basis": "20日安値 $85.22（基準日終値 2026-10-05、Yahoo日足、2026-10-05）",
     "earnings_date": "2026-11-17",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-02"
+    "as_of": "2026-10-05"
   }
 ]
