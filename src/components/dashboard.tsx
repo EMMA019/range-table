@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CHIPS, SORT_OPTIONS, UNIVERSE_SCOPES, type ChipKey, type SortId, type UniverseScopeId } from "@/lib/copy";
+import { CHIPS, CORP_ACTION_BADGE, SORT_OPTIONS, UNIVERSE_SCOPES, type ChipKey, type SortId, type UniverseScopeId } from "@/lib/copy";
 import { formatPe } from "@/lib/pe";
 import {
   SEMI_CAP_BADGE,
@@ -582,6 +582,7 @@ function TickerCard({
     row.semi && row.semiFull && quote?.entrySignal === "in_ok" && !row.watchOnly ? SEMI_CAP_BADGE : null,
     row.watchOnly ? "監視のみ" : null,
     quote?.gapWarning ? "価格が飛んでいる" : null,
+    quote?.corpActionWarning ? CORP_ACTION_BADGE : null,
     row.tags.includes("高ボラ") ? "高ボラ" : null,
     row.pe.recovering ? "利益回復中" : null,
     quote && continuedBreakout(quote) ? continuedBreakoutText(quote) : null,

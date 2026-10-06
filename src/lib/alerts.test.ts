@@ -104,6 +104,12 @@ describe("entry alerts", () => {
       entryAlerts([candidate({ watchOnly: true, sectorId: "index", earningsUnknown: true, earnings: null })], TODAY, AFTER_CLOSE).length,
       1,
     );
+    const spinBars = bandBars();
+    for (let i = 1; i < spinBars.length; i++) spinBars[i].c = 85;
+    const last = spinBars[spinBars.length - 1];
+    last.c = 12;
+    last.l = 11;
+    assert.equal(entryAlerts([candidate({ bars: spinBars, ticker: "SPIN" })], TODAY, AFTER_CLOSE).length, 0);
     assert.equal(entryAlerts([candidate({ ticker: "ONDS" })], TODAY, AFTER_CLOSE).length, 0);
     assert.equal(entryAlerts([candidate({ bars: undefined })], TODAY, AFTER_CLOSE).length, 0);
     assert.equal(

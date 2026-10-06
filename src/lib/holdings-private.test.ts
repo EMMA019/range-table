@@ -26,6 +26,7 @@ function quote(partial: Partial<Quote> = {}): Quote {
     cost10: 300,
     brokeHigh: false,
     gapWarning: false,
+    corpActionWarning: null,
     maSlopePct: 0,
     volume: 1,
     avgVolume20: 1,

@@ -30,6 +30,7 @@ function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow
       cost10: 100,
       brokeHigh: false,
       gapWarning: false,
+      corpActionWarning: null,
       maSlopePct: null,
       volume: 1_000_000,
       avgVolume20: 1_000_000,
@@ -273,6 +274,25 @@ describe("applyView", () => {
         ["software", "IT・ソフト", 1],
       ],
     );
+  });
+
+  it("excludes corp-action names from box-based chips", () => {
+    const spin = row({
+      ticker: "SPIN",
+      quote: {
+        ...row({ ticker: "SPIN" }).quote!,
+        boxPct: 10,
+        entrySignal: "in_ok",
+        reboundDays: 2,
+        corpActionWarning: { date: "2026-10-01", pctMove: -85 },
+      },
+    });
+    const ok = row({
+      ticker: "OK",
+      quote: { ...row({ ticker: "OK" }).quote!, boxPct: 10, entrySignal: "in_ok", reboundDays: 2 },
+    });
+    assert.deepEqual(applyView([spin, ok], { ...filters, bottom: true }).map((r) => r.ticker), ["OK"]);
+    assert.deepEqual(applyView([spin, ok], { ...filters, inOk: true }).map((r) => r.ticker), ["OK"]);
   });
 
   it("filters by minimum ATR percent of the close", () => {
