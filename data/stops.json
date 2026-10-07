@@ -1,0 +1,8 @@
+{
+  "note": "見直しの価格。株数は HOLDINGS_JSON。ON は終値が20日線を下回ったら見直しで、固定価格の損切りではない。発注はしない。",
+  "rules": [
+    { "ticker": "AVGO", "kind": "price", "price": 364 },
+    { "ticker": "VRT", "kind": "price", "price": 240 },
+    { "ticker": "ON", "kind": "belowMa20" }
+  ]
+}

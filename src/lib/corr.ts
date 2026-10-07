@@ -168,3 +168,18 @@ export function buildCorrelations(
   }
   return out;
 }
+
+/** Benchmark correlation for every symbol that has closes. Does not need holdings. */
+export function benchmarkCorrelations(
+  closes: Record<string, Array<{ date: string; c: number }>>,
+  settings: CorrSettings,
+): Map<string, number | null> {
+  const benchmarkBars = closes[settings.benchmark];
+  if (!benchmarkBars) return new Map();
+  const benchmarkReturns = dailyReturns(benchmarkBars);
+  const out = new Map<string, number | null>();
+  for (const symbol of Object.keys(closes)) {
+    out.set(symbol, corrOnWindow(dailyReturns(closes[symbol] ?? []), benchmarkReturns, settings.window));
+  }
+  return out;
+}

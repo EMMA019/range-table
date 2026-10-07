@@ -1,7 +1,9 @@
 import type { HoldingsConfig } from "./holdings";
 import { isIgnoredTicker } from "./holdings";
+import { buildRiskLine, positionsFromHoldings, type RiskLine } from "./risk-line";
+import { loadStopRules } from "./stops";
 import { enrichTickerMeta } from "./ticker-meta";
-import type { EarningsView, EntrySignal, Quote } from "./types";
+import type { Bar, EarningsView, EntrySignal, Quote } from "./types";
 
 export type HoldingRow = {
   ticker: string;
@@ -54,9 +56,9 @@ export type AccountView = {
   unpriced: string[];
 };
 
-export type HoldingsView = { rows: HoldingRow[]; account: AccountView; warnings: string[] };
+export type HoldingsView = { rows: HoldingRow[]; account: AccountView; warnings: string[]; stopRisk: RiskLine };
 
-export type QuoteInput = { quote: Quote | null; stale: boolean; error: string | null };
+export type QuoteInput = { quote: Quote | null; stale: boolean; error: string | null; bars?: Bar[] };
 
 export function buildHoldingsView(input: {
   config: HoldingsConfig;
@@ -125,8 +127,25 @@ export function buildHoldingsView(input: {
 
   const warnings = [...config.warnings];
   if (rate == null) warnings.push("ドル円が取れていないので、円建ての合計を出せない");
+  const positions = positionsFromHoldings(
+    holdings,
+    Object.fromEntries(
+      holdings.map((holding) => {
+        const entry = quotes[holding.ticker];
+        return [holding.ticker, { close: entry?.quote?.close ?? null, bars: entry?.bars }];
+      }),
+    ),
+    loadStopRules(),
+  );
+  const stopRisk = buildRiskLine({
+    defenseLineJpy: config.defenseLineJpy,
+    accountCenterJpy: config.accountCenterJpy,
+    usdJpy: rate,
+    positions,
+  });
   return {
     rows,
+    stopRisk,
     account: {
       stockUsd,
       cashSettledUsd: settled,

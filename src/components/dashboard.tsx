@@ -13,7 +13,9 @@ import {
   formatCompactShares,
   formatCorr,
   formatEarnings,
+  formatDollar,
   formatPx,
+  formatYen,
   formatRs,
   formatVolumeRatio,
   guideLineText,
@@ -34,6 +36,10 @@ import { Atr14Value } from "./atr14-value";
 import { Shares10 } from "./shares10";
 import { DetailPanel } from "./detail-panel";
 import { Glossary } from "./glossary";
+import { ThemeWatch } from "./theme-watch";
+import { WeatherLine } from "./weather-line";
+import { cushionAfterLoss } from "@/lib/account-config";
+import { monitorLossToLow } from "@/lib/morning";
 import { SiteNav } from "./site-nav";
 import { ThemeToggle } from "./theme-toggle";
 import { Button } from "./ui/button";
@@ -307,6 +313,7 @@ export function Dashboard() {
         </header>
 
         <div className="space-y-3 px-4 py-3">
+          {data && <WeatherLine weather={data.weather} />}
           {data && (
             <div className="grid grid-cols-3 gap-2">
               {data.indices.map((index) => (
@@ -314,6 +321,7 @@ export function Dashboard() {
               ))}
             </div>
           )}
+          {data && <ThemeWatch demand={data.themeDemand} slots={data.themeSlots} month={data.barDate?.slice(0, 7) ?? null} />}
           {data?.excludedPartial && (
             <p className="text-xs leading-relaxed text-muted">
               米国市場の場中なので、未確定の当日足は除き、直前の確定日足で計算している。
@@ -470,6 +478,8 @@ export function Dashboard() {
                   row={item.row}
                   selected={item.row.ticker === ticker}
                   onOpen={openTicker}
+                  cushionJpy={data?.policy.cushionJpy ?? null}
+                  usdJpy={data?.usdJpy?.rate ?? null}
                 />
               </li>
             ),
@@ -576,10 +586,14 @@ function TickerCard({
   row,
   selected,
   onOpen,
+  cushionJpy,
+  usdJpy,
 }: {
   row: TickerRow;
   selected: boolean;
   onOpen: (ticker: string) => void;
+  cushionJpy: number | null;
+  usdJpy: number | null;
 }) {
   const quote = row.quote;
   const zone = quote ? zoneOf(quote.boxPct) : null;
@@ -771,6 +785,41 @@ function TickerCard({
         {" / SOXX"}
         <b className="font-mono font-medium text-ink tabular-nums">{formatCorr(row.corrSoxx)}</b>
       </p>
+      {quote && quote.verdict.state === "候補" && (
+        <CandidateColumns quote={quote} corrSoxx={row.corrSoxx} cushionJpy={cushionJpy} usdJpy={usdJpy} />
+      )}
+      <p className="mt-1 text-[11px] leading-snug text-muted">
+        {row.research ? (
+          <>
+            調査 <b className="text-ink">{row.research.mark}</b> {row.research.title}{" "}
+            <span className="font-mono">{row.research.date}</span>
+          </>
+        ) : (
+          "調査なし"
+        )}
+      </p>
     </button>
+  );
+}
+
+function CandidateColumns({
+  quote,
+  corrSoxx,
+  cushionJpy,
+  usdJpy,
+}: {
+  quote: NonNullable<TickerRow["quote"]>;
+  corrSoxx: number | null;
+  cushionJpy: number | null;
+  usdJpy: number | null;
+}) {
+  const loss = monitorLossToLow(quote);
+  const after = cushionJpy == null ? null : cushionAfterLoss(cushionJpy, loss, usdJpy);
+  return (
+    <p className="mt-1 text-[11px] leading-relaxed text-ink">
+      監視候補 · SOXX相関 <b className="font-mono tabular-nums">{formatCorr(corrSoxx)}</b>
+      {" · "}20日安値までの損失 <b className="font-mono tabular-nums">{loss == null ? "—" : formatDollar(loss)}</b>
+      {" · "}余裕 <b className="font-mono tabular-nums">{after == null ? "—" : formatYen(after)}</b>
+    </p>
   );
 }

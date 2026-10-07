@@ -24,6 +24,7 @@ const FLAG_LABEL: Record<string, string> = {
   amended: "訂正",
   semi_cap: "半導体2枠埋まり",
   loss_unknown: LOSS_UNKNOWN_TAG,
+  overnight: "夜間",
 };
 
 export function AlertCards({ items }: { items: AlertItem[] }) {

@@ -49,6 +49,22 @@ export function AccountCard({ view }: { view: HoldingsView }) {
           </div>
         </div>
       )}
+      <p className="mt-3 text-[12px] leading-relaxed">
+        全ストップ時の損失{" "}
+        <b className="font-mono tabular-nums">{view.stopRisk.lossJpy == null ? "—" : formatYen(view.stopRisk.lossJpy)}</b>
+        {view.stopRisk.lossUsd != null ? <span className="text-muted">（{formatDollar(view.stopRisk.lossUsd)}）</span> : null}
+        {" · "}防衛ラインまでの余裕 <b className="font-mono tabular-nums">{formatYen(view.stopRisk.cushionJpy)}</b>
+        {" · "}損失後の余裕{" "}
+        <b className="font-mono tabular-nums">
+          {view.stopRisk.cushionAfterJpy == null ? "—" : formatYen(view.stopRisk.cushionAfterJpy)}
+        </b>
+      </p>
+      <p className="mt-1 text-[11px] leading-relaxed text-muted">
+        余裕は口座の中心 {formatYen(view.stopRisk.accountCenterJpy)} − 防衛ライン {formatYen(view.stopRisk.defenseLineJpy)}。
+        AVGO と VRT は data/stops.json の価格、ON は終値が20日線を下回った見直し。株数は HOLDINGS_JSON。
+        {view.stopRisk.uncovered.length > 0 ? ` 損切りが無い保有: ${view.stopRisk.uncovered.join(" ")}` : ""}
+        {view.stopRisk.lossJpy == null ? " 損失は株数と終値が揃うまで出さない。" : ""}
+      </p>
       {a.unsettled.length > 0 && (
         <ul className="mt-3 space-y-0.5 text-[11px] text-muted">
           {a.unsettled.map((item) => (

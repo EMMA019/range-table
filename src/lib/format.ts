@@ -252,11 +252,25 @@ export function formatEarningsForAlert(e: EarningsView | null, unknown: boolean)
 export const EARNINGS_AVOID_BADGE = "決算前・新規は避けて";
 export const SEMI_CAP_BADGE = "半導体2枠埋まり";
 
+export function earningsStatusLabel(status: EarningsView["status"]): string {
+  return status === "confirmed" ? "確" : "推定";
+}
+
+/** 寄り前 / 引け後. Unrecorded sessions stay explicit. */
+export function earningsSessionLabel(session: EarningsView["session"]): string {
+  if (session === "pre") return "寄り前";
+  if (session === "post") return "引け後";
+  return "場は未登録";
+}
+
+function earningsMarks(e: EarningsView): string {
+  return `${earningsStatusLabel(e.status)}・${earningsSessionLabel(e.session)}`;
+}
+
 /** Countdown for a known next earnings date. Null once that date is in the past. */
 export function earningsCountdown(e: EarningsView | null): string | null {
   if (!e || e.state === "past") return null;
-  const est = e.status === "estimated" ? "・推定" : "";
-  return `決算まであと${e.tradingDays ?? 0}営業日${est}`;
+  return `決算まであと${e.tradingDays ?? 0}営業日・${earningsMarks(e)}`;
 }
 
 export function formatEarnings(e: EarningsView | null): string {
@@ -264,8 +278,7 @@ export function formatEarnings(e: EarningsView | null): string {
   const countdown = earningsCountdown(e);
   if (countdown) return countdown;
   const when = shortDate(e.date);
-  const status = e.status === "confirmed" ? "確" : "推定";
-  return `決算済 ${when}（${status}）`;
+  return `決算済 ${when}（${earningsMarks(e)}）`;
 }
 
 /** Red badge once the next earnings date is inside five trading days, including today. */

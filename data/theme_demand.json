@@ -1,0 +1,11 @@
+{
+  "note": "週次のテーマ需要。change は strengthened / weakened / unchanged。null は未記録で、強弱は推測しない。",
+  "asOf": null,
+  "signals": [
+    { "id": "power-demand", "label": "電力需要", "change": null },
+    { "id": "cooling", "label": "冷却", "change": null },
+    { "id": "networking", "label": "ネットワーキング", "change": null },
+    { "id": "edge", "label": "エッジ", "change": null },
+    { "id": "semi-capex", "label": "半導体設備", "change": null }
+  ]
+}

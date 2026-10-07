@@ -27,6 +27,8 @@ export type HoldingsConfig = {
     jpy: number | null;
   };
   defenseLineJpy: number | null;
+  /** Reference equity in yen. Null uses the policy default in account-config. */
+  accountCenterJpy: number | null;
   /** Problems found while reading. Shown on the private pages, never the values themselves. */
   warnings: string[];
 };
@@ -49,6 +51,7 @@ export function emptyHoldings(warnings: string[] = []): HoldingsConfig {
     holdings: [],
     cash: { usdSettled: null, usdUnsettled: [], jpy: null },
     defenseLineJpy: null,
+    accountCenterJpy: null,
     warnings,
   };
 }
@@ -130,6 +133,7 @@ export function parseHoldingsJson(text: string | undefined | null): HoldingsConf
       jpy: nonNegative(cashRaw.jpy),
     },
     defenseLineJpy: positive(root.defenseLineJpy),
+    accountCenterJpy: positive(root.accountCenterJpy),
     warnings,
   };
 }

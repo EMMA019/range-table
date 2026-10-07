@@ -7,6 +7,7 @@ export function classifyEarnings(
   earnings: EarningsInput | null,
 ): EarningsView | null {
   if (!earnings) return null;
+  const session = earnings.session ?? null;
   if (earnings.date < today) {
     return {
       date: earnings.date,
@@ -14,6 +15,7 @@ export function classifyEarnings(
       state: "past",
       tradingDays: null,
       warn: false,
+      session,
     };
   }
   if (earnings.date === today) {
@@ -23,6 +25,7 @@ export function classifyEarnings(
       state: "today",
       tradingDays: 0,
       warn: true,
+      session,
     };
   }
   const tradingDays = tradingDaysUntil(today, earnings.date);
@@ -33,5 +36,6 @@ export function classifyEarnings(
     state: "upcoming",
     tradingDays,
     warn: tradingDays <= warnDays,
+    session,
   };
 }

@@ -158,3 +158,17 @@ export function isPaperCandidate(ticker: string, quote: MorningQuote | null): bo
 export function reboundConfirmed(quote: MorningQuote): boolean {
   return (quote.reboundDays ?? 0) >= 1;
 }
+
+/** Dollar loss of the monitoring lot if price falls to the 20-day low. Not an order size. */
+export function monitorLossToLow(quote: MorningQuote): number | null {
+  const lines = morningBuyLines(quote);
+  if (lines.length > 0) {
+    const losses = lines
+      .map((line) => lotFlags(quote, line).maxLoss)
+      .filter((loss): loss is number => loss != null);
+    return losses.length ? Math.min(...losses) : null;
+  }
+  const shares = sharesForRisk30(quote.close, quote.low20);
+  if (shares == null || shares < 1) return null;
+  return Math.round(shares * (quote.close - quote.low20) * 100) / 100;
+}

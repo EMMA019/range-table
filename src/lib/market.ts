@@ -12,7 +12,7 @@ import {
 } from "./constants";
 import { fetchEpsBatch } from "./eps";
 import { epsIsFresh, epsTtlMs, hasEpsValue, peView, pickEpsBatch } from "./pe";
-import { buildCorrelations, loadCorrBasket, type CorrPair } from "./corr";
+import { benchmarkCorrelations, buildCorrelations, loadCorrBasket, loadCorrSettings, type CorrPair } from "./corr";
 import { chartPoints, computeQuote } from "./compute";
 import {
   cachedEarningsEnrich,
@@ -42,6 +42,7 @@ import type {
   TickerRow,
   Watchlist,
   EarningsInput,
+  Bar,
 } from "./types";
 import { loadWatchlist } from "./watchlist";
 import { enrichTickerMeta } from "./ticker-meta";
@@ -52,6 +53,16 @@ import {
   monitorUnionSymbols,
 } from "./monitor-universe";
 import { fetchDailyBars } from "./yahoo";
+import { yahooSymbolCandidates } from "./yahoo-symbol";
+import { policyLevels } from "./account-config";
+import { loadEarningsSessionHook, resolveEarningsSession } from "./earnings-session";
+import { nasdaqSessionMap } from "./nasdaq-earnings-calendar";
+import { loadExtraSemiEvents, upcomingSemiEvents } from "./semi-events";
+import { latestResearch, loadResearchPapers } from "./research";
+import { buildThemeSlots, loadThemeDemand, loadThemeSlotMap } from "./theme-slots";
+import { ensureWeather, weatherStamp } from "./weather-feed";
+import { buildWeather } from "./weather";
+import { weekBench } from "./weekly-report";
 import {
   dueSymbols,
   emptyCache,
@@ -97,8 +108,8 @@ export function startEpsWarm(): void {
 export async function getMarketPayload(): Promise<MarketPayload> {
   const list = loadWatchlist();
   const symbols = list.groups.flatMap((group) => group.tickers.map((ticker) => ticker.ticker));
-  const cache = await ensureSeries(list);
-  const payload = memoPayload(cache, list);
+  const [cache, weatherBars] = await Promise.all([ensureSeries(list), ensureWeather()]);
+  const payload = memoPayload(cache, list, weatherBars);
   kickEpsWarm(list, symbols);
   return payload;
 }
@@ -250,14 +261,22 @@ async function refresh(symbols: string[]): Promise<CacheBody> {
   return next;
 }
 
+const NOT_FOUND_RE = /HTTP 404|not found|No data|Quote not found/i;
+
 async function fetchOne(symbol: string): Promise<{ symbol: string; outcome: FetchOutcome }> {
-  try {
-    const parsed = await fetchDailyBars(symbol);
-    return { symbol, outcome: { bars: parsed.bars, droppedPartial: parsed.droppedPartial } };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "取得失敗";
-    return { symbol, outcome: { error: message.slice(0, 180) } };
+  let last = "日足を取得できなかった";
+  const candidates = yahooSymbolCandidates(symbol);
+  for (let i = 0; i < candidates.length; i += 1) {
+    try {
+      const parsed = await fetchDailyBars(candidates[i]);
+      return { symbol, outcome: { bars: parsed.bars, droppedPartial: parsed.droppedPartial } };
+    } catch (error) {
+      last = error instanceof Error ? error.message : "取得失敗";
+      const more = i < candidates.length - 1 && NOT_FOUND_RE.test(last);
+      if (!more) break;
+    }
   }
+  return { symbol, outcome: { error: last.slice(0, 180) } };
 }
 
 async function waitForPrices(): Promise<void> {
@@ -272,10 +291,14 @@ async function waitForPrices(): Promise<void> {
 
 let payloadMemo: { key: string; payload: MarketPayload } | null = null;
 
-function memoPayload(cache: CacheBody, list: Watchlist): MarketPayload {
-  const key = `${cache.version}:${epsStamp()}:${basketStamp()}:${monitorStamp()}`;
+function memoPayload(
+  cache: CacheBody,
+  list: Watchlist,
+  weatherBars: Record<string, Bar[] | null>,
+): MarketPayload {
+  const key = `${cache.version}:${epsStamp()}:${basketStamp()}:${monitorStamp()}:${weatherStamp()}`;
   if (payloadMemo?.key === key) return payloadMemo.payload;
-  const payload = buildPayload(cache, list, readCachedEps());
+  const payload = buildPayload(cache, list, readCachedEps(), weatherBars);
   payloadMemo = { key, payload };
   return payload;
 }
@@ -460,12 +483,17 @@ function buildPayload(
   cache: CacheBody,
   list: Watchlist,
   eps: Record<string, EpsSnapshot>,
+  weatherBars: Record<string, Bar[] | null> = {},
 ): MarketPayload {
   const today = todayEt();
   const corr = correlationsOf(cache);
   const spyBars = cache.series.SPY?.bars ?? [];
   const semis = semiTickerSet(list.groups);
-  const semiFull = semiSlotsFull(holdingsSource().load().holdings, semis);
+  const config = holdingsSource().load();
+  const semiFull = semiSlotsFull(config.holdings, semis);
+  const papers = loadResearchPapers();
+  const sessionHook = loadEarningsSessionHook();
+  const nasdaqWhen = nasdaqSessionMap();
   const rows: TickerRow[] = [];
   for (const group of list.groups) {
     for (const ticker of group.tickers) {
@@ -474,7 +502,13 @@ function buildPayload(
       const pair = corr.get(ticker.ticker);
       const epsSnap = eps[ticker.ticker] ?? null;
       const enrich = cachedEarningsEnrich(ticker.ticker);
-      const earningsInput = resolveEarningsInput(ticker.earnings, epsSnap, enrich);
+      const earningsInput = withSession(
+        ticker.ticker,
+        resolveEarningsInput(ticker.earnings, epsSnap, enrich),
+        ticker.earnings?.session ?? null,
+        sessionHook,
+        nasdaqWhen,
+      );
       const profitability = profitabilityFromCache(ticker.ticker, epsSnap);
       const earningsView = classifyEarnings(today, earningsInput);
       const meta = enrichTickerMeta(ticker.ticker);
@@ -504,6 +538,7 @@ function buildPayload(
         error: built.error,
         errorDetail: built.errorDetail,
         stale: built.stale,
+        research: latestResearch(ticker.ticker, papers),
       });
     }
   }
@@ -515,7 +550,7 @@ function buildPayload(
 
   const failCount = rows.filter((row) => !row.quote).length;
   const staleCount = rows.filter((row) => row.stale).length;
-  const indexBuilt = buildIndexMonitorRows(cache, list, corr, spyBars, eps);
+  const indexBuilt = buildIndexMonitorRows(cache, list, corr, spyBars, eps, papers);
   let monitor: MonitorMeta | null = null;
   try {
     const indexFile = loadMonitorIndex();
@@ -551,7 +586,67 @@ function buildPayload(
     indexFailCount: indexBuilt.failCount,
     staleCount,
     usdJpy: usdJpyOf(cache),
+    weather: weatherOf(indices, weatherBars, cache, rows, today),
+    policy: policyLevels(config),
+    weekBench: weekBench({
+      SPY: cache.series.SPY?.bars,
+      QQQ: cache.series.QQQ?.bars,
+      SOXX: cache.series.SOXX?.bars,
+    }),
+    themeDemand: loadThemeDemand(),
+    themeSlots: themeSlotsOf(rows, indexBuilt.rows),
   };
+}
+
+function withSession(
+  ticker: string,
+  input: EarningsInput | null,
+  watch: EarningsInput["session"],
+  hook: ReturnType<typeof loadEarningsSessionHook>,
+  nasdaqWhen: Record<string, NonNullable<EarningsInput["session"]>>,
+): EarningsInput | null {
+  if (!input) return null;
+  return {
+    ...input,
+    session: resolveEarningsSession(ticker, watch ?? input.session, nasdaqWhen[ticker] ?? null, hook),
+  };
+}
+
+function weatherOf(
+  indices: IndexRow[],
+  weatherBars: Record<string, Bar[] | null>,
+  cache: CacheBody,
+  rows: TickerRow[],
+  today: string,
+) {
+  const soxx = indices.find((index) => index.ticker === "SOXX")?.quote ?? null;
+  const events = upcomingSemiEvents({
+    today,
+    earnings: rows.flatMap((row) =>
+      row.earnings
+        ? [{ ticker: row.ticker, date: row.earnings.date, status: row.earnings.status, session: row.earnings.session ?? null }]
+        : [],
+    ),
+    extra: loadExtraSemiEvents(),
+  });
+  return buildWeather({
+    soxx: soxx ? { close: soxx.close, ma20: soxx.ma20, devPct: soxx.devPct } : null,
+    spy: weatherBars.SPY ?? cache.series.SPY?.bars ?? null,
+    rsp: weatherBars.RSP ?? null,
+    vix: weatherBars["^VIX"] ?? null,
+    events,
+    pending: !weatherBars.SPY && !weatherBars["^VIX"],
+  });
+}
+
+function themeSlotsOf(rows: TickerRow[], indexRows: TickerRow[]) {
+  const corr = new Map<string, number | null>();
+  const known = new Set<string>();
+  for (const row of [...rows, ...indexRows]) {
+    corr.set(row.ticker, row.corrSoxx);
+    known.add(row.ticker);
+  }
+  return buildThemeSlots(loadThemeSlotMap(), corr).filter((row) => known.has(row.ticker));
 }
 
 let indexTickerNames: Record<string, string> | null = null;
@@ -576,6 +671,7 @@ function buildIndexMonitorRows(
   corr: Map<string, CorrPair>,
   spyBars: NonNullable<CacheBody["series"][string]["bars"]>,
   eps: Record<string, EpsSnapshot>,
+  papers: ReturnType<typeof loadResearchPapers>,
 ): { rows: TickerRow[]; failCount: number } {
   let sp500 = new Set<string>();
   let ndx = new Set<string>();
@@ -627,6 +723,7 @@ function buildIndexMonitorRows(
       error: built.error,
       errorDetail: built.errorDetail,
       stale: built.stale,
+      research: latestResearch(ticker, papers),
     });
   }
   return { rows, failCount };
@@ -656,19 +753,31 @@ function toPickQuote(quote: Quote | null): PickQuote | null {
 }
 
 function correlationsOf(cache: CacheBody): Map<string, CorrPair> {
-  const basket = loadCorrBasket();
-  if (!basket) return new Map();
+  const settings = loadCorrSettings();
   const closes: Record<string, Array<{ date: string; c: number }>> = {};
   for (const [symbol, entry] of Object.entries(cache.series)) {
     if (!entry.bars?.length) continue;
     closes[symbol] = entry.bars.map((bar) => ({ date: bar.date, c: bar.c }));
   }
-  try {
-    return buildCorrelations(closes, basket);
-  } catch (error) {
-    console.error("[range] corr", error);
-    return new Map();
+  const soxx = benchmarkCorrelations(closes, settings);
+  let paired = new Map<string, CorrPair>();
+  const basket = loadCorrBasket();
+  if (basket) {
+    try {
+      paired = buildCorrelations(closes, basket);
+    } catch (error) {
+      console.error("[range] corr", error);
+    }
   }
+  const out = new Map<string, CorrPair>();
+  for (const symbol of new Set([...soxx.keys(), ...paired.keys()])) {
+    const pair = paired.get(symbol);
+    out.set(symbol, {
+      basket: pair?.basket ?? null,
+      soxx: pair?.soxx ?? soxx.get(symbol) ?? null,
+    });
+  }
+  return out;
 }
 
 /** Latest USD/JPY daily close. Null until Yahoo returns it. */

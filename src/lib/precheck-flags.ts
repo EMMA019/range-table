@@ -34,7 +34,7 @@ export const FLAG_TEXT: Record<PrecheckFlag, string> = {
   costOver450: `買付額が$${ATR_COST_WARN}超`,
   atrUnder3: `ATRが終値の${ALERT_MIN_ATR_PCT}%未満`,
   corrHigh: `保有と相関${CORR_HIGH}超`,
-  notInOk: "25–35%帯（±2pt）の買い候補ではない",
+  notInOk: "25–35%帯（±2pt）の監視候補ではない",
   lossUnknown: LOSS_UNKNOWN_TAG,
   earningsUnknown: EARNINGS_UNKNOWN_PROMINENT,
   earningsEstimated: "決算日は推定（カレンダー・EDGARから補完）",
