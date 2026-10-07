@@ -8,6 +8,7 @@ import type { Fill } from "@/lib/ibkr-parse";
 import { parseIbkrStatement } from "@/lib/ibkr-parse";
 import { buildTradeLog, DAY_TARGET_USD, mergeFills } from "@/lib/trade-log";
 import { cn } from "@/lib/utils";
+import { WeeklyReportSection } from "./weekly-report-section";
 
 type Notice = { tone: "ok" | "warn"; lines: string[] };
 
@@ -135,6 +136,8 @@ export function TradeLogView() {
           </div>
         )}
       </section>
+
+      <WeeklyReportSection trades={log.trades} />
 
       {fills.length === 0 ? (
         <p className="pt-2 text-sm leading-relaxed text-muted">まだ約定がない。CSVを選ぶと、勝率・1回平均・合計・$10達成日がここに出る。</p>

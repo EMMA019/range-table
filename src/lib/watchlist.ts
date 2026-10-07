@@ -129,5 +129,8 @@ function earningsField(
     errors.push(`${ticker} の earnings.status は confirmed か estimated`);
   }
   if (!date || !status || !STATUSES.has(status as EarningsStatus)) return null;
-  return { date, status: status as EarningsStatus };
+  const when = stringField(value, "when");
+  const session = when === "pre" ? "pre" : when === "post" ? "post" : null;
+  if (when && !session) errors.push(`${ticker} の earnings.when は pre か post`);
+  return { date, status: status as EarningsStatus, session };
 }

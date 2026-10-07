@@ -53,10 +53,11 @@ describe("trading days", () => {
     const near = classifyEarnings("2026-10-01", { date: "2026-10-08", status: "estimated" });
     const far = classifyEarnings("2026-10-01", { date: "2026-10-09", status: "confirmed" });
     const past = classifyEarnings("2026-10-01", { date: "2026-09-30", status: "confirmed" });
-    assert.equal(formatEarnings(near), "決算まであと5営業日・推定");
+    assert.equal(formatEarnings(near), "決算まであと5営業日・推定・場は未登録");
     assert.equal(earningsBadge(near), EARNINGS_AVOID_BADGE);
-    assert.equal(formatEarnings(far), "決算まであと6営業日");
+    assert.equal(formatEarnings(far), "決算まであと6営業日・確・場は未登録");
     assert.equal(earningsBadge(far), null);
+    assert.equal(formatEarnings({ ...past!, session: "post" }), formatEarnings(past).replace("場は未登録", "引け後"));
     assert.match(formatEarnings(past), /^決算済 /);
     assert.equal(earningsBadge(past), null);
     assert.equal(formatEarnings(null), EARNINGS_UNKNOWN);

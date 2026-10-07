@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   basketReturnSeries,
+  benchmarkCorrelations,
   buildCorrBasket,
   buildCorrelations,
   corrOnWindow,
@@ -97,5 +98,13 @@ describe("correlation", () => {
     assert.equal(corr.get("BBB")?.basket, -1);
     assert.equal(corr.get("CCC")?.basket, null);
     assert.equal(corrOnWindow(dailyReturns(up), dailyReturns(soxx), 4), null);
+  });
+
+  it("computes the benchmark correlation when there is no holdings basket", () => {
+    const soxx = bars([10, 11, 9.9, 12]);
+    const same = bars([10, 11, 9.9, 12]);
+    const map = benchmarkCorrelations({ SOXX: soxx, AAA: same }, { window: 3, benchmark: "SOXX" });
+    assert.equal(map.get("AAA"), 1);
+    assert.equal(benchmarkCorrelations({ AAA: same }, { window: 3, benchmark: "SOXX" }).size, 0);
   });
 });

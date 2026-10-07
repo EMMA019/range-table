@@ -26,7 +26,8 @@ export async function getHoldingsView(now = new Date()): Promise<HoldingsView> {
   const spyBars = cache.series.SPY?.bars ?? [];
   for (const holding of config.holdings) {
     const bars = cache.series[holding.ticker]?.bars;
-    quotes[holding.ticker] = quoteFromEntry(cache.series[holding.ticker]);
+    const built = quoteFromEntry(cache.series[holding.ticker]);
+    quotes[holding.ticker] = { ...built, bars };
     rs[holding.ticker] = bars ? rs20(bars, spyBars) : null;
   }
   return buildHoldingsView({

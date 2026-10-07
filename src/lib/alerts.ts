@@ -10,6 +10,7 @@ export type AlertKind =
   | "entry_in_ok"
   | "earnings_hold"
   | "review_break"
+  | "material_news"
   | "sec_8k"
   | "sec_form4_sell"
   | "sec_offering"
@@ -58,6 +59,8 @@ export type AlertsPayload = {
     edgar: AlertSourceStatus;
     /** Review-line alerts: only for a caller with ALERTS_TOKEN or the holdings session. */
     holdings: AlertSourceStatus;
+    /** Overnight headlines for holdings. Same gate as holdings. Empty hook means no items. */
+    news: AlertSourceStatus;
   };
   counts: { total: number } & Partial<Record<AlertKind, number>>;
   items: AlertItem[];

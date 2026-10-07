@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { formatDollar, formatPnl, formatPx } from "@/lib/format";
+import { formatCorr, formatDollar, formatPnl, formatPx, formatYen } from "@/lib/format";
+import { cushionAfterLoss } from "@/lib/account-config";
 import { screenExclusionReasons } from "@/lib/candidate-screen";
 import { EARNINGS_UNKNOWN_PROMINENT } from "@/lib/constants";
 import { isIgnoredTicker } from "@/lib/holdings";
@@ -194,7 +195,7 @@ export function MorningView() {
 
       <main className="space-y-4 px-4 py-4 pb-[max(2rem,env(safe-area-inset-bottom))]">
         <section className="rounded-2xl border border-line bg-elev px-3 py-3 text-sm leading-relaxed">
-          <p>1銘柄につき買いは2回まで。1回目は25%線、2回目は35%線（箱の位置が{BAND_LOW_PCT}〜{BAND_HIGH_PCT}%）。反発の確認は不要。参考として「反発あり」を出す。</p>
+          <p>1銘柄につき監視ロットは2つまで。1回目は25%線、2回目は35%線（箱の位置が{BAND_LOW_PCT}〜{BAND_HIGH_PCT}%）。反発の確認は不要。参考として「反発あり」を出す。発注はしない。</p>
           <p className="mt-1">利確は箱の高値で、持っている株を一度に全部。</p>
           <p className="mt-1 text-[11px] text-muted">
             損切りは箱の安値。株数は ${PAPER_RISK_USD} ÷（入り − 安値）と ${USUAL_COST_CAP} ÷ 入り の小さい方。$450が株数を決めたときは「$450上限」と、その株数での損切り損を出す。1株が $450 を超えるときは、代金と $550 の印をこれまで通り出す。
@@ -220,7 +221,7 @@ export function MorningView() {
 
         <section>
           <div className="flex items-end justify-between gap-3">
-            <h2 className="text-sm font-medium">今日の買い候補</h2>
+            <h2 className="text-sm font-medium">今日の監視候補</h2>
             <p className="text-[11px] text-muted">{cards.length}件</p>
           </div>
           <p className="mt-1 text-[11px] leading-relaxed text-muted">
@@ -250,6 +251,7 @@ export function MorningView() {
           <ul className="mt-3 space-y-2">
             {cards.map(({ row, line, slot, rebound, reasons, lot }) => {
               const grey = reasons.length > 0;
+              const after = data ? cushionAfterLoss(data.policy.cushionJpy, lot.maxLoss, data.usdJpy?.rate ?? null) : null;
               const taken = ledger?.positions.some((position) => position.ticker === row.ticker && position.line === line) ?? false;
               return (
                 <li key={`${row.ticker}-${line}`} className={cn("rounded-2xl border border-line bg-elev px-3 py-3", grey && "opacity-60")}>
@@ -297,6 +299,12 @@ export function MorningView() {
                     <dd className="text-right font-mono tabular-nums">{lot.shares ?? "—"}</dd>
                     <dt className="text-muted">代金</dt>
                     <dd className="text-right font-mono tabular-nums">{lot.cost == null ? "—" : formatDollar(lot.cost)}</dd>
+                    <dt className="text-muted">SOXX相関</dt>
+                    <dd className="text-right font-mono tabular-nums">{formatCorr(row.corrSoxx)}</dd>
+                    <dt className="text-muted">20日安値までの損失</dt>
+                    <dd className="text-right font-mono tabular-nums">{lot.maxLoss == null ? "—" : formatDollar(lot.maxLoss)}</dd>
+                    <dt className="text-muted">損失後の余裕</dt>
+                    <dd className="text-right font-mono tabular-nums">{after == null ? "—" : formatYen(after)}</dd>
                     {lot.flags.capBinding && lot.maxLoss != null && (
                       <>
                         <dt className="text-muted">損切り損</dt>
@@ -327,7 +335,7 @@ export function MorningView() {
               );
             })}
           </ul>
-          {data && cards.length === 0 && <p className="mt-3 text-sm text-muted">今、線の上にいる候補はない。</p>}
+          {data && cards.length === 0 && <p className="mt-3 text-sm text-muted">今、線の上にいる監視候補はない。</p>}
         </section>
 
         <section>

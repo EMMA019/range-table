@@ -29,10 +29,10 @@ describe("watchlist", () => {
     const mu = tickers.find((item) => item.ticker === "MU");
     const mod = tickers.find((item) => item.ticker === "MOD");
     assert.equal(tsm?.watchOnly, true);
-    assert.deepEqual(tsm?.earnings, { date: "2026-10-15", status: "confirmed" });
+    assert.deepEqual(tsm?.earnings, { date: "2026-10-15", status: "confirmed", session: null });
     assert.equal(nvda?.watchOnly, false);
     assert.equal(nvda?.earnings, null);
-    assert.deepEqual(mu?.earnings, { date: "2026-09-30", status: "confirmed" });
+    assert.deepEqual(mu?.earnings, { date: "2026-09-30", status: "confirmed", session: null });
     assert.equal(mod?.tags.includes("事業分離"), true);
     assert.match(mod?.notes ?? "", /事業分離/);
     assert.equal(nvda?.sectorLabel, null);
@@ -62,11 +62,13 @@ describe("watchlist", () => {
     assert.deepEqual(groupOf("DAL")?.tickers.find((item) => item.ticker === "DAL")?.earnings, {
       date: "2026-10-09",
       status: "estimated",
+      session: null,
     });
     assert.equal(groupOf("NOW")?.name, "IT・ソフト");
     assert.deepEqual(groupOf("NOW")?.tickers.find((item) => item.ticker === "NOW")?.earnings, {
       date: "2026-11-04",
       status: "estimated",
+      session: null,
     });
     assert.equal(groupOf("FERG")?.name, "資本財・工業");
     assert.equal(groupOf("FERG")?.tickers.find((item) => item.ticker === "FERG")?.earnings, null);

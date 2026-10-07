@@ -1,0 +1,9 @@
+{
+  "note": "月次のテーマ監視枠。S&P500のうち電力・冷却・ネットワーキング・エッジ。相関は日足から計算する。低相関は防衛枠の監視候補で、発注しない。",
+  "themes": {
+    "power": ["VST", "CEG", "NRG", "ETN", "PWR", "GEV", "NEE", "SO"],
+    "cooling": ["VRT", "TT", "CARR", "JCI", "EME", "FIX"],
+    "networking": ["ANET", "CSCO", "AVGO", "CIEN", "GLW", "COHR"],
+    "edge": ["DELL", "SMCI", "HPE", "NTAP"]
+  }
+}

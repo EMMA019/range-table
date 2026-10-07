@@ -18,7 +18,9 @@ import {
 } from "./alerts";
 import { entryAlerts, finalBars, holdingEarningsAlerts, type EntryCandidate } from "./alerts-entry";
 import { reviewAlerts } from "./alerts-review";
-import { holdingsSource } from "./holdings";
+import { holdingsSource, isIgnoredTicker } from "./holdings";
+import { loadStopRules, stopLevel } from "./stops";
+import { loadMaterialNews, materialNewsAlerts } from "./material-news";
 import { semiSlotsFull, semiTickerSet } from "./semis";
 import { edgarItems, edgarStatus, refreshEdgar } from "./edgar-feed";
 
@@ -86,18 +88,34 @@ export async function getAlertsPayload(query: AlertsQuery, now = new Date()): Pr
     ...entryAlerts(candidates, today, now, { spyBars: spyFinal, semiFull }),
     ...edgarItems(),
   ];
-  const withLine = config.holdings.filter((holding) => holding.reviewLine != null);
+  const rules = loadStopRules();
+  const reviewTargets = config.holdings.flatMap((holding) => {
+    if (isIgnoredTicker(holding.ticker)) return [];
+    const bars = cache.series[holding.ticker]?.bars;
+    const level = stopLevel(holding.ticker, bars, rules) ?? holding.reviewLine;
+    if (level == null) return [];
+    return [{ ...holding, reviewLine: level }];
+  });
+  const news = loadMaterialNews();
   if (query.authorized) {
-    const series = Object.fromEntries(withLine.map((holding) => [holding.ticker, cache.series[holding.ticker]?.bars]));
-    items.push(...reviewAlerts(withLine, series, now));
+    const series = Object.fromEntries(reviewTargets.map((holding) => [holding.ticker, cache.series[holding.ticker]?.bars]));
+    items.push(...reviewAlerts(reviewTargets, series, now));
     const earningsByTicker = new Map(tickers.map((ticker) => [ticker.ticker, ticker.earnings]));
     items.push(...holdingEarningsAlerts(config.holdings, earningsByTicker, today));
+    items.push(...materialNewsAlerts(config.holdings, news.items, now));
   }
   const holdings = {
-    ok: !query.authorized || withLine.every((holding) => cache.series[holding.ticker]?.bars),
-    enabled: Boolean(query.authorized) && withLine.length > 0,
+    ok: !query.authorized || reviewTargets.every((holding) => cache.series[holding.ticker]?.bars),
+    enabled: Boolean(query.authorized) && reviewTargets.length > 0,
     checkedAtJst: query.authorized ? formatJst(now) : null,
-    error: query.authorized && withLine.length === 0 ? "HOLDINGS_JSON に reviewLine のある保有がない" : null,
+    error: query.authorized && reviewTargets.length === 0 ? "HOLDINGS_JSON に見直しラインのある保有がない" : null,
+    complete: true,
+  };
+  const newsSource = {
+    ok: !news.error,
+    enabled: Boolean(query.authorized),
+    checkedAtJst: query.authorized ? formatJst(now) : null,
+    error: news.error,
     complete: true,
   };
 
@@ -129,7 +147,7 @@ export async function getAlertsPayload(query: AlertsQuery, now = new Date()): Pr
     slot: alertSlot(now),
     barDate,
     complete: prices.complete && edgar.complete,
-    sources: { prices, edgar, holdings },
+    sources: { prices, edgar, holdings, news: newsSource },
     counts: countAlerts(finalItems),
     items: finalItems,
   };

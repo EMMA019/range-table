@@ -1,8 +1,12 @@
 export type EarningsStatus = "confirmed" | "estimated";
 
+/** pre = before the open, post = after the close. Null means the session was not recorded. */
+export type EarningsSession = "pre" | "post";
+
 export type EarningsInput = {
   date: string;
   status: EarningsStatus;
+  session?: EarningsSession | null;
 };
 
 export type WatchTicker = {
@@ -111,6 +115,8 @@ export type EarningsView = {
   state: "upcoming" | "today" | "past";
   tradingDays: number | null;
   warn: boolean;
+  /** 寄り前 / 引け後. Null when nobody recorded the session. */
+  session?: EarningsSession | null;
 };
 
 export type EpsSnapshot = {
@@ -181,6 +187,8 @@ export type TickerRow = {
   profitability: Profitability;
   /** True when no next earnings date could be resolved. */
   earningsUnknown: boolean;
+  /** Latest research note that tags this ticker. Null when data/research_papers.json has none. */
+  research: { date: string; title: string; mark: "効く" | "様子見" | "今は無視" } | null;
 };
 
 export type IndexRow = {
@@ -220,6 +228,34 @@ export type MarketPayload = {
   staleCount: number;
   /** Latest USD/JPY daily close (Yahoo JPY=X). */
   usdJpy: { rate: number; date: string } | null;
+  /** SOXX versus its 20-day average, plus the three market checks. */
+  weather: {
+    soxx: { close: number; ma20: number; above: boolean; devPct: number } | null;
+    checks: Array<{ id: "spy200" | "breadth" | "vix"; label: string; ok: boolean | null; detail: string }>;
+    cautious: boolean;
+    events: Array<{ date: string; label: string }>;
+    note: string | null;
+  };
+  /** Defense line and account center. Share-based loss stays on the holdings page. */
+  policy: { defenseLineJpy: number; accountCenterJpy: number; cushionJpy: number };
+  /** Close-to-close return over the last five SPY sessions. */
+  weekBench: {
+    from: string | null;
+    to: string | null;
+    sessions: string[];
+    returns: { SPY: number | null; QQQ: number | null; SOXX: number | null };
+  };
+  themeDemand: {
+    asOf: string | null;
+    signals: Array<{ id: string; label: string; change: "strengthened" | "weakened" | "unchanged" | null }>;
+  };
+  themeSlots: Array<{
+    ticker: string;
+    theme: "power" | "cooling" | "networking" | "edge";
+    themeLabel: string;
+    corrSoxx: number | null;
+    lowCorr: boolean;
+  }>;
 };
 
 export type PickStatus = "候補" | "監視のみ";

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { addDays, isTradingDay } from "./calendar";
 import { EPS_CACHE_TTL_MS } from "./constants";
+import { nasdaqTimeToSession, type EarningsSession } from "./earnings-session";
 
 const CACHE_PATH = path.join(process.cwd(), "data", ".cache", "nasdaq-earnings-calendar.json");
 const SCAN_TRADING_DAYS = 60;
@@ -12,17 +13,19 @@ export const NASDAQ_CALENDAR_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
 type CacheBody = {
-  v: 1;
+  v: 1 | 2;
   builtAt: number;
   anchorDate: string;
   /** Earliest scanned earnings session per symbol (YYYY-MM-DD). */
   tickerNext: Record<string, string>;
+  /** pre / post when Nasdaq sent a time. Missing means 場は未登録. */
+  tickerWhen?: Record<string, EarningsSession>;
 };
 
 function readCache(): CacheBody | null {
   try {
     const raw = JSON.parse(fs.readFileSync(CACHE_PATH, "utf8")) as CacheBody;
-    if (raw?.v === 1 && raw.tickerNext && raw.anchorDate) return raw;
+    if ((raw?.v === 1 || raw?.v === 2) && raw.tickerNext && raw.anchorDate) return raw;
   } catch {
     /* empty */
   }
@@ -49,19 +52,34 @@ export function lookupNasdaqCalendar(ticker: string, today: string): string | nu
   return date;
 }
 
+export function lookupNasdaqSession(ticker: string): EarningsSession | null {
+  return nasdaqSessionMap()[ticker.trim().toUpperCase()] ?? null;
+}
+
+export function nasdaqSessionMap(): Record<string, EarningsSession> {
+  return readCache()?.tickerWhen ?? {};
+}
+
+export type NasdaqCalendarRow = { symbol: string; session: EarningsSession | null };
+
 /** Parse symbols reporting on `date` from Nasdaq's earnings calendar JSON. */
 export function parseNasdaqCalendarDay(json: unknown): string[] {
-  const rows = (json as { data?: { rows?: Array<{ symbol?: string }> } })?.data?.rows;
+  return parseNasdaqCalendarRows(json).map((row) => row.symbol);
+}
+
+export function parseNasdaqCalendarRows(json: unknown): NasdaqCalendarRow[] {
+  const rows = (json as { data?: { rows?: Array<{ symbol?: string; time?: string }> } })?.data?.rows;
   if (!Array.isArray(rows)) return [];
-  const out: string[] = [];
+  const out: NasdaqCalendarRow[] = [];
   for (const row of rows) {
     const sym = typeof row.symbol === "string" ? row.symbol.trim().toUpperCase() : "";
-    if (sym) out.push(sym);
+    if (!sym) continue;
+    out.push({ symbol: sym, session: nasdaqTimeToSession(row.time) });
   }
   return out;
 }
 
-export async function fetchNasdaqCalendarDay(date: string): Promise<string[]> {
+export async function fetchNasdaqCalendarDay(date: string): Promise<NasdaqCalendarRow[]> {
   const url = `https://api.nasdaq.com/api/calendar/earnings?date=${date}`;
   try {
     const res = await fetch(url, {
@@ -74,7 +92,7 @@ export async function fetchNasdaqCalendarDay(date: string): Promise<string[]> {
     });
     if (!res.ok) return [];
     const json = await res.json();
-    return parseNasdaqCalendarDay(json);
+    return parseNasdaqCalendarRows(json);
   } catch {
     return [];
   }
@@ -93,6 +111,7 @@ function nextTradingDay(date: string): string {
 export async function refreshNasdaqCalendarIfNeeded(anchorDate: string, now = Date.now()): Promise<void> {
   if (nasdaqCalendarFresh(anchorDate, now)) return;
   const tickerNext: Record<string, string> = {};
+  const tickerWhen: Record<string, EarningsSession> = {};
   let day = anchorDate;
   let scanned = 0;
   while (scanned < SCAN_TRADING_DAYS) {
@@ -100,13 +119,14 @@ export async function refreshNasdaqCalendarIfNeeded(anchorDate: string, now = Da
       day = nextTradingDay(day);
       continue;
     }
-    const symbols = await fetchNasdaqCalendarDay(day);
-    for (const symbol of symbols) {
-      if (!tickerNext[symbol]) tickerNext[symbol] = day;
+    const rows = await fetchNasdaqCalendarDay(day);
+    for (const row of rows) {
+      if (!tickerNext[row.symbol]) tickerNext[row.symbol] = day;
+      if (row.session && !tickerWhen[row.symbol]) tickerWhen[row.symbol] = row.session;
     }
     scanned += 1;
     day = nextTradingDay(day);
     await new Promise((resolve) => setTimeout(resolve, DAY_PAUSE_MS));
   }
-  writeCache({ v: 1, builtAt: now, anchorDate, tickerNext });
+  writeCache({ v: 2, builtAt: now, anchorDate, tickerNext, tickerWhen });
 }
