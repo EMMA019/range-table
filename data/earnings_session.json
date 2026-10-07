@@ -1,4 +1,7 @@
 {
   "note": "決算の場。pre は寄り前、post は引け後。未登録は「場は未登録」。推測で埋めない。ウォッチリストの earnings.when が優先。",
-  "when": {}
+  "when": {
+    "TSM": "pre",
+    "LRCX": "post"
+  }
 }
