@@ -142,7 +142,7 @@ groups:
         watchOnly: true
         earnings:
           date: 2026-10-14
-          status: confirmed
+          status: estimated
       - ticker: KLAC
         description: 検査・計測装置の首位。先端プロセスほど需要増
         notes: 連動高/MU高
@@ -186,6 +186,9 @@ groups:
       - ticker: LRCX
         description: エッチング・成膜装置。メモリ投資の恩恵
         tags: [IBKR元リスト]
+        earnings:
+          date: 2026-10-21
+          status: confirmed
 
   - id: network
     name: ネットワーク・光通信
