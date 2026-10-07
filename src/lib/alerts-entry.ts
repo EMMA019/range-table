@@ -188,6 +188,8 @@ function entryAlertForLine(
 /**
  * Morning-band entry (23–37% of the 20-day box), ATR at least 3%, exclusions aligned with the morning screen,
  * and no earnings inside the warn window (5 sessions confirmed, 10 estimated). Up to two alerts per ticker (25% and 35% lines).
+ * The weekday paper workflow appends one row per ticker to data/paper/signals.json
+ * (`scripts/log-paper-signals.ts`). This request path does not write that file.
  */
 export function entryAlerts(
   candidates: EntryCandidate[],

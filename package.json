@@ -12,7 +12,9 @@
     "backtest": "tsx scripts/backtest.ts",
     "backtest:study": "tsx scripts/backtest-study.ts",
     "robustness": "tsx scripts/robustness.ts",
-    "paper": "tsx scripts/paper.ts"
+    "paper": "tsx scripts/paper.ts",
+    "paper:signals": "tsx scripts/log-paper-signals.ts",
+    "paper:followup": "tsx scripts/paper-followup.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.3.3",

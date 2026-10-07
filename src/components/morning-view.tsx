@@ -116,6 +116,7 @@ export function MorningView() {
   const spy = data?.indices.find((index) => index.ticker === "SPY")?.quote ?? null;
   const filter = spyFilter(spy ? { close: spy.close, ma20: spy.ma20 } : null);
 
+  // Default rows here are appended to data/paper/signals.json by scripts/log-paper-signals.ts.
   const cards = rows.flatMap((row) => {
     const quote = row.quote;
     if (!quote) return [];

@@ -25,7 +25,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run paper
-      - name: Commit the snapshot
+      - name: Commit the paper snapshot
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -34,5 +34,18 @@ jobs:
             echo "paper snapshot unchanged"
           else
             git commit -m "Update the paper forward-test snapshot"
+            git push
+          fi
+      - run: npm run paper:signals
+      - run: npm run paper:followup
+      - name: Commit notification follow-up
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/paper/signals.json data/paper/followup.json
+          if git diff --cached --quiet; then
+            echo "notification follow-up unchanged"
+          else
+            git commit -m "Update entry-notification follow-up"
             git push
           fi
