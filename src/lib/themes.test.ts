@@ -9,6 +9,8 @@ describe("themes", () => {
     assert.equal(themeOf("ASTS"), "space");
     assert.equal(themeOf("RDW"), "space");
     assert.equal(themeOf("CORZ"), "crypto");
+    assert.equal(themeOf("HOOD"), "crypto");
+    assert.equal(themeOf("COIN"), "crypto");
     assert.equal(themeOf("APLD"), null);
     assert.equal(themeOf("EQIX"), null);
     assert.equal(themeOf("VSAT"), "space");
@@ -35,6 +37,7 @@ describe("themes", () => {
 
   it("lists CORZ on crypto and has no duplicate solar tickers", () => {
     assert.ok(CRYPTO.includes("CORZ"));
+    assert.ok(CRYPTO.includes("HOOD"));
     assert.equal(new Set(SOLAR).size, SOLAR.length);
     assert.equal(new Set(SPACE).size, SPACE.length);
   });

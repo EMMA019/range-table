@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import paper from "../../data/backtest/paper.json";
+import followupFile from "../../data/paper/followup.json";
 import { formatPnl } from "@/lib/format";
+import { followupLine, summarizeFollowup } from "@/lib/paper-followup";
 import type { ClosedTrade } from "@/lib/trade-log";
 import type { MarketPayload } from "@/lib/types";
 import { paperHorizon, weeklyPnl } from "@/lib/weekly-report";
@@ -39,6 +41,7 @@ export function WeeklyReportSection({ trades }: { trades: ClosedTrade[] }) {
   const pnl = weeklyPnl(trades, sessions);
   const box = paper.books.find((book) => book.id === "box-ticker");
   const horizon = paperHorizon("box-ticker", box?.daily ?? []);
+  const notificationLine = followupLine(summarizeFollowup(followupFile));
 
   return (
     <section className="rounded-2xl border border-line bg-elev px-3 py-3 text-[12px] leading-relaxed">
@@ -71,6 +74,7 @@ export function WeeklyReportSection({ trades }: { trades: ClosedTrade[] }) {
         紙テストは data/backtest/paper.json の箱・ティッカー順。開始から5営業日と10営業日の評価額。{horizon.sessions}営業日ぶんある。
         {benchError ? ` ${benchError}` : ""}
       </p>
+      <p className="mt-2 text-[11px] leading-relaxed text-muted">{notificationLine}</p>
     </section>
   );
 }

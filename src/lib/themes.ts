@@ -7,9 +7,10 @@
  */
 export const SOLAR = ["ENPH", "SEDG", "FSLR", "RUN", "ARRY", "NXT", "SHLS", "CSIQ", "JKS", "SPWR", "MAXN", "NOVA"] as const;
 
-/** BTC miners, crypto proxies, and mining-to-hosting pivots (watchlist cloud group where noted). */
+/** BTC miners, crypto proxies, brokers, and mining-to-hosting pivots (watchlist cloud group where noted). */
 export const CRYPTO = [
   "COIN",
+  "HOOD",
   "MSTR",
   "MARA",
   "RIOT",
