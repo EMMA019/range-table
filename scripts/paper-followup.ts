@@ -1,6 +1,7 @@
 /**
  * Score data/paper/signals.json from Yahoo daily closes.
  * Missing +5/+10 bars stay null. A close under low20 inside 10 sessions is a miss.
+ * SOXX and SPY use their own close on the signal date, then the same later-bar counts.
  *
  *   npm run paper:followup
  */
@@ -13,6 +14,7 @@ import {
   measureFollowup,
   YAHOO_DAILY_SOURCE,
   HIT_DEFINITION,
+  type BenchmarkSeries,
   type FollowupFile,
   type FollowupRecord,
 } from "../src/lib/paper-followup";
@@ -62,7 +64,7 @@ async function main() {
     process.exit(1);
   }
   const signals = parseSignals(JSON.parse(fs.readFileSync(SIGNALS, "utf8"))).filter((signal) => !isIgnoredTicker(signal.symbol));
-  const symbols = [...new Set(signals.map((signal) => signal.symbol))];
+  const symbols = [...new Set([...signals.map((signal) => signal.symbol), "SOXX", "SPY"])];
   const bars = new Map<string, Bar[]>();
   await mapPool(symbols, FETCH_CONCURRENCY, async (symbol) => {
     bars.set(symbol, await fetchBars(symbol));
@@ -74,7 +76,8 @@ async function main() {
     if (last && (barsThrough == null || last > barsThrough)) barsThrough = last;
   }
 
-  const records: FollowupRecord[] = signals.map((signal) => measureFollowup(signal, bars.get(signal.symbol) ?? null));
+  const benchmarks: BenchmarkSeries = { soxx: bars.get("SOXX") ?? null, spy: bars.get("SPY") ?? null };
+  const records: FollowupRecord[] = signals.map((signal) => measureFollowup(signal, bars.get(signal.symbol) ?? null, benchmarks));
   const file: FollowupFile = {
     source: YAHOO_DAILY_SOURCE,
     fetchedAtJst: formatJst(new Date()),

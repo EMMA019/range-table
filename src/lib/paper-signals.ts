@@ -1,6 +1,7 @@
 import type { AlertItem } from "./alerts";
 import { isIgnoredTicker } from "./holdings";
 import { morningBuyLines, type MorningQuote } from "./morning";
+import { themeOf } from "./themes";
 
 export const SOURCE_ALERT = "alerts_entry_in_ok";
 export const SOURCE_MORNING = "morning_entry_near_到達";
@@ -25,6 +26,11 @@ export type MorningEntryInput = {
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+/** ONDS, plus solar/crypto/nuclear/quantum/space from themeOf. Financials stay a sector check on the screen. */
+function blockedSymbol(symbol: string): boolean {
+  return isIgnoredTicker(symbol) || themeOf(symbol) != null;
+}
+
 function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
@@ -41,12 +47,12 @@ function asSignal(raw: unknown): PaperSignal | null {
   const ref = typeof row.ref_close === "number" ? row.ref_close : null;
   const low = typeof row.low20 === "number" ? row.low20 : null;
   const source = typeof row.source === "string" ? row.source : "";
-  if (!DATE_RE.test(signalDate) || !symbol || isIgnoredTicker(symbol)) return null;
+  if (!DATE_RE.test(signalDate) || !symbol || blockedSymbol(symbol)) return null;
   if (ref == null || !(ref > 0) || low == null || !Number.isFinite(low) || !source) return null;
   return { signal_date: signalDate, symbol, ref_close: ref, low20: low, source };
 }
 
-/** Accepts `{ signals: [...] }` or a bare array. Drops ONDS and broken rows. */
+/** Accepts `{ signals: [...] }` or a bare array. Drops ONDS, excluded themes, and broken rows. */
 export function parseSignals(raw: unknown): PaperSignal[] {
   const rows = Array.isArray(raw)
     ? raw
@@ -61,13 +67,13 @@ export function parseSignals(raw: unknown): PaperSignal[] {
 
 /**
  * First row for a (signal_date, symbol) pair wins, so a later run cannot
- * replace a seeded ref close. ONDS is dropped.
+ * replace a seeded ref close. ONDS and excluded themes are dropped.
  */
 export function mergeSignals(existing: PaperSignal[], incoming: PaperSignal[]): PaperSignal[] {
   const out: PaperSignal[] = [];
   const seen = new Set<string>();
   for (const signal of [...existing, ...incoming]) {
-    if (isIgnoredTicker(signal.symbol)) continue;
+    if (blockedSymbol(signal.symbol)) continue;
     const key = signalKey(signal);
     if (seen.has(key)) continue;
     seen.add(key);
@@ -78,7 +84,7 @@ export function mergeSignals(existing: PaperSignal[], incoming: PaperSignal[]): 
 
 /** One row per entry_in_ok alert. The 25% and 35% lines share a close, so they collapse later. */
 export function signalFromEntryAlert(item: AlertItem): PaperSignal | null {
-  if (item.kind !== "entry_in_ok" || !item.ticker || isIgnoredTicker(item.ticker)) return null;
+  if (item.kind !== "entry_in_ok" || !item.ticker || blockedSymbol(item.ticker)) return null;
   const signalDate = item.facts.barDate;
   const ref = item.facts.close;
   const low = item.facts.low20;
@@ -100,7 +106,7 @@ export function signalFromEntryAlert(item: AlertItem): PaperSignal | null {
  */
 export function morningEntrySignal(input: MorningEntryInput): PaperSignal | null {
   if (!input.onMorningList || !input.screenPass || !input.quote) return null;
-  if (isIgnoredTicker(input.ticker)) return null;
+  if (blockedSymbol(input.ticker)) return null;
   if (!DATE_RE.test(input.closeDate)) return null;
   if (morningBuyLines(input.quote).length === 0) return null;
   if (!(input.quote.close > 0) || !Number.isFinite(input.quote.low20)) return null;

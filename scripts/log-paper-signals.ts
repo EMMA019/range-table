@@ -3,7 +3,8 @@
  *
  * Same rules as the site: entry_in_ok from entryAlerts, and the morning page's
  * default rows (line reached, financials off, other exclusions hidden).
- * ONDS is never written. A later run does not replace an existing ref close.
+ * ONDS and themeOf names (solar, crypto, nuclear, quantum, space) are never written.
+ * A later run does not replace an existing ref close.
  *
  *   npm run paper:signals
  */

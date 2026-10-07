@@ -1,6 +1,6 @@
 {
   "source": "Yahoo Finance chart API query1 v8 日足（src/lib/yahoo.ts の fetchDailyBars）",
-  "fetchedAtJst": "2026-10-08 07:20 JST",
+  "fetchedAtJst": "2026-10-08 07:35 JST",
   "barsThrough": "2026-10-07",
   "hitDefinition": "的中は、通知日から10営業日後の終値が通知日の終値より高く、かつその10営業日のあいだに終値が20日安値（通知日を含む20本の最安値）を下回らないこと。終値が20日安値を下回った時点で外れ。+10日の足が無いあいだは未判定で、無い足のリターンは作らない。",
   "records": [
@@ -17,7 +17,13 @@
       "plus5_date": "2026-10-05",
       "plus10_date": null,
       "sessions_after": 7,
-      "note": null
+      "note": null,
+      "soxx5": 5.12,
+      "soxx10": null,
+      "spy5": 1.2,
+      "spy10": null,
+      "excess5_soxx": 8.47,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-09-28",
@@ -32,7 +38,13 @@
       "plus5_date": "2026-10-05",
       "plus10_date": null,
       "sessions_after": 7,
-      "note": null
+      "note": null,
+      "soxx5": 5.12,
+      "soxx10": null,
+      "spy5": 1.2,
+      "spy10": null,
+      "excess5_soxx": -1.42,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-09-28",
@@ -47,7 +59,13 @@
       "plus5_date": "2026-10-05",
       "plus10_date": null,
       "sessions_after": 7,
-      "note": null
+      "note": null,
+      "soxx5": 5.12,
+      "soxx10": null,
+      "spy5": 1.2,
+      "spy10": null,
+      "excess5_soxx": 2.33,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-09-28",
@@ -62,7 +80,13 @@
       "plus5_date": "2026-10-05",
       "plus10_date": null,
       "sessions_after": 7,
-      "note": null
+      "note": null,
+      "soxx5": 5.12,
+      "soxx10": null,
+      "spy5": 1.2,
+      "spy10": null,
+      "excess5_soxx": 0.01,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-09-28",
@@ -77,7 +101,13 @@
       "plus5_date": "2026-10-05",
       "plus10_date": null,
       "sessions_after": 7,
-      "note": null
+      "note": null,
+      "soxx5": 5.12,
+      "soxx10": null,
+      "spy5": 1.2,
+      "spy10": null,
+      "excess5_soxx": 8.1,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-09-28",
@@ -92,7 +122,13 @@
       "plus5_date": "2026-10-05",
       "plus10_date": null,
       "sessions_after": 7,
-      "note": null
+      "note": null,
+      "soxx5": 5.12,
+      "soxx10": null,
+      "spy5": 1.2,
+      "spy10": null,
+      "excess5_soxx": -1.19,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-09-28",
@@ -107,7 +143,13 @@
       "plus5_date": "2026-10-05",
       "plus10_date": null,
       "sessions_after": 7,
-      "note": null
+      "note": null,
+      "soxx5": 5.12,
+      "soxx10": null,
+      "spy5": 1.2,
+      "spy10": null,
+      "excess5_soxx": 13,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-09-28",
@@ -122,7 +164,13 @@
       "plus5_date": "2026-10-05",
       "plus10_date": null,
       "sessions_after": 7,
-      "note": null
+      "note": null,
+      "soxx5": 5.12,
+      "soxx10": null,
+      "spy5": 1.2,
+      "spy10": null,
+      "excess5_soxx": -6.04,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-09-29",
@@ -137,7 +185,13 @@
       "plus5_date": "2026-10-06",
       "plus10_date": null,
       "sessions_after": 6,
-      "note": null
+      "note": null,
+      "soxx5": 3.88,
+      "soxx10": null,
+      "spy5": 1.95,
+      "spy10": null,
+      "excess5_soxx": -3.72,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-09-29",
@@ -152,7 +206,13 @@
       "plus5_date": "2026-10-06",
       "plus10_date": null,
       "sessions_after": 6,
-      "note": null
+      "note": null,
+      "soxx5": 3.88,
+      "soxx10": null,
+      "spy5": 1.95,
+      "spy10": null,
+      "excess5_soxx": -1.95,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-09-30",
@@ -167,7 +227,13 @@
       "plus5_date": "2026-10-07",
       "plus10_date": null,
       "sessions_after": 5,
-      "note": null
+      "note": null,
+      "soxx5": 2.49,
+      "soxx10": null,
+      "spy5": 1.91,
+      "spy10": null,
+      "excess5_soxx": -4.13,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-09-30",
@@ -182,7 +248,13 @@
       "plus5_date": "2026-10-07",
       "plus10_date": null,
       "sessions_after": 5,
-      "note": null
+      "note": null,
+      "soxx5": 2.49,
+      "soxx10": null,
+      "spy5": 1.91,
+      "spy10": null,
+      "excess5_soxx": -0.34,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-09-30",
@@ -197,7 +269,13 @@
       "plus5_date": "2026-10-07",
       "plus10_date": null,
       "sessions_after": 5,
-      "note": null
+      "note": null,
+      "soxx5": 2.49,
+      "soxx10": null,
+      "spy5": 1.91,
+      "spy10": null,
+      "excess5_soxx": 13.75,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-10-02",
@@ -212,7 +290,13 @@
       "plus5_date": null,
       "plus10_date": null,
       "sessions_after": 3,
-      "note": null
+      "note": null,
+      "soxx5": null,
+      "soxx10": null,
+      "spy5": null,
+      "spy10": null,
+      "excess5_soxx": null,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-10-02",
@@ -227,7 +311,13 @@
       "plus5_date": null,
       "plus10_date": null,
       "sessions_after": 3,
-      "note": null
+      "note": null,
+      "soxx5": null,
+      "soxx10": null,
+      "spy5": null,
+      "spy10": null,
+      "excess5_soxx": null,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-10-02",
@@ -242,7 +332,13 @@
       "plus5_date": null,
       "plus10_date": null,
       "sessions_after": 3,
-      "note": null
+      "note": null,
+      "soxx5": null,
+      "soxx10": null,
+      "spy5": null,
+      "spy10": null,
+      "excess5_soxx": null,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-10-02",
@@ -257,7 +353,13 @@
       "plus5_date": null,
       "plus10_date": null,
       "sessions_after": 3,
-      "note": null
+      "note": null,
+      "soxx5": null,
+      "soxx10": null,
+      "spy5": null,
+      "spy10": null,
+      "excess5_soxx": null,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-10-02",
@@ -272,7 +374,13 @@
       "plus5_date": null,
       "plus10_date": null,
       "sessions_after": 3,
-      "note": null
+      "note": null,
+      "soxx5": null,
+      "soxx10": null,
+      "spy5": null,
+      "spy10": null,
+      "excess5_soxx": null,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-10-02",
@@ -287,7 +395,13 @@
       "plus5_date": null,
       "plus10_date": null,
       "sessions_after": 3,
-      "note": null
+      "note": null,
+      "soxx5": null,
+      "soxx10": null,
+      "spy5": null,
+      "spy10": null,
+      "excess5_soxx": null,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-10-02",
@@ -302,7 +416,13 @@
       "plus5_date": null,
       "plus10_date": null,
       "sessions_after": 3,
-      "note": null
+      "note": null,
+      "soxx5": null,
+      "soxx10": null,
+      "spy5": null,
+      "spy10": null,
+      "excess5_soxx": null,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-10-02",
@@ -317,7 +437,13 @@
       "plus5_date": null,
       "plus10_date": null,
       "sessions_after": 3,
-      "note": null
+      "note": null,
+      "soxx5": null,
+      "soxx10": null,
+      "spy5": null,
+      "spy10": null,
+      "excess5_soxx": null,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-10-07",
@@ -332,7 +458,13 @@
       "plus5_date": null,
       "plus10_date": null,
       "sessions_after": 0,
-      "note": null
+      "note": null,
+      "soxx5": null,
+      "soxx10": null,
+      "spy5": null,
+      "spy10": null,
+      "excess5_soxx": null,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-10-07",
@@ -347,7 +479,13 @@
       "plus5_date": null,
       "plus10_date": null,
       "sessions_after": 0,
-      "note": null
+      "note": null,
+      "soxx5": null,
+      "soxx10": null,
+      "spy5": null,
+      "spy10": null,
+      "excess5_soxx": null,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-10-07",
@@ -362,7 +500,13 @@
       "plus5_date": null,
       "plus10_date": null,
       "sessions_after": 0,
-      "note": null
+      "note": null,
+      "soxx5": null,
+      "soxx10": null,
+      "spy5": null,
+      "spy10": null,
+      "excess5_soxx": null,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-10-07",
@@ -377,22 +521,13 @@
       "plus5_date": null,
       "plus10_date": null,
       "sessions_after": 0,
-      "note": null
-    },
-    {
-      "signal_date": "2026-10-07",
-      "symbol": "HOOD",
-      "ref_close": 109.51,
-      "low20": 101.71,
-      "source": "alerts_entry_in_ok",
-      "ret5": null,
-      "ret10": null,
-      "broke_low20": null,
-      "status": "pending",
-      "plus5_date": null,
-      "plus10_date": null,
-      "sessions_after": 0,
-      "note": null
+      "note": null,
+      "soxx5": null,
+      "soxx10": null,
+      "spy5": null,
+      "spy10": null,
+      "excess5_soxx": null,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-10-07",
@@ -407,7 +542,13 @@
       "plus5_date": null,
       "plus10_date": null,
       "sessions_after": 0,
-      "note": null
+      "note": null,
+      "soxx5": null,
+      "soxx10": null,
+      "spy5": null,
+      "spy10": null,
+      "excess5_soxx": null,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-10-07",
@@ -422,7 +563,13 @@
       "plus5_date": null,
       "plus10_date": null,
       "sessions_after": 0,
-      "note": null
+      "note": null,
+      "soxx5": null,
+      "soxx10": null,
+      "spy5": null,
+      "spy10": null,
+      "excess5_soxx": null,
+      "excess10_soxx": null
     },
     {
       "signal_date": "2026-10-07",
@@ -437,7 +584,13 @@
       "plus5_date": null,
       "plus10_date": null,
       "sessions_after": 0,
-      "note": null
+      "note": null,
+      "soxx5": null,
+      "soxx10": null,
+      "spy5": null,
+      "spy10": null,
+      "excess5_soxx": null,
+      "excess10_soxx": null
     }
   ]
 }

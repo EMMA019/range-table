@@ -91,4 +91,22 @@ describe("entry notification log", () => {
     assert.equal(both[0]?.source, SOURCE_ALERT);
     assert.equal(both[0]?.ref_close, 252.18);
   });
+
+  it("drops crypto and other excluded themes, and keeps names that are not on the list", () => {
+    assert.equal(signalFromEntryAlert(alert("HOOD", { barDate: "2026-10-07", close: 109.51, low20: 101.71 })), null);
+    assert.equal(signalFromEntryAlert(alert("COIN", { barDate: "2026-10-07", close: 200, low20: 180 })), null);
+    assert.equal(
+      morningEntrySignal({ ticker: "HOOD", onMorningList: true, screenPass: true, closeDate: "2026-10-07", quote: quote(25, 109.51, 101.71) }),
+      null,
+    );
+    assert.equal(signalFromEntryAlert(alert("GDDY", { barDate: "2026-10-07", close: 97.21, low20: 91.84 }))?.symbol, "GDDY");
+    const merged = mergeSignals(
+      [
+        { signal_date: "2026-10-07", symbol: "HOOD", ref_close: 109.51, low20: 101.71, source: SOURCE_ALERT },
+        { signal_date: "2026-10-07", symbol: "GDDY", ref_close: 97.21, low20: 91.84, source: SOURCE_ALERT },
+      ],
+      [{ signal_date: "2026-10-07", symbol: "STX", ref_close: 807.57, low20: 758.35, source: SOURCE_MORNING }],
+    );
+    assert.deepEqual(merged.map((row) => row.symbol), ["GDDY", "STX"]);
+  });
 });

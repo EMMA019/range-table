@@ -177,13 +177,6 @@
     },
     {
       "signal_date": "2026-10-07",
-      "symbol": "HOOD",
-      "ref_close": 109.51,
-      "low20": 101.71,
-      "source": "alerts_entry_in_ok"
-    },
-    {
-      "signal_date": "2026-10-07",
       "symbol": "ORCL",
       "ref_close": 143.56,
       "low20": 131.58,
