@@ -321,7 +321,14 @@ export function Dashboard() {
               ))}
             </div>
           )}
-          {data && <ThemeWatch demand={data.themeDemand} slots={data.themeSlots} month={data.barDate?.slice(0, 7) ?? null} />}
+          {data && (
+            <ThemeWatch
+              demand={data.themeDemand}
+              slots={data.themeSlots}
+              papers={data.researchPapers}
+              month={data.barDate?.slice(0, 7) ?? null}
+            />
+          )}
           {data?.excludedPartial && (
             <p className="text-xs leading-relaxed text-muted">
               米国市場の場中なので、未確定の当日足は除き、直前の確定日足で計算している。
@@ -793,6 +800,7 @@ function TickerCard({
           <>
             調査 <b className="text-ink">{row.research.mark}</b> {row.research.title}{" "}
             <span className="font-mono">{row.research.date}</span>
+            {row.research.lag ? ` · ${row.research.lag}` : ""}
           </>
         ) : (
           "調査なし"

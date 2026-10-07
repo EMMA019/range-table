@@ -3,7 +3,7 @@ import path from "node:path";
 import { CORR_LOW_MAX } from "./constants";
 import { isIgnoredTicker } from "./holdings";
 
-export const THEME_SLOT_IDS = ["power", "cooling", "networking", "edge"] as const;
+export const THEME_SLOT_IDS = ["power", "cooling", "networking", "edge", "physical-ai"] as const;
 export type ThemeSlotId = (typeof THEME_SLOT_IDS)[number];
 
 export const THEME_SLOT_LABEL: Record<ThemeSlotId, string> = {
@@ -11,6 +11,7 @@ export const THEME_SLOT_LABEL: Record<ThemeSlotId, string> = {
   cooling: "冷却",
   networking: "ネットワーキング",
   edge: "エッジ",
+  "physical-ai": "Physical AI",
 };
 
 export type ThemeDemandChange = "strengthened" | "weakened" | "unchanged";
@@ -19,6 +20,8 @@ export type ThemeDemandSignal = {
   id: string;
   label: string;
   change: ThemeDemandChange | null;
+  /** One line from the weekly note. Null when the file omitted it. */
+  reason: string | null;
 };
 
 export type ThemeSlotRow = {
@@ -36,7 +39,10 @@ const DEMAND_PATH = path.join(process.cwd(), "data", "theme_demand.json");
 const CHANGES = new Set<ThemeDemandChange>(["strengthened", "weakened", "unchanged"]);
 
 export function loadThemeSlotMap(file = SLOTS_PATH): Record<ThemeSlotId, string[]> {
-  const empty = { power: [], cooling: [], networking: [], edge: [] } as Record<ThemeSlotId, string[]>;
+  const empty = { power: [], cooling: [], networking: [], edge: [], "physical-ai": [] } as Record<
+    ThemeSlotId,
+    string[]
+  >;
   try {
     const json = JSON.parse(fs.readFileSync(file, "utf8")) as { themes?: Record<string, unknown> };
     const themes = json.themes ?? {};
@@ -69,7 +75,8 @@ export function loadThemeDemand(file = DEMAND_PATH): { asOf: string | null; sign
         const change = typeof row.change === "string" && CHANGES.has(row.change as ThemeDemandChange)
           ? (row.change as ThemeDemandChange)
           : null;
-        signals.push({ id, label, change });
+        const reason = typeof row.reason === "string" ? row.reason.trim() : "";
+        signals.push({ id, label, change, reason: reason || null });
       }
     }
     return { asOf, signals };
@@ -106,5 +113,5 @@ export function buildThemeSlots(
 export const DEMAND_LABEL: Record<ThemeDemandChange, string> = {
   strengthened: "強まった",
   weakened: "弱まった",
-  unchanged: "変わらず",
+  unchanged: "変化なし",
 };

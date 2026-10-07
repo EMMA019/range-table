@@ -1,4 +1,126 @@
 {
-  "note": "調査メモ。tickers で銘柄と結ぶ。mark は 効く / 様子見 / 今は無視。空なら表は「調査なし」。数値はここに書いたものだけを使う。",
-  "papers": []
+  "note": "調査メモ。tickers は一次資料が名指しした監視ユニバースの銘柄だけ、最大2つ。mark は 効く / 様子見 / 今は無視。lag は すぐ / 1〜2年 / もっと先。ONDS は書かない。空なら表は「調査なし」。",
+  "papers": [
+    {
+      "id": "mixture-of-kittens",
+      "title": "Mixture-of-Kittens: MoE Megakernel for NVL72s",
+      "date": "2026-09-28",
+      "url": "https://arxiv.org/abs/2609.36070",
+      "summary": "NVIDIAのNVL72向けに、MoEのトークン配送とエキスパート計算を一つの学習カーネルにまとめた。層のスループットは公開手法の最大2.37倍、512 GPUの本番実行では学習スループット1.41倍と報告している。",
+      "companyTech": "NVIDIA NVL72（GB300）",
+      "lag": "すぐ",
+      "tickers": ["NVDA"],
+      "mark": "様子見"
+    },
+    {
+      "id": "muse-realtime-avatar",
+      "title": "Muse Realtime Avatar",
+      "date": "2026-09-23",
+      "url": "https://research.meta.ai/blog/bringing-your-muse-to-life",
+      "summary": "音声トークンからリアルタイムのアバター映像を出す。GB200上で448×768、25fps、話し終わりから同期した応答の先頭まで約870ms。記事の例は、Museアプリの提供そのものではない。",
+      "companyTech": "Meta Muse Realtime Avatar（NVIDIA GB200、CUDA Graph）",
+      "lag": "1〜2年",
+      "tickers": ["META", "NVDA"],
+      "mark": "様子見"
+    },
+    {
+      "id": "google-tee-fl",
+      "title": "Toward provably private learning from federated data",
+      "date": "2026-09-25",
+      "url": "https://arxiv.org/abs/2609.31494",
+      "summary": "AMD SEV-SNPとIntel TDXのTEE上で、端末が暗号化したデータをサーバ側で学習する。Gboardの英語モデルは、従来の本番モデルより短い期間・小さいプライバシー予算で、使い勝手の指標は同水準だったと書く。",
+      "companyTech": "AMD SEV-SNP、Intel TDX（Google Gboard）",
+      "lag": "すぐ",
+      "tickers": ["AMD", "INTC"],
+      "mark": "様子見"
+    },
+    {
+      "id": "google-private-ai-memory",
+      "title": "Advancing Private AI Compute with secure, server-side memory",
+      "date": "2026-09-23",
+      "url": "https://deepmind.google/blog/advancing-private-ai-compute-with-secure-server-side-memory/",
+      "summary": "端末が鍵を持つセキュアエンクレーブに、利用者ごとの記憶をクラウド側で残す構想。ブログはこれから持たせると書いており、出荷日はない。HBMの需給の話ではない。",
+      "companyTech": "Google Private AI Compute（サーバ側メモリ、セキュアエンクレーブ）",
+      "lag": "1〜2年",
+      "tickers": ["GOOGL"],
+      "mark": "様子見"
+    },
+    {
+      "id": "meta-reasoning",
+      "title": "Thinking Before Thinking: Scaling Agentic Inference Through Meta-Reasoning",
+      "date": "2026-09-29",
+      "url": "https://arxiv.org/abs/2609.38147",
+      "summary": "長いエージェント実行の制御を、作業本体と分けて推論時に行う実験。評価はGemini 3.1 Pro、GPT-5.5、Opus 4.8で、特定のチップは指名していない。",
+      "companyTech": "企業技術の明示なし",
+      "lag": "もっと先",
+      "tickers": [],
+      "mark": "今は無視"
+    },
+    {
+      "id": "gemini-4-argon",
+      "title": "Gemini 4 Argon",
+      "date": "2026-09-30",
+      "url": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-4-argon/",
+      "summary": "長手順の業務向けフロンティアモデル。出力上限は100万トークン、導入価格は入力100万トークンあたり2ドル、出力100万トークンあたり10ドル。一般提供の前に、信頼できる防御側へ段階的に出している。",
+      "companyTech": "Gemini 4 Argon（Google）",
+      "lag": "すぐ",
+      "tickers": ["GOOGL"],
+      "mark": "様子見"
+    },
+    {
+      "id": "slai-t-rex",
+      "title": "SLAI T-Rex: Full-Parameter Post-training of the DeepSeek-V4 Family on Ascend SuperPOD",
+      "date": "2026-07-22",
+      "url": "https://arxiv.org/abs/2607.20145",
+      "summary": "Ascend 910CのSuperPODでDeepSeek-V4を全パラメータ事後学習し、DeepSeek-V4-ProでMFU 34.22%（公開レシピ比2.93倍）と報告している。監視ユニバースの上場ティッカーは指名していない。",
+      "companyTech": "Huawei Ascend 910C（Ascend SuperPOD）",
+      "lag": "1〜2年",
+      "tickers": [],
+      "mark": "様子見"
+    },
+    {
+      "id": "amd-moonshot-mi355x",
+      "title": "Rebuilding Agentic AI from First Principles for AMD GPU — Together with Moonshot AI",
+      "date": "2026-07-21",
+      "url": "https://www.amd.com/en/developer/resources/technical-articles/2026/rebuilding-agentic-ai-for-amd-gpu.html",
+      "summary": "Moonshot AIと、Kimi K2.6のエージェント推論をMI355X上のSGLang、ROCm、UMBPで組み直した。KVがHBMからあふれる前提で、階層キャッシュをスケジューラに見せる。",
+      "companyTech": "AMD Instinct MI355X（ROCm、SGLang、UMBP）",
+      "lag": "すぐ",
+      "tickers": ["AMD"],
+      "mark": "様子見"
+    },
+    {
+      "id": "pdd-cross-dc",
+      "title": "PDD: Unleashing Economical and Flexible Heterogeneous LLM Inference via Cross-Datacenter Prefill-Decode Disaggregation",
+      "date": "2026-07-18",
+      "url": "https://arxiv.org/abs/2609.13161",
+      "summary": "プレフィル、中継デコード、本デコードの三段で、データセンター間のKV転送を隠す。H100とH200を広域Ethernetで組む試験で、同一拠点の均質PDよりSLA内goodputの費用対効果が最大37.5%高いと報告している。",
+      "companyTech": "NVIDIA H100、NVIDIA H200（データセンター間Ethernet）",
+      "lag": "1〜2年",
+      "tickers": ["NVDA"],
+      "mark": "様子見"
+    },
+    {
+      "id": "deepseek-dsec",
+      "title": "DeepSeek Elastic Compute (DSec): A Sandbox Infrastructure for Effective Agentic Training at Scale",
+      "date": "2026-09-19",
+      "url": "https://arxiv.org/abs/2609.22978",
+      "summary": "エージェント学習向けのサンドボックス基盤。本番規模の1単位は約160ノード、1日約300万サンドボックス。マイクロVMのノードはAMD EPYC 9655。GPUの学習ジョブとは寿命を分け、オペレータ計測ではNVIDIA MIGを使う。",
+      "companyTech": "DeepSeek DSec（3FS、AMD EPYC 9655、NVIDIA MIG）",
+      "lag": "すぐ",
+      "tickers": ["AMD", "NVDA"],
+      "mark": "様子見"
+    },
+    {
+      "id": "jetson-pi",
+      "title": "Jetson-PI: Towards Onboard Real-Time Robot Control via Foresight-Aligned Asynchronous Inference",
+      "date": "2026-07-14",
+      "url": "https://arxiv.org/abs/2607.12659",
+      "summary": "Jetson Orin上で、視覚言語行動ポリシーの推論遅れを非同期に補正する。制御周波数は素のPyTorch比8.66倍、vla.cpp比5.41倍。LIBEROの成功率はVLASHより平均14.8ポイント高いと報告している。工場出荷の話ではない。",
+      "companyTech": "NVIDIA Jetson Orin",
+      "lag": "1〜2年",
+      "tickers": ["NVDA"],
+      "mark": "様子見"
+    }
+  ]
 }

@@ -1,11 +1,42 @@
 {
-  "note": "週次のテーマ需要。change は strengthened / weakened / unchanged。null は未記録で、強弱は推測しない。",
-  "asOf": null,
+  "note": "週次のテーマ需要。change は strengthened / weakened / unchanged。画面の unchanged は「変化なし」。reason は調査メモの一次資料に書いてあることだけ。今週の増減が資料に無いものは unchanged。",
+  "asOf": "2026-10-07",
   "signals": [
-    { "id": "power-demand", "label": "電力需要", "change": null },
-    { "id": "cooling", "label": "冷却", "change": null },
-    { "id": "networking", "label": "ネットワーキング", "change": null },
-    { "id": "edge", "label": "エッジ", "change": null },
-    { "id": "semi-capex", "label": "半導体設備", "change": null }
+    {
+      "id": "inference-tokens",
+      "label": "推論トークン需要",
+      "change": "unchanged",
+      "reason": "Gemini 4 Argon（9/30）は出力上限100万トークンと導入価格を示し、Meta-Reasoning（9/29）は長い実行ほど制御の計算が増えると書く。今週の実需の増減はどちらの一次資料にもない。"
+    },
+    {
+      "id": "hbm-memory",
+      "label": "HBM・メモリの制約",
+      "change": "unchanged",
+      "reason": "AMD×Moonshot（7/21）はエージェントのKVがHBMからあふれると書く。Private AI Computeのメモリは利用者状態の暗号化で、HBMの需給ではない。今週の制約の強弱は未記載。"
+    },
+    {
+      "id": "power-cooling",
+      "label": "電力・冷却の制約",
+      "change": "unchanged",
+      "reason": "今回の一次資料は電力や冷却の需要を測っていない。"
+    },
+    {
+      "id": "non-nvidia",
+      "label": "NVIDIA以外の学習と推論",
+      "change": "unchanged",
+      "reason": "SLAI T-RexはAscend 910Cでの事後学習、AMD×MoonshotはMI355XでのKimi K2.6サービングを示す。今週の出荷やシェアの変化は書いていない。"
+    },
+    {
+      "id": "cross-dc",
+      "label": "データセンター間の分離サービング",
+      "change": "unchanged",
+      "reason": "PDD（7/18）はH100とH200をデータセンター間Ethernetでつなぐ試験構成で、今週の回線需要の増減は測っていない。"
+    },
+    {
+      "id": "physical-ai",
+      "label": "Physical AI",
+      "change": "unchanged",
+      "reason": "Jetson-PI（7/14公開）はJetson Orin上の研究ベンチで、工場や車載の出荷需要は書いていない。"
+    }
   ]
 }

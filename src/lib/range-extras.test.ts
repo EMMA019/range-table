@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { cushionAfterLoss, policyLevels } from "./account-config";
 import { parseMaterialNews, isOvernightNews, materialNewsAlerts } from "./material-news";
-import { latestResearch, parseResearchPapers } from "./research";
+import { latestResearch, loadResearchPapers, parseResearchPapers } from "./research";
 import { buildRiskLine } from "./risk-line";
 import { upcomingSemiEvents } from "./semi-events";
 import { ma20Close, parseStopRules, stopLevel } from "./stops";
-import { buildThemeSlots, isLowSoxxCorr, loadThemeDemand } from "./theme-slots";
+import { buildThemeSlots, isLowSoxxCorr, loadThemeDemand, loadThemeSlotMap } from "./theme-slots";
+import { loadMonitorIndex } from "./monitor-universe";
 import type { Bar } from "./types";
 import { paperHorizon, weekBench, weeklyPnl } from "./weekly-report";
 import { aboveSma, breadthOk, buildWeather, marketTurnedBad, vixBelow } from "./weather";
@@ -160,13 +161,31 @@ describe("overnight news, research, and themes", () => {
     });
     assert.equal(latestResearch("NVDA", papers)?.mark, "効く");
     assert.equal(latestResearch("NVDA", papers)?.title, "新しい");
+    assert.equal(latestResearch("NVDA", papers)?.lag, null);
     assert.equal(latestResearch("ONDS", papers), null);
     assert.equal(latestResearch("AMD", papers), null);
+    const kept = parseResearchPapers({
+      papers: [
+        {
+          id: "lag",
+          title: "時点",
+          date: "2026-10-01",
+          tickers: ["AMD", "INTC", "NVDA", "ONDS"],
+          mark: "様子見",
+          lag: "1〜2年",
+          summary: "短い",
+          companyTech: "企業技術の明示なし",
+        },
+      ],
+    });
+    assert.deepEqual(kept[0]?.tickers, ["AMD", "INTC"]);
+    assert.equal(kept[0]?.lag, "1〜2年");
+    assert.equal(kept[0]?.summary, "短い");
   });
 
   it("flags low SOXX correlation as a defensive-slot watch", () => {
     const rows = buildThemeSlots(
-      { power: ["NEE"], cooling: ["VRT"], networking: ["CSCO"], edge: ["DELL"] },
+      { power: ["NEE"], cooling: ["VRT"], networking: ["CSCO"], edge: ["DELL"], "physical-ai": ["ON"] },
       new Map([
         ["NEE", 0.2],
         ["VRT", 0.8],
@@ -176,10 +195,20 @@ describe("overnight news, research, and themes", () => {
     assert.equal(rows.find((row) => row.ticker === "NEE")?.lowCorr, true);
     assert.equal(rows.find((row) => row.ticker === "VRT")?.lowCorr, false);
     assert.equal(rows.find((row) => row.ticker === "CSCO")?.lowCorr, false);
+    assert.equal(rows.find((row) => row.ticker === "ON")?.themeLabel, "Physical AI");
     assert.equal(isLowSoxxCorr(0.305), false);
     const demand = loadThemeDemand();
-    assert.equal(demand.signals.length, 5);
-    assert.ok(demand.signals.every((signal) => signal.change == null));
+    assert.equal(demand.signals.length, 6);
+    assert.equal(demand.asOf, "2026-10-07");
+    assert.ok(demand.signals.every((signal) => signal.change === "unchanged" && signal.reason));
+    const themes = loadThemeSlotMap();
+    const universe = new Set(loadMonitorIndex().union);
+    assert.ok(themes["physical-ai"].includes("ON"));
+    assert.ok(themes["physical-ai"].every((ticker) => ticker !== "ONDS" && universe.has(ticker)));
+    const notes = loadResearchPapers();
+    assert.equal(notes.length, 11);
+    assert.ok(notes.every((paper) => paper.summary && paper.companyTech && paper.lag && paper.url));
+    assert.ok(notes.every((paper) => paper.tickers.length <= 2 && !paper.tickers.includes("ONDS")));
   });
 });
 
