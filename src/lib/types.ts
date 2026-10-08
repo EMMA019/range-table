@@ -188,7 +188,12 @@ export type TickerRow = {
   /** True when no next earnings date could be resolved. */
   earningsUnknown: boolean;
   /** Latest research note that tags this ticker. Null when data/research_papers.json has none. */
-  research: { date: string; title: string; mark: "効く" | "様子見" | "今は無視" } | null;
+  research: {
+    date: string;
+    title: string;
+    mark: "効く" | "様子見" | "今は無視";
+    lag: "すぐ" | "1〜2年" | "もっと先" | null;
+  } | null;
 };
 
 export type IndexRow = {
@@ -247,14 +252,31 @@ export type MarketPayload = {
   };
   themeDemand: {
     asOf: string | null;
-    signals: Array<{ id: string; label: string; change: "strengthened" | "weakened" | "unchanged" | null }>;
+    signals: Array<{
+      id: string;
+      label: string;
+      change: "strengthened" | "weakened" | "unchanged" | null;
+      reason: string | null;
+    }>;
   };
   themeSlots: Array<{
     ticker: string;
-    theme: "power" | "cooling" | "networking" | "edge";
+    theme: "power" | "cooling" | "networking" | "edge" | "physical-ai";
     themeLabel: string;
     corrSoxx: number | null;
     lowCorr: boolean;
+  }>;
+  /** Survey notes from data/research_papers.json. Empty when the file has none. */
+  researchPapers: Array<{
+    id: string;
+    title: string;
+    date: string;
+    url: string | null;
+    summary: string | null;
+    companyTech: string | null;
+    lag: "すぐ" | "1〜2年" | "もっと先" | null;
+    tickers: string[];
+    mark: "効く" | "様子見" | "今は無視";
   }>;
 };
 

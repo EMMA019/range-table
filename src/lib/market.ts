@@ -595,6 +595,7 @@ function buildPayload(
     }),
     themeDemand: loadThemeDemand(),
     themeSlots: themeSlotsOf(rows, indexBuilt.rows),
+    researchPapers: papers,
   };
 }
 
