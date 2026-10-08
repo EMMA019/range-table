@@ -1,6 +1,6 @@
 {
   "source": "Yahoo Finance chart API query1 v8 日足（src/lib/yahoo.ts の fetchDailyBars）",
-  "fetchedAtJst": "2026-10-08 07:35 JST",
+  "fetchedAtJst": "2026-10-08 11:12 JST",
   "barsThrough": "2026-10-07",
   "hitDefinition": "的中は、通知日から10営業日後の終値が通知日の終値より高く、かつその10営業日のあいだに終値が20日安値（通知日を含む20本の最安値）を下回らないこと。終値が20日安値を下回った時点で外れ。+10日の足が無いあいだは未判定で、無い足のリターンは作らない。",
   "records": [
