@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { attachVerdict, computeVerdict } from "./verdict";
 import type { EarningsView, Quote } from "./types";
+import { emptyWeekly } from "./weekly";
 
 function baseQuote(partial: Partial<Quote> = {}): Quote {
   return {
@@ -36,6 +37,7 @@ function baseQuote(partial: Partial<Quote> = {}): Quote {
     low20DaysAgo: 10,
     high20DaysAgo: 10,
     downtrend: { active: false, reason: null, lowDaysAgo: 10, highDaysAgo: 10 },
+    weekly: emptyWeekly(),
     verdict: { state: "待ち", reason: "—" },
     ...partial,
   };

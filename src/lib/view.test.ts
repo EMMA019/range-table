@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { TickerRow } from "./types";
 import { applyView, continuedBreakoutText, sectorsOf, volumeSurge, volumeThin, waitingRebound, withDividers } from "./view";
+import { WEEKLY_CALL, emptyWeekly } from "./weekly";
 
 function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow {
   return {
@@ -47,6 +48,7 @@ function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow
       low20DaysAgo: 0,
       high20DaysAgo: 5,
       downtrend: { active: false, reason: null, lowDaysAgo: 0, highDaysAgo: 5 },
+      weekly: emptyWeekly(),
       verdict: { state: "待ち", reason: "—" },
     },
     pe: {
@@ -63,6 +65,8 @@ function row(partial: Partial<TickerRow> & Pick<TickerRow, "ticker">): TickerRow
     sectorLabel: null,
     corrBasket: null,
     corrSoxx: null,
+    soxxTag: null,
+    weeklyCall: null,
     rs20: null,
     semi: false,
     semiFull: false,
@@ -88,6 +92,7 @@ const filters = {
   inOk: false,
   candidateVerdict: false,
   hideWatch: false,
+  weekBuy: false,
   sort: "boxAsc" as const,
   q: "",
 };
@@ -345,6 +350,28 @@ describe("applyView", () => {
     assert.deepEqual(
       applyView(names, { ...filters, inOk: true }).map((item) => item.ticker),
       ["OK"],
+    );
+  });
+
+  it("keeps the weekly rebound list and sorts by weekly close strength", () => {
+    const names = [
+      row({
+        ticker: "SOFT",
+        weeklyCall: WEEKLY_CALL.rebound,
+        quote: { ...row({ ticker: "SOFT" }).quote!, weekly: emptyWeekly({ weekClosePos: 55 }) },
+      }),
+      row({
+        ticker: "STRONG",
+        weeklyCall: WEEKLY_CALL.rebound,
+        quote: { ...row({ ticker: "STRONG" }).quote!, weekly: emptyWeekly({ weekClosePos: 90 }) },
+      }),
+      row({ ticker: "WAIT", weeklyCall: WEEKLY_CALL.wait }),
+      row({ ticker: "EARN", weeklyCall: WEEKLY_CALL.earnings }),
+      row({ ticker: "AVOID", weeklyCall: WEEKLY_CALL.avoid }),
+    ];
+    assert.deepEqual(
+      applyView(names, { ...filters, weekBuy: true }).map((item) => item.ticker),
+      ["STRONG", "SOFT"],
     );
   });
 

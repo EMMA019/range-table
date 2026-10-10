@@ -17,7 +17,6 @@ import {
   formatPx,
   formatRs,
   formatShares,
-  guideLineText,
   rangeRefText,
   reboundText,
   formatSlope,
@@ -35,6 +34,7 @@ import { EntryBadge } from "./entry-badge";
 import { Shares10 } from "./shares10";
 import { PriceChart } from "./price-chart";
 import { Button } from "./ui/button";
+import { SoxxTagChip, WeeklyBadge, WeeklyFacts } from "./weekly-facts";
 
 export function DetailPanel({
   row,
@@ -105,7 +105,8 @@ export function DetailPanel({
                 <p className="mb-1 text-xs text-muted">箱の位置</p>
                 <BoxBar pct={row.quote.boxPct} />
                 <p className="mt-1 text-[11px] text-muted">{BASIS.box}</p>
-                <p className="mt-3 text-sm leading-relaxed">{guideLineText(row.quote.line15, row.quote.line25)}</p>
+                <WeeklyFacts quote={row.quote} />
+                <p className="mt-1 text-[11px] leading-relaxed text-muted">{BASIS.weekStop}</p>
                 <div className="mt-3 rounded-xl border border-line bg-elev px-3 py-2">
                   <p className="text-[11px] font-medium text-ink">参考レンジ（20日箱の補助）</p>
                   <p className="mt-1 font-mono text-sm tabular-nums text-ink">
@@ -117,6 +118,8 @@ export function DetailPanel({
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <EntryBadge signal={row.quote.entrySignal} className="text-[11px]" />
+                  {row.weeklyCall && <WeeklyBadge call={row.weeklyCall} />}
+                  {row.soxxTag && <SoxxTagChip tag={row.soxxTag} />}
                   <p className="text-sm">{reboundText(row.quote.reboundDays)}</p>
                 </div>
                 <p className="mt-1 text-[11px] leading-relaxed text-muted">{BASIS.guide}</p>
@@ -196,6 +199,7 @@ export function DetailPanel({
                   value={
                     <>
                       <Atr14Value atr14={row.quote.atr14} close={row.quote.close} />
+                      {row.quote.weekly.narrowRange && <span className="text-copper"> 値幅が小さい</span>}
                       {" · "}
                       <Shares10 shares={row.quote.shares10} cost={row.quote.cost10} />
                     </>
@@ -304,7 +308,16 @@ function CorrBlock({ row }: { row: TickerRow }) {
     <div className="mt-4">
       <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
         <Stat label="保有との相関" value={formatCorrExact(row.corrBasket)} basis={CORR_NOTE} />
-        <Stat label="SOXXとの相関" value={formatCorrExact(row.corrSoxx)} basis="同じ60営業日の日次リターンとSOXXの相関" />
+        <Stat
+          label="SOXXとの相関"
+          value={
+            <>
+              {formatCorrExact(row.corrSoxx)}
+              {row.soxxTag ? ` · ${row.soxxTag}` : ""}
+            </>
+          }
+          basis={BASIS.corr}
+        />
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { boxMetricsUnreliable } from "./compute";
 import { quoteDowntrendActive } from "./downtrend";
 import { isCandidateVerdict } from "./verdict";
 import type { Quote, TickerRow } from "./types";
+import { WEEKLY_CALL } from "./weekly";
 
 export type ViewFilters = {
   sector: string;
@@ -20,6 +21,8 @@ export type ViewFilters = {
   inOk: boolean;
   candidateVerdict: boolean;
   hideWatch: boolean;
+  /** 週内で底タッチ→反発 only. Earnings-blocked names stay out. Sorted by weekly close strength. */
+  weekBuy: boolean;
   sort: SortId;
   q: string;
 };
@@ -106,6 +109,7 @@ export function applyView(rows: TickerRow[], filters: ViewFilters): TickerRow[] 
         return false;
     }
     if (filters.candidateVerdict && !isCandidateVerdict(row.quote)) return false;
+    if (filters.weekBuy && row.weeklyCall !== WEEKLY_CALL.rebound) return false;
     if (query) {
       const hay =
         `${row.ticker} ${row.name} ${row.sector} ${row.industry ?? ""} ${row.description} ${row.notes} ${row.groupName} ${row.sectorLabel ?? ""} ${row.tags.join(" ")}`.toLowerCase();
@@ -114,8 +118,20 @@ export function applyView(rows: TickerRow[], filters: ViewFilters): TickerRow[] 
     return true;
   });
 
-  filtered.sort((a, b) => compareRows(a, b, filters.sort));
+  if (filters.weekBuy) filtered.sort(compareWeekClose);
+  else filtered.sort((a, b) => compareRows(a, b, filters.sort));
   return filtered;
+}
+
+/** Higher weekly close position first. Missing figures sort last. */
+function compareWeekClose(a: TickerRow, b: TickerRow): number {
+  const av = a.quote?.weekly.weekClosePos;
+  const bv = b.quote?.weekly.weekClosePos;
+  if (av == null && bv == null) return a.ticker.localeCompare(b.ticker);
+  if (av == null) return 1;
+  if (bv == null) return -1;
+  if (av !== bv) return av > bv ? -1 : 1;
+  return a.ticker.localeCompare(b.ticker);
 }
 
 function earnRank(row: TickerRow): number {
@@ -156,6 +172,10 @@ function compareRows(a: TickerRow, b: TickerRow, sort: SortId): number {
     if (bv == null) return -1;
     if (av !== bv) return av > bv ? -1 : 1;
     return a.ticker.localeCompare(b.ticker);
+  }
+
+  if (sort === "weekCloseDesc") {
+    return compareWeekClose(a, b);
   }
 
   if (sort === "slopeDesc") {

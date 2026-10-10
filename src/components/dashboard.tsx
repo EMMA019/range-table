@@ -18,7 +18,6 @@ import {
   formatYen,
   formatRs,
   formatVolumeRatio,
-  guideLineText,
   rangeRefText,
   reboundText,
   shortDate,
@@ -44,6 +43,7 @@ import { SiteNav } from "./site-nav";
 import { ThemeToggle } from "./theme-toggle";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { SoxxTagChip, WeeklyBadge, WeeklyFacts } from "./weekly-facts";
 
 const SORTS = new Set<string>(SORT_OPTIONS.map((option) => option.id));
 const UNIVERSE = new Set<string>(UNIVERSE_SCOPES.map((scope) => scope.id));
@@ -66,6 +66,7 @@ const CHIP_PARAM: Record<ChipKey, string> = {
   inOk: "inok",
   candidateVerdict: "cand",
   hideWatch: "hideWatch",
+  weekBuy: "weekbuy",
 };
 
 export function Dashboard() {
@@ -131,6 +132,7 @@ export function Dashboard() {
       inOk: sp.get("inok") === "1",
       candidateVerdict: sp.get("cand") === "1",
       hideWatch: sp.get("hideWatch") === "1",
+      weekBuy: sp.get("weekbuy") === "1",
       sort: SORTS.has(sort ?? "") ? (sort as SortId) : "boxAsc",
       q: query,
     };
@@ -154,7 +156,10 @@ export function Dashboard() {
     return watchRows;
   }, [universe, watchRows, indexRows]);
   const visible = useMemo(() => applyView(rows, filters), [rows, filters]);
-  const items = useMemo(() => withDividers(visible, filters.sort), [visible, filters.sort]);
+  const items = useMemo(
+    () => withDividers(visible, filters.weekBuy ? "weekCloseDesc" : filters.sort),
+    [visible, filters.weekBuy, filters.sort],
+  );
   const sectors = useMemo(() => sectorsOf(rows), [rows]);
   const selected =
     [...watchRows, ...indexRows].find((row) => row.ticker === ticker) ?? null;
@@ -230,11 +235,23 @@ export function Dashboard() {
     filters.inOk ||
     filters.candidateVerdict ||
     filters.hideWatch ||
+    filters.weekBuy ||
     query.trim().length > 0;
 
   function toggleChip(key: ChipKey) {
     const param = CHIP_PARAM[key];
-    commit({ [param]: sp.get(param) === "1" ? null : "1" }, "replace");
+    const turningOn = sp.get(param) !== "1";
+    if (key === "weekBuy") {
+      commit(
+        {
+          [param]: turningOn ? "1" : null,
+          sort: turningOn ? "weekCloseDesc" : null,
+        },
+        "replace",
+      );
+      return;
+    }
+    commit({ [param]: turningOn ? "1" : null }, "replace");
   }
 
   function clearFilters() {
@@ -254,13 +271,16 @@ export function Dashboard() {
         inok: null,
         cand: null,
         hideWatch: null,
+        weekbuy: null,
         sort: null,
       },
       "replace",
     );
   }
 
-  const sortLabel = SORT_OPTIONS.find((option) => option.id === filters.sort)?.label ?? "箱の底から";
+  const sortLabel = filters.weekBuy
+    ? "週の引けが強い順"
+    : (SORT_OPTIONS.find((option) => option.id === filters.sort)?.label ?? "箱の底から");
 
   return (
     <div className="mx-auto min-h-dvh w-full max-w-lg lg:grid lg:h-dvh lg:max-w-6xl lg:grid-cols-[26rem_minmax(0,1fr)] lg:overflow-hidden">
@@ -400,13 +420,18 @@ export function Dashboard() {
               並び
               <select
                 className="mt-1 h-11 w-full rounded-xl border border-line bg-elev px-2 text-base text-ink"
-                value={filters.sort}
-                onChange={(event) =>
-                  commit(
-                    { sort: event.target.value === "boxAsc" ? null : event.target.value },
-                    "replace",
-                  )
-                }
+                value={filters.weekBuy ? "weekCloseDesc" : filters.sort}
+                onChange={(event) => {
+                  const next = event.target.value;
+                  if (filters.weekBuy && next !== "weekCloseDesc") {
+                    commit(
+                      { weekbuy: null, sort: next === "boxAsc" ? null : next },
+                      "replace",
+                    );
+                    return;
+                  }
+                  commit({ sort: next === "boxAsc" ? null : next }, "replace");
+                }}
               >
                 {SORT_OPTIONS.map((option) => (
                   <option key={option.id} value={option.id}>
@@ -519,7 +544,7 @@ export function Dashboard() {
           <div className="px-8 py-10">
             <h2 className="text-xl font-semibold">銘柄を選ぶ</h2>
             <p className="mt-3 max-w-md text-sm leading-relaxed text-muted">
-              箱の位置は、直近20本の安値から高値までのどこに終値があるか。0%が底、100%が天井。底で買い、天井で全部売る見方のための表。
+              箱の位置は、直近20本の安値から高値までのどこに終値があるか。0%が底、100%が天井。週間の列は、一日のヒゲと、週を通した戻りを分ける。注文は出さない。
             </p>
             <Glossary className="mt-6" />
           </div>
@@ -648,6 +673,8 @@ function TickerCard({
           {(quote || badges.length > 0) && (
             <div className="mt-1 flex flex-wrap gap-1">
               {quote && <EntryBadge signal={quote.entrySignal} />}
+              {row.weeklyCall && <WeeklyBadge call={row.weeklyCall} />}
+              {row.soxxTag && <SoxxTagChip tag={row.soxxTag} />}
               {badges.map((badge) => (
                 <span
                   key={badge}
@@ -683,8 +710,8 @@ function TickerCard({
               <p className="mt-1 text-[11px] font-medium leading-snug text-rust">{DOWNTREND_BADGE}</p>
             )}
           </div>
+          <WeeklyFacts quote={quote} />
           <p className="mt-2 text-[11px] text-muted">{formatEarnings(row.earnings)}</p>
-          <p className="mt-1 text-[11px] leading-relaxed text-muted">{guideLineText(quote.line15, quote.line25)}</p>
           <p className="mt-1 font-mono text-[11px] leading-relaxed text-ink">
             参考 {rangeRefText(quote.low5, quote.high5, quote.low10, quote.high10)}
           </p>
@@ -719,6 +746,7 @@ function TickerCard({
             </span>
             <span>
               ATR(14) <Atr14Value atr14={quote.atr14} close={quote.close} />
+              {quote.weekly.narrowRange && <span className="text-copper"> 値幅が小さい</span>}
               {" · "}
               <b className="font-mono font-medium text-ink tabular-nums">
                 <Shares10 shares={quote.shares10} cost={quote.cost10} />

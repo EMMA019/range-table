@@ -45,6 +45,50 @@ export type Bar = {
 /** Where the latest close sits against the 15% and 25% lines of the 20-day box. */
 export type EntrySignal = "in_ok" | "early" | "chase" | "late";
 
+/** 60-day correlation versus SOXX, on the two-decimal figure. */
+export type SoxxTag = "半導体・AI寄り" | "中間" | "低相関";
+
+/**
+ * One weekly read of the latest close.
+ * rebound = 週内で底タッチ→反発, wait = 底で待ち, avoid = 安値更新＋20日線が下向き.
+ * earnings replaces rebound when the next report is inside 5 trading days.
+ */
+export type WeeklyCall =
+  | "週内で底タッチ→反発"
+  | "底で待ち"
+  | "安値更新＋20日線が下向き"
+  | "決算5営業日以内";
+
+/** Week-shaped stats from bars that end on the latest close. No later session is included. */
+export type WeeklyStats = {
+  /** Box position 5 trading days earlier. Null until 25 closes exist. */
+  boxPctPrev: number | null;
+  /** Box position of the last 10 sessions, oldest first. Each day uses only bars through that day. */
+  boxPctSpark: number[];
+  /** Close ÷ close 5 trading days earlier − 1, in percent. */
+  weekChangePct: number | null;
+  /** Latest close inside the last 5 sessions' high–low, 0–100. */
+  weekClosePos: number | null;
+  /** How many of the last 5 sessions closed above the prior close. */
+  upDays: number | null;
+  /** Some session this week printed a low inside that day's own bottom 15% of the 20-day box. */
+  touchedBottom: boolean;
+  /** The latest session printed the current 20-day low. */
+  newLowLast: boolean;
+  /** 20-day low − 0.5×ATR(14). */
+  stop: number;
+  /** floor($15 / (close−stop)), then capped so shares×close ≤ $450. 0 when one share risks more than $15. */
+  shares: number;
+  /** shares × (close − stop). 0 when shares is 0. */
+  riskUsd: number;
+  /** ATR(14) ÷ close × 100, two decimals. */
+  atrPct: number;
+  /** atrPct < 3. */
+  narrowRange: boolean;
+  /** Price rules for 週内で底タッチ→反発, before the earnings exclusion. */
+  reboundSetup: boolean;
+};
+
 export type Quote = {
   close: number;
   closeDate: string;
@@ -102,6 +146,8 @@ export type Quote = {
     lowDaysAgo: number;
     highDaysAgo: number;
   };
+  /** How the latest week sits in the 20-day box. Same bars as the rest of the quote. */
+  weekly: WeeklyStats;
   /** Monitoring label (見送り / 待ち / 候補). Not a buy recommendation. */
   verdict: {
     state: "見送り" | "待ち" | "候補";
@@ -172,6 +218,10 @@ export type TickerRow = {
   corrBasket: number | null;
   /** 60-day daily-return correlation versus the basket file's benchmark (SOXX). */
   corrSoxx: number | null;
+  /** Band of corrSoxx. Null when correlation is missing. */
+  soxxTag: SoxxTag | null;
+  /** Weekly badge after the earnings exclusion. Null when the quote is missing or no badge applies. */
+  weeklyCall: WeeklyCall | null;
   /** 20-session return minus SPY's 20-session return on the same date. Null when either series is short. */
   rs20: number | null;
   /** Semiconductor or equipment watchlist group. */

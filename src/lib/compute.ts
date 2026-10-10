@@ -12,6 +12,7 @@ import {
 } from "./constants";
 import { detectDowntrend, boxExtremeAges } from "./downtrend";
 import type { Bar, ChartBar, EntrySignal, Quote } from "./types";
+import { weeklyStats } from "./weekly";
 
 export type QuoteResult =
   | { ok: true; quote: Quote }
@@ -158,6 +159,7 @@ export function computeQuote(bars: Bar[]): QuoteResult {
       low20DaysAgo: ages.lowDaysAgo,
       high20DaysAgo: ages.highDaysAgo,
       downtrend,
+      weekly: weeklyStats(bars, atrRounded, close, guides.line15),
       verdict: { state: "待ち", reason: "—" },
     },
   };

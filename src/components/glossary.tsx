@@ -25,6 +25,15 @@ const ITEMS = [
   ["利益回復中", BASIS.recovering],
   ["出来高", BASIS.volume],
   ["相関", BASIS.corr],
+  ["箱% 先週→今週", BASIS.weekBox],
+  ["週間%", BASIS.weekChange],
+  ["週の引け位置", BASIS.weekClose],
+  ["上昇日数", BASIS.upDays],
+  ["損切りと株数", BASIS.weekStop],
+  ["週内で底タッチ→反発", BASIS.weekBuy],
+  ["底で待ち", BASIS.weekWait],
+  ["安値更新＋20日線が下向き", BASIS.weekAvoid],
+  ["値幅が小さい", BASIS.narrowRange],
 ] as const;
 
 export function Glossary({ className = "" }: { className?: string }) {
