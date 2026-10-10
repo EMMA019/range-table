@@ -314,6 +314,132 @@
       "ref_close": 32.68,
       "low20": 30.21,
       "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-09",
+      "symbol": "ARM",
+      "ref_close": 266.28,
+      "low20": 238.03,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-09",
+      "symbol": "WDAY",
+      "ref_close": 186.59,
+      "low20": 181.47,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-09",
+      "symbol": "AKAM",
+      "ref_close": 106.95,
+      "low20": 99.3,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-09",
+      "symbol": "NBIS",
+      "ref_close": 221.07,
+      "low20": 203.87,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-09",
+      "symbol": "TYL",
+      "ref_close": 329.55,
+      "low20": 312.04,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-09",
+      "symbol": "CAT",
+      "ref_close": 800.47,
+      "low20": 772.86,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-09",
+      "symbol": "LEN",
+      "ref_close": 76.69,
+      "low20": 73.75,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-09",
+      "symbol": "NXPI",
+      "ref_close": 227.52,
+      "low20": 216.66,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-09",
+      "symbol": "MOD",
+      "ref_close": 181.56,
+      "low20": 173.07,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-09",
+      "symbol": "BBY",
+      "ref_close": 87.01,
+      "low20": 83.65,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-09",
+      "symbol": "AMKR",
+      "ref_close": 49.12,
+      "low20": 45.33,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-09",
+      "symbol": "NVMI",
+      "ref_close": 353,
+      "low20": 329.57,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-09",
+      "symbol": "POWI",
+      "ref_close": 49.12,
+      "low20": 46.71,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-09",
+      "symbol": "TKO",
+      "ref_close": 178.01,
+      "low20": 171.19,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-09",
+      "symbol": "APO",
+      "ref_close": 118.65,
+      "low20": 112.1,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-09",
+      "symbol": "FDXF",
+      "ref_close": 115.47,
+      "low20": 107.67,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-09",
+      "symbol": "EFX",
+      "ref_close": 145.78,
+      "low20": 137.01,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-09",
+      "symbol": "GEN",
+      "ref_close": 23.25,
+      "low20": 20.34,
+      "source": "alerts_entry_in_ok"
     }
   ]
 }
