@@ -6,6 +6,7 @@ import { buildHoldingsView, type QuoteInput } from "./holdings-view";
 import { nextTradeDate, precheck } from "./precheck";
 import { bearerOk, configuredPasscode, createLoginLimiter, signSession, verifySession } from "./private-auth";
 import type { Bar, Quote } from "./types";
+import { emptyWeekly } from "./weekly";
 
 function quote(partial: Partial<Quote> = {}): Quote {
   return {
@@ -40,6 +41,7 @@ function quote(partial: Partial<Quote> = {}): Quote {
     low20DaysAgo: 5,
     high20DaysAgo: 8,
     downtrend: { active: false, reason: null, lowDaysAgo: 5, highDaysAgo: 8 },
+    weekly: emptyWeekly(),
     verdict: { state: "候補", reason: "テスト" },
     ...partial,
   };

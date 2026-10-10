@@ -29,7 +29,16 @@ export const BASIS = {
   recovering: `実績PERが予想PERの${PE_RECOVERY_MULTIPLE}倍以上。過去12か月の利益が薄く、予想利益の方が大きい`,
   slope: `Yahoo Finance の確定終値で作った20日単純移動平均。今日の値 ÷ ${MA_SLOPE_LOOKBACK}営業日前の値 − 1。±${MA_SLOPE_FLAT_PCT}%未満は横ばい`,
   volume: "出来高=Yahoo日足。倍率=直近日の出来高÷直前20日平均。薄商い<0.7倍、急増≧1.5倍。売買代金=終値×出来高の20日平均。",
-  corr: "60営業日の日次リターン相関。保有バスケット=非公開設定(HOLDINGS_JSON)の株数×最新終値で加重。ONDSは除外。未設定なら—。",
+  corr: "60営業日の日次リターン相関。保有バスケット=非公開設定(HOLDINGS_JSON)の株数×最新終値で加重。ONDSは除外。未設定なら—。0.50以上は半導体・AI寄り、0.30以下は低相関、その間は中間。",
+  weekBox: "箱の位置を、5営業日前の確定足でも同じ式で出す。その日より先の足は使わない。矢印は先週から今週への上下。",
+  weekChange: "今週の終値 ÷ 5営業日前の終値 − 1。",
+  weekClose: "今週5本の安値から高値まで、今日の終値がどこか。0%が週の安値、100%が週の高値。上半分は50%以上。",
+  upDays: "今週5本のうち、終値が前日より高い日の数。",
+  weekStop: "損切り目安は20日安値 − ATR(14)の半分。株数は、終値からそこまでの損失が$15に収まる数で、金額が$450を超えないよう抑える。1株で$15を超えるときは0。注文は出さない。",
+  weekBuy: "週のどこかで、その日の安値がその日の20日箱の下15%に入り、終値が15%ラインを上回り、週の引けが週の値幅の上半分で、終値日は20日安値ではなく、ATRが終値の3%以上。決算が5営業日以内の銘柄は外し、決算の印を出す。",
+  weekWait: "箱の位置が25%未満で、上の反発条件がまだ揃っていない。",
+  weekAvoid: "終値日が20日安値で、20日線が5営業日前より下がっている。",
+  narrowRange: "ATR(14)が終値の3%未満。値幅が小さい。",
   rs: "終値 ÷ 20本前の終値 − 1。同じ計算の SPY を引いた差。強いほど上",
   guide: "20日箱(直近20営業日の高値・安値)から計算。反発=20日安値後の連続陽線数",
   entryInOk: "反発が1日以上続き、終値が20日箱の15%〜25%にある。",
@@ -80,11 +89,13 @@ export const SORT_OPTIONS = [
   { id: "slopeDesc", label: "20日線の上向きから" },
   { id: "volDesc", label: "出来高倍率の高い順" },
   { id: "rsDesc", label: "対SPY強い順" },
+  { id: "weekCloseDesc", label: "週の引けが強い順" },
 ] as const;
 
 export type SortId = (typeof SORT_OPTIONS)[number]["id"];
 
 export const CHIPS = [
+  { key: "weekBuy", label: "週の買い目だけ" },
   { key: "bottom", label: `箱の底 ≤${BOX_BOTTOM_MAX}%` },
   { key: "top", label: `箱の天井 ≥${BOX_TOP_MIN}%` },
   { key: "breakout", label: "20日高値を上抜け" },

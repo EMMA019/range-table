@@ -43,6 +43,7 @@ import type {
   Watchlist,
   EarningsInput,
   Bar,
+  EarningsView,
 } from "./types";
 import { loadWatchlist } from "./watchlist";
 import { enrichTickerMeta } from "./ticker-meta";
@@ -63,6 +64,7 @@ import { buildThemeSlots, loadThemeDemand, loadThemeSlotMap } from "./theme-slot
 import { ensureWeather, weatherStamp } from "./weather-feed";
 import { buildWeather } from "./weather";
 import { weekBench } from "./weekly-report";
+import { resolveWeeklyCall, soxxCorrelationTag } from "./weekly";
 import {
   dueSymbols,
   emptyCache,
@@ -530,6 +532,7 @@ function buildPayload(
         profitability,
         corrBasket: pair?.basket ?? null,
         corrSoxx: pair?.soxx ?? null,
+        ...weeklyRowFields(pair?.soxx ?? null, quote, earningsView),
         rs20: built.quote && entry?.bars ? rs20(entry.bars, spyBars) : null,
         semi: semis.has(ticker.ticker),
         semiFull,
@@ -699,6 +702,7 @@ function buildIndexMonitorRows(
           ? "S&P500"
           : "Nasdaq-100";
     const meta = enrichTickerMeta(ticker);
+    const quote = built.quote ? attachVerdict(built.quote, null) : null;
     rows.push({
       ticker,
       name: meta.name,
@@ -716,10 +720,11 @@ function buildIndexMonitorRows(
       profitability: profitabilityFromCache(ticker, epsSnap),
       corrBasket: pair?.basket ?? null,
       corrSoxx: pair?.soxx ?? null,
+      ...weeklyRowFields(pair?.soxx ?? null, quote, null),
       rs20: built.quote && entry?.bars ? rs20(entry.bars, spyBars) : null,
       semi: false,
       semiFull: false,
-      quote: built.quote ? attachVerdict(built.quote, null) : null,
+      quote,
       pe: peView(built.quote?.close, epsSnap),
       error: built.error,
       errorDetail: built.errorDetail,
@@ -786,6 +791,17 @@ export function usdJpyOf(cache: CacheBody): { rate: number; date: string } | nul
   const last = cache.series[FX_USDJPY]?.bars?.at(-1);
   if (!last || !(last.c > 0)) return null;
   return { rate: last.c, date: last.date };
+}
+
+function weeklyRowFields(
+  corrSoxx: number | null,
+  quote: Quote | null,
+  earnings: EarningsView | null,
+): { soxxTag: TickerRow["soxxTag"]; weeklyCall: TickerRow["weeklyCall"] } {
+  return {
+    soxxTag: soxxCorrelationTag(corrSoxx),
+    weeklyCall: quote ? resolveWeeklyCall(quote, earnings) : null,
+  };
 }
 
 /** Bars kept from an earlier fetch still produce a quote; `stale` tells the UI they are old. */
