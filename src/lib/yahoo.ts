@@ -322,7 +322,7 @@ export async function fetchDailyBars(symbol: string, options: FetchBarsOptions =
   const keep = options.keep ?? CHART_SESSIONS;
   const totalReturn = options.totalReturn ?? false;
   const applySplitAdjustment = options.applySplitAdjustment ?? !totalReturn;
-  const maxBytes = range === "6mo" ? 256_000 : 2_000_000;
+  const maxBytes = range === "6mo" ? 256_000 : 4_000_000;
   let lastError: Error | null = null;
   for (let i = 0; i < ATTEMPTS.length; i++) {
     await yahooGate.wait();

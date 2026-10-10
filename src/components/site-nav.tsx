@@ -9,6 +9,7 @@ const TABS = [
   { href: "/holdings", label: "保有" },
   { href: "/log", label: "取引ログ" },
   { href: "/backtest", label: "過去検証" },
+  { href: "/robo", label: "ロボ枠" },
 ] as const;
 
 export type NavPath = (typeof TABS)[number]["href"];

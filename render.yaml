@@ -14,6 +14,10 @@ services:
       # Private holdings JSON. Set in the Render Dashboard; never committed.
       - key: HOLDINGS_JSON
         sync: false
+      # ETF sleeve only, separate from HOLDINGS_JSON. Same JSON shape, tickers from the robo universe.
+      # Shown on /robo only after the holdings passcode. Never committed.
+      - key: ROBO_HOLDINGS_JSON
+        sync: false
       # "range-table <contact email>". SEC rejects requests without a contact email.
       - key: SEC_USER_AGENT
         sync: false
