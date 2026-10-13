@@ -440,6 +440,167 @@
       "ref_close": 23.25,
       "low20": 20.34,
       "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "ONTO",
+      "ref_close": 273.74,
+      "low20": 240.01,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "COHR",
+      "ref_close": 288.02,
+      "low20": 269.34,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "STM",
+      "ref_close": 50.48,
+      "low20": 47.53,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "FIX",
+      "ref_close": 1638.05,
+      "low20": 1567.36,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "MCHP",
+      "ref_close": 73.83,
+      "low20": 68.75,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "CAT",
+      "ref_close": 799.37,
+      "low20": 774.48,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "NXPI",
+      "ref_close": 225.21,
+      "low20": 216.66,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "DAL",
+      "ref_close": 80.11,
+      "low20": 76.89,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "WDAY",
+      "ref_close": 188.25,
+      "low20": 181.47,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "HONA",
+      "ref_close": 157.27,
+      "low20": 149.88,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "ORCL",
+      "ref_close": 137.39,
+      "low20": 131.58,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "EXPE",
+      "ref_close": 268.47,
+      "low20": 253.16,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "ALNY",
+      "ref_close": 227.02,
+      "low20": 215.46,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "MKC",
+      "ref_close": 45.58,
+      "low20": 43.25,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "CRM",
+      "ref_close": 233.92,
+      "low20": 220.29,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "ARES",
+      "ref_close": 118.15,
+      "low20": 113.06,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "ADBE",
+      "ref_close": 238.14,
+      "low20": 224.67,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "CHRW",
+      "ref_close": 139.75,
+      "low20": 132.05,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "FDXF",
+      "ref_close": 113.12,
+      "low20": 107.67,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "EFX",
+      "ref_close": 147.33,
+      "low20": 137.01,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "GEN",
+      "ref_close": 23.35,
+      "low20": 20.34,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "FICO",
+      "ref_close": 740,
+      "low20": 586.05,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-12",
+      "symbol": "AMKR",
+      "ref_close": 48.11,
+      "low20": 45.33,
+      "source": "morning_entry_near_到達"
     }
   ]
 }
