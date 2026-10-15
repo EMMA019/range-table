@@ -601,6 +601,97 @@
       "ref_close": 48.11,
       "low20": 45.33,
       "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-14",
+      "symbol": "ON",
+      "ref_close": 73.36,
+      "low20": 66.05,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-14",
+      "symbol": "LSCC",
+      "ref_close": 115,
+      "low20": 108.18,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-14",
+      "symbol": "AMAT",
+      "ref_close": 446.63,
+      "low20": 413.56,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-14",
+      "symbol": "CHRW",
+      "ref_close": 139.45,
+      "low20": 132.05,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-14",
+      "symbol": "GEN",
+      "ref_close": 23.8,
+      "low20": 20.34,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-14",
+      "symbol": "FICO",
+      "ref_close": 719.63,
+      "low20": 586.05,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-14",
+      "symbol": "MPWR",
+      "ref_close": 1243.11,
+      "low20": 1146.4,
+      "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-14",
+      "symbol": "RMBS",
+      "ref_close": 92.11,
+      "low20": 83.78,
+      "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-14",
+      "symbol": "AMD",
+      "ref_close": 570.82,
+      "low20": 527.6,
+      "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-14",
+      "symbol": "KLAC",
+      "ref_close": 178.81,
+      "low20": 167.26,
+      "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-14",
+      "symbol": "FORM",
+      "ref_close": 119.71,
+      "low20": 109.25,
+      "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-14",
+      "symbol": "LRCX",
+      "ref_close": 286.92,
+      "low20": 266.9,
+      "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-14",
+      "symbol": "TMUS",
+      "ref_close": 157.79,
+      "low20": 147.9,
+      "source": "morning_entry_near_到達"
     }
   ]
 }
