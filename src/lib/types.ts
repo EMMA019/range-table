@@ -207,6 +207,8 @@ export type TickerRow = {
   sectorId: string;
   /** Watchlist group or index membership label (was `sector` before meta). */
   groupName: string;
+  /** Index memberships (sp500 / ndx100 / sp400 / sp600). Empty when in none. */
+  indexTags?: string[];
   description: string;
   notes: string;
   tags: string[];

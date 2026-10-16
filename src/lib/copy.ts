@@ -119,4 +119,15 @@ export const UNIVERSE_SCOPES = [
   { id: "all", label: "すべて" },
 ] as const;
 
+/** Index membership filter (URL param `ix`). */
+export const INDEX_FILTERS = [
+  { id: "all", label: "全指数" },
+  { id: "sp500", label: "S&P500" },
+  { id: "ndx100", label: "Nasdaq-100" },
+  { id: "sp400", label: "S&P400（中型）" },
+  { id: "sp600", label: "S&P600（小型）" },
+] as const;
+
+export type IndexFilterId = (typeof INDEX_FILTERS)[number]["id"];
+
 export type UniverseScopeId = (typeof UNIVERSE_SCOPES)[number]["id"];

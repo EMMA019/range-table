@@ -49,6 +49,8 @@ import { loadWatchlist } from "./watchlist";
 import { enrichTickerMeta } from "./ticker-meta";
 import {
   indexMonitorTickers,
+  indexTagMap,
+  indexTagsLabel,
   loadMonitorIndex,
   monitorIndexPath,
   monitorUnionSymbols,
@@ -201,10 +203,58 @@ export async function ensureSeries(list: Watchlist, extra: string[] = [], option
   const cache = memory;
   const due = dueSymbols(cache, symbols, Date.now());
   if (cache && due.length === 0) return cache;
-  const run = startRefresh(due);
-  if (!cache || options.fresh || missingSymbols(cache, symbols).length > 0) return run;
+  // Index-only (monitor) symbols never block a response: ~1,500 of them would make a cold
+  // start wait minutes on Yahoo. Core symbols (watchlist, holdings, benchmarks, extras) go first.
+  const monitorOnly = monitorOnlySet(list, extra);
+  const core = symbols.filter((s) => !monitorOnly.has(s));
+  const coreDue = due.filter((s) => !monitorOnly.has(s));
+  const restDue = due.filter((s) => monitorOnly.has(s));
+  const mustWait = !cache || options.fresh || missingSymbols(cache, core).length > 0;
+  if (restDue.length > 0 && coreDue.length > 0) {
+    const coreRun = startRefresh(coreDue);
+    void coreRun
+      .then(() => refreshInChunks(restDue))
+      .catch((error) => console.error("[range] background monitor refresh", error));
+    if (mustWait) return coreRun;
+    void coreRun.catch((error) => console.error("[range] background refresh", error));
+    return cache ?? coreRun;
+  }
+  if (coreDue.length === 0) {
+    // Monitor-only batch: always in the background, in chunks so core refreshes can cut in.
+    void refreshInChunks(restDue).catch((error) => console.error("[range] background monitor refresh", error));
+    return cache ?? emptyCache();
+  }
+  const run = startRefresh(coreDue);
+  if (mustWait || !cache) return run;
   void run.catch((error) => console.error("[range] background refresh", error));
   return cache;
+}
+
+/** Monitor symbols per refresh pass; small enough that a queued core refresh waits seconds, not minutes. */
+const MONITOR_CHUNK = 120;
+let monitorChunking = false;
+
+async function refreshInChunks(symbols: string[]): Promise<void> {
+  if (monitorChunking) return;
+  monitorChunking = true;
+  try {
+    for (let i = 0; i < symbols.length; i += MONITOR_CHUNK) {
+      const chunk = dueSymbols(memory, symbols.slice(i, i + MONITOR_CHUNK), Date.now());
+      if (chunk.length > 0) await startRefresh(chunk);
+    }
+  } finally {
+    monitorChunking = false;
+  }
+}
+
+function monitorOnlySet(list: Watchlist, extra: string[]): Set<string> {
+  const keep = new Set<string>([...BENCHMARKS, FX_USDJPY]);
+  for (const group of list.groups) for (const t of group.tickers) keep.add(t.ticker);
+  for (const holding of holdingsSource().load().holdings) keep.add(holding.ticker);
+  for (const e of extra) keep.add(e.trim().toUpperCase());
+  const out = new Set<string>();
+  for (const t of monitorUnionSymbols()) if (!keep.has(t)) out.add(t);
+  return out;
 }
 
 function startRefresh(symbols: string[]): Promise<CacheBody> {
@@ -496,6 +546,7 @@ function buildPayload(
   const papers = loadResearchPapers();
   const sessionHook = loadEarningsSessionHook();
   const nasdaqWhen = nasdaqSessionMap();
+  const watchTagMap = indexTagMap();
   const rows: TickerRow[] = [];
   for (const group of list.groups) {
     for (const ticker of group.tickers) {
@@ -522,6 +573,7 @@ function buildPayload(
         industry: meta.industry,
         sectorId: group.id,
         groupName: group.name,
+        indexTags: watchTagMap.get(ticker.ticker) ?? [],
         sectorLabel: ticker.sectorLabel,
         description: ticker.description,
         notes: ticker.notes,
@@ -677,15 +729,8 @@ function buildIndexMonitorRows(
   eps: Record<string, EpsSnapshot>,
   papers: ReturnType<typeof loadResearchPapers>,
 ): { rows: TickerRow[]; failCount: number } {
-  let sp500 = new Set<string>();
-  let ndx = new Set<string>();
-  try {
-    const indexFile = loadMonitorIndex();
-    sp500 = new Set(indexFile.sp500);
-    ndx = new Set(indexFile.ndx100);
-  } catch {
-    return { rows: [], failCount: 0 };
-  }
+  const tagMap = indexTagMap();
+  if (tagMap.size === 0) return { rows: [], failCount: 0 };
   const tickers = indexMonitorTickers(list).sort((a, b) => a.localeCompare(b));
   const rows: TickerRow[] = [];
   let failCount = 0;
@@ -695,12 +740,8 @@ function buildIndexMonitorRows(
     if (!built.quote) failCount += 1;
     const pair = corr.get(ticker);
     const epsSnap = eps[ticker] ?? null;
-    const indexLabel =
-      sp500.has(ticker) && ndx.has(ticker)
-        ? "S&P500 · NDX100"
-        : sp500.has(ticker)
-          ? "S&P500"
-          : "Nasdaq-100";
+    const tags = tagMap.get(ticker) ?? [];
+    const indexLabel = indexTagsLabel(tags) || "指数";
     const meta = enrichTickerMeta(ticker);
     const quote = built.quote ? attachVerdict(built.quote, null) : null;
     rows.push({
@@ -710,6 +751,7 @@ function buildIndexMonitorRows(
       industry: meta.industry,
       sectorId: "index",
       groupName: indexLabel,
+      indexTags: tags,
       sectorLabel: "指数監視",
       description: indexTickerDescription(ticker),
       notes: "",
