@@ -5,9 +5,13 @@ import type { Watchlist } from "./types";
 export type MonitorIndexFile = {
   generatedAt: string;
   asOfDate: string;
-  sources: { sp500: string; ndx100: string };
+  sources: { sp500: string; ndx100: string; sp400?: string; sp600?: string };
   sp500: string[];
   ndx100: string[];
+  /** S&P MidCap 400 (optional; older files omit it). */
+  sp400: string[];
+  /** S&P SmallCap 600 (optional; older files omit it). */
+  sp600: string[];
   union: string[];
 };
 
@@ -27,6 +31,8 @@ export function validateMonitorIndex(raw: unknown): MonitorIndexFile {
   const doc = raw as Record<string, unknown>;
   const sp500 = stringArray(doc.sp500, "sp500");
   const ndx100 = stringArray(doc.ndx100, "ndx100");
+  const sp400 = doc.sp400 === undefined ? [] : stringArray(doc.sp400, "sp400");
+  const sp600 = doc.sp600 === undefined ? [] : stringArray(doc.sp600, "sp600");
   const union = stringArray(doc.union, "union");
   const generatedAt = typeof doc.generatedAt === "string" ? doc.generatedAt : "";
   const asOfDate = typeof doc.asOfDate === "string" ? doc.asOfDate : "";
@@ -37,7 +43,20 @@ export function validateMonitorIndex(raw: unknown): MonitorIndexFile {
   if (typeof spSrc !== "string" || typeof ndxSrc !== "string") {
     throw new Error("monitor_index.json sources が不正");
   }
-  return { generatedAt, asOfDate, sources: { sp500: spSrc, ndx100: ndxSrc }, sp500, ndx100, union };
+  const src = sources as Record<string, unknown>;
+  const extra: { sp400?: string; sp600?: string } = {};
+  if (typeof src.sp400 === "string") extra.sp400 = src.sp400;
+  if (typeof src.sp600 === "string") extra.sp600 = src.sp600;
+  return {
+    generatedAt,
+    asOfDate,
+    sources: { sp500: spSrc, ndx100: ndxSrc, ...extra },
+    sp500,
+    ndx100,
+    sp400,
+    sp600,
+    union,
+  };
 }
 
 function stringArray(value: unknown, label: string): string[] {
@@ -74,4 +93,37 @@ export function monitorUnionSymbols(file = MONITOR_PATH): string[] {
   } catch {
     return [];
   }
+}
+
+export type IndexTag = "sp500" | "ndx100" | "sp400" | "sp600";
+
+export const INDEX_TAG_LABEL: Record<IndexTag, string> = {
+  sp500: "S&P500",
+  ndx100: "NDX100",
+  sp400: "S&P400",
+  sp600: "S&P600",
+};
+
+/** Ticker -> index memberships, in display order. */
+export function indexTagMap(file = MONITOR_PATH): Map<string, IndexTag[]> {
+  const map = new Map<string, IndexTag[]>();
+  let index: MonitorIndexFile;
+  try {
+    index = loadMonitorIndex(file);
+  } catch {
+    return map;
+  }
+  const order: IndexTag[] = ["sp500", "ndx100", "sp400", "sp600"];
+  for (const tag of order) {
+    for (const t of index[tag]) {
+      const list = map.get(t);
+      if (list) list.push(tag);
+      else map.set(t, [tag]);
+    }
+  }
+  return map;
+}
+
+export function indexTagsLabel(tags: IndexTag[]): string {
+  return tags.map((tag) => INDEX_TAG_LABEL[tag]).join(" · ");
 }

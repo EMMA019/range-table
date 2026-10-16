@@ -66,7 +66,16 @@ async function main() {
 
   const ndx100 = await fetchNasdaq100();
 
-  const unionSet = new Set<string>([...sp500, ...ndx100]);
+  // S&P 400/600 are a manual snapshot; keep whatever the current file has.
+  let prev: { sp400?: string[]; sp600?: string[]; sources?: Record<string, string> } = {};
+  try {
+    prev = JSON.parse(fs.readFileSync(OUT, "utf8"));
+  } catch {
+    prev = {};
+  }
+  const sp400 = prev.sp400 ?? [];
+  const sp600 = prev.sp600 ?? [];
+  const unionSet = new Set<string>([...sp500, ...ndx100, ...sp400, ...sp600]);
   const union = [...unionSet].sort((a, b) => a.localeCompare(b));
 
   const doc = {
@@ -75,9 +84,13 @@ async function main() {
     sources: {
       sp500: SP500_URL,
       ndx100: NDX100_URL,
+      ...(prev.sources?.sp400 ? { sp400: prev.sources.sp400 } : {}),
+      ...(prev.sources?.sp600 ? { sp600: prev.sources.sp600 } : {}),
     },
     sp500,
     ndx100,
+    sp400,
+    sp600,
     union,
   };
   fs.writeFileSync(OUT, `${JSON.stringify(doc, null, 2)}\n`);

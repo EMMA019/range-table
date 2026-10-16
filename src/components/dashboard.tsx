@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CHIPS, CORP_ACTION_BADGE, DOWNTREND_BADGE, SORT_OPTIONS, UNIVERSE_SCOPES, type ChipKey, type SortId, type UniverseScopeId } from "@/lib/copy";
+import { CHIPS, CORP_ACTION_BADGE, DOWNTREND_BADGE, INDEX_FILTERS, SORT_OPTIONS, UNIVERSE_SCOPES, type IndexFilterId, type ChipKey, type SortId, type UniverseScopeId } from "@/lib/copy";
 import { formatPe } from "@/lib/pe";
 import {
   SEMI_CAP_BADGE,
@@ -47,6 +47,13 @@ import { SoxxTagChip, WeeklyBadge, WeeklyFacts } from "./weekly-facts";
 
 const SORTS = new Set<string>(SORT_OPTIONS.map((option) => option.id));
 const UNIVERSE = new Set<string>(UNIVERSE_SCOPES.map((scope) => scope.id));
+
+const INDEX_FILTER_IDS = new Set<string>(INDEX_FILTERS.map((f) => f.id));
+
+function parseIndexFilter(raw: string | null): IndexFilterId {
+  if (raw && INDEX_FILTER_IDS.has(raw)) return raw as IndexFilterId;
+  return "all";
+}
 
 function parseUniverse(raw: string | null): UniverseScopeId {
   if (raw && UNIVERSE.has(raw)) return raw as UniverseScopeId;
@@ -141,6 +148,7 @@ export function Dashboard() {
   const tickerRaw = sp.get("t");
   const ticker = tickerRaw && !isIgnoredTicker(tickerRaw) ? tickerRaw : null;
   const universe = parseUniverse(sp.get("u"));
+  const indexFilter = parseIndexFilter(sp.get("ix"));
 
   const watchRows = useMemo(
     () => (data?.rows ?? []).filter((row) => !isIgnoredTicker(row.ticker)),
@@ -150,11 +158,22 @@ export function Dashboard() {
     () => (data?.indexRows ?? []).filter((row) => !isIgnoredTicker(row.ticker)),
     [data],
   );
-  const rows = useMemo(() => {
+  const scopedRows = useMemo(() => {
     if (universe === "index") return indexRows;
     if (universe === "all") return [...watchRows, ...indexRows];
     return watchRows;
   }, [universe, watchRows, indexRows]);
+  const indexCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: scopedRows.length };
+    for (const row of scopedRows) {
+      for (const tag of row.indexTags ?? []) counts[tag] = (counts[tag] ?? 0) + 1;
+    }
+    return counts;
+  }, [scopedRows]);
+  const rows = useMemo(() => {
+    if (indexFilter === "all") return scopedRows;
+    return scopedRows.filter((row) => (row.indexTags ?? []).includes(indexFilter));
+  }, [scopedRows, indexFilter]);
   const visible = useMemo(() => applyView(rows, filters), [rows, filters]);
   const items = useMemo(
     () => withDividers(visible, filters.weekBuy ? "weekCloseDesc" : filters.sort),
@@ -165,12 +184,7 @@ export function Dashboard() {
     [...watchRows, ...indexRows].find((row) => row.ticker === ticker) ?? null;
   const universeLabel =
     UNIVERSE_SCOPES.find((scope) => scope.id === universe)?.label ?? UNIVERSE_SCOPES[0].label;
-  const scopeTotal =
-    universe === "watch"
-      ? watchRows.length
-      : universe === "index"
-        ? indexRows.length
-        : watchRows.length + indexRows.length;
+  const scopeTotal = rows.length;
 
   const commit = useCallback(
     (patch: Record<string, string | null>, history: "push" | "replace") => {
@@ -368,7 +382,7 @@ export function Dashboard() {
             enterKeyHint="search"
           />
           <label className="block text-[11px] text-muted">
-            表示範囲（S&amp;P500 + Nasdaq-100 監視）
+            表示範囲（S&amp;P500・Nasdaq-100・S&amp;P400・S&amp;P600 監視）
             <select
               className="mt-1 h-11 w-full rounded-xl border border-line bg-elev px-2 text-base text-ink"
               value={universe}
@@ -390,6 +404,22 @@ export function Dashboard() {
                   </option>
                 );
               })}
+            </select>
+          </label>
+          <label className="block text-[11px] text-muted">
+            指数
+            <select
+              className="mt-1 h-11 w-full rounded-xl border border-line bg-elev px-2 text-base text-ink"
+              value={indexFilter}
+              onChange={(event) =>
+                commit({ ix: event.target.value === "all" ? null : event.target.value }, "replace")
+              }
+            >
+              {INDEX_FILTERS.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.label} {indexCounts[f.id] ?? 0}
+                </option>
+              ))}
             </select>
           </label>
           {data?.monitor && universe !== "watch" && (
@@ -524,7 +554,7 @@ export function Dashboard() {
             <p>読み取り専用。証券口座にはつながっていない。注文は出さない。</p>
             <p className="mt-1">{data?.source ?? "価格は米ドル。日足から計算する。"}</p>
             <p className="mt-1">
-              15分より頻繁には取りにいかない。ウォッチリストは data/watchlist.yaml。S&amp;P500+Nasdaq-100 は「表示範囲」で切り替え（保有・reviewLine
+              15分より頻繁には取りにいかない。ウォッチリストは data/watchlist.yaml。S&amp;P500・Nasdaq-100・S&amp;P400・S&amp;P600 は「表示範囲」「指数」で切り替え（保有・reviewLine
               アラートはウォッチのみ）。
             </p>
           </footer>

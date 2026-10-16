@@ -13,6 +13,9 @@ describe("monitor-universe", () => {
     assert.ok(index.union.length >= 500);
     assert.ok(index.sp500.length >= 490);
     assert.ok(index.ndx100.length >= 95);
+    assert.ok(index.sp400.length >= 390);
+    assert.ok(index.sp600.length >= 590);
+    assert.ok(index.union.length >= 1500);
     assert.equal(new Set(index.union).size, index.union.length);
   });
 
