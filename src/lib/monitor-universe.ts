@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import bundledMonitorRaw from "../../data/monitor_index.json";
 import type { Watchlist } from "./types";
 
 export type MonitorIndexFile = {
@@ -21,7 +22,31 @@ export function monitorIndexPath(): string {
   return MONITOR_PATH;
 }
 
+/**
+ * A shorter on-disk list must not hide constituents that shipped in this build.
+ * Render's disk is ephemeral, but a leftover `data/monitor_index.json` (or a
+ * mount over `data/`) used to leave the API on the old 518-name union.
+ */
+export function preferMonitorIndex(
+  disk: MonitorIndexFile | null,
+  bundled: MonitorIndexFile,
+): MonitorIndexFile {
+  if (!disk || disk.union.length < bundled.union.length) return bundled;
+  return disk;
+}
+
+const bundledMonitor = validateMonitorIndex(bundledMonitorRaw);
+
 export function loadMonitorIndex(file = MONITOR_PATH): MonitorIndexFile {
+  if (file === MONITOR_PATH) {
+    let disk: MonitorIndexFile | null = null;
+    try {
+      disk = validateMonitorIndex(JSON.parse(fs.readFileSync(file, "utf8")) as unknown);
+    } catch {
+      disk = null;
+    }
+    return preferMonitorIndex(disk, bundledMonitor);
+  }
   const raw = JSON.parse(fs.readFileSync(file, "utf8")) as unknown;
   return validateMonitorIndex(raw);
 }

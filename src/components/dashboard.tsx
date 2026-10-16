@@ -108,10 +108,18 @@ export function Dashboard() {
     void load(false);
   }, [load]);
 
+  const indexBackfill =
+    !!data?.monitor &&
+    data.monitor.indexOnlyCount > 0 &&
+    data.indexFailCount > Math.max(20, Math.round(data.monitor.indexOnlyCount * 0.05));
+
   useEffect(() => {
     const id = window.setInterval(() => {
       setNow(Date.now());
-      if (data && Date.now() - data.fetchedAt >= data.ttlMs) void load(true);
+      // fetchedAt follows the watchlist, so a full price TTL can hide an index
+      // backfill that is still filling S&P 400/600 quotes in the background.
+      const stale = !!data && Date.now() - data.fetchedAt >= data.ttlMs;
+      if (stale || indexBackfill) void load(true);
     }, 30_000);
     const onVis = () => {
       if (document.visibilityState === "visible") void load(true);
@@ -121,7 +129,7 @@ export function Dashboard() {
       window.clearInterval(id);
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, [data, load]);
+  }, [data, indexBackfill, load]);
 
   const filters = useMemo<ViewFilters>(() => {
     const sort = sp.get("sort");
