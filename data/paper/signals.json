@@ -692,6 +692,146 @@
       "ref_close": 157.79,
       "low20": 147.9,
       "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "ON",
+      "ref_close": 73.7,
+      "low20": 68.17,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "MCHP",
+      "ref_close": 74.26,
+      "low20": 69.76,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "APH",
+      "ref_close": 81.49,
+      "low20": 77.4,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "DAL",
+      "ref_close": 78.08,
+      "low20": 75.54,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "ETN",
+      "ref_close": 402.48,
+      "low20": 386.01,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "POWL",
+      "ref_close": 170.82,
+      "low20": 153.41,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "GNRC",
+      "ref_close": 198.4,
+      "low20": 186.08,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "ORCL",
+      "ref_close": 134.47,
+      "low20": 127.6,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "HPQ",
+      "ref_close": 30.85,
+      "low20": 29.18,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "MU",
+      "ref_close": 931.24,
+      "low20": 858,
+      "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "ASX",
+      "ref_close": 41.89,
+      "low20": 39.98,
+      "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "MPWR",
+      "ref_close": 1249.2,
+      "low20": 1176.21,
+      "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "RMBS",
+      "ref_close": 92.87,
+      "low20": 84.83,
+      "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "SWKS",
+      "ref_close": 79.1,
+      "low20": 73.76,
+      "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "AMD",
+      "ref_close": 562.23,
+      "low20": 530.09,
+      "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "QCOM",
+      "ref_close": 178.4,
+      "low20": 168.84,
+      "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "ENTG",
+      "ref_close": 146.87,
+      "low20": 135.63,
+      "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "NOK",
+      "ref_close": 9.57,
+      "low20": 9.04,
+      "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "PWR",
+      "ref_close": 642.21,
+      "low20": 613,
+      "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-10-15",
+      "symbol": "CHTR",
+      "ref_close": 109.99,
+      "low20": 101.63,
+      "source": "morning_entry_near_到達"
     }
   ]
 }
