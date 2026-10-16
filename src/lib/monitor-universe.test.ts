@@ -3,7 +3,14 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
-import { indexMonitorTickers, loadMonitorIndex, validateMonitorIndex, watchlistTickerSet } from "./monitor-universe";
+import {
+  indexMonitorTickers,
+  indexTagMap,
+  loadMonitorIndex,
+  preferMonitorIndex,
+  validateMonitorIndex,
+  watchlistTickerSet,
+} from "./monitor-universe";
 import { loadWatchlist } from "./watchlist";
 
 describe("monitor-universe", () => {
@@ -17,6 +24,23 @@ describe("monitor-universe", () => {
     assert.ok(index.sp600.length >= 590);
     assert.ok(index.union.length >= 1500);
     assert.equal(new Set(index.union).size, index.union.length);
+    const tags = indexTagMap(file);
+    assert.ok(tags.get("AAMI")?.includes("sp600"));
+    assert.ok(tags.get("AAPL")?.includes("sp500"));
+  });
+
+  it("keeps the bundled universe when the on-disk list is the old 518-name file", () => {
+    const bundled = loadMonitorIndex();
+    const stale = {
+      ...bundled,
+      sp400: [],
+      sp600: [],
+      union: bundled.union.slice(0, 518),
+    };
+    const chosen = preferMonitorIndex(stale, bundled);
+    assert.equal(chosen.union.length, bundled.union.length);
+    assert.ok(chosen.sp600.length >= 590);
+    assert.equal(preferMonitorIndex(null, bundled), bundled);
   });
 
   it("validates shape", () => {

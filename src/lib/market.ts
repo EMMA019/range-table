@@ -212,11 +212,16 @@ export async function ensureSeries(list: Watchlist, extra: string[] = [], option
   const mustWait = !cache || options.fresh || missingSymbols(cache, core).length > 0;
   if (restDue.length > 0 && coreDue.length > 0) {
     const coreRun = startRefresh(coreDue);
-    void coreRun
-      .then(() => refreshInChunks(restDue))
-      .catch((error) => console.error("[range] background monitor refresh", error));
+    // A failed core fetch must not cancel the index backfill. One thrown chunk
+    // used to reject the whole chain, so later S&P 400/600 names never loaded.
+    void coreRun.then(
+      () => refreshInChunks(restDue),
+      (error) => {
+        console.error("[range] core refresh", error);
+        return refreshInChunks(restDue);
+      },
+    );
     if (mustWait) return coreRun;
-    void coreRun.catch((error) => console.error("[range] background refresh", error));
     return cache ?? coreRun;
   }
   if (coreDue.length === 0) {
@@ -240,7 +245,12 @@ async function refreshInChunks(symbols: string[]): Promise<void> {
   try {
     for (let i = 0; i < symbols.length; i += MONITOR_CHUNK) {
       const chunk = dueSymbols(memory, symbols.slice(i, i + MONITOR_CHUNK), Date.now());
-      if (chunk.length > 0) await startRefresh(chunk);
+      if (chunk.length === 0) continue;
+      try {
+        await startRefresh(chunk);
+      } catch (error) {
+        console.error("[range] monitor chunk", error);
+      }
     }
   } finally {
     monitorChunking = false;
