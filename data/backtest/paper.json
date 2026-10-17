@@ -1,7 +1,7 @@
 {
   "v": 1,
   "rulesCommit": "83181044326c4d5cbd5f84b52c3815438ee00de2",
-  "generatedAt": "2026-10-16",
+  "generatedAt": "2026-10-17",
   "start": "2026-10-05",
   "asOf": "2026-10-15",
   "rules": [
@@ -129,11 +129,11 @@
     {
       "id": "rsi2",
       "label": "RSI(2)<10",
-      "n": 14,
-      "totalUsd": -360.44,
-      "endEquity": 2839.56,
-      "mtmDdUsd": 387.81,
-      "realizedDdUsd": 408.56,
+      "n": 11,
+      "totalUsd": -346.62,
+      "endEquity": 2853.38,
+      "mtmDdUsd": 385.71,
+      "realizedDdUsd": 394.74,
       "daily": [
         {
           "date": "2026-10-05",
@@ -172,13 +172,13 @@
         },
         {
           "date": "2026-10-14",
-          "equity": 2832.66,
-          "realizedEquity": 2971.05
+          "equity": 2834.76,
+          "realizedEquity": 3248.12
         },
         {
           "date": "2026-10-15",
-          "equity": 2839.56,
-          "realizedEquity": 2839.56
+          "equity": 2853.38,
+          "realizedEquity": 2853.38
         }
       ]
     },
