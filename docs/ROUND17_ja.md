@@ -1,0 +1,814 @@
+# Round 17 結果（日本語）
+
+事前登録: `200b35f8189439abbce3671e58b0a18bdfb37e1e`
+生成: 2026-10-04T09:16:53.969Z
+
+## 安定化フィルタ（訂正メモ）
+
+フィルタは `generateLiveBandSignals` に接続済み。23–37%帯では終値が10日安値をほぼ常に上回るため、ポートフォリオ結果は基準と同一になりやすい（バグではなく定義上の no-op）。
+
+```json
+{
+  "verdict": "no-op on 2024-26 for N=2 (identical to baseline); N=3 identical on in-sample — filter wired but rarely binds in band",
+  "signalsBlockedTouchOnly": {
+    "oos-N2": 42,
+    "oos-N3": 55,
+    "in-N2": 15,
+    "in-N3": 20
+  },
+  "candidateDelta": {
+    "oos": {
+      "stab2": 0,
+      "stab3": -2
+    },
+    "in": {
+      "stab2": 0,
+      "stab3": -2
+    }
+  }
+}
+```
+
+## 急落フィルタ k=3.5 で外れた約定
+
+```json
+{
+  "oos": [],
+  "in": [
+    {
+      "ticker": "POWL",
+      "entryDate": "2025-01-28",
+      "pnlUsd": -21.64
+    },
+    {
+      "ticker": "ANET",
+      "entryDate": "2026-01-15",
+      "pnlUsd": 40.76
+    },
+    {
+      "ticker": "NOK",
+      "entryDate": "2026-01-23",
+      "pnlUsd": 13.82
+    },
+    {
+      "ticker": "AVGO",
+      "entryDate": "2026-01-27",
+      "pnlUsd": -22.41
+    },
+    {
+      "ticker": "VST",
+      "entryDate": "2026-02-09",
+      "pnlUsd": 28.1
+    }
+  ]
+}
+```
+
+## AI・DC 枠2上限で外れた約定
+
+```json
+{
+  "skippedBaselineFills": {
+    "oos": [
+      {
+        "ticker": "NTAP",
+        "entryDate": "2022-10-19",
+        "pnlUsd": 36.4
+      },
+      {
+        "ticker": "SBUX",
+        "entryDate": "2022-10-26",
+        "pnlUsd": 31.15
+      },
+      {
+        "ticker": "APLD",
+        "entryDate": "2022-11-11",
+        "pnlUsd": -38.85
+      },
+      {
+        "ticker": "MOD",
+        "entryDate": "2022-12-13",
+        "pnlUsd": 27.18
+      },
+      {
+        "ticker": "AMZN",
+        "entryDate": "2023-01-09",
+        "pnlUsd": 37.18
+      },
+      {
+        "ticker": "ANET",
+        "entryDate": "2023-01-12",
+        "pnlUsd": 78.42
+      },
+      {
+        "ticker": "TYL",
+        "entryDate": "2023-01-10",
+        "pnlUsd": 7.19
+      },
+      {
+        "ticker": "INTC",
+        "entryDate": "2023-02-09",
+        "pnlUsd": -40
+      },
+      {
+        "ticker": "EW",
+        "entryDate": "2023-02-09",
+        "pnlUsd": -19.05
+      },
+      {
+        "ticker": "MPC",
+        "entryDate": "2023-02-09",
+        "pnlUsd": 20.45
+      },
+      {
+        "ticker": "FN",
+        "entryDate": "2023-03-22",
+        "pnlUsd": -13.12
+      },
+      {
+        "ticker": "MTSI",
+        "entryDate": "2023-03-27",
+        "pnlUsd": -30.28
+      },
+      {
+        "ticker": "POET",
+        "entryDate": "2023-03-22",
+        "pnlUsd": -19.4
+      },
+      {
+        "ticker": "ENTG",
+        "entryDate": "2023-04-21",
+        "pnlUsd": -27.4
+      },
+      {
+        "ticker": "ENTG",
+        "entryDate": "2023-04-28",
+        "pnlUsd": 95.42
+      },
+      {
+        "ticker": "AMKR",
+        "entryDate": "2023-05-11",
+        "pnlUsd": 58.7
+      },
+      {
+        "ticker": "LSCC",
+        "entryDate": "2023-06-05",
+        "pnlUsd": 50.7
+      },
+      {
+        "ticker": "CIEN",
+        "entryDate": "2023-06-21",
+        "pnlUsd": -15.7
+      },
+      {
+        "ticker": "SMCI",
+        "entryDate": "2023-06-26",
+        "pnlUsd": 54.82
+      },
+      {
+        "ticker": "POWL",
+        "entryDate": "2023-06-21",
+        "pnlUsd": 39.12
+      },
+      {
+        "ticker": "POET",
+        "entryDate": "2023-07-31",
+        "pnlUsd": -42.12
+      },
+      {
+        "ticker": "POET",
+        "entryDate": "2023-09-01",
+        "pnlUsd": -31.41
+      },
+      {
+        "ticker": "SMCI",
+        "entryDate": "2023-08-31",
+        "pnlUsd": -29.44
+      },
+      {
+        "ticker": "POET",
+        "entryDate": "2023-09-12",
+        "pnlUsd": -31.41
+      },
+      {
+        "ticker": "GFS",
+        "entryDate": "2023-10-12",
+        "pnlUsd": -22.12
+      },
+      {
+        "ticker": "STM",
+        "entryDate": "2023-11-03",
+        "pnlUsd": 36.42
+      },
+      {
+        "ticker": "LSCC",
+        "entryDate": "2023-11-15",
+        "pnlUsd": 41.94
+      },
+      {
+        "ticker": "SMCI",
+        "entryDate": "2023-12-04",
+        "pnlUsd": 58.28
+      },
+      {
+        "ticker": "CAMT",
+        "entryDate": "2023-12-15",
+        "pnlUsd": 40.74
+      },
+      {
+        "ticker": "CIEN",
+        "entryDate": "2023-12-20",
+        "pnlUsd": 47.7
+      },
+      {
+        "ticker": "RMBS",
+        "entryDate": "2024-01-11",
+        "pnlUsd": 38.96
+      },
+      {
+        "ticker": "CLS",
+        "entryDate": "2024-01-17",
+        "pnlUsd": -7.26
+      },
+      {
+        "ticker": "POET",
+        "entryDate": "2023-12-26",
+        "pnlUsd": 41.54
+      },
+      {
+        "ticker": "GFS",
+        "entryDate": "2024-02-09",
+        "pnlUsd": -11.83
+      },
+      {
+        "ticker": "NOK",
+        "entryDate": "2024-02-14",
+        "pnlUsd": 21.06
+      },
+      {
+        "ticker": "POET",
+        "entryDate": "2024-03-05",
+        "pnlUsd": -51.53
+      },
+      {
+        "ticker": "FN",
+        "entryDate": "2024-03-25",
+        "pnlUsd": -16.72
+      },
+      {
+        "ticker": "VIAV",
+        "entryDate": "2024-03-22",
+        "pnlUsd": -35.35
+      },
+      {
+        "ticker": "VIAV",
+        "entryDate": "2024-03-18",
+        "pnlUsd": -33.55
+      },
+      {
+        "ticker": "DELL",
+        "entryDate": "2024-04-01",
+        "pnlUsd": 49.73
+      },
+      {
+        "ticker": "ARM",
+        "entryDate": "2024-03-12",
+        "pnlUsd": -0.16
+      },
+      {
+        "ticker": "POET",
+        "entryDate": "2024-04-08",
+        "pnlUsd": -32.7
+      },
+      {
+        "ticker": "SMCI",
+        "entryDate": "2024-04-08",
+        "pnlUsd": -50.47
+      },
+      {
+        "ticker": "ANET",
+        "entryDate": "2024-04-30",
+        "pnlUsd": 51.23
+      },
+      {
+        "ticker": "ARM",
+        "entryDate": "2024-04-30",
+        "pnlUsd": 16.93
+      },
+      {
+        "ticker": "SBUX",
+        "entryDate": "2024-05-13",
+        "pnlUsd": 17.65
+      },
+      {
+        "ticker": "ON",
+        "entryDate": "2024-05-30",
+        "pnlUsd": 36.2
+      },
+      {
+        "ticker": "AMD",
+        "entryDate": "2024-06-13",
+        "pnlUsd": -12.24
+      },
+      {
+        "ticker": "ALAB",
+        "entryDate": "2024-06-12",
+        "pnlUsd": -29.98
+      },
+      {
+        "ticker": "ETN",
+        "entryDate": "2024-06-17",
+        "pnlUsd": -10.03
+      },
+      {
+        "ticker": "RMBS",
+        "entryDate": "2024-06-21",
+        "pnlUsd": 47.46
+      },
+      {
+        "ticker": "AMD",
+        "entryDate": "2024-06-25",
+        "pnlUsd": 27.64
+      },
+      {
+        "ticker": "HUBB",
+        "entryDate": "2024-07-03",
+        "pnlUsd": 23.12
+      },
+      {
+        "ticker": "QCOM",
+        "entryDate": "2024-07-05",
+        "pnlUsd": -29.2
+      },
+      {
+        "ticker": "CLS",
+        "entryDate": "2024-07-18",
+        "pnlUsd": -42.28
+      },
+      {
+        "ticker": "EME",
+        "entryDate": "2024-07-09",
+        "pnlUsd": -17.94
+      },
+      {
+        "ticker": "ASX",
+        "entryDate": "2024-09-05",
+        "pnlUsd": 42.98
+      },
+      {
+        "ticker": "F",
+        "entryDate": "2024-09-26",
+        "pnlUsd": -4.06
+      }
+    ],
+    "in": [
+      {
+        "ticker": "WDC",
+        "entryDate": "2024-11-12",
+        "pnlUsd": -14.24
+      },
+      {
+        "ticker": "POET",
+        "entryDate": "2024-11-07",
+        "pnlUsd": 36.7
+      },
+      {
+        "ticker": "MOS",
+        "entryDate": "2024-11-26",
+        "pnlUsd": -29.94
+      },
+      {
+        "ticker": "POET",
+        "entryDate": "2024-12-13",
+        "pnlUsd": 45.83
+      },
+      {
+        "ticker": "NTAP",
+        "entryDate": "2024-12-26",
+        "pnlUsd": -13.15
+      },
+      {
+        "ticker": "RMBS",
+        "entryDate": "2024-12-26",
+        "pnlUsd": 60.5
+      },
+      {
+        "ticker": "AMKR",
+        "entryDate": "2025-01-17",
+        "pnlUsd": 23.27
+      },
+      {
+        "ticker": "ALAB",
+        "entryDate": "2025-01-17",
+        "pnlUsd": -38.56
+      },
+      {
+        "ticker": "POET",
+        "entryDate": "2025-01-22",
+        "pnlUsd": -32.67
+      },
+      {
+        "ticker": "POWL",
+        "entryDate": "2025-01-28",
+        "pnlUsd": -21.64
+      },
+      {
+        "ticker": "ETN",
+        "entryDate": "2025-02-11",
+        "pnlUsd": -20.69
+      },
+      {
+        "ticker": "STX",
+        "entryDate": "2025-02-04",
+        "pnlUsd": -2.5
+      },
+      {
+        "ticker": "VRT",
+        "entryDate": "2025-04-03",
+        "pnlUsd": -13.48
+      },
+      {
+        "ticker": "SNDK",
+        "entryDate": "2025-04-30",
+        "pnlUsd": 46.62
+      },
+      {
+        "ticker": "UBER",
+        "entryDate": "2025-05-30",
+        "pnlUsd": 44.65
+      },
+      {
+        "ticker": "MOD",
+        "entryDate": "2025-05-30",
+        "pnlUsd": 31.1
+      },
+      {
+        "ticker": "CRWV",
+        "entryDate": "2025-07-10",
+        "pnlUsd": -29.72
+      },
+      {
+        "ticker": "NBIS",
+        "entryDate": "2025-07-08",
+        "pnlUsd": -34.9
+      },
+      {
+        "ticker": "MOD",
+        "entryDate": "2025-07-11",
+        "pnlUsd": 54.54
+      },
+      {
+        "ticker": "POET",
+        "entryDate": "2025-07-31",
+        "pnlUsd": -31.04
+      },
+      {
+        "ticker": "POET",
+        "entryDate": "2025-07-29",
+        "pnlUsd": -31.39
+      },
+      {
+        "ticker": "CIEN",
+        "entryDate": "2025-08-20",
+        "pnlUsd": 50.9
+      },
+      {
+        "ticker": "VRT",
+        "entryDate": "2025-08-28",
+        "pnlUsd": 10.52
+      },
+      {
+        "ticker": "CRWV",
+        "entryDate": "2025-08-29",
+        "pnlUsd": 20.92
+      },
+      {
+        "ticker": "POET",
+        "entryDate": "2025-09-30",
+        "pnlUsd": 74.34
+      },
+      {
+        "ticker": "MOD",
+        "entryDate": "2025-09-29",
+        "pnlUsd": 37.18
+      },
+      {
+        "ticker": "VST",
+        "entryDate": "2025-10-08",
+        "pnlUsd": -30.82
+      },
+      {
+        "ticker": "NRG",
+        "entryDate": "2025-10-22",
+        "pnlUsd": 19.26
+      },
+      {
+        "ticker": "ANET",
+        "entryDate": "2025-10-16",
+        "pnlUsd": 52.64
+      },
+      {
+        "ticker": "SMCI",
+        "entryDate": "2025-12-05",
+        "pnlUsd": -40.8
+      },
+      {
+        "ticker": "INTC",
+        "entryDate": "2025-12-22",
+        "pnlUsd": 36.08
+      },
+      {
+        "ticker": "MOD",
+        "entryDate": "2025-12-17",
+        "pnlUsd": -36.58
+      },
+      {
+        "ticker": "MRVL",
+        "entryDate": "2025-12-16",
+        "pnlUsd": -10.3
+      },
+      {
+        "ticker": "GLW",
+        "entryDate": "2026-01-08",
+        "pnlUsd": 71.2
+      },
+      {
+        "ticker": "ALAB",
+        "entryDate": "2026-01-27",
+        "pnlUsd": -28.18
+      },
+      {
+        "ticker": "AVGO",
+        "entryDate": "2026-01-27",
+        "pnlUsd": -22.41
+      },
+      {
+        "ticker": "LSCC",
+        "entryDate": "2026-02-02",
+        "pnlUsd": 50.75
+      },
+      {
+        "ticker": "RMBS",
+        "entryDate": "2026-02-11",
+        "pnlUsd": -20.56
+      },
+      {
+        "ticker": "VST",
+        "entryDate": "2026-02-09",
+        "pnlUsd": 28.1
+      },
+      {
+        "ticker": "CLS",
+        "entryDate": "2026-05-11",
+        "pnlUsd": -32.74
+      },
+      {
+        "ticker": "TEL",
+        "entryDate": "2026-05-07",
+        "pnlUsd": -31.9
+      },
+      {
+        "ticker": "JBL",
+        "entryDate": "2026-05-19",
+        "pnlUsd": 37.89
+      },
+      {
+        "ticker": "POWI",
+        "entryDate": "2026-05-19",
+        "pnlUsd": 98.12
+      },
+      {
+        "ticker": "VLO",
+        "entryDate": "2026-05-28",
+        "pnlUsd": 19.18
+      },
+      {
+        "ticker": "POWL",
+        "entryDate": "2026-05-19",
+        "pnlUsd": 32.92
+      },
+      {
+        "ticker": "TSM",
+        "entryDate": "2026-07-08",
+        "pnlUsd": -24.41
+      },
+      {
+        "ticker": "NRG",
+        "entryDate": "2026-07-16",
+        "pnlUsd": -24.37
+      },
+      {
+        "ticker": "APH",
+        "entryDate": "2026-07-22",
+        "pnlUsd": -22.08
+      },
+      {
+        "ticker": "TEL",
+        "entryDate": "2026-07-01",
+        "pnlUsd": 11.46
+      },
+      {
+        "ticker": "CSCO",
+        "entryDate": "2026-07-22",
+        "pnlUsd": 49.22
+      },
+      {
+        "ticker": "APH",
+        "entryDate": "2026-08-26",
+        "pnlUsd": 17.03
+      },
+      {
+        "ticker": "ANET",
+        "entryDate": "2026-09-04",
+        "pnlUsd": 36.56
+      },
+      {
+        "ticker": "TSLA",
+        "entryDate": "2026-09-29",
+        "pnlUsd": -4.99
+      }
+    ]
+  },
+  "note": "Profit fell when higher-RS AI/DC names filled slots instead of baseline picks (bucket max 2)."
+}
+```
+
+## $30 損切り併用出口
+
+```json
+{
+  "dollarStopLedCandidates": 0,
+  "fillsWithDifferentPnl": 0
+}
+```
+
+## SOXX（チューニング N=2）
+
+| variant | window | trades | $1.90 net | DD | 連敗 |
+|---|---|---:|---:|---:|---:|
+| no-spy | oos | 209 | 1784.09 | 545.90 | 22 |
+| no-spy | in | 245 | 189.77 | 858.01 | 12 |
+| baseline | oos | 173 | 1382.92 | 387.94 | 15 |
+| baseline | in | 192 | 906.22 | 406.96 | 13 |
+| spy-soxx-all | oos | 152 | 527.83 | 527.99 | 11 |
+| spy-soxx-all | in | 169 | 780.27 | 497.22 | 17 |
+| soxx-semi-2 | oos | 172 | 1148.31 | 416.55 | 12 |
+| soxx-semi-2 | in | 190 | 860.18 | 455.83 | 21 |
+| soxx-all-2 | oos | 152 | 527.83 | 527.99 | 11 |
+| soxx-all-2 | in | 169 | 780.27 | 497.22 | 17 |
+
+## 半導体ボックス長（ポートフォリオ）
+
+| box | window | trades | $1.90 net | DD | 連敗 |
+|---|---|---:|---:|---:|---:|
+| 5d | oos | 151 | 214.82 | 429.08 | 14 |
+| 5d | in | 158 | -314.08 | 569.80 | 13 |
+| 10d | oos | 81 | 331.42 | 258.41 | 10 |
+| 10d | in | 102 | 195.55 | 414.52 | 16 |
+| 20d | oos | 65 | 599.67 | 217.79 | 9 |
+| 20d | in | 76 | 56.91 | 265.34 | 11 |
+
+## 合否（2024-26、基準比）
+
+| variant | trades | $1.90 net | DD | 連敗 | 判定 |
+|---|---:|---:|---:|---:|---|
+| baseline | 192 | 906.22 | 406.96 | 13 | 基準 |
+| soxx-all-2 | 169 | 780.27 | 497.22 | 17 | {"kind":"fail","reasons":["max_dd","max_consec_losses"]} |
+| soxx-semi-2 | 190 | 860.18 | 455.83 | 21 | {"kind":"fail","reasons":["max_dd","max_consec_losses"]} |
+| exit-risk30 | 192 | 906.22 | 406.96 | 13 | {"kind":"pass"} |
+| crash-3.5 | 191 | 820.69 | 406.96 | 13 | {"kind":"pass"} |
+| stab-2 | 192 | 906.22 | 406.96 | 13 | {"kind":"pass"} |
+| stab-3 | 192 | 906.22 | 406.96 | 13 | {"kind":"pass"} |
+| ai-dc-cap | 180 | 279.27 | 397.55 | 8 | {"kind":"flag-profit","reasons":["profit_drop_15pct"]} |
+
+## 出口比較（variant C）
+
+### 参考：Emma実口座（別約定セット・合格基準ではない）
+
+期間 **2026-07-30〜2026-10-02**（ライブ窓と同じ）。実口座リターン **+10.9%**、最大DD **約-6%**。バックテスト C0/C1 は銘柄・タイミングが異なるため対照線のみ。
+
+| variant | window | trades | $1.90 net | MTM DD | 連敗 | 最大建玉含み損 | タイムアウト>$30 |
+|---|---|---:|---:|---:|---:|---:|---:|
+| exit-c0 | live | 18 | 33.83 | 107.34 | 5 | 35.54 | — |
+| exit-c1-20 | live | 14 | 96.34 | 114.48 | 3 | 44.00 | 2 |
+| exit-c1-40 | live | 7 | -34.54 | 194.41 | 3 | 73.50 | 2 |
+| exit-c0 | in | 192 | 906.22 | 406.96 | 13 | 65.32 | — |
+| exit-c1-20 | in | 133 | 1340.92 | 369.24 | 7 | 145.86 | 15 |
+| exit-c1-40 | in | 84 | 450.80 | 829.03 | 9 | 203.64 | 15 |
+
+**解釈（C）**: C0 は箱底損切り＋20日。C1 は損切りなし（利確 or タイムアウト）。ライブ窓は単一ポートフォリオ $3,200 起点。
+
+C1 合否（同一窓の C0 比）:
+
+```json
+[
+  {
+    "id": "exit-c1-20",
+    "window": "live",
+    "verdict": {
+      "kind": "fail",
+      "reasons": [
+        "max_dd"
+      ]
+    }
+  },
+  {
+    "id": "exit-c1-40",
+    "window": "live",
+    "verdict": {
+      "kind": "fail",
+      "reasons": [
+        "max_dd",
+        "trade_count"
+      ]
+    }
+  },
+  {
+    "id": "exit-c1-20",
+    "window": "in",
+    "verdict": {
+      "kind": "fail",
+      "reasons": [
+        "trade_count"
+      ]
+    }
+  },
+  {
+    "id": "exit-c1-40",
+    "window": "in",
+    "verdict": {
+      "kind": "fail",
+      "reasons": [
+        "max_dd",
+        "trade_count"
+      ]
+    }
+  }
+]
+```
+
+
+## 追記：差分リストの重複行と非 AI/DC 銘柄
+
+### 事実
+
+- 旧レポートの「同じ銘柄・同じ entryDate が2行」は、ポートフォリオの二重計上ではなく、**25%線と35%線の別建玉**（`positionKey` が `TICKER-L25` / `TICKER-L35`）が、差分用キー `ticker|entryDate` だけで突き合わせていたための**表示上の重複**。
+- 修正後（2024-26）: 約定行 192、一意キー（銘柄|entry日|線）192、キー重複 0。
+- **集計値は変わらない**（基準 192 / +$906.22、ai-dc-cap 180 / +$279.27、crash-3.5 191 / +$820.69、DD・連敗も同一）。
+- AI・DC 枠リストに SBUX・F など非バケット銘柄が出るのは、**maxBucket=2 による入れ替え**（ノックオン）。基準で入った約定が上限付きランで採用されなかった差分であり、バケット誤分類ではない（`bucketHeavy` = 半導体・設備・ネットワーク・サーバ・クラウド・電力グループ）。
+
+### 解釈
+
+- 差分リストは「AI テーマだけが落ちた銘柄」ではなく、「**上限ありの別シミュレーションに無い基準約定**」の一覧。
+- 合否（ai-dc-cap は利益15%超の低下で flag-profit）は上記集計のまま有効。
+
+```json
+{
+  "fillIntegrity": {
+    "oos": {
+      "baseline": {
+        "fillRows": 173,
+        "uniqueKeys": 173,
+        "duplicateKeys": 0,
+        "dupPnl": 1590.5200000000004,
+        "dedupedPnl": 1590.5200000000004,
+        "samples": []
+      },
+      "aiDcCap": {
+        "fillRows": 158,
+        "uniqueKeys": 158,
+        "duplicateKeys": 0,
+        "dupPnl": 1116.4900000000007,
+        "dedupedPnl": 1116.4900000000007,
+        "samples": []
+      }
+    },
+    "in": {
+      "baseline": {
+        "fillRows": 192,
+        "uniqueKeys": 192,
+        "duplicateKeys": 0,
+        "dupPnl": 1136.620000000001,
+        "dedupedPnl": 1136.620000000001,
+        "samples": []
+      },
+      "aiDcCap": {
+        "fillRows": 180,
+        "uniqueKeys": 180,
+        "duplicateKeys": 0,
+        "dupPnl": 495.2700000000001,
+        "dedupedPnl": 495.2700000000001,
+        "samples": []
+      }
+    }
+  },
+  "aiDcCapListNote": "Lists baseline fills absent from the capped book (set diff on ticker|entryDate). Non–AI/DC names are knock-on slot substitutions, not bucket mis-tags."
+}
+```
+
+
+## 要約
+
+基準（2024-26）: 192回、$1.90純益 906.22、DD 406.96、連敗 13。急落フィルタは2022-24で k=3.5 を採用。テーマ除外 47 銘柄（宇宙は SPCX 以外、暗号は CORZ 等）
+
+基準（2024-26）: 192回 / $1.90 net 906.22 / DD 406.96 / 連敗 13
