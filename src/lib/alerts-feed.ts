@@ -68,7 +68,8 @@ export async function getAlertsPayload(query: AlertsQuery, now = new Date()): Pr
     }
   }
 
-  for (const ticker of indexMonitorTickers(list)) {
+  const indexTickers = indexMonitorTickers(list);
+  for (const ticker of indexTickers) {
     const entry = cache.series[ticker];
     const epsSnap = eps[ticker] ?? null;
     candidates.push({
@@ -121,6 +122,7 @@ export async function getAlertsPayload(query: AlertsQuery, now = new Date()): Pr
 
   const barDate = spyFinal.at(-1)?.date ?? null;
   const failCount = tickers.filter((ticker) => !cache.series[ticker.ticker]?.bars).length;
+  const indexFailCount = indexTickers.filter((ticker) => !cache.series[ticker]?.bars).length;
   const staleCount = tickers.filter((ticker) => isStale(cache.series[ticker.ticker])).length;
   const fetchedAt = oldestOkAt(
     cache,
@@ -133,10 +135,16 @@ export async function getAlertsPayload(query: AlertsQuery, now = new Date()): Pr
     ok: failCount < tickers.length / 2,
     enabled: true,
     checkedAtJst: formatJst(new Date(fetchedAt)),
-    error: failCount > 0 ? `${failCount}銘柄の日足が無い` : null,
-    complete: true,
+    error:
+      [failCount > 0 ? `${failCount}銘柄の日足が無い` : null, indexFailCount > 0 ? `指数監視 欠損${indexFailCount}件` : null]
+        .filter(Boolean)
+        .join(" / ") || null,
+    // Index-only names fill in the background; incomplete until every one has bars.
+    complete: indexFailCount === 0,
     provisional: closeIsProvisional(spy?.at(-1)?.date ?? null, now),
     failCount,
+    indexFailCount,
+    indexCount: indexTickers.length,
     staleCount,
   };
   const edgar = edgarStatus();

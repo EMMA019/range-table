@@ -1,5 +1,5 @@
 /** Thresholds and windows. The UI labels these in Japanese so the basis stays visible. */
-export const BENCHMARKS = ["SPY", "QQQ", "SOXX"] as const;
+export const BENCHMARKS = ["SPY", "QQQ", "SOXX", "SMH"] as const;
 
 /** Never counted as a holding, in correlation, alerts, KPIs, or the pre-buy check. */
 export const IGNORED_TICKERS = ["ONDS"] as const;

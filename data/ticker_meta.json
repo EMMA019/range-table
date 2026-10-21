@@ -7041,6 +7041,11 @@
       "sector": "一般消費財",
       "industry": "コンシューマー・エレクトロニクス"
     },
+    "SMH": {
+      "name": "VanEck Semiconductor ETF",
+      "sector": "指数・ETF",
+      "industry": "半導体"
+    },
     "SOXX": {
       "name": "iShares Semiconductor ETF",
       "sector": "指数・ETF",
