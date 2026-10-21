@@ -55,7 +55,14 @@ export type AlertsPayload = {
   /** False when any source is still filling in. */
   complete: boolean;
   sources: {
-    prices: AlertSourceStatus & { provisional: boolean; failCount: number; staleCount: number };
+    prices: AlertSourceStatus & {
+      provisional: boolean;
+      failCount: number;
+      /** Index-only monitor names with no daily bars yet (background fill). */
+      indexFailCount: number;
+      indexCount: number;
+      staleCount: number;
+    };
     edgar: AlertSourceStatus;
     /** Review-line alerts: only for a caller with ALERTS_TOKEN or the holdings session. */
     holdings: AlertSourceStatus;
