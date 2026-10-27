@@ -5,14 +5,14 @@
     "genre": "大手クラウド・ソフト",
     "thesis_facts": "残す。箱29%・保有相関0.06で分散効果大。反発未確認。決算は10/28推定。",
     "thesis_hypothesis": "",
-    "entry_line": 322,
-    "entry_basis": "直近安値 $322.00（直近10営業日の最安値・2026-10-22、Yahoo日足、2026-10-23）",
-    "review_line": 322,
-    "review_basis": "20日安値 $322.00（基準日終値 2026-10-22、Yahoo日足、2026-10-23）",
+    "entry_line": 316.6,
+    "entry_basis": "直近安値 $316.60（直近10営業日の最安値・2026-10-26、Yahoo日足、2026-10-26）",
+    "review_line": 316.6,
+    "review_basis": "20日安値 $316.60（基準日終値 2026-10-26、Yahoo日足、2026-10-26）",
     "earnings_date": "2026-10-28",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-23"
+    "as_of": "2026-10-26"
   },
   {
     "ticker": "AMZN",
@@ -20,14 +20,14 @@
     "genre": "大手クラウド・ソフト",
     "thesis_facts": "残す。箱23%・相関0.24。反発未確認。決算は10/29推定。",
     "thesis_hypothesis": "",
-    "entry_line": 248,
-    "entry_basis": "直近安値 $248.00（直近10営業日の最安値・2026-10-22、Yahoo日足、2026-10-23）",
-    "review_line": 244.73,
-    "review_basis": "20日安値 $244.73（基準日終値 2026-10-22、Yahoo日足、2026-10-23）",
+    "entry_line": 246.45,
+    "entry_basis": "直近安値 $246.45（直近10営業日の最安値・2026-10-23、Yahoo日足、2026-10-26）",
+    "review_line": 245.14,
+    "review_basis": "20日安値 $245.14（基準日終値 2026-10-26、Yahoo日足、2026-10-26）",
     "earnings_date": "2026-10-29",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-23"
+    "as_of": "2026-10-26"
   },
   {
     "ticker": "CEG",
@@ -35,14 +35,14 @@
     "genre": "発電・原子力",
     "thesis_facts": "残す。箱20%、10/1に1日反発。相関0.46。",
     "thesis_hypothesis": "",
-    "entry_line": 253.37,
-    "entry_basis": "直近安値 $253.37（直近10営業日の最安値・2026-10-22、Yahoo日足、2026-10-23）",
+    "entry_line": 247.2,
+    "entry_basis": "直近安値 $247.20（直近10営業日の最安値・2026-10-23、Yahoo日足、2026-10-26）",
     "review_line": 247.2,
-    "review_basis": "20日安値 $247.20（基準日終値 2026-10-22、Yahoo日足、2026-10-23）",
+    "review_basis": "20日安値 $247.20（基準日終値 2026-10-26、Yahoo日足、2026-10-26）",
     "earnings_date": "2026-11-06",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-23"
+    "as_of": "2026-10-26"
   },
   {
     "ticker": "AKAM",
@@ -51,13 +51,13 @@
     "thesis_facts": "残す。箱22%・反発未確認。Anthropic IPOの関係者（向きは不明）。",
     "thesis_hypothesis": "",
     "entry_line": 86.06,
-    "entry_basis": "直近安値 $86.06（直近10営業日の最安値・2026-10-20、Yahoo日足、2026-10-23）",
+    "entry_basis": "直近安値 $86.06（直近10営業日の最安値・2026-10-20、Yahoo日足、2026-10-26）",
     "review_line": 86.06,
-    "review_basis": "20日安値 $86.06（基準日終値 2026-10-22、Yahoo日足、2026-10-23）",
+    "review_basis": "20日安値 $86.06（基準日終値 2026-10-26、Yahoo日足、2026-10-26）",
     "earnings_date": "2026-11-05",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-23"
+    "as_of": "2026-10-26"
   },
   {
     "ticker": "VRSK",
@@ -65,14 +65,14 @@
     "genre": "保険データ分析",
     "thesis_facts": "新規。箱16.5%・2日続伸・保有相関−0.50。ソフト株安に巻き込まれる注意。",
     "thesis_hypothesis": "",
-    "entry_line": 175.19,
-    "entry_basis": "直近安値 $175.19（直近10営業日の最安値・2026-10-09、Yahoo日足、2026-10-23）",
+    "entry_line": 175.43,
+    "entry_basis": "直近安値 $175.43（直近10営業日の最安値・2026-10-13、Yahoo日足、2026-10-26）",
     "review_line": 161.51,
-    "review_basis": "20日安値 $161.51（基準日終値 2026-10-22、Yahoo日足、2026-10-23）",
+    "review_basis": "20日安値 $161.51（基準日終値 2026-10-26、Yahoo日足、2026-10-26）",
     "earnings_date": "2026-11-04",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-23"
+    "as_of": "2026-10-26"
   },
   {
     "ticker": "EOG",
@@ -80,14 +80,14 @@
     "genre": "シェール石油の大手",
     "thesis_facts": "新規。箱23.6%、10/1に1日反発、相関−0.35で業種が分散。",
     "thesis_hypothesis": "",
-    "entry_line": 147.97,
-    "entry_basis": "直近安値 $147.97（直近10営業日の最安値・2026-10-09、Yahoo日足、2026-10-23）",
+    "entry_line": 150.94,
+    "entry_basis": "直近安値 $150.94（直近10営業日の最安値・2026-10-13、Yahoo日足、2026-10-26）",
     "review_line": 137.35,
-    "review_basis": "20日安値 $137.35（基準日終値 2026-10-22、Yahoo日足、2026-10-23）",
+    "review_basis": "20日安値 $137.35（基準日終値 2026-10-26、Yahoo日足、2026-10-26）",
     "earnings_date": "2026-11-05",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-23"
+    "as_of": "2026-10-26"
   },
   {
     "ticker": "MO",
@@ -96,13 +96,13 @@
     "thesis_facts": "新規（反発待ち）。箱11.3%・相関−0.45。安値更新が止まるまで待つ。",
     "thesis_hypothesis": "",
     "entry_line": 71.14,
-    "entry_basis": "直近安値 $71.14（直近10営業日の最安値・2026-10-13、Yahoo日足、2026-10-23）",
+    "entry_basis": "直近安値 $71.14（直近10営業日の最安値・2026-10-13、Yahoo日足、2026-10-26）",
     "review_line": 65.78,
-    "review_basis": "20日安値 $65.78（基準日終値 2026-10-22、Yahoo日足、2026-10-23）",
+    "review_basis": "20日安値 $65.78（基準日終値 2026-10-26、Yahoo日足、2026-10-26）",
     "earnings_date": "2026-10-29",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-23"
+    "as_of": "2026-10-26"
   },
   {
     "ticker": "GEHC",
@@ -110,14 +110,14 @@
     "genre": "医療機器（画像診断）",
     "thesis_facts": "新規（反発待ち）。箱11.8%・相関−0.44。安値更新が止まるまで待つ。",
     "thesis_hypothesis": "",
-    "entry_line": 64.29,
-    "entry_basis": "直近安値 $64.29（直近10営業日の最安値・2026-10-09、Yahoo日足、2026-10-23）",
+    "entry_line": 67.36,
+    "entry_basis": "直近安値 $67.36（直近10営業日の最安値・2026-10-13、Yahoo日足、2026-10-26）",
     "review_line": 63.32,
-    "review_basis": "20日安値 $63.31（基準日終値 2026-10-22、Yahoo日足、2026-10-23）",
+    "review_basis": "20日安値 $63.31（基準日終値 2026-10-26、Yahoo日足、2026-10-26）",
     "earnings_date": "2026-11-04",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-23"
+    "as_of": "2026-10-26"
   },
   {
     "ticker": "MDT",
@@ -125,13 +125,13 @@
     "genre": "医療機器大手",
     "thesis_facts": "新規（反発待ち）。箱12.8%・相関−0.37。決算が一番遠い（11/17推定）。",
     "thesis_hypothesis": "",
-    "entry_line": 87.4,
-    "entry_basis": "直近安値 $87.40（直近10営業日の最安値・2026-10-09、Yahoo日足、2026-10-23）",
+    "entry_line": 90.2,
+    "entry_basis": "直近安値 $90.20（直近10営業日の最安値・2026-10-13、Yahoo日足、2026-10-26）",
     "review_line": 85.22,
-    "review_basis": "20日安値 $85.22（基準日終値 2026-10-22、Yahoo日足、2026-10-23）",
+    "review_basis": "20日安値 $85.22（基準日終値 2026-10-26、Yahoo日足、2026-10-26）",
     "earnings_date": "2026-11-17",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-23"
+    "as_of": "2026-10-26"
   }
 ]
