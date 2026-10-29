@@ -1,9 +1,9 @@
 {
   "v": 1,
   "rulesCommit": "83181044326c4d5cbd5f84b52c3815438ee00de2",
-  "generatedAt": "2026-10-28",
+  "generatedAt": "2026-10-29",
   "start": "2026-10-05",
-  "asOf": "2026-10-26",
+  "asOf": "2026-10-28",
   "rules": [
     "開始は 2026-10-05。ブックは4つ、それぞれ現金 $3,200。箱と RSI は同時5件、1件 $300–$450、整数株、往復手数料 $0.70。売却代金は翌セッションまで使えない。",
     "箱: 反発1日以上、終値が20日箱の15%線以上、ATR 3%以上、終値 $550以下。利確は翌日始値+1ATR。損切りは終値がシグナル日の20日安値を下回ったときの終値。20営業日で期限。シグナルは終値、買いは翌営業日の始値。",
@@ -12,14 +12,14 @@
     "QQQは開始日の始値で口座全額を整数株にする。1件 $450の上限は使わない。往復手数料 $0.70は最終足で引く。",
     "ルールはここで固定する。結果を見てエントリーも出口も変えない。"
   ],
-  "note": "2026-10-05 から 2026-10-26 の確定足。シグナルは終値、買いは翌始値。",
+  "note": "2026-10-05 から 2026-10-28 の確定足。シグナルは終値、買いは翌始値。",
   "books": [
     {
       "id": "box-ticker",
       "label": "箱・ATR≥3%・ティッカー順",
-      "n": 17,
-      "totalUsd": -223.3,
-      "endEquity": 2976.7,
+      "n": 23,
+      "totalUsd": -152.6,
+      "endEquity": 3047.4,
       "mtmDdUsd": 259.99,
       "realizedDdUsd": 253.93,
       "daily": [
@@ -100,17 +100,27 @@
         },
         {
           "date": "2026-10-26",
-          "equity": 2976.7,
-          "realizedEquity": 2976.7
+          "equity": 2978.8,
+          "realizedEquity": 2960.9
+        },
+        {
+          "date": "2026-10-27",
+          "equity": 3032.29,
+          "realizedEquity": 3003.54
+        },
+        {
+          "date": "2026-10-28",
+          "equity": 3047.4,
+          "realizedEquity": 3047.4
         }
       ]
     },
     {
       "id": "box-rs",
       "label": "箱・ATR≥3%・20日の対SPY",
-      "n": 17,
-      "totalUsd": -190.89,
-      "endEquity": 3009.11,
+      "n": 23,
+      "totalUsd": -122.43,
+      "endEquity": 3077.57,
       "mtmDdUsd": 227.58,
       "realizedDdUsd": 221.52,
       "daily": [
@@ -191,17 +201,27 @@
         },
         {
           "date": "2026-10-26",
-          "equity": 3009.11,
-          "realizedEquity": 3009.11
+          "equity": 3011.21,
+          "realizedEquity": 2993.31
+        },
+        {
+          "date": "2026-10-27",
+          "equity": 3054.84,
+          "realizedEquity": 3038.89
+        },
+        {
+          "date": "2026-10-28",
+          "equity": 3077.57,
+          "realizedEquity": 3077.57
         }
       ]
     },
     {
       "id": "rsi2",
       "label": "RSI(2)<10",
-      "n": 21,
-      "totalUsd": -516.31,
-      "endEquity": 2683.69,
+      "n": 26,
+      "totalUsd": -411.09,
+      "endEquity": 2788.91,
       "mtmDdUsd": 585.56,
       "realizedDdUsd": 570.88,
       "daily": [
@@ -282,8 +302,18 @@
         },
         {
           "date": "2026-10-26",
-          "equity": 2683.69,
-          "realizedEquity": 2683.69
+          "equity": 2686.49,
+          "realizedEquity": 2681.66
+        },
+        {
+          "date": "2026-10-27",
+          "equity": 2796.28,
+          "realizedEquity": 2799.7
+        },
+        {
+          "date": "2026-10-28",
+          "equity": 2788.91,
+          "realizedEquity": 2788.91
         }
       ]
     },
@@ -291,10 +321,10 @@
       "id": "qqq",
       "label": "QQQを口座いっぱい",
       "n": 1,
-      "totalUsd": -149.3,
-      "endEquity": 3050.7,
+      "totalUsd": -95.66,
+      "endEquity": 3104.34,
       "mtmDdUsd": 221.04,
-      "realizedDdUsd": 149.3,
+      "realizedDdUsd": 95.66,
       "daily": [
         {
           "date": "2026-10-05",
@@ -373,8 +403,18 @@
         },
         {
           "date": "2026-10-26",
-          "equity": 3050.7,
-          "realizedEquity": 3050.7
+          "equity": 3051.4,
+          "realizedEquity": 3200
+        },
+        {
+          "date": "2026-10-27",
+          "equity": 3087.6,
+          "realizedEquity": 3200
+        },
+        {
+          "date": "2026-10-28",
+          "equity": 3104.34,
+          "realizedEquity": 3104.34
         }
       ]
     }
