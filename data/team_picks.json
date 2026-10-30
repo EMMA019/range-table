@@ -5,14 +5,14 @@
     "genre": "大手クラウド・ソフト",
     "thesis_facts": "残す。箱29%・保有相関0.06で分散効果大。反発未確認。決算は10/28推定。",
     "thesis_hypothesis": "",
-    "entry_line": 316.6,
-    "entry_basis": "直近安値 $316.60（直近10営業日の最安値・2026-10-26、Yahoo日足、2026-10-28）",
-    "review_line": 316.6,
-    "review_basis": "20日安値 $316.60（基準日終値 2026-10-28、Yahoo日足、2026-10-28）",
+    "entry_line": 280.36,
+    "entry_basis": "直近安値 $280.36（直近10営業日の最安値・2026-10-29、Yahoo日足、2026-10-29）",
+    "review_line": 280.36,
+    "review_basis": "20日安値 $280.36（基準日終値 2026-10-29、Yahoo日足、2026-10-29）",
     "earnings_date": "2026-10-28",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-28"
+    "as_of": "2026-10-29"
   },
   {
     "ticker": "AMZN",
@@ -20,14 +20,14 @@
     "genre": "大手クラウド・ソフト",
     "thesis_facts": "残す。箱23%・相関0.24。反発未確認。決算は10/29推定。",
     "thesis_hypothesis": "",
-    "entry_line": 246.45,
-    "entry_basis": "直近安値 $246.45（直近10営業日の最安値・2026-10-23、Yahoo日足、2026-10-28）",
-    "review_line": 246.12,
-    "review_basis": "20日安値 $246.12（基準日終値 2026-10-28、Yahoo日足、2026-10-28）",
+    "entry_line": 241.24,
+    "entry_basis": "直近安値 $241.24（直近10営業日の最安値・2026-10-29、Yahoo日足、2026-10-29）",
+    "review_line": 241.24,
+    "review_basis": "20日安値 $241.24（基準日終値 2026-10-29、Yahoo日足、2026-10-29）",
     "earnings_date": "2026-10-29",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-28"
+    "as_of": "2026-10-29"
   },
   {
     "ticker": "CEG",
@@ -36,13 +36,13 @@
     "thesis_facts": "残す。箱20%、10/1に1日反発。相関0.46。",
     "thesis_hypothesis": "",
     "entry_line": 247.2,
-    "entry_basis": "直近安値 $247.20（直近10営業日の最安値・2026-10-23、Yahoo日足、2026-10-28）",
+    "entry_basis": "直近安値 $247.20（直近10営業日の最安値・2026-10-23、Yahoo日足、2026-10-29）",
     "review_line": 247.2,
-    "review_basis": "20日安値 $247.20（基準日終値 2026-10-28、Yahoo日足、2026-10-28）",
+    "review_basis": "20日安値 $247.20（基準日終値 2026-10-29、Yahoo日足、2026-10-29）",
     "earnings_date": "2026-11-06",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-28"
+    "as_of": "2026-10-29"
   },
   {
     "ticker": "AKAM",
@@ -51,13 +51,13 @@
     "thesis_facts": "残す。箱22%・反発未確認。Anthropic IPOの関係者（向きは不明）。",
     "thesis_hypothesis": "",
     "entry_line": 86.06,
-    "entry_basis": "直近安値 $86.06（直近10営業日の最安値・2026-10-20、Yahoo日足、2026-10-28）",
+    "entry_basis": "直近安値 $86.06（直近10営業日の最安値・2026-10-20、Yahoo日足、2026-10-29）",
     "review_line": 86.06,
-    "review_basis": "20日安値 $86.06（基準日終値 2026-10-28、Yahoo日足、2026-10-28）",
+    "review_basis": "20日安値 $86.06（基準日終値 2026-10-29、Yahoo日足、2026-10-29）",
     "earnings_date": "2026-11-05",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-28"
+    "as_of": "2026-10-29"
   },
   {
     "ticker": "VRSK",
@@ -65,14 +65,14 @@
     "genre": "保険データ分析",
     "thesis_facts": "新規。箱16.5%・2日続伸・保有相関−0.50。ソフト株安に巻き込まれる注意。",
     "thesis_hypothesis": "",
-    "entry_line": 184.72,
-    "entry_basis": "直近安値 $184.72（直近10営業日の最安値・2026-10-15、Yahoo日足、2026-10-28）",
+    "entry_line": 185.28,
+    "entry_basis": "直近安値 $185.28（直近10営業日の最安値・2026-10-19、Yahoo日足、2026-10-29）",
     "review_line": 161.51,
-    "review_basis": "20日安値 $161.51（基準日終値 2026-10-28、Yahoo日足、2026-10-28）",
+    "review_basis": "20日安値 $161.51（基準日終値 2026-10-29、Yahoo日足、2026-10-29）",
     "earnings_date": "2026-11-04",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-28"
+    "as_of": "2026-10-29"
   },
   {
     "ticker": "EOG",
@@ -80,14 +80,14 @@
     "genre": "シェール石油の大手",
     "thesis_facts": "新規。箱23.6%、10/1に1日反発、相関−0.35で業種が分散。",
     "thesis_hypothesis": "",
-    "entry_line": 151.65,
-    "entry_basis": "直近安値 $151.65（直近10営業日の最安値・2026-10-15、Yahoo日足、2026-10-28）",
-    "review_line": 137.53,
-    "review_basis": "20日安値 $137.53（基準日終値 2026-10-28、Yahoo日足、2026-10-28）",
+    "entry_line": 152.53,
+    "entry_basis": "直近安値 $152.53（直近10営業日の最安値・2026-10-16、Yahoo日足、2026-10-29）",
+    "review_line": 139.46,
+    "review_basis": "20日安値 $139.46（基準日終値 2026-10-29、Yahoo日足、2026-10-29）",
     "earnings_date": "2026-11-05",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-28"
+    "as_of": "2026-10-29"
   },
   {
     "ticker": "MO",
@@ -96,13 +96,13 @@
     "thesis_facts": "新規（反発待ち）。箱11.3%・相関−0.45。安値更新が止まるまで待つ。",
     "thesis_hypothesis": "",
     "entry_line": 72.3,
-    "entry_basis": "直近安値 $72.30（直近10営業日の最安値・2026-10-27、Yahoo日足、2026-10-28）",
+    "entry_basis": "直近安値 $72.30（直近10営業日の最安値・2026-10-27、Yahoo日足、2026-10-29）",
     "review_line": 65.78,
-    "review_basis": "20日安値 $65.78（基準日終値 2026-10-28、Yahoo日足、2026-10-28）",
+    "review_basis": "20日安値 $65.78（基準日終値 2026-10-29、Yahoo日足、2026-10-29）",
     "earnings_date": "2026-10-29",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-28"
+    "as_of": "2026-10-29"
   },
   {
     "ticker": "GEHC",
@@ -111,13 +111,13 @@
     "thesis_facts": "新規（反発待ち）。箱11.8%・相関−0.44。安値更新が止まるまで待つ。",
     "thesis_hypothesis": "",
     "entry_line": 68.7,
-    "entry_basis": "直近安値 $68.70（直近10営業日の最安値・2026-10-21、Yahoo日足、2026-10-28）",
+    "entry_basis": "直近安値 $68.70（直近10営業日の最安値・2026-10-21、Yahoo日足、2026-10-29）",
     "review_line": 63.32,
-    "review_basis": "20日安値 $63.31（基準日終値 2026-10-28、Yahoo日足、2026-10-28）",
+    "review_basis": "20日安値 $63.31（基準日終値 2026-10-29、Yahoo日足、2026-10-29）",
     "earnings_date": "2026-11-04",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-28"
+    "as_of": "2026-10-29"
   },
   {
     "ticker": "MDT",
@@ -126,12 +126,12 @@
     "thesis_facts": "新規（反発待ち）。箱12.8%・相関−0.37。決算が一番遠い（11/17推定）。",
     "thesis_hypothesis": "",
     "entry_line": 92.67,
-    "entry_basis": "直近安値 $92.67（直近10営業日の最安値・2026-10-19、Yahoo日足、2026-10-28）",
-    "review_line": 85.22,
-    "review_basis": "20日安値 $85.22（基準日終値 2026-10-28、Yahoo日足、2026-10-28）",
+    "entry_basis": "直近安値 $92.67（直近10営業日の最安値・2026-10-19、Yahoo日足、2026-10-29）",
+    "review_line": 85.43,
+    "review_basis": "20日安値 $85.43（基準日終値 2026-10-29、Yahoo日足、2026-10-29）",
     "earnings_date": "2026-11-17",
     "status": "候補",
     "recommended_by": "Alex/Sarah/Nova/Colin",
-    "as_of": "2026-10-28"
+    "as_of": "2026-10-29"
   }
 ]
