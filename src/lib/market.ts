@@ -541,7 +541,8 @@ function projectEps(quotes: Record<string, StoredEps>): Record<string, EpsSnapsh
   return out;
 }
 
-function buildPayload(
+/** Assembles the /api/market body from a price cache. Exported so session-date behavior can be tested without Yahoo. */
+export function buildPayload(
   cache: CacheBody,
   list: Watchlist,
   eps: Record<string, EpsSnapshot>,
@@ -610,7 +611,7 @@ function buildPayload(
 
   const indices: IndexRow[] = BENCHMARKS.map((ticker) => {
     const built = quoteFromEntry(cache.series[ticker]);
-    return { ticker, quote: built.quote, error: built.error };
+    return { ticker, quote: built.quote, error: built.error, stale: built.stale };
   });
 
   const failCount = rows.filter((row) => !row.quote).length;
@@ -619,11 +620,13 @@ function buildPayload(
   let monitor: MonitorMeta | null = null;
   try {
     const indexFile = loadMonitorIndex();
+    const indexFetchedAt = oldestOkAt(cache, indexMonitorTickers(list), 0);
     monitor = {
       asOfDate: indexFile.asOfDate,
       unionCount: indexFile.union.length,
       watchlistCount: rows.length,
       indexOnlyCount: indexBuilt.rows.length,
+      fetchedAt: indexFetchedAt > 0 ? indexFetchedAt : null,
     };
   } catch {
     monitor = null;
@@ -873,11 +876,14 @@ export function quoteFromEntry(entry: SeriesEntry | undefined): {
   return { quote: computed.quote, error: null, errorDetail: entry.error ?? null, stale: isStale(entry) };
 }
 
-function modeDate(indices: IndexRow[], rows: TickerRow[]): string | null {
-  const spy = indices.find((index) => index.ticker === "SPY")?.quote?.closeDate;
-  if (spy) return spy;
+/** Session date for the payload. SPY's close wins only while that series is current. */
+export function modeDate(indices: IndexRow[], rows: TickerRow[]): string | null {
+  // SPY is the canonical session marker, but only while its bars are current:
+  // a stale SPY (kept after a failed refetch) must not date the whole payload.
+  const spy = indices.find((index) => index.ticker === "SPY");
+  if (spy?.quote?.closeDate && !spy.stale) return spy.quote.closeDate;
   const counts = new Map<string, number>();
-  for (const row of rows) {
+  for (const row of [...indices, ...rows]) {
     const date = row.quote?.closeDate;
     if (!date) continue;
     counts.set(date, (counts.get(date) ?? 0) + 1);

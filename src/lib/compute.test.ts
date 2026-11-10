@@ -48,6 +48,31 @@ describe("computeQuote", () => {
     assert.equal(reboundText(2), "反発確認2日目");
   });
 
+  it("keeps boxPct on the documented definition when a one-day wick sets the 20-day high", () => {
+    // Shape of SMH on 2026-11-09: an intraday spike weeks earlier set high20 far
+    // above every close, so the close sits low in the box even after a +5% day.
+    const bars = flat(25, 470);
+    for (const item of bars) {
+      item.o = 470;
+      item.h = 480;
+      item.l = 460;
+      item.c = 470;
+    }
+    bars[8] = bar("2026-01-09", 460, 470, 445.59, 455);
+    bars[10] = bar("2026-01-11", 480, 588.68, 470, 490);
+    bars[24] = bar("2026-01-25", 470, 490.47, 465, 487.41);
+    const result = computeQuote(bars);
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.quote.close, 487.41);
+    assert.equal(result.quote.low20, 445.59);
+    assert.equal(result.quote.high20, 588.68);
+    // boxPct must be reproducible from the quote's own close/low20/high20.
+    const expected = ((487.41 - 445.59) / (588.68 - 445.59)) * 100;
+    assert.ok(Math.abs(result.quote.boxPct - expected) < 0.01, `boxPct=${result.quote.boxPct} expected~${expected}`);
+    assert.equal(result.quote.boxPct.toFixed(1), "29.2");
+  });
+
   it("sizes shares so one ATR is about ten dollars", () => {
     assert.deepEqual(sharesForMove(4, 141), { shares10: 3, cost10: 423 });
     assert.equal(formatShares10(3, 423), "3株 / $423");

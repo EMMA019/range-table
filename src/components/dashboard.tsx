@@ -359,7 +359,13 @@ export function Dashboard() {
           {data && (
             <div className="grid grid-cols-3 gap-2">
               {data.indices.map((index) => (
-                <IndexCell key={index.ticker} ticker={index.ticker} quote={index.quote} error={index.error} />
+                <IndexCell
+                  key={index.ticker}
+                  ticker={index.ticker}
+                  quote={index.quote}
+                  error={index.error}
+                  stale={index.stale}
+                />
               ))}
             </div>
           )}
@@ -432,8 +438,9 @@ export function Dashboard() {
           </label>
           {data?.monitor && universe !== "watch" && (
             <p className="text-[11px] leading-relaxed text-muted">
-              指数構成 as-of {data.monitor.asOfDate} · 和集合 {data.monitor.unionCount}（ウォッチと重複除く指数のみ{" "}
-              {data.monitor.indexOnlyCount}）
+              指数構成 as-of {data.monitor.asOfDate}
+              {data.monitor.fetchedAt != null ? ` · 価格 ${formatAge(data.monitor.fetchedAt, now)}` : ""}
+              {" · "}和集合 {data.monitor.unionCount}（ウォッチと重複除く指数のみ {data.monitor.indexOnlyCount}）
             </p>
           )}
           <div className="grid grid-cols-2 gap-2">
@@ -621,10 +628,12 @@ function IndexCell({
   ticker,
   quote,
   error,
+  stale,
 }: {
   ticker: string;
   quote: MarketPayload["indices"][number]["quote"];
   error: string | null;
+  stale: boolean;
 }) {
   const dev = quote ? quote.devPct : 0;
   return (
@@ -634,6 +643,7 @@ function IndexCell({
         <>
           <div className="font-mono text-sm tabular-nums">{formatPx(quote.close)}</div>
           <div className="text-[10px] text-muted">終値 {shortDate(quote.closeDate)}</div>
+          {stale && <div className="text-[10px] leading-tight text-muted">前回の日足</div>}
           <div
             className={cn(
               "mt-1 font-mono text-sm tabular-nums",
