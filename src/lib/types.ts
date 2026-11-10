@@ -252,14 +252,19 @@ export type IndexRow = {
   ticker: string;
   quote: Quote | null;
   error: string | null;
+  /** True when the quote is built from bars kept from an earlier fetch because the latest one failed. */
+  stale: boolean;
 };
 
 /** S&P 500 + Nasdaq-100 monitor coverage (see data/monitor_index.json). */
 export type MonitorMeta = {
+  /** Date of the universe snapshot file itself, not of the prices. */
   asOfDate: string;
   unionCount: number;
   watchlistCount: number;
   indexOnlyCount: number;
+  /** Oldest successful price fetch among the index-monitor symbols (epoch ms). Null before any succeeds. */
+  fetchedAt: number | null;
 };
 
 export type MarketPayload = {

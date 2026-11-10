@@ -113,7 +113,8 @@ export function MorningView() {
     persist(upsertDay(ledger, day));
   }, [data?.barDate, ledger, marks, persist]);
 
-  const spy = data?.indices.find((index) => index.ticker === "SPY")?.quote ?? null;
+  const spyIndex = data?.indices.find((index) => index.ticker === "SPY");
+  const spy = spyIndex?.quote ?? null;
   const filter = spyFilter(spy ? { close: spy.close, ma20: spy.ma20 } : null);
 
   // Default rows here are appended to data/paper/signals.json by scripts/log-paper-signals.ts.
@@ -213,6 +214,7 @@ export function MorningView() {
           {spy && (
             <p className="mt-1 font-mono text-xs tabular-nums text-muted">
               {formatPx(spy.close)} / 20日線 {formatPx(spy.ma20)} · {spy.closeDate}
+              {spyIndex?.stale ? " · 前回の日足" : ""}
             </p>
           )}
         </section>
