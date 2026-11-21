@@ -15140,6 +15140,713 @@
       "ref_close": 296.78,
       "low20": 258.61,
       "source": "morning_entry_near_到達"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "YOU",
+      "ref_close": 52.43,
+      "low20": 44.35,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "ESAB",
+      "ref_close": 74.74,
+      "low20": 66.28,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "CVNA",
+      "ref_close": 63.85,
+      "low20": 55.92,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "TPR",
+      "ref_close": 120.02,
+      "low20": 109.13,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "MIR",
+      "ref_close": 16.07,
+      "low20": 14.6,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "EVR",
+      "ref_close": 271.82,
+      "low20": 251.85,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "GXO",
+      "ref_close": 52.13,
+      "low20": 48.6,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "SWK",
+      "ref_close": 106.62,
+      "low20": 98.35,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "RCL",
+      "ref_close": 296.48,
+      "low20": 277.36,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "STAA",
+      "ref_close": 24.22,
+      "low20": 22.11,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "AIR",
+      "ref_close": 101.84,
+      "low20": 96.02,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "LFST",
+      "ref_close": 13.82,
+      "low20": 12.82,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "THO",
+      "ref_close": 74.92,
+      "low20": 68.59,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "IR",
+      "ref_close": 78.3,
+      "low20": 73.81,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "CWK",
+      "ref_close": 12.59,
+      "low20": 11.69,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "PMT",
+      "ref_close": 7.49,
+      "low20": 7.03,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "FG",
+      "ref_close": 21.96,
+      "low20": 20.35,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "FERG",
+      "ref_close": 240.62,
+      "low20": 226.18,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "WGO",
+      "ref_close": 30.36,
+      "low20": 27.72,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "ITT",
+      "ref_close": 201.09,
+      "low20": 190.08,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "FTDR",
+      "ref_close": 89.08,
+      "low20": 82.44,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "ATI",
+      "ref_close": 165.6,
+      "low20": 153.51,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "NBIX",
+      "ref_close": 150.57,
+      "low20": 142.34,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "BTSG",
+      "ref_close": 62.84,
+      "low20": 58.03,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "AVNT",
+      "ref_close": 42.84,
+      "low20": 40.91,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "GPI",
+      "ref_close": 255.06,
+      "low20": 240.72,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "SEZL",
+      "ref_close": 137.42,
+      "low20": 121.41,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "BSY",
+      "ref_close": 41.28,
+      "low20": 38.38,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "J",
+      "ref_close": 150.62,
+      "low20": 144.1,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "CRH",
+      "ref_close": 88.05,
+      "low20": 83.28,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "LULU",
+      "ref_close": 102.62,
+      "low20": 98.82,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "VMC",
+      "ref_close": 270.87,
+      "low20": 259.98,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "MD",
+      "ref_close": 30.22,
+      "low20": 28.52,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "TTD",
+      "ref_close": 13.38,
+      "low20": 12.23,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "PHM",
+      "ref_close": 124.67,
+      "low20": 118.35,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "TKO",
+      "ref_close": 177.99,
+      "low20": 170.14,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "SBSI",
+      "ref_close": 32.66,
+      "low20": 31.34,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "ZBH",
+      "ref_close": 101.1,
+      "low20": 94.38,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "GIII",
+      "ref_close": 30.55,
+      "low20": 28.95,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "LSCC",
+      "ref_close": 98.31,
+      "low20": 90.25,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "SSD",
+      "ref_close": 188.17,
+      "low20": 181.51,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "BJRI",
+      "ref_close": 57.5,
+      "low20": 54.22,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "VVX",
+      "ref_close": 75.18,
+      "low20": 71.64,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "ALRM",
+      "ref_close": 64.99,
+      "low20": 63.6,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "CENTA",
+      "ref_close": 39.6,
+      "low20": 37.98,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "ADUS",
+      "ref_close": 122.5,
+      "low20": 118.13,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "HNI",
+      "ref_close": 47.82,
+      "low20": 46.37,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "ALGN",
+      "ref_close": 155.17,
+      "low20": 147.52,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "FAF",
+      "ref_close": 64.58,
+      "low20": 62.9,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "LNC",
+      "ref_close": 39.68,
+      "low20": 38.55,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "INCY",
+      "ref_close": 114.63,
+      "low20": 111.01,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "BR",
+      "ref_close": 181.41,
+      "low20": 174.8,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "SOLV",
+      "ref_close": 84.5,
+      "low20": 80.76,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "LPX",
+      "ref_close": 72.95,
+      "low20": 69.13,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "VIRT",
+      "ref_close": 55.16,
+      "low20": 52.06,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "DHI",
+      "ref_close": 145.44,
+      "low20": 140.5,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "DG",
+      "ref_close": 130.53,
+      "low20": 124.62,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "HSIC",
+      "ref_close": 83.52,
+      "low20": 81.03,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "EXPD",
+      "ref_close": 192.56,
+      "low20": 184.22,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "BBY",
+      "ref_close": 97.95,
+      "low20": 93.18,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "URBN",
+      "ref_close": 84.58,
+      "low20": 81.79,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "HCSG",
+      "ref_close": 24.72,
+      "low20": 23.8,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "UFPI",
+      "ref_close": 79.18,
+      "low20": 76.09,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "KNX",
+      "ref_close": 59.65,
+      "low20": 58.21,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "SCHL",
+      "ref_close": 37.31,
+      "low20": 36.19,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "NOC",
+      "ref_close": 534.31,
+      "low20": 510.3,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "KMB",
+      "ref_close": 106.38,
+      "low20": 104.42,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "WTS",
+      "ref_close": 345.78,
+      "low20": 333.29,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "LW",
+      "ref_close": 51.7,
+      "low20": 48.71,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "AMG",
+      "ref_close": 368.15,
+      "low20": 348.02,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "UHS",
+      "ref_close": 179.43,
+      "low20": 169.13,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "FSS",
+      "ref_close": 108.71,
+      "low20": 104.78,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "CF",
+      "ref_close": 115.53,
+      "low20": 110.61,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "PCAR",
+      "ref_close": 102.2,
+      "low20": 100.07,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "DXPE",
+      "ref_close": 148.38,
+      "low20": 132.41,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "MUSA",
+      "ref_close": 507.42,
+      "low20": 482.46,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "BKE",
+      "ref_close": 44.15,
+      "low20": 41.61,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "AM",
+      "ref_close": 19.73,
+      "low20": 18.8,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "CNMD",
+      "ref_close": 46.56,
+      "low20": 43.5,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "TRGP",
+      "ref_close": 278.3,
+      "low20": 261.25,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "BSX",
+      "ref_close": 41.98,
+      "low20": 39.57,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "DY",
+      "ref_close": 205.55,
+      "low20": 186.25,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "AKAM",
+      "ref_close": 85.11,
+      "low20": 77.37,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "CALX",
+      "ref_close": 33.01,
+      "low20": 30.55,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "WSO",
+      "ref_close": 292,
+      "low20": 280.18,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "SANM",
+      "ref_close": 139.76,
+      "low20": 126.35,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "DBX",
+      "ref_close": 33.91,
+      "low20": 31.6,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "COHR",
+      "ref_close": 187.22,
+      "low20": 160.23,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "CRWD",
+      "ref_close": 229.44,
+      "low20": 213.22,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "PAYC",
+      "ref_close": 241.64,
+      "low20": 230.92,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "BLKB",
+      "ref_close": 48.83,
+      "low20": 45.48,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "VIAV",
+      "ref_close": 26.71,
+      "low20": 24.08,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "INSW",
+      "ref_close": 97.1,
+      "low20": 91.15,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "UFCS",
+      "ref_close": 49.78,
+      "low20": 46.48,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "SPCX",
+      "ref_close": 127.79,
+      "low20": 120.39,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "CVLT",
+      "ref_close": 145.9,
+      "low20": 135.06,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "QLYS",
+      "ref_close": 185.92,
+      "low20": 164.68,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "CNR",
+      "ref_close": 78.87,
+      "low20": 73.31,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "FICO",
+      "ref_close": 694.31,
+      "low20": 653.4,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "ACLS",
+      "ref_close": 90.26,
+      "low20": 82.03,
+      "source": "alerts_entry_in_ok"
+    },
+    {
+      "signal_date": "2026-11-20",
+      "symbol": "PWR",
+      "ref_close": 559.03,
+      "low20": 502.04,
+      "source": "morning_entry_near_到達"
     }
   ]
 }
