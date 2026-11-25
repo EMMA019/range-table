@@ -109,9 +109,15 @@ export function startEpsWarm(): void {
   kickEpsWarm(list, symbols);
 }
 
-export async function getMarketPayload(): Promise<MarketPayload> {
+export type MarketPayloadOptions = {
+  /** Wait until every universe symbol has a cache entry before answering (?u=all). */
+  awaitUniverse?: boolean;
+};
+
+export async function getMarketPayload(options: MarketPayloadOptions = {}): Promise<MarketPayload> {
   const list = loadWatchlist();
   const symbols = list.groups.flatMap((group) => group.tickers.map((ticker) => ticker.ticker));
+  if (options.awaitUniverse) await ensureUniverse(list);
   const [cache, weatherBars] = await Promise.all([ensureSeries(list), ensureWeather()]);
   const payload = memoPayload(cache, list, weatherBars);
   kickEpsWarm(list, symbols);
@@ -237,12 +243,12 @@ export async function ensureSeries(list: Watchlist, extra: string[] = [], option
 
 /** Monitor symbols per refresh pass; small enough that a queued core refresh waits seconds, not minutes. */
 const MONITOR_CHUNK = 120;
-let monitorChunking = false;
+let monitorPass: Promise<void> | null = null;
 
-async function refreshInChunks(symbols: string[]): Promise<void> {
-  if (monitorChunking) return;
-  monitorChunking = true;
-  try {
+/** Runs one chunked backfill pass, or joins the pass already running. */
+function refreshInChunks(symbols: string[]): Promise<void> {
+  if (monitorPass) return monitorPass;
+  const run = (async () => {
     for (let i = 0; i < symbols.length; i += MONITOR_CHUNK) {
       const chunk = dueSymbols(memory, symbols.slice(i, i + MONITOR_CHUNK), Date.now());
       if (chunk.length === 0) continue;
@@ -252,8 +258,34 @@ async function refreshInChunks(symbols: string[]): Promise<void> {
         console.error("[range] monitor chunk", error);
       }
     }
-  } finally {
-    monitorChunking = false;
+  })();
+  monitorPass = run.finally(() => {
+    if (monitorPass === run) monitorPass = null;
+  });
+  return monitorPass;
+}
+
+/** Longest ?u=all wait for the monitor backfill. A cold pass over ~1,500 symbols at
+ * FETCH_CONCURRENCY=5 normally lands in minutes; the cap only guards a wedged Yahoo. */
+const UNIVERSE_WAIT_MS = 20 * 60 * 1000;
+
+/**
+ * Waits until every symbol in the universe has a cache entry (success or failure), so a
+ * ?u=all answer never reports index rows as "no daily bars yet" just because the background
+ * backfill had not reached them. Entries are never removed, so the missing set only
+ * shrinks; a pass that makes no progress ends the wait instead of spinning.
+ */
+export async function ensureUniverse(list: Watchlist): Promise<void> {
+  await ensureSeries(list);
+  const symbols = symbolsFor(list);
+  const deadline = Date.now() + UNIVERSE_WAIT_MS;
+  let lastMissing = Number.POSITIVE_INFINITY;
+  while (Date.now() < deadline) {
+    const missing = missingSymbols(memory ?? emptyCache(), symbols);
+    if (missing.length === 0) return;
+    if (missing.length >= lastMissing) return;
+    lastMissing = missing.length;
+    await refreshInChunks(missing);
   }
 }
 
